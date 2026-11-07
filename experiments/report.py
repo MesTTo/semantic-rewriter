@@ -13,6 +13,8 @@ import re
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
+from impl_eval import aggregate
+
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
 REPORT = ROOT / "RESULTS.md"
@@ -43,17 +45,33 @@ def _table(header: Sequence[str], rows: Sequence[Sequence[object]]) -> str:
 
 
 def _load_judges() -> dict:
-    """The real-judge runs, written as one file per process (implementations.judges-*.json), merged."""
+    """The real-judge runs, written as one file pair per process (implementations.judges-*), merged.
+
+    Aggregates are recomputed from the saved rows with the runner's own
+    aggregate(), so every table reads one definition of each metric whichever
+    version of the runner wrote the summary.
+    """
     paths = sorted(RESULTS.glob("implementations.judges-*.json"))
     if not paths:
         msg = f"no implementations.judges-*.json under {RESULTS}; run experiments/impl_eval.py with real judges first"
         raise FileNotFoundError(msg)
-    merged: dict = {"aggregates": [], "discovery": []}
+    merged: dict = {"aggregates": [], "discovery": [], "sweep": []}
+    rows: list[dict] = []
     for path in paths:
         part = json.loads(path.read_text())
-        merged["aggregates"] += part["aggregates"]
         merged["discovery"] += part["discovery"]
+        merged["sweep"] += part.get("sweep", [])
+        rows += [json.loads(line) for line in path.with_suffix(".jsonl").read_text().splitlines()]
+    merged["aggregates"] = aggregate(rows)
     return merged
+
+
+def _load_oracle() -> dict:
+    """The oracle run's summary with its aggregates recomputed from its saved rows."""
+    summary = _load("implementations.oracle.json")
+    rows = [json.loads(line) for line in (RESULTS / "implementations.oracle.jsonl").read_text().splitlines()]
+    summary["aggregates"] = aggregate(rows)
+    return summary
 
 
 def _aggregates(summary: dict, judge: str, kb: str = "ALL") -> dict[tuple[str, str], dict]:
@@ -62,7 +80,7 @@ def _aggregates(summary: dict, judge: str, kb: str = "ALL") -> dict[tuple[str, s
 
 def strategies_table() -> str:
     """Every strategy with the oracle judge over all four benchmarks, cold and warm."""
-    agg = _aggregates(_load("implementations.oracle.json"), "oracle")
+    agg = _aggregates(_load_oracle(), "oracle")
     rows = []
     for s in STRATEGY_ORDER:
         cold, warm = agg.get((s, "cold")), agg.get((s, "warm"))
@@ -111,12 +129,15 @@ def judges_in_kb_table() -> str:
                 kinds[k] = kinds.get(k, 0) + v
         true = kinds.get("true", 0)
         lazy = _aggregates(summary, judge).get(("lazy-tabled", "cold"), {})
+        sweep = next((s for s in summary["sweep"] if s["judge"] == judge), {})
         rows.append([
             judge, admitted, true / admitted if admitted else 1.0, kinds.get("reversed", 0), kinds.get("swap", 0),
-            kinds.get("trap", 0), kinds.get("unrelated", 0), lazy.get("precision", "n/a"), lazy.get("recall", "n/a"),
+            kinds.get("trap", 0), kinds.get("unrelated", 0), lazy.get("terminated_rate", "n/a"), lazy.get("f1", "n/a"),
+            sweep.get("f1_held_out_pooled", "n/a"),
         ])
     return _table(["judge", "rewrites admitted", "rewrite precision", "reversed", "wrong argument order", "trap",
-                   "unrelated", "answer precision (lazy-tabled)", "answer recall (lazy-tabled)"], rows)
+                   "unrelated", "finished (default threshold)", "answer F1 (default threshold)",
+                   "answer F1 (held-out threshold)"], rows)
 
 
 def judges_strategies_table() -> str:
@@ -129,8 +150,10 @@ def judges_strategies_table() -> str:
         for s in ("exact", "depth-bounded", "lazy-tabled", "eager-worklist", "alias-canonical", "saturate"):
             a = agg.get((s, "cold"))
             if a:
-                rows.append([judge, s, a["precision"], a["recall"], a["f1"], a["terminated_rate"], a["proposals_per_query"]])
-    return _table(["judge", "strategy", "precision", "recall", "F1", "terminated", "proposals/query"], rows)
+                rows.append([judge, s, a["terminated_rate"], a["precision"], a["recall"], a["f1"],
+                             a["precision_finished"], a["recall_finished"], a["proposals_per_query"]])
+    return _table(["judge", "strategy", "finished", "precision", "recall", "F1", "precision (finished)",
+                   "recall (finished)", "proposals/query"], rows)
 
 
 def pairs_table() -> str:
@@ -202,14 +225,33 @@ GENERATORS: dict[str, Callable[[], str]] = {
 
 
 def main() -> None:
-    """Replace every generated block in RESULTS.md that a generator names."""
+    """Replace every generated block in RESULTS.md that a generator names.
+
+    A table whose results file is missing is left as it was and named on
+    stderr; with --complete a missing file is an error, since a finished
+    report must not keep a stale table.
+    """
+    import sys
+
+    complete = "--complete" in sys.argv
     text = REPORT.read_text()
+    missing = []
     for name, generate in GENERATORS.items():
-        pattern = re.compile(rf"(<!-- BEGIN GENERATED: {re.escape(name)} -->\n).*?(\n<!-- END GENERATED: {re.escape(name)} -->)", re.S)
-        if pattern.search(text):
-            text = pattern.sub(lambda m, body=generate(): m.group(1) + body + m.group(2), text)
+        pattern = re.compile(rf"(<!-- BEGIN GENERATED: {re.escape(name)} -->\n)(?:.*?\n)?(<!-- END GENERATED: {re.escape(name)} -->)", re.S)
+        if not pattern.search(text):
+            continue
+        try:
+            body = generate()
+        except FileNotFoundError as e:
+            if complete:
+                raise
+            missing.append(f"{name}: {e}")
+            continue
+        text = pattern.sub(lambda m, body=body: m.group(1) + body + "\n" + m.group(2), text)
     REPORT.write_text(text)
     print(f"rendered {REPORT}")
+    for line in missing:
+        print(f"not rendered, input missing: {line}", file=sys.stderr)
 
 
 if __name__ == "__main__":

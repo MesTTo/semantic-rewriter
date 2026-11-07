@@ -193,6 +193,10 @@ def aggregate(rows: list[dict]) -> list[dict]:
         n = len(rs)
         p = tp / (tp + fp) if tp + fp else 1.0
         rc = tp / (tp + fn) if tp + fn else 1.0
+        # A run that exhausts its budget answers nothing, so all-runs recall mixes
+        # missing rewrites with truncated work; the finished-only figures separate them.
+        done = [r for r in rs if r["terminated"]]
+        dtp, dfp, dfn = (sum(r[f] for r in done) for f in ("tp", "fp", "fn"))
         kinds: dict[str, int] = defaultdict(int)
         for r in rs:
             for kind, c in r["rewrite_kinds"].items():
@@ -203,6 +207,8 @@ def aggregate(rows: list[dict]) -> list[dict]:
             "precision": round(p, 4), "recall": round(rc, 4), "f1": round(2 * p * rc / (p + rc), 4) if p + rc else 0.0,
             "exact_rate": round(sum(r["exact"] for r in rs) / n, 4),
             "terminated_rate": round(sum(r["terminated"] for r in rs) / n, 4),
+            "precision_finished": round(dtp / (dtp + dfp), 4) if dtp + dfp else 1.0,
+            "recall_finished": round(dtp / (dtp + dfn), 4) if dtp + dfn else 1.0,
             "proposals_per_query": round(sum(r["proposals"] for r in rs) / n, 2),
             "expansions_per_query": round(sum(r["expansions"] for r in rs) / n, 2),
             "retrievals_per_query": round(sum(r["retrievals"] for r in rs) / n, 2),
@@ -327,6 +333,10 @@ def main() -> None:
     parser.add_argument("--budget", type=int, default=2_000_000)
     parser.add_argument("--skip-extras", action="store_true", help="skip the divergence sweep and the isolation check")
     parser.add_argument("--sweep", action="store_true", help="also sweep lazy-tabled's threshold for each judge")
+    parser.add_argument("--reuse-rows", action="store_true",
+                        help="read the strategy rows from results/implementations.<tag>.jsonl instead of running them")
+    parser.add_argument("--divergence-budgets", default="10000,100000,1000000,3000000",
+                        help="inference budgets for the divergence sweep; time grows faster than the budget")
     parser.add_argument("--tag", default="", help="suffix for the output files, so judge runs can be split across processes")
     parser.add_argument("--one", nargs=3, metavar=("KB", "STRATEGY", "QUERY"))
     args = parser.parse_args()
@@ -343,11 +353,13 @@ def main() -> None:
     discovery: list[dict] = []
     sweeps: list[dict] = []
     started = time.perf_counter()
+    tag = f".{args.tag}" if args.tag else ""
+    strategies = [] if args.reuse_rows else args.strategies.split(",")
     for judge_name in args.judges.split(","):
         judge: Judge | None = None
         for kb in kbs:
             judge = make_judge(judge_name, kb) if judge_name == "oracle" or judge is None else judge
-            kb_rows, kb_discovery = run_kb(kb, judge_name, judge, retriever, budget, modes, args.strategies.split(","))
+            kb_rows, kb_discovery = run_kb(kb, judge_name, judge, retriever, budget, modes, strategies)
             rows += kb_rows
             discovery.append(kb_discovery)
         if args.sweep and judge_name != "oracle":
@@ -356,10 +368,13 @@ def main() -> None:
         close = getattr(judge, "close", None)
         if callable(close):
             close()
-    tag = f".{args.tag}" if args.tag else ""
-    with (RESULTS / f"implementations{tag}.jsonl").open("w") as f:
-        for r in rows:
-            f.write(json.dumps(r, sort_keys=True) + "\n")
+    rows_path = RESULTS / f"implementations{tag}.jsonl"
+    if args.reuse_rows:
+        rows = [json.loads(line) for line in rows_path.read_text().splitlines()]
+    else:
+        with rows_path.open("w") as f:
+            for r in rows:
+                f.write(json.dumps(r, sort_keys=True) + "\n")
     summary = {
         "judges": args.judges.split(","), "kbs": args.kbs.split(","), "modes": modes, "k": K, "budget_inferences": args.budget,
         "retriever": retriever.model_name, "seconds": round(time.perf_counter() - started, 1),
@@ -369,7 +384,8 @@ def main() -> None:
     if sweeps:
         summary["sweep"] = sweeps
     if not args.skip_extras:
-        summary["divergence"] = divergence(BENCHMARKS["family"](), (10_000, 100_000, 1_000_000, 10_000_000))
+        budgets = [int(b) for b in args.divergence_budgets.split(",")]
+        summary["divergence"] = divergence(BENCHMARKS["family"](), budgets)
         summary["isolation"] = isolation_check("family")
     (RESULTS / f"implementations{tag}.json").write_text(json.dumps(summary, indent=1, sort_keys=True))
     print(f"wrote {len(rows)} rows in {summary['seconds']} s", flush=True)
