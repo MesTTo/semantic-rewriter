@@ -1,0 +1,41 @@
+# Purpose: declare the semantic rewriter's package, its dependencies and the CUDA torch index uv installs from.
+[project]
+name = "semantic-rewriter"
+version = "0.1.0"
+description = "Semantic rule discovery for goal-directed MeTTa rewriting on pymetta, with the experiment that measures it."
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "pymetta==0.9.4",
+    "torch>=2.8",
+    "sentence-transformers>=5.0",
+    "transformers>=4.51",
+    "typesafe-sdk==0.7.0",
+    "numpy>=2.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "hypothesis>=6.100",
+]
+
+[tool.uv]
+package = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["semrewrite"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
