@@ -187,6 +187,13 @@ def direction_policy_table() -> str:
                    "answer precision", "answer recall", "answer F1", "false rewrites"], rows)
 
 
+def blowup_table() -> str:
+    """A permissive judge's closure against the oracle's on the same hard queries, with no budget in the way."""
+    rows = [[r["query"], r["judge"], r["strategy"], r["status"], r["inferences"], r["tables"], r["rewrites"],
+             f"{r['true']}/{r['answers']}", r["gold"]] for r in _load("blowup.json")]
+    return _table(["query", "judge", "strategy", "status", "inferences", "tables", "rewrites", "true/answers", "gold"], rows)
+
+
 NAMED_CASES = (
     "hard:mother>parent", "hard:mother>parent:reverse", "hard:legal_guardian>parent", "hard:stepmother>parent",
     "hard:mother_in_law>mother", "hard:employs>manages", "hard:employs>manages:reverse",
@@ -214,6 +221,7 @@ def named_cases_table() -> str:
 GENERATORS: dict[str, Callable[[], str]] = {
     "named-cases": named_cases_table,
     "direction-policy": direction_policy_table,
+    "blowup": blowup_table,
     "strategies": strategies_table,
     "divergence": divergence_table,
     "isolation": isolation_table,
