@@ -2,9 +2,10 @@
 judge on every benchmark knowledge base, score answers against the gold answers
 and admitted rewrites against what the gold program entails, and write
 results/implementations.jsonl (one row per run) and results/implementations.json
-(aggregates, retrieval recall, the divergence sweep and the isolation check).
+(aggregates, retrieval recall, the divergence sweep, the isolation check and,
+with --sweep, each named strategy's threshold sweep per judge).
 
-Run: .venv/bin/python experiments/impl_eval.py [--judges oracle,nli-deberta-base,...]
+Run: .venv/bin/python experiments/impl_eval.py [--judges oracle,nli-deberta-base,...] [--sweep lazy-tabled,depth-bounded]
 
 Modes: `cold` gives each query a fresh discoverer, so its model work is the
 query's alone; `warm` shares one discoverer across a knowledge base's queries
@@ -268,16 +269,23 @@ def isolation_check(kb_name: str) -> dict:
 
 
 def sweep(kbs: list[KB], judge_name: str, judge: Judge, retriever: Retriever, budget: Budget,
-          quantiles: Sequence[float] = (0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.925, 0.95, 0.96, 0.97, 0.98, 0.99, 0.995)) -> dict:
-    """Lazy-tabled answer quality at a grid of thresholds, and a threshold chosen without the benchmark it is scored on.
+          strategies: Sequence[str],
+          quantiles: Sequence[float] = (0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.925, 0.95, 0.96, 0.97, 0.98, 0.99, 0.995)) -> list[dict]:
+    """Each strategy's answer quality at a grid of thresholds, and a threshold chosen without the benchmark it is scored on.
 
     The grid is quantiles of the judge's own scores over every proposal the
     four benchmarks ask, so it adapts to how the judge spreads its scores; it
     sits in the upper half because true implications are a small share of the
     proposals, and below the median nearly every proposal is admitted. For
-    each benchmark the threshold maximising answer F1 on the other three is
-    chosen, then scored on the held-out one: leave-one-benchmark-out
-    calibration for the rewriter's objective, beside the pair-set default.
+    each strategy and benchmark the threshold maximising answer F1 on the other
+    three is chosen, then scored on the held-out one: leave-one-benchmark-out
+    calibration for the rewriter's objective, beside the pair-set default. All
+    strategies share one grid and one score cache per benchmark, so they are
+    compared on the same admissions. Each point also counts the runs that
+    finished inside the budget, since an unfinished run returns no answers and
+    so loses recall without any wrong rewrite. Returns one result per strategy.
+
+    Cost: thresholds x strategies x queries rewriter runs, each within budget.
     """
     rewriters = [Rewriter(kb, ScoreCache(judge), retriever, k=K, budget=budget) for kb in kbs]
     for r in rewriters:
@@ -285,41 +293,55 @@ def sweep(kbs: list[KB], judge_name: str, judge: Judge, retriever: Retriever, bu
     pooled = sorted(s for r in rewriters for s in r.scorer.scores())
     grid = sorted({pooled[round(q * (len(pooled) - 1))] for q in quantiles} | {judge.threshold})
     default = judge.threshold
-    counts: dict[tuple[str, float], tuple[int, int, int]] = {}
+    counts: dict[tuple[str, str, float], tuple[int, int, int, int]] = {}
     for rewriter in rewriters:
         closure = rewriter.kb.closure()
+        golds = [(query, rewriter.kb.answers(query, closure)) for query in rewriter.kb.queries]
         for t in grid:
             judge.threshold = t
-            tp = fp = fn = 0
-            for query in rewriter.kb.queries:
-                o = rewriter.ask(STRATEGIES["lazy-tabled"], query)
-                gold = rewriter.kb.answers(query, closure)
-                tp += len(o.answers & gold)
-                fp += len(o.answers - gold)
-                fn += len(gold - o.answers)
-            counts[(rewriter.kb.name, t)] = (tp, fp, fn)
+            for strategy in strategies:
+                tp = fp = fn = finished = 0
+                for query, gold in golds:
+                    o = rewriter.ask(STRATEGIES[strategy], query)
+                    tp += len(o.answers & gold)
+                    fp += len(o.answers - gold)
+                    fn += len(gold - o.answers)
+                    finished += o.terminated
+                counts[(strategy, rewriter.kb.name, t)] = (tp, fp, fn, finished)
     judge.threshold = default
+    queries = sum(len(r.kb.queries) for r in rewriters)
 
     def f1(tp: int, fp: int, fn: int) -> float:
         return 2 * tp / (2 * tp + fp + fn) if tp else 0.0
 
-    def pooled_f1(names: list[str], t: float) -> float:
-        return f1(*(sum(counts[(n, t)][i] for n in names) for i in range(3)))
-
     names = [kb.name for kb in kbs]
-    held_out = []
-    for name in names:
-        others = [n for n in names if n != name]
-        best = max(grid, key=lambda t: (pooled_f1(others, t), -t))
-        held_out.append({"kb": name, "threshold": best, "f1_held_out": round(f1(*counts[(name, best)]), 4),
-                         "f1_at_default": round(f1(*counts[(name, default)]), 4)})
-    curve = [{"threshold": t, "f1": round(pooled_f1(names, t), 4),
-              "precision": round(sum(counts[(n, t)][0] for n in names) / max(1, sum(counts[(n, t)][0] + counts[(n, t)][1] for n in names)), 4),
-              "recall": round(sum(counts[(n, t)][0] for n in names) / max(1, sum(counts[(n, t)][0] + counts[(n, t)][2] for n in names)), 4)}
-             for t in grid]
-    tp, fp, fn = (sum(counts[(n, h["threshold"])][i] for h in held_out for n in [h["kb"]]) for i in range(3))
-    return {"judge": judge_name, "default_threshold": default, "curve": curve, "held_out": held_out,
-            "f1_held_out_pooled": round(f1(tp, fp, fn), 4), "f1_default_pooled": round(pooled_f1(names, default), 4)}
+    results = []
+    for strategy in strategies:
+        def total(kbs_: list[str], t: float, strategy: str = strategy) -> tuple[int, int, int]:
+            tp_, fp_, fn_ = (sum(counts[(strategy, n, t)][i] for n in kbs_) for i in range(3))
+            return tp_, fp_, fn_
+
+        held_out = []
+        for name in names:
+            others = [n for n in names if n != name]
+            best = max(grid, key=lambda t: (f1(*total(others, t)), -t))
+            held_out.append({"kb": name, "threshold": best, "f1_held_out": round(f1(*counts[(strategy, name, best)][:3]), 4),
+                             "f1_at_default": round(f1(*counts[(strategy, name, default)][:3]), 4),
+                             "finished_held_out": counts[(strategy, name, best)][3]})
+        curve = []
+        for t in grid:
+            tp, fp, fn = total(names, t)
+            curve.append({"threshold": t, "f1": round(f1(tp, fp, fn), 4),
+                          "precision": round(tp / max(1, tp + fp), 4), "recall": round(tp / max(1, tp + fn), 4),
+                          "finished": round(sum(counts[(strategy, n, t)][3] for n in names) / queries, 4)})
+        tp, fp, fn = (sum(counts[(strategy, h["kb"], h["threshold"])][i] for h in held_out) for i in range(3))
+        results.append({"judge": judge_name, "strategy": strategy, "default_threshold": default, "curve": curve,
+                        "held_out": held_out, "f1_held_out_pooled": round(f1(tp, fp, fn), 4),
+                        "precision_held_out_pooled": round(tp / max(1, tp + fp), 4),
+                        "recall_held_out_pooled": round(tp / max(1, tp + fn), 4),
+                        "finished_held_out_pooled": round(sum(h["finished_held_out"] for h in held_out) / queries, 4),
+                        "f1_default_pooled": round(f1(*total(names, default)), 4)})
+    return results
 
 
 def main() -> None:
@@ -328,12 +350,13 @@ def main() -> None:
     parser.add_argument("--judges", default="oracle")
     parser.add_argument("--kbs", default=",".join(BENCHMARKS))
     parser.add_argument("--modes", default="cold,warm")
-    parser.add_argument("--strategies", default=",".join(STRATEGIES))
+    parser.add_argument("--strategies", default=None,
+                        help="strategies to run; default all, or none with --reuse-rows")
     parser.add_argument("--budget", type=int, default=2_000_000)
     parser.add_argument("--skip-extras", action="store_true", help="skip the divergence sweep and the isolation check")
-    parser.add_argument("--sweep", action="store_true", help="also sweep lazy-tabled's threshold for each judge")
+    parser.add_argument("--sweep", default="", help="comma-separated strategies whose threshold to sweep for each real judge")
     parser.add_argument("--reuse-rows", action="store_true",
-                        help="read the strategy rows from results/implementations.<tag>.jsonl instead of running them")
+                        help="keep the rows and extras saved under the tag, recomputing only the strategies, sweeps and extras this run names")
     parser.add_argument("--divergence-budgets", default="10000,100000,1000000,3000000",
                         help="inference budgets for the divergence sweep; time grows faster than the budget")
     parser.add_argument("--tag", default="", help="suffix for the output files, so judge runs can be split across processes")
@@ -353,7 +376,15 @@ def main() -> None:
     sweeps: list[dict] = []
     started = time.perf_counter()
     tag = f".{args.tag}" if args.tag else ""
-    strategies = [] if args.reuse_rows else args.strategies.split(",")
+    rows_path = RESULTS / f"implementations{tag}.jsonl"
+    summary_path = RESULTS / f"implementations{tag}.json"
+    previous = json.loads(summary_path.read_text()) if args.reuse_rows else {}
+    saved = [json.loads(line) for line in rows_path.read_text().splitlines()] if args.reuse_rows else []
+    if args.strategies is not None:
+        strategies = [s for s in args.strategies.split(",") if s]
+    else:
+        strategies = [] if args.reuse_rows else list(STRATEGIES)
+    swept = [s for s in args.sweep.split(",") if s]
     for judge_name in args.judges.split(","):
         judge: Judge | None = None
         for kb in kbs:
@@ -361,32 +392,32 @@ def main() -> None:
             kb_rows, kb_discovery = run_kb(kb, judge_name, judge, retriever, budget, modes, strategies)
             rows += kb_rows
             discovery.append(kb_discovery)
-        if args.sweep and judge_name != "oracle":
-            sweeps.append(sweep(kbs, judge_name, judge, retriever, budget))
+        if swept and judge_name != "oracle":
+            sweeps += sweep(kbs, judge_name, judge, retriever, budget, swept)
             print(f"  sweep {judge_name}: done", flush=True)
         close = getattr(judge, "close", None)
         if callable(close):
             close()
-    rows_path = RESULTS / f"implementations{tag}.jsonl"
-    if args.reuse_rows:
-        rows = [json.loads(line) for line in rows_path.read_text().splitlines()]
-    else:
-        with rows_path.open("w") as f:
-            for r in rows:
-                f.write(json.dumps(r, sort_keys=True) + "\n")
+    rows = [r for r in saved if r["strategy"] not in strategies] + rows
+    with rows_path.open("w") as f:
+        for r in rows:
+            f.write(json.dumps(r, sort_keys=True) + "\n")
     summary = {
         "judges": args.judges.split(","), "kbs": args.kbs.split(","), "modes": modes, "k": K, "budget_inferences": args.budget,
         "retriever": retriever.model_name, "seconds": round(time.perf_counter() - started, 1),
         "aggregates": aggregate(rows), "discovery": discovery,
         "retrieval_recall": [retrieval_recall(kb, retriever) for kb in kbs],
     }
-    if sweeps:
-        summary["sweep"] = sweeps
+    kept_sweeps = [s for s in previous.get("sweep", []) if s["strategy"] not in swept]
+    if kept_sweeps or sweeps:
+        summary["sweep"] = kept_sweeps + sweeps
     if not args.skip_extras:
         budgets = [int(b) for b in args.divergence_budgets.split(",")]
         summary["divergence"] = divergence(BENCHMARKS["family"](), budgets)
         summary["isolation"] = isolation_check("family")
-    (RESULTS / f"implementations{tag}.json").write_text(json.dumps(summary, indent=1, sort_keys=True))
+    else:
+        summary |= {key: previous[key] for key in ("divergence", "isolation") if key in previous}
+    summary_path.write_text(json.dumps(summary, indent=1, sort_keys=True))
     print(f"wrote {len(rows)} rows in {summary['seconds']} s", flush=True)
 
 

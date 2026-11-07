@@ -5,10 +5,10 @@ The claims, each checked against a Python fixpoint over the gold rules:
 
 | strategy | claim |
 |---|---|
-| every tabled strategy | terminates and answers exactly the fixpoint, on every catalogue |
+| every tabled strategy without a depth bound | terminates and answers exactly the fixpoint, on every catalogue |
 | untabled (naive, memo-untabled) | never terminates when the query predicate lies on a cycle of rewrites |
 | untabled (naive, memo-untabled) | terminates with the fixpoint when everything the query reaches is acyclic |
-| depth-bounded | terminates, and every answer is a gold answer |
+| depth-bounded, depth-tabled | terminate, every answer is a gold answer, and tables leave the answers at a given depth unchanged |
 
 The judge is an oracle that admits only the direct gold triples, so a chain
 p0 <= p1 <= p2 must be found by discovering p1 and then p2: recursive
@@ -22,13 +22,14 @@ from collections import defaultdict
 from hypothesis import HealthCheck, event, given, settings
 from hypothesis import strategies as st
 
-from semrewrite.engine import STRATEGIES, Budget, Evaluation, Rewriter
+from semrewrite.engine import STRATEGIES, Budget, Rewriter
 from semrewrite.judging import OracleJudge
 from semrewrite.kb import KB, Lit, Query, Rule
 
 CONSTANTS = ("c0", "c1", "c2", "c3")
-TABLED = [n for n, s in STRATEGIES.items() if s.evaluation is Evaluation.TABLED and s.timing.value != "none"]
-UNTABLED = [n for n, s in STRATEGIES.items() if s.evaluation is Evaluation.UNTABLED]
+TABLED = [n for n, s in STRATEGIES.items() if s.tabled and not s.depth and s.timing.value != "none"]
+UNTABLED = [n for n, s in STRATEGIES.items() if not s.tabled and not s.depth]
+DEPTH = [n for n, s in STRATEGIES.items() if s.depth]
 
 
 @st.composite
@@ -158,8 +159,14 @@ def test_untabled_rewriting_loops_exactly_when_a_cycle_is_in_reach(kb: KB) -> No
 @SETTINGS
 @given(catalogues())
 def test_depth_bounded_rewriting_stops_and_is_sound(kb: KB) -> None:
-    """A depth bound always stops the search, and what it finds is true."""
+    """A depth bound always stops the search, what it finds is true, and tables change only its cost."""
     query = kb.queries[0]
-    outcome = _rewriter(kb, inferences=2_000_000).ask(STRATEGIES["depth-bounded"], query)
-    assert outcome.terminated, f"depth-bounded on {query}: {outcome.status}"
-    assert outcome.answers <= kb.answers(query)
+    rewriter = _rewriter(kb, inferences=2_000_000)
+    by_depth: dict[int, list[tuple[str, frozenset]]] = defaultdict(list)
+    for name in DEPTH:
+        outcome = rewriter.ask(STRATEGIES[name], query)
+        assert outcome.terminated, f"{name} on {query}: {outcome.status}"
+        assert outcome.answers <= kb.answers(query), f"{name} on {query}"
+        by_depth[STRATEGIES[name].depth].append((name, frozenset(outcome.answers)))
+    for depth, found in by_depth.items():
+        assert len({answers for _, answers in found}) == 1, f"depth {depth} on {query}: {found}"

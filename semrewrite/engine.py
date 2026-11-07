@@ -2,13 +2,14 @@
 program from a knowledge base and its admitted rewrites, evaluate a query under
 an inference budget, and report the answers with what they cost.
 
-Every strategy is a setting of four independent knobs:
+Every strategy is a setting of five independent knobs:
 
 | knob | settings |
 |---|---|
 | discovery timing | none, eager worklist, lazy inside evaluation, rounds, saturate |
 | per-predicate memo | on, off |
-| evaluation | tabled (SLG), untabled (SLD), depth-bounded |
+| tables | on (SLG), off (SLD) |
+| depth bound | none, or at most n rewrite and rule steps |
 | alias canonicalisation | on, off |
 
 Two encodings carry them. The native encoding compiles each admitted rewrite
@@ -48,33 +49,24 @@ class Timing(StrEnum):
     SATURATE = "saturate"
 
 
-class Evaluation(StrEnum):
-    """How the engine resolves goals: SLG with tables, plain SLD, or SLD cut at a depth."""
-
-    TABLED = "tabled"
-    UNTABLED = "untabled"
-    DEPTH = "depth"
-
-
 @dataclass(frozen=True, slots=True)
 class Strategy:
-    """One setting of the knobs, named for the implementation it is."""
+    """One setting of the knobs, named for the implementation it is; depth 0 means no depth bound."""
 
     name: str
     timing: Timing
     memo: bool = True
-    evaluation: Evaluation = Evaluation.TABLED
+    tabled: bool = True
     depth: int = 0
     canonical: bool = False
 
     def __post_init__(self) -> None:
-        if (self.evaluation is Evaluation.DEPTH) != (self.depth > 0):
-            msg = f"strategy {self.name}: a depth bound goes with depth-bounded evaluation and nothing else"
+        if self.depth < 0:
+            msg = f"strategy {self.name}: a depth bound counts steps, so it can't be negative"
             raise ValueError(msg)
-        if self.timing in (Timing.EAGER, Timing.ROUNDS, Timing.SATURATE, Timing.NONE) and (
-            self.evaluation is Evaluation.DEPTH or not self.memo
-        ):
-            msg = f"strategy {self.name}: only lazy discovery runs without a memo or under a depth bound"
+        # The native encoding always tables and has no depth argument; only the meta encoding varies them.
+        if self.timing is not Timing.LAZY and (not self.memo or not self.tabled or self.depth):
+            msg = f"strategy {self.name}: only lazy discovery runs without a memo, without tables or under a depth bound"
             raise ValueError(msg)
         if self.canonical and self.timing is not Timing.EAGER:
             msg = f"strategy {self.name}: canonicalisation needs the eager rule set before evaluation"
@@ -85,10 +77,11 @@ STRATEGIES: dict[str, Strategy] = {
     s.name: s
     for s in (
         Strategy("exact", Timing.NONE),
-        Strategy("naive", Timing.LAZY, memo=False, evaluation=Evaluation.UNTABLED),
-        Strategy("memo-untabled", Timing.LAZY, memo=True, evaluation=Evaluation.UNTABLED),
-        Strategy("nomemo-tabled", Timing.LAZY, memo=False, evaluation=Evaluation.TABLED),
-        Strategy("depth-bounded", Timing.LAZY, memo=True, evaluation=Evaluation.DEPTH, depth=3),
+        Strategy("naive", Timing.LAZY, memo=False, tabled=False),
+        Strategy("memo-untabled", Timing.LAZY, tabled=False),
+        Strategy("nomemo-tabled", Timing.LAZY, memo=False),
+        Strategy("depth-bounded", Timing.LAZY, tabled=False, depth=3),
+        Strategy("depth-tabled", Timing.LAZY, depth=3),
         Strategy("lazy-tabled", Timing.LAZY),
         Strategy("rounds", Timing.ROUNDS),
         Strategy("eager-worklist", Timing.EAGER),
@@ -224,6 +217,9 @@ def meta_source(kb: KB, *, tabled: bool, depth: bool) -> str:
     (= (holds p ...) (let True (holds q ...) (holds r ...))). One clause asks
     the impliers op for admitted rewrites (rw q same|swap) and follows each,
     so discovery runs when evaluation first reaches a goal predicate.
+    Under a depth bound every rewrite and rule step spends one unit, and
+    tabling then keys each table on the remaining depth too, so a goal
+    reached again with the same depth left reuses its answers.
     """
     lines = [f"(= (fact {p} {a} {b}) True)" for p, a, b in kb.facts]
     if depth:
@@ -245,8 +241,8 @@ def meta_source(kb: KB, *, tabled: bool, depth: bool) -> str:
             "(= (via $q swap $x $y) (holds $q $y $x))",
         ]
         lines += [f"(= {_holds(rule.head)} {rule.metta_body(_holds)})" for rule in kb.rules]
-        if tabled:
-            lines.append("!(tabled (holds $p $x $y))")
+    if tabled:
+        lines.append("!(tabled (holds $p $x $y $d))" if depth else "!(tabled (holds $p $x $y))")
     return "\n".join(lines)
 
 
@@ -407,8 +403,8 @@ class Rewriter:
                 admitted.add(rw.key)
                 yield Expression((S.rw, S[rw.premise], S.swap if rw.swapped else S.same))
 
-        depth = strategy.evaluation is Evaluation.DEPTH
-        source = meta_source(self.kb, tabled=strategy.evaluation is Evaluation.TABLED, depth=depth)
+        depth = strategy.depth > 0
+        source = meta_source(self.kb, tabled=strategy.tabled, depth=depth)
         lit = query.lit
         a, b = _term(lit.a), _term(lit.b)
         call = f"(holds {lit.pred} {a} {b} {strategy.depth})" if depth else f"(holds {lit.pred} {a} {b})"

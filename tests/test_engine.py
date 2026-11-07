@@ -9,12 +9,12 @@ from __future__ import annotations
 import pytest
 
 from semrewrite.benchmarks import BENCHMARKS
-from semrewrite.engine import STRATEGIES, Budget, Evaluation, ParityUnionFind, Rewriter
+from semrewrite.engine import STRATEGIES, Budget, ParityUnionFind, Rewriter
 from semrewrite.judging import OracleJudge
 from semrewrite.kb import KB, Lit, Query, Rule, fixpoint, from_metta
 
 KBS = {name: make() for name, make in BENCHMARKS.items()}
-TABLED = [name for name, s in STRATEGIES.items() if s.evaluation is Evaluation.TABLED and s.timing.value != "none"]
+TABLED = [name for name, s in STRATEGIES.items() if s.tabled and not s.depth and s.timing.value != "none"]
 
 
 @pytest.mark.parametrize("name", sorted(KBS))

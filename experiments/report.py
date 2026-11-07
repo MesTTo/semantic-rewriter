@@ -19,8 +19,8 @@ ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
 REPORT = ROOT / "RESULTS.md"
 
-STRATEGY_ORDER = ["exact", "naive", "memo-untabled", "nomemo-tabled", "depth-bounded", "lazy-tabled", "rounds",
-                  "eager-worklist", "alias-canonical", "saturate"]
+STRATEGY_ORDER = ["exact", "naive", "memo-untabled", "nomemo-tabled", "depth-bounded", "depth-tabled", "lazy-tabled",
+                  "rounds", "eager-worklist", "alias-canonical", "saturate"]
 
 
 def _load(name: str) -> dict:
@@ -79,7 +79,12 @@ def _aggregates(summary: dict, judge: str, kb: str = "ALL") -> dict[tuple[str, s
 
 
 def strategies_table() -> str:
-    """Every strategy with the oracle judge over all four benchmarks, cold and warm."""
+    """Every strategy with the oracle judge over all four benchmarks, cold and warm.
+
+    Wall time is left out: per-query seconds grew over the life of the run's
+    process, so they measure when a strategy ran more
+    than what it costs; engine work is read from counted inferences instead.
+    """
     agg = _aggregates(_load_oracle(), "oracle")
     rows = []
     for s in STRATEGY_ORDER:
@@ -89,10 +94,10 @@ def strategies_table() -> str:
         rows.append([
             s, cold["precision"], cold["recall"], cold["terminated_rate"], cold["proposals_per_query"],
             warm["proposals_per_query"] if warm else "n/a", cold["expansions_per_query"],
-            int(cold["inferences_per_query"]), cold["tables_per_query"], cold["seconds_per_query"],
+            int(cold["inferences_per_query"]), cold["tables_per_query"],
         ])
     return _table(["strategy", "precision", "recall", "terminated", "proposals/query cold", "proposals/query warm",
-                   "expansions/query", "inferences/query", "tables/query", "seconds/query"], rows)
+                   "expansions/query", "inferences/query", "tables/query"], rows)
 
 
 def divergence_table() -> str:
@@ -129,7 +134,7 @@ def judges_in_kb_table() -> str:
                 kinds[k] = kinds.get(k, 0) + v
         true = kinds.get("true", 0)
         lazy = _aggregates(summary, judge).get(("lazy-tabled", "cold"), {})
-        sweep = next((s for s in summary["sweep"] if s["judge"] == judge), {})
+        sweep = next((s for s in summary["sweep"] if s["judge"] == judge and s["strategy"] == "lazy-tabled"), {})
         rows.append([
             judge, admitted, true / admitted if admitted else 1.0, kinds.get("reversed", 0), kinds.get("swap", 0),
             kinds.get("trap", 0), kinds.get("unrelated", 0), lazy.get("terminated_rate", "n/a"), lazy.get("f1", "n/a"),
@@ -147,7 +152,7 @@ def judges_strategies_table() -> str:
     rows = []
     for judge in judges:
         agg = _aggregates(summary, judge)
-        for s in ("exact", "depth-bounded", "lazy-tabled", "eager-worklist", "alias-canonical", "saturate"):
+        for s in ("exact", "depth-bounded", "depth-tabled", "lazy-tabled", "eager-worklist", "alias-canonical", "saturate"):
             a = agg.get((s, "cold"))
             if a:
                 rows.append([judge, s, a["terminated_rate"], a["precision"], a["recall"], a["f1"],
@@ -188,15 +193,17 @@ def direction_policy_table() -> str:
 
 
 def sweep_table() -> str:
-    """Lazy-tabled answer F1 at each judge's pair-calibrated default against a threshold calibrated on the other benchmarks."""
+    """Each swept strategy's answer F1 at the judge's pair-calibrated default against a threshold calibrated on the other benchmarks."""
     rows = []
     for s in _load_judges()["sweep"]:
         folds = ", ".join(f"{h['kb']} {h['threshold']:.3f}" for h in s["held_out"])
         best = max(s["curve"], key=lambda c: c["f1"])
-        rows.append([s["judge"], s["default_threshold"], s["f1_default_pooled"], folds, s["f1_held_out_pooled"],
-                     best["threshold"], best["f1"], best["precision"], best["recall"]])
-    return _table(["judge", "default threshold", "F1 at default", "held-out threshold per benchmark", "F1 held-out",
-                   "best threshold in hindsight", "F1", "precision", "recall"], rows)
+        rows.append([s["judge"], s["strategy"], s["default_threshold"], s["f1_default_pooled"], folds,
+                     s["f1_held_out_pooled"], s["precision_held_out_pooled"], s["recall_held_out_pooled"],
+                     s["finished_held_out_pooled"], best["threshold"], best["f1"]])
+    return _table(["judge", "strategy", "default threshold", "F1 at default", "held-out threshold per benchmark",
+                   "F1 held-out", "precision held-out", "recall held-out", "finished held-out",
+                   "best threshold in hindsight", "F1 in hindsight"], rows)
 
 
 def blowup_table() -> str:
