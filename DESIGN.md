@@ -61,7 +61,7 @@ The rewriter finds an answer when a chain of admitted rewrites and rules connect
 
 ### Cost
 
-An expansion of a binary predicate with k candidates asks the judge 2k + 1 questions: each candidate in both argument orders, plus whether the predicate is symmetric. For arity n it asks k·n! + 1. With a memo, the number of expansions per query is at most the number of catalogue predicates the query reaches, and a memo shared across queries brings repeated predicates to zero further questions. Engine work has no such bound: a judge that admits rewrites between most pairs of predicates makes nearly every predicate reach nearly every other, and the fixpoint, while finite, grows large. In the experiment one permissive judge needed 1,559 times the engine work of a perfect judge on the same query.
+An expansion of a binary predicate with k candidates asks the judge 2k + 1 questions: each candidate in both argument orders, plus whether the predicate is symmetric. For arity n it asks k·n! + n! − 1: each candidate under each of the n! argument mappings, plus the predicate onto itself under each mapping other than the identity. Direction-aware admission doubles that. With a memo, the number of expansions per query is at most the number of catalogue predicates the query reaches, and a memo shared across queries brings repeated predicates to zero further questions. Engine work has no such bound: a judge that admits rewrites between most pairs of predicates makes nearly every predicate reach nearly every other, and the fixpoint, while finite, grows large. In the experiment one permissive judge needed 1,559 times the engine work of a perfect judge on the same query.
 
 ## Architecture
 
@@ -125,10 +125,12 @@ Reference implementations: three NLI cross-encoders (DeBERTa-v3 base and large, 
 
 ```python
 class Admission(Protocol):
-    def admit(self, proposals: Sequence[Proposal], scores: Sequence[float], converse: Sequence[float] | None) -> list[bool]: ...
+    needs_converse: bool
+    def admit(self, proposals: Sequence[Proposal], scores: Sequence[float],
+              converse: Sequence[float] | None, threshold: float) -> list[bool]: ...
 ```
 
-It decides which scored proposals become rewrites. The default policy admits a proposal whose score reaches the judge's threshold. The direction-aware policy also scores each proposal's converse and admits it only when `score + slack >= converse score`, with the slack calibrated per judge, so a true equivalence such as `mum ⇔ mother` survives in both directions and a one-way implication read backwards is dropped. It costs one extra judge question per candidate.
+It decides which scored proposals become rewrites, given the judge's threshold. The default policy admits a proposal whose score reaches the threshold. The direction-aware policy sets `needs_converse`, so the discoverer also scores each proposal's converse, and admits a proposal only when it reaches the threshold and `score + slack >= converse score`, with the slack calibrated per judge. A true equivalence such as `mum ⇔ mother` then survives in both directions, and a one-way implication read backwards is dropped. It costs one extra judge question per candidate.
 
 A proposal of a predicate onto itself with swapped arguments, such as `spouse(y, x) ⇒ spouse(x, y)`, states that the predicate is symmetric; admitting it makes the engine try both argument orders.
 
@@ -174,14 +176,14 @@ class Engine(Protocol):
 | `reached` | reports which predicates evaluation called, needed by the rounds strategy |
 | `proofs` | returns a derivation for each answer |
 
-`Solution` carries the answers (tuples of constants matching the query's variables), a status (`ok`, `inference_limit`, `time_limit` or `error`), the work spent in the engine's own unit, the predicates reached when the engine reports them, and proofs when it provides them.
+`Budget` gives the most a run may spend: work in the engine's own unit (inferences for a Prolog engine, rule applications for the Python engine) and wall-clock seconds. `Solution` carries the answers (one tuple of constants per answer, the query's arguments with its variables filled), a status (`ok`, `work_limit`, `time_limit` or `error`), the work spent, the predicates reached when the engine reports them, and proofs when it provides them.
 
 An engine must keep this contract:
 
 1. Answers are exact. With `tabling` and `tabled=True`, the answers are those of the least model of facts, rules and rewrites, restricted to the query. The rewrites are the program's rewrites plus whatever `expand` returned.
 2. Depth has one meaning. With `depth = n`, an answer is returned exactly when it has a derivation whose rule and rewrite steps, counted along every path from the query down to a fact, number at most n. A fact needs zero steps. Tables then only change the cost, never the answers.
 3. Expansion is a rule source. When `expand` is given and the engine is `lazy`, it calls `expand(P)` before it resolves a goal on P that it has not expanded in this call to `solve`, and treats each returned rewrite as a rule for P. It may call `expand` again for the same predicate; the discoverer's memo makes that free.
-4. Budgets are hard. The engine stops when it exceeds the work or the seconds of its budget and reports which limit it hit. A budget-stopped run returns no answers; partial answers would read as complete ones.
+4. Budgets are hard. The engine stops when it exceeds the work or the seconds of its budget and reports which limit it hit, and a status of `ok` means the run stayed within both. A budget-stopped run returns no answers; partial answers would read as complete ones.
 5. Names are data. Any constant or predicate name matching `[a-z][A-Za-z0-9_]*` must work, including names the engine's own language reserves. An engine renames them internally if it must. (PyMeTTa needed this: a person called `max` collided with the builtin `max` and lost answers until the backend renamed it.)
 
 Two patterns implement the lazy capability, and either is enough:
@@ -225,8 +227,9 @@ An engine implements the protocol when it passes the conformance kit, `semrewrit
 | with tables and no depth bound, answers equal a reference fixpoint on generated programs with rewrite cycles, joins and arities 1 to 3 | `tabling` |
 | with a depth bound, answers equal the reference fixpoint restricted to derivations of at most that many steps, with tables on or off | `depth` |
 | lazy expansion gives the same answers as passing every rewrite up front | `lazy` |
-| a budget too small for the program ends the run with a limit status and no answers | always |
-| constants and predicates spelled like the engine's reserved words keep their answers | always |
+| a budget too small for the program ends the run with a limit status and no answers, and an `ok` run stayed within its budget | always |
+| constants and predicates spelled like the engine's reserved words keep their answers, with every rewrite up front and through the callback | `tabling` or `depth` |
+| each answer has one proof whose steps are program rules or rewrites, whose leaves are program facts, and whose height respects the depth bound | `proofs` |
 | without tables, a query on a rewrite cycle never finishes, and one that reaches no cycle finishes with the fixpoint | `untabled` |
 
 The reference fixpoint is a semi-naive bottom-up evaluator with no dependencies, so the kit checks an engine against something other than itself. Run it with `semrewrite conformance --engine NAME` or from pytest.
