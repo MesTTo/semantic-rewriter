@@ -1,13 +1,21 @@
 {
  "provenance": {
-  "at": "2026-11-08T03:58:15+1100",
-  "command": "python experiments/judge_eval.py --scores SCORES",
-  "commit": "5c1d914be33ffbb0658d7d9d3ed4efd3fd9e2510",
-  "uncommitted_changes": true,
+  "at": "2026-11-08T04:14:00+1100",
+  "command": "python experiments/judge_eval.py ",
+  "commit": "be6a7c6ef4f3b5854ae6b3354f20d734278fd62f",
+  "inputs_uncommitted": [],
   "pairs": {
    "levyholt": "bdabc781b3c407fe9d3874cf733a3626b6eefe21eb5b98dc294fee245407af2e",
    "wikidata": "71b6501ea8e54e68e425bdcf580543f3d3706e01e8f680abe96ed0173dd76dc5",
    "hard": "36295cc3b04ddc0fbca9f9e0d4d8528c64dfe07a2a30585e51c6d03476295155"
+  },
+  "jev_ledger": {
+   "requests": 27,
+   "questions": 17305,
+   "input_tokens": 764177,
+   "models": [
+    "jev-1.14.0"
+   ]
   }
  },
  "calibration": {
@@ -25,10 +33,10 @@
     "encoded": 9400
    },
    "seconds": {
-    "load": 44.31,
-    "letters": 1.54,
-    "typed": 1.64,
-    "instances": 0.59
+    "load": 7.9,
+    "letters": 1.74,
+    "typed": 1.82,
+    "instances": 0.77
    },
    "gpu_peak_gib": 0.148,
    "variants": {
@@ -346,10 +354,10 @@
     "encoded": 9400
    },
    "seconds": {
-    "load": 6.43,
-    "letters": 3.34,
-    "typed": 5.15,
-    "instances": 2.6
+    "load": 15.49,
+    "letters": 4.07,
+    "typed": 5.34,
+    "instances": 2.9
    },
    "gpu_peak_gib": 1.147,
    "variants": {
@@ -671,10 +679,10 @@
     "output_tokens": 0
    },
    "seconds": {
-    "load": 0.09,
+    "load": 0.13,
     "letters": 0.08,
-    "typed": 0.07,
-    "instances": 0.05
+    "typed": 0.08,
+    "instances": 0.02
    },
    "gpu_peak_gib": 0.009,
    "variants": {
@@ -991,10 +999,10 @@
     "calls": 3
    },
    "seconds": {
-    "load": 3.05,
-    "letters": 7.57,
-    "typed": 6.76,
-    "instances": 2.02
+    "load": 6.37,
+    "letters": 7.73,
+    "typed": 7.52,
+    "instances": 2.15
    },
    "gpu_peak_gib": 0.892,
    "variants": {
@@ -1311,10 +1319,10 @@
     "calls": 3
    },
    "seconds": {
-    "load": 66.7,
-    "letters": 53.9,
-    "typed": 26.2,
-    "instances": 14.66
+    "load": 28.05,
+    "letters": 22.84,
+    "typed": 23.71,
+    "instances": 7.42
    },
    "gpu_peak_gib": 1.946,
    "variants": {
@@ -1631,10 +1639,10 @@
     "calls": 3
    },
    "seconds": {
-    "load": 5.58,
-    "letters": 6.02,
-    "typed": 6.59,
-    "instances": 1.89
+    "load": 9.76,
+    "letters": 7.32,
+    "typed": 7.44,
+    "instances": 1.99
    },
    "gpu_peak_gib": 0.981,
    "variants": {
@@ -1951,10 +1959,10 @@
     "calls": 3
    },
    "seconds": {
-    "load": 1.85,
-    "letters": 26.67,
-    "typed": 28.61,
-    "instances": 8.97
+    "load": 17.25,
+    "letters": 27.53,
+    "typed": 29.14,
+    "instances": 19.24
    },
    "gpu_peak_gib": 1.227,
    "variants": {
