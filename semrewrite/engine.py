@@ -26,7 +26,7 @@ from __future__ import annotations
 import time
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 
 from metta import Expression, MeTTa, S, parse
@@ -186,6 +186,48 @@ def _term(t: str) -> str:
     return f"${t}" if is_variable(t) else t
 
 
+# Symbols the engine's own programs use; a constant spelled like one would be read as one of them.
+ENGINE_SYMBOLS = frozenset({"holds", "fact", "via", "rw", "same", "swap", "ans", "impliers", "reach", "True", "False"})
+
+
+def constant_escapes(kb: KB, reserved: Iterable[str]) -> dict[str, str]:
+    """Fresh names for the knowledge base's constants that are spelled like a reserved name.
+
+    pymetta 0.9.4 reads a constant spelled like a builtin, such as max, differently
+    once an untabled call passes it on: untabled evaluation then loses answers that
+    tabled evaluation finds (repros/builtin_named_constant_untabled.py). A constant spelled like a
+    predicate would also be evaluated as a call in the native encoding. The engine
+    renames such constants in every program it builds and renames them back in
+    the answers, so every strategy accepts any knowledge base.
+    """
+    terms = [t for _, a, b in kb.facts for t in (a, b)]
+    terms += [t for rule in kb.rules for lit in (rule.head, *rule.body) for t in (lit.a, lit.b)]
+    terms += [t for q in kb.queries for t in (q.a, q.b)]
+    constants = {t for t in terms if not is_variable(t)}
+    reserved = set(reserved)
+    taken = reserved | constants
+    escapes: dict[str, str] = {}
+    for c in sorted(constants & reserved):
+        fresh = c + "_"
+        while fresh in taken:
+            fresh += "_"
+        taken.add(fresh)
+        escapes[c] = fresh
+    return escapes
+
+
+def _rename_constants(kb: KB, escapes: dict[str, str]) -> KB:
+    def lit(l: Lit) -> Lit:
+        return Lit(l.pred, escapes.get(l.a, l.a), escapes.get(l.b, l.b))
+
+    return replace(
+        kb,
+        facts=tuple((p, escapes.get(a, a), escapes.get(b, b)) for p, a, b in kb.facts),
+        rules=tuple(Rule(lit(r.head), tuple(lit(b) for b in r.body)) for r in kb.rules),
+        queries=tuple(Query(q.pred, escapes.get(q.a, q.a), escapes.get(q.b, q.b)) for q in kb.queries),
+    )
+
+
 def _holds(lit: Lit, extra: str = "") -> str:
     tail = f" {extra}" if extra else ""
     return f"(holds {lit.pred} {_term(lit.a)} {_term(lit.b)}{tail})"
@@ -320,6 +362,22 @@ class Rewriter:
         self._rules_by_head: dict[str, list[Rule]] = defaultdict(list)
         for rule in kb.rules:
             self._rules_by_head[rule.head.pred].append(rule)
+        with MeTTa() as m:
+            builtins = set(m.self.builtins())
+        self._reserved = builtins | set(self.catalogue) | ENGINE_SYMBOLS
+        self._escapes = constant_escapes(kb, self._reserved)
+        # Every program is built from this copy; answers are renamed back in ask().
+        self._engine_kb = _rename_constants(kb, self._escapes) if self._escapes else kb
+
+    def _escaped(self, query: Query) -> Query:
+        """The query with its reserved-looking constants renamed, extending the renaming for new ones."""
+        for t in (query.a, query.b):
+            if not is_variable(t) and t in self._reserved and t not in self._escapes:
+                fresh = t + "_"
+                while fresh in self._reserved or fresh in self._escapes.values():
+                    fresh += "_"
+                self._escapes[t] = fresh
+        return Query(query.pred, self._escapes.get(query.a, query.a), self._escapes.get(query.b, query.b))
 
     def discoverer(self, memo: bool = True) -> Discoverer:
         """A fresh discoverer over this knowledge base's catalogue."""
@@ -344,7 +402,10 @@ class Rewriter:
             Timing.LAZY: self._lazy,
             Timing.ROUNDS: self._rounds,
         }[strategy.timing]
-        run(strategy, query, disc, outcome)
+        run(strategy, self._escaped(query), disc, outcome)
+        if self._escapes:
+            back = {v: k for k, v in self._escapes.items()}
+            outcome.answers = {(back.get(a, a), back.get(b, b)) for a, b in outcome.answers}
         outcome.seconds = time.perf_counter() - started
         outcome.expansions = disc.stats.expansions - before[0]
         outcome.proposals = disc.stats.proposals - before[1]
@@ -354,7 +415,7 @@ class Rewriter:
     # -- strategies ----------------------------------------------------------
 
     def _exact(self, strategy: Strategy, query: Query, disc: Discoverer, out: Outcome) -> None:
-        source, tabled = native_source(self.kb, (), tabled=True)
+        source, tabled = native_source(self._engine_kb, (), tabled=True)
         with self._context(source, tabled) as m:
             self._evaluate(m, query.metta(), out)
 
@@ -376,9 +437,9 @@ class Rewriter:
     def _eager(self, strategy: Strategy, query: Query, disc: Discoverer, out: Outcome) -> None:
         rewrites = self._worklist(query.pred, disc)
         out.admitted = {rw.key for rw in rewrites}
-        kb, swapped = self.kb, False
+        kb, swapped = self._engine_kb, False
         if strategy.canonical:
-            kb, rewrites, query, swapped = canonicalise(self.kb, rewrites, query)
+            kb, rewrites, query, swapped = canonicalise(self._engine_kb, rewrites, query)
         source, tabled = native_source(kb, rewrites, tabled=True)
         with self._context(source, tabled) as m:
             self._evaluate(m, query.metta(), out)
@@ -391,7 +452,7 @@ class Rewriter:
             for rw in disc.rewrites(p):
                 found.setdefault(rw.key, rw)
         out.admitted = set(found)
-        source, tabled = native_source(self.kb, found.values(), tabled=True)
+        source, tabled = native_source(self._engine_kb, found.values(), tabled=True)
         with self._context(source, tabled) as m:
             self._evaluate(m, query.metta(), out)
 
@@ -404,7 +465,7 @@ class Rewriter:
                 yield Expression((S.rw, S[rw.premise], S.swap if rw.swapped else S.same))
 
         depth = strategy.depth > 0
-        source = meta_source(self.kb, tabled=strategy.tabled, depth=depth)
+        source = meta_source(self._engine_kb, tabled=strategy.tabled, depth=depth)
         lit = query.lit
         a, b = _term(lit.a), _term(lit.b)
         call = f"(holds {lit.pred} {a} {b} {strategy.depth})" if depth else f"(holds {lit.pred} {a} {b})"
@@ -424,7 +485,7 @@ class Rewriter:
             yield from ()
 
         fallbacks = [f'(= ({p} $X $Y) (reach "{p}"))' for p in self.catalogue]
-        source, _ = native_source(self.kb, (), tabled=True)
+        source, _ = native_source(self._engine_kb, (), tabled=True)
         source = source + "\n" + "\n".join(fallbacks)
         tabled = sorted(self.catalogue)
         added: dict[tuple[str, str, bool], Rewrite] = {}

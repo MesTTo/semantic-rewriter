@@ -138,3 +138,19 @@ def test_naive_rediscovery_keeps_calling_the_judge() -> None:
     memo = rewriter.ask(STRATEGIES["memo-untabled"], Query("mother", "X", "Y"))
     assert memo.expansions <= len(kb.glosses)
     assert naive.expansions > 10 * len(kb.glosses)
+
+
+def test_constants_spelled_like_builtins_keep_their_answers_under_every_strategy() -> None:
+    """max and min are pymetta builtins and here also people; the engine renames them, so untabled runs lose nothing."""
+    kb = KB(
+        name="builtin-constants",
+        glosses={"parent": "{x} is a parent of {y}", "daughter_of": "{x} is a daughter of {y}"},
+        facts=(("daughter_of", "max", "hope"), ("daughter_of", "min", "max")),
+        gold=frozenset({("daughter_of", "parent", True)}),
+    )
+    rewriter = Rewriter(kb, OracleJudge.of(kb.gold), None, budget=Budget(inferences=300_000, seconds=30))
+    for name, strategy in STRATEGIES.items():
+        if strategy.timing.value == "none":
+            continue
+        assert rewriter.ask(strategy, Query("parent", "X", "max")).answers == {("hope", "max")}, name
+        assert rewriter.ask(strategy, Query("parent", "max", "Y")).answers == {("max", "min")}, name
