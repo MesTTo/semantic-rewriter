@@ -62,6 +62,24 @@ def test_parity_union_find_joins_aliases_and_spots_symmetry() -> None:
     assert "spouse" in uf.symmetric
 
 
+def test_canonicalisation_keeps_a_symmetry_found_inside_one_alias_class() -> None:
+    """p0 <=> p2 joins one class; p0(y, x) => p2(x, y) then makes it symmetric, so p0(c1, c0) holds.
+
+    The falsifying example Hypothesis found: canonicalisation once dropped every
+    rewrite inside a class as an identity and lost (c1, c0).
+    """
+    kb = KB(
+        name="generated",
+        glosses={p: f"{{x}} is {p} of {{y}}" for p in ("p0", "p1", "p2")},
+        facts=(("p0", "c0", "c1"),),
+        gold=frozenset({("p0", "p2", False), ("p0", "p2", True), ("p2", "p0", False)}),
+    )
+    query = Query("p0", "X", "Y")
+    rewriter = Rewriter(kb, OracleJudge.of(kb.gold), None)
+    outcome = rewriter.ask(STRATEGIES["alias-canonical"], query)
+    assert outcome.answers == kb.answers(query) == {("c0", "c1"), ("c1", "c0")}
+
+
 def _oracle_rewriter(kb: KB) -> Rewriter:
     return Rewriter(kb, OracleJudge.of(implication_closure(kb.gold)), None, budget=Budget(inferences=3_000_000, seconds=60))
 

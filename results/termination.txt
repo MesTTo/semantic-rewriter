@@ -1,0 +1,42 @@
+...                                                                      [100%]
+============================ Hypothesis Statistics =============================
+tests/test_termination.py::test_tabled_strategies_reach_exactly_the_fixpoint:
+
+  - during reuse phase (15.12 seconds):
+    - Typical runtimes: ~ 100-2289 ms, of which ~ 0-1 ms in data generation
+    - 36 passing, 0 failing, and 0 invalid test cases
+
+  - during generate phase (676.11 seconds):
+    - Typical runtimes: ~ 88-6329 ms, of which ~ 0-289 ms in data generation
+    - 364 passing, 0 failing, and 21 invalid test cases
+    - Events:
+      * 64.16%, query on a rewrite cycle
+      * 21.30%, query reaches no cycle
+      * 9.09%, query reaches a cycle off itself
+
+  - Stopped because settings.max_examples=400
+
+
+tests/test_termination.py::test_untabled_rewriting_loops_exactly_when_a_cycle_is_in_reach:
+
+  - during generate phase (198.05 seconds):
+    - Typical runtimes: ~ 1-741 ms, of which ~ 0-8 ms in data generation
+    - 400 passing, 0 failing, and 23 invalid test cases
+    - Events:
+      * 61.70%, looping case
+      * 21.28%, acyclic case
+      * 11.58%, no claim
+
+  - Stopped because settings.max_examples=400
+
+
+tests/test_termination.py::test_depth_bounded_rewriting_stops_and_is_sound:
+
+  - during generate phase (61.82 seconds):
+    - Typical runtimes: ~ 55-301 ms, of which ~ 0-2 ms in data generation
+    - 400 passing, 0 failing, and 21 invalid test cases
+
+  - Stopped because settings.max_examples=400
+
+
+3 passed in 957.98s (0:15:57)

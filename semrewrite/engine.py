@@ -112,7 +112,9 @@ class Outcome:
 
     status is ok, inference_limit, time_limit or error; derivations counts
     answers with repeats, so derivations above len(answers) shows the same
-    answer proved more than once.
+    answer proved more than once. `admitted` holds the implication triples the
+    judge admitted while answering, as the judge saw them (before any alias
+    renaming), so they can be scored against the gold closure.
     """
 
     kb: str
@@ -126,7 +128,7 @@ class Outcome:
     expansions: int = 0
     proposals: int = 0
     retrievals: int = 0
-    rewrites: int = 0
+    admitted: set[tuple[str, str, bool]] = field(default_factory=set)
     rounds: int = 0
     inferences: int = 0
     tables: int = 0
@@ -136,6 +138,11 @@ class Outcome:
     def terminated(self) -> bool:
         """True when evaluation finished inside its budget."""
         return self.status == "ok"
+
+    @property
+    def rewrites(self) -> int:
+        """How many distinct rewrites the judge admitted while answering."""
+        return len(self.admitted)
 
 
 class ParityUnionFind:
@@ -277,9 +284,14 @@ def canonicalise(kb: KB, rewrites: Iterable[Rewrite], query: Query) -> tuple[KB,
     for rw in rewrites:
         rc, pc = uf.find(rw.conclusion)
         rp, pp = uf.find(rw.premise)
+        swapped = rw.swapped ^ pc ^ pp
         if rc == rp:
+            # Inside one class a rewrite is the identity unless its parity is odd:
+            # p0 <=> p2 with p0(y, x) => p2(x, y) says the class is symmetric.
+            if swapped:
+                uf.symmetric.add(rc)
             continue
-        renamed = Rewrite(rc, rp, rw.swapped ^ pc ^ pp, rw.score)
+        renamed = Rewrite(rc, rp, swapped, rw.score)
         out.setdefault(renamed.key, renamed)
     for root in sorted(uf.symmetric):
         out.setdefault((root, root, True), Rewrite(root, root, True, 1.0))
@@ -367,10 +379,10 @@ class Rewriter:
 
     def _eager(self, strategy: Strategy, query: Query, disc: Discoverer, out: Outcome) -> None:
         rewrites = self._worklist(query.pred, disc)
+        out.admitted = {rw.key for rw in rewrites}
         kb, swapped = self.kb, False
         if strategy.canonical:
             kb, rewrites, query, swapped = canonicalise(self.kb, rewrites, query)
-        out.rewrites = len(rewrites)
         source, tabled = native_source(kb, rewrites, tabled=True)
         with self._context(source, tabled) as m:
             self._evaluate(m, query.metta(), out)
@@ -382,7 +394,7 @@ class Rewriter:
         for p in self.catalogue:
             for rw in disc.rewrites(p):
                 found.setdefault(rw.key, rw)
-        out.rewrites = len(found)
+        out.admitted = set(found)
         source, tabled = native_source(self.kb, found.values(), tabled=True)
         with self._context(source, tabled) as m:
             self._evaluate(m, query.metta(), out)
@@ -403,7 +415,7 @@ class Rewriter:
         term = f"(let True {call} (ans {a} {b}))"
         with self._context(source, [], ops={"impliers": impliers}, meta=True) as m:
             self._evaluate(m, term, out)
-        out.rewrites = len(admitted)
+        out.admitted = admitted
 
     def _rounds(self, strategy: Strategy, query: Query, disc: Discoverer, out: Outcome) -> None:
         """Evaluate, expand every predicate the evaluation reached, add the rewrites, evaluate again,
@@ -436,7 +448,7 @@ class Rewriter:
                         if rw.key not in added:
                             added[rw.key] = rw
                             m.self.run(rw.metta())
-        out.rewrites = len(added)
+        out.admitted = set(added)
 
     # -- engine plumbing ----------------------------------------------------------
 
