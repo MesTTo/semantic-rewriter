@@ -46,7 +46,7 @@ DEFAULT_SET = "wikidata"
 ENGINE_VARIANT = "letters"
 SPLITS = ("dev", "test")
 # What the results are a function of; other files in the tree belong to other work.
-INPUTS = ("semrewrite/judging.py", "semrewrite/judges", "semrewrite/pairs.py", "experiments/judge_eval.py", "data")
+INPUTS = ("semrewrite/model.py", "semrewrite/judges", "semrewrite/pairs.py", "experiments/judge_eval.py", "data")
 
 
 def score_rows(judge: Any, rows: Sequence[pairs.PairRow], variant: str) -> dict[str, float]:

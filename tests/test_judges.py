@@ -20,12 +20,14 @@ from semrewrite import judges, pairs
 from semrewrite.judges import NAMES, default_threshold, make
 from semrewrite.judges.base import SentenceJudge, sentence_pairs
 from semrewrite.judges.metrics import at_threshold, calibrate, direction, roc_auc
-from semrewrite.judging import Judge, OracleJudge, Predicate, Proposal
+from semrewrite.judges.oracle import OracleJudge
+from semrewrite.model import Predicate, Proposal
+from semrewrite.protocols import Judge
 
 MOTHER = Predicate("mother", "{x} is the mother of {y}")
 PARENT = Predicate("parent", "{x} is a parent of {y}")
 CHILD = Predicate("child_of", "{x} is a child of {y}")
-FORWARD, BACKWARD = Proposal(MOTHER, PARENT), Proposal(PARENT, MOTHER)
+FORWARD, BACKWARD = Proposal(MOTHER, PARENT, (0, 1)), Proposal(PARENT, MOTHER, (0, 1))
 SYMMETRIC = ("cosine-bge", "cosine-qwen3")
 
 
@@ -58,7 +60,7 @@ def test_base_refuses_scores_that_are_not_probabilities() -> None:
 
 def test_fillers_reach_the_sentences_per_proposal() -> None:
     judge = Constant(lambda p, c: 0.5)
-    judge.score([FORWARD, Proposal(CHILD, PARENT, True)], fillers=[("the first person", "the second person"), ("X", "Y")])
+    judge.score([FORWARD, Proposal(CHILD, PARENT, (1, 0))], fillers=[("the first person", "the second person"), ("X", "Y")])
     assert judge.seen == [
         ("the first person is the mother of the second person", "the first person is a parent of the second person"),
         ("Y is a child of X", "X is a parent of Y"),
@@ -105,7 +107,7 @@ def judge(request: pytest.FixtureRequest):  # noqa: ANN201
 def test_every_judge_satisfies_the_protocol_and_counts(judge) -> None:  # noqa: ANN001
     assert isinstance(judge, Judge)
     before = judge.usage["pairs"]
-    scores = judge.score([FORWARD, BACKWARD, Proposal(CHILD, PARENT, True)])
+    scores = judge.score([FORWARD, BACKWARD, Proposal(CHILD, PARENT, (1, 0))])
     assert len(scores) == 3 and all(0.0 <= s <= 1.0 for s in scores)
     assert judge.usage["pairs"] == before + 3
 

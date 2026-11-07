@@ -14,27 +14,32 @@ import math
 from collections.abc import Sequence
 from types import TracebackType
 
-from semrewrite.judging import Proposal
+from semrewrite.model import LETTERS as _LETTERS
+from semrewrite.model import Proposal
 
-Fillers = tuple[str, str]
-"""The texts standing for the conclusion's first and second argument, such as ("A", "B")."""
+Fillers = tuple[str, ...]
+"""The texts standing for the conclusion's arguments in order, such as ("A", "B"); at least the arity many."""
 
-LETTERS: Fillers = ("A", "B")
+LETTERS: Fillers = _LETTERS
 
 
 def sentence_pairs(proposals: Sequence[Proposal], fillers: Sequence[Fillers]) -> list[tuple[str, str]]:
     """Each proposal's (premise, conclusion) sentences under its own fillers.
 
-    >>> from semrewrite.judging import Predicate
+    >>> from semrewrite.model import Predicate
     >>> mother = Predicate("mother", "{x} is the mother of {y}")
     >>> parent = Predicate("parent", "{x} is a parent of {y}")
-    >>> sentence_pairs([Proposal(mother, parent)], [("the first person", "the second person")])
+    >>> sentence_pairs([Proposal(mother, parent, (0, 1))], [("the first person", "the second person")])
     [('the first person is the mother of the second person', 'the first person is a parent of the second person')]
     """
     if len(fillers) != len(proposals):
-        msg = f"{len(fillers)} filler pairs for {len(proposals)} proposals"
+        msg = f"{len(fillers)} filler tuples for {len(proposals)} proposals"
         raise ValueError(msg)
-    return [p.sentences(x, y) for p, (x, y) in zip(proposals, fillers, strict=True)]
+    for p, f in zip(proposals, fillers, strict=True):
+        if len(f) < p.conclusion.arity:
+            msg = f"{len(f)} fillers for the {p.conclusion.arity} arguments of {p.conclusion.name}"
+            raise ValueError(msg)
+    return [p.sentences(f) for p, f in zip(proposals, fillers, strict=True)]
 
 
 class SentenceJudge:

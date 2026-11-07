@@ -22,9 +22,14 @@ from collections import defaultdict
 from hypothesis import HealthCheck, event, given, settings
 from hypothesis import strategies as st
 
-from semrewrite.engine import STRATEGIES, Budget, Rewriter
-from semrewrite.judging import OracleJudge
-from semrewrite.kb import KB, Lit, Query, Rule
+import pytest
+
+from semrewrite.engines import available, make
+from semrewrite.judges.oracle import OracleJudge
+from semrewrite.kb import KB, atom
+from semrewrite.model import Rule
+from semrewrite.protocols import Budget
+from semrewrite.rewriter import STRATEGIES, Rewriter
 
 CONSTANTS = ("c0", "c1", "c2", "c3")
 TABLED = [n for n, s in STRATEGIES.items() if s.tabled and not s.depth and s.timing.value != "none"]
@@ -53,10 +58,10 @@ def catalogues(draw: st.DrawFn) -> KB:
     rules: tuple[Rule, ...] = ()
     if n >= 3 and draw(st.booleans()):
         head, left, right = draw(st.lists(pred, min_size=3, max_size=3))
-        rules = (Rule(Lit(head, "X", "Z"), (Lit(left, "X", "Y"), Lit(right, "Y", "Z"))),)
+        rules = (Rule(atom(head, "X", "Z"), (atom(left, "X", "Y"), atom(right, "Y", "Z"))),)
     term = st.sampled_from(("X",) + CONSTANTS)
     qa, qb = draw(term), draw(st.sampled_from(("Y",) + CONSTANTS))
-    query = Query(draw(pred), qa, qb)
+    query = atom(draw(pred), qa, qb)
     glosses = {p: f"{{x}} is {p} of {{y}}" for p in preds}
     return KB("generated", glosses, tuple(sorted(set(facts))), rules, frozenset(gold), (query,))
 
@@ -114,31 +119,40 @@ def _acyclic_from(kb: KB, start: str) -> bool:
     return visit(start)
 
 
-def _rewriter(kb: KB, inferences: int) -> Rewriter:
-    return Rewriter(kb, OracleJudge.of(kb.gold), None, budget=Budget(inferences=inferences, seconds=60))
+def _rewriter(kb: KB, work: int, engine_name: str) -> Rewriter:
+    return Rewriter(kb, OracleJudge(kb.gold), make(engine_name), None, budget=Budget(work=work, seconds=60))
+
+
+def _engines(*capabilities: str) -> list[str]:
+    return [e for e in available() if all(getattr(make(e).capabilities, c) for c in capabilities)]
 
 
 SETTINGS = settings(max_examples=400, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 
 
+@pytest.mark.parametrize("engine_name", _engines("tabling"))
 @SETTINGS
 @given(catalogues())
-def test_tabled_strategies_reach_exactly_the_fixpoint(kb: KB) -> None:
+def test_tabled_strategies_reach_exactly_the_fixpoint(engine_name: str, kb: KB) -> None:
     """Every tabled strategy stops inside the budget with exactly the fixpoint's answers."""
     query = kb.queries[0]
     gold = kb.answers(query)
     event("query on a rewrite cycle" if _on_rewrite_cycle(kb, query.pred) else
           "query reaches no cycle" if _acyclic_from(kb, query.pred) else "query reaches a cycle off itself")
-    rewriter = _rewriter(kb, inferences=2_000_000)
+    rewriter = _rewriter(kb, 2_000_000, engine_name)
+    caps = make(engine_name).capabilities
     for name in TABLED:
-        outcome = rewriter.ask(STRATEGIES[name], query)
-        assert outcome.terminated, f"{name} did not terminate on {query}: {outcome.status} {outcome.detail}"
+        if not all(getattr(caps, c) for c, need in STRATEGIES[name].needs().items() if need):
+            continue
+        outcome = rewriter.ask(query, STRATEGIES[name])
+        assert outcome.finished, f"{name} did not terminate on {query}: {outcome.status} {outcome.detail}"
         assert outcome.answers == gold, f"{name} on {query}"
 
 
+@pytest.mark.parametrize("engine_name", _engines("untabled", "lazy"))
 @SETTINGS
 @given(catalogues())
-def test_untabled_rewriting_loops_exactly_when_a_cycle_is_in_reach(kb: KB) -> None:
+def test_untabled_rewriting_loops_exactly_when_a_cycle_is_in_reach(engine_name: str, kb: KB) -> None:
     """On a rewrite cycle through the query, untabled rewriting never stops; with no cycle in reach it stops correctly."""
     query = kb.queries[0]
     looping = _on_rewrite_cycle(kb, query.pred)
@@ -146,26 +160,30 @@ def test_untabled_rewriting_loops_exactly_when_a_cycle_is_in_reach(kb: KB) -> No
     event("looping case" if looping else "acyclic case" if acyclic else "no claim")
     if not (looping or acyclic):
         return
-    rewriter = _rewriter(kb, inferences=150_000)
+    rewriter = _rewriter(kb, 150_000, engine_name)
     for name in UNTABLED:
-        outcome = rewriter.ask(STRATEGIES[name], query)
+        outcome = rewriter.ask(query, STRATEGIES[name])
         if looping:
-            assert outcome.status in ("inference_limit", "time_limit"), f"{name} stopped on a cycle through {query}"
+            assert outcome.status in ("work_limit", "time_limit"), f"{name} stopped on a cycle through {query}"
         else:
-            assert outcome.terminated, f"{name} did not stop on an acyclic {query}: {outcome.status}"
+            assert outcome.finished, f"{name} did not stop on an acyclic {query}: {outcome.status}"
             assert outcome.answers == kb.answers(query), f"{name} on acyclic {query}"
 
 
+@pytest.mark.parametrize("engine_name", _engines("depth", "lazy"))
 @SETTINGS
 @given(catalogues())
-def test_depth_bounded_rewriting_stops_and_is_sound(kb: KB) -> None:
+def test_depth_bounded_rewriting_stops_and_is_sound(engine_name: str, kb: KB) -> None:
     """A depth bound always stops the search, what it finds is true, and tables change only its cost."""
     query = kb.queries[0]
-    rewriter = _rewriter(kb, inferences=2_000_000)
+    rewriter = _rewriter(kb, 2_000_000, engine_name)
+    caps = make(engine_name).capabilities
     by_depth: dict[int, list[tuple[str, frozenset]]] = defaultdict(list)
     for name in DEPTH:
-        outcome = rewriter.ask(STRATEGIES[name], query)
-        assert outcome.terminated, f"{name} on {query}: {outcome.status}"
+        if not all(getattr(caps, c) for c, need in STRATEGIES[name].needs().items() if need):
+            continue
+        outcome = rewriter.ask(query, STRATEGIES[name])
+        assert outcome.finished, f"{name} on {query}: {outcome.status}"
         assert outcome.answers <= kb.answers(query), f"{name} on {query}"
         by_depth[STRATEGIES[name].depth].append((name, frozenset(outcome.answers)))
     for depth, found in by_depth.items():

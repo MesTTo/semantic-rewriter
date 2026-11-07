@@ -18,38 +18,41 @@ from pathlib import Path
 
 from semrewrite.benchmarks import BENCHMARKS
 from semrewrite.discovery import ScoreCache
-from semrewrite.engine import STRATEGIES, Budget, Rewriter
+from semrewrite.engines import make as make_engine
 from semrewrite.judges import make
-from semrewrite.judging import OracleJudge
-from semrewrite.kb import Query
-from semrewrite.retrieve import Retriever
+from semrewrite.judges.oracle import OracleJudge
+from semrewrite.kb import atom
+from semrewrite.protocols import Budget
+from semrewrite.retrieve import EmbeddingRetriever
+from semrewrite.rewriter import Rewriter
 
 ROOT = Path(__file__).resolve().parents[1]
 CASES = (
-    ("family", Query("parent", "X", "Y")),
-    ("family", Query("ancestor", "X", "leo")),
-    ("work", Query("superior_of", "X", "finn")),
-    ("geography", Query("inside", "X", "palir")),
-    ("medicine", Query("brings_about", "X", "numbness")),
+    ("family", atom("parent", "X", "Y")),
+    ("family", atom("ancestor", "X", "leo")),
+    ("work", atom("superior_of", "X", "finn")),
+    ("geography", atom("inside", "X", "palir")),
+    ("medicine", atom("brings_about", "X", "numbness")),
 )
 
 
 def main() -> None:
     """Run every case under both judges with lazy-tabled and eager-worklist, and write the rows."""
-    retriever = Retriever()
+    retriever = EmbeddingRetriever()
+    engine = make_engine("pymetta")
     permissive = make("nli-deberta-base")
     rows = []
     for kb_name, query in CASES:
         kb = BENCHMARKS[kb_name]()
         gold = kb.answers(query)
-        judges = (("nli-deberta-base", ScoreCache(permissive)), ("oracle", ScoreCache(OracleJudge.of(kb.entailed()))))
+        judges = (("nli-deberta-base", ScoreCache(permissive)), ("oracle", ScoreCache(OracleJudge(kb.entailed()))))
         for judge_name, scorer in judges:
-            rewriter = Rewriter(kb, scorer, retriever, k=8, budget=Budget(inferences=200_000_000, seconds=900))
+            rewriter = Rewriter(kb, scorer, engine, retriever, k=8, budget=Budget(work=200_000_000, seconds=900))
             for strategy in ("lazy-tabled", "eager-worklist"):
                 started = time.perf_counter()
-                o = rewriter.ask(STRATEGIES[strategy], query)
+                o = rewriter.ask(query, strategy)
                 rows.append({"kb": kb_name, "query": str(query), "judge": judge_name, "strategy": strategy, "status": o.status,
-                             "inferences": o.inferences, "tables": o.tables, "rewrites": o.rewrites, "answers": len(o.answers),
+                             "work": o.work, "tables": o.tables, "rewrites": len(o.admitted), "answers": len(o.answers),
                              "true": len(o.answers & gold), "gold": len(gold), "seconds": round(time.perf_counter() - started, 2)})
                 print(json.dumps(rows[-1]), flush=True)
     permissive.close()

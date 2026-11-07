@@ -23,7 +23,7 @@ from collections import Counter, defaultdict, deque
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
-from semrewrite.judging import Predicate, Proposal
+from semrewrite.model import Predicate, Proposal
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 RAW = ROOT / "data" / "raw"
@@ -65,7 +65,7 @@ class PairRow:
 
     @property
     def proposal(self) -> Proposal:
-        return Proposal(self.premise, self.conclusion, self.swapped)
+        return Proposal(self.premise, self.conclusion, (1, 0) if self.swapped else (0, 1))
 
     def to_json(self) -> dict[str, object]:
         return {

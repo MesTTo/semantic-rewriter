@@ -24,7 +24,8 @@ import random
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 
-from semrewrite.kb import KB, Lit, Query, Rule
+from semrewrite.kb import KB, atom
+from semrewrite.model import Rule
 
 T, F = True, False
 
@@ -41,7 +42,7 @@ def _choose(rng: random.Random, options: Sequence[tuple[float, Callable[[], tupl
 
 
 def _rule(head: tuple[str, str, str], *body: tuple[str, str, str]) -> Rule:
-    return Rule(Lit(*head), tuple(Lit(*b) for b in body))
+    return Rule(atom(*head), tuple(atom(*b) for b in body))
 
 
 def _transitive(name: str, step: str) -> tuple[Rule, Rule]:
@@ -150,15 +151,15 @@ def family(seed: int = 7) -> KB:
     married = [p for pair in couples for p in pair]
     siblings = [k for kids in by_parents.values() if len(kids) > 1 for k in kids]
     queries = (
-        *(Query("parent", "X", c) for c in rng.sample(level2 + level3, 3)),
-        *(Query("child", "X", p) for p in rng.sample([person for pair in by_parents for person in pair][:12], 2)),
-        *(Query("mother", "X", c) for c in rng.sample(level1 + level2, 2)),
-        Query("father", "X", rng.choice(level2)),
-        *(Query("spouse", "X", p) for p in rng.sample(married, 2)),
-        *(Query("sibling", "X", p) for p in rng.sample(siblings, 2)),
-        *(Query("grandparent", "X", c) for c in rng.sample(level2 + level3, 2)),
-        *(Query("ancestor", "X", c) for c in rng.sample(level3, 2)),
-        Query("parent", "X", "Y"),
+        *(atom("parent", "X", c) for c in rng.sample(level2 + level3, 3)),
+        *(atom("child", "X", p) for p in rng.sample([person for pair in by_parents for person in pair][:12], 2)),
+        *(atom("mother", "X", c) for c in rng.sample(level1 + level2, 2)),
+        atom("father", "X", rng.choice(level2)),
+        *(atom("spouse", "X", p) for p in rng.sample(married, 2)),
+        *(atom("sibling", "X", p) for p in rng.sample(siblings, 2)),
+        *(atom("grandparent", "X", c) for c in rng.sample(level2 + level3, 2)),
+        *(atom("ancestor", "X", c) for c in rng.sample(level3, 2)),
+        atom("parent", "X", "Y"),
     )
     traps = frozenset({"guardian_of", "stepmother_of", "godfather_of", "aunt_of", "uncle_of", "grandmother_of"})
     return KB("family", glosses, tuple(sorted(facts)), rules, frozenset(gold), queries, traps)
@@ -248,13 +249,13 @@ def work(seed: int = 11) -> KB:
         *_transitive("superior_of", "boss_of"),
     )
     queries = (
-        *(Query("boss_of", "X", p) for p in rng.sample(staff[1:], 3)),
-        *(Query("subordinate_of", "X", b) for b in rng.sample(sorted({b for b, _ in manages}), 2)),
-        *(Query("employee_of", "X", org) for org in ("acme", "globex")),
-        *(Query("employer_of", "X", p) for p in rng.sample(staff, 2)),
-        *(Query("skip_level_boss", "X", p) for p in rng.sample(acme[4:], 2)),
-        *(Query("superior_of", "X", p) for p in rng.sample(acme[-6:], 2)),
-        Query("boss_of", "X", "Y"),
+        *(atom("boss_of", "X", p) for p in rng.sample(staff[1:], 3)),
+        *(atom("subordinate_of", "X", b) for b in rng.sample(sorted({b for b, _ in manages}), 2)),
+        *(atom("employee_of", "X", org) for org in ("acme", "globex")),
+        *(atom("employer_of", "X", p) for p in rng.sample(staff, 2)),
+        *(atom("skip_level_boss", "X", p) for p in rng.sample(acme[4:], 2)),
+        *(atom("superior_of", "X", p) for p in rng.sample(acme[-6:], 2)),
+        atom("boss_of", "X", "Y"),
     )
     traps = frozenset({"mentor_of", "client_of", "founded", "invested_in", "colleague_of"})
     return KB("work", glosses, tuple(sorted(facts)), rules, frozenset(gold), queries, traps)
@@ -350,13 +351,13 @@ def geography(seed: int = 13) -> KB:
              _rule(("located_in", "X", "Z"), ("located_in", "X", "Y"), ("located_in", "Y", "Z")))
     regions = [r for rs in countries.values() for r in rs]
     queries = (
-        *(Query("within", "X", r) for r in rng.sample(regions, 2)),
-        *(Query("within", c, "Y") for c in rng.sample(all_cities, 2)),
-        *(Query("encloses", "X", c) for c in rng.sample(all_cities, 2)),
-        *(Query("neighbour_of", "X", c) for c in rng.sample(list(countries), 2)),
-        *(Query("inside", c, "Y") for c in rng.sample(all_cities, 2)),
-        *(Query("inside", "X", c) for c in continents),
-        *(Query("capital_of", "X", c) for c in rng.sample(list(countries), 2)),
+        *(atom("within", "X", r) for r in rng.sample(regions, 2)),
+        *(atom("within", c, "Y") for c in rng.sample(all_cities, 2)),
+        *(atom("encloses", "X", c) for c in rng.sample(all_cities, 2)),
+        *(atom("neighbour_of", "X", c) for c in rng.sample(list(countries), 2)),
+        *(atom("inside", c, "Y") for c in rng.sample(all_cities, 2)),
+        *(atom("inside", "X", c) for c in continents),
+        *(atom("capital_of", "X", c) for c in rng.sample(list(countries), 2)),
     )
     traps = frozenset({"largest_city_of", "former_capital_of", "near", "twinned_with"})
     return KB("geography", glosses, tuple(sorted(facts)), rules, frozenset(gold), queries, traps)
@@ -415,13 +416,13 @@ def medicine(seed: int = 17) -> KB:
     }
     rules = (_rule(("indirectly_brings_about", "X", "Z"), ("brings_about", "X", "Y"), ("brings_about", "Y", "Z")),)
     queries = (
-        *(Query("remedy_for", "X", d) for d in ("flu", "migraine", "headache")),
-        *(Query("brings_about", d, "Y") for d in rng.sample(diseases, 3)),
-        *(Query("brings_about", "X", s) for s in rng.sample(symptoms, 2)),
-        *(Query("result_of", s, "Y") for s in rng.sample(symptoms, 2)),
-        Query("indirectly_brings_about", "diabetes", "Y"),
-        Query("indirectly_brings_about", "gastritis", "Y"),
-        Query("remedy_for", "X", "Y"),
+        *(atom("remedy_for", "X", d) for d in ("flu", "migraine", "headache")),
+        *(atom("brings_about", d, "Y") for d in rng.sample(diseases, 3)),
+        *(atom("brings_about", "X", s) for s in rng.sample(symptoms, 2)),
+        *(atom("result_of", s, "Y") for s in rng.sample(symptoms, 2)),
+        atom("indirectly_brings_about", "diabetes", "Y"),
+        atom("indirectly_brings_about", "gastritis", "Y"),
+        atom("remedy_for", "X", "Y"),
     )
     traps = frozenset({"correlated_with", "associated_with", "prevents", "contraindicated_for"})
     return KB("medicine", glosses, tuple(sorted(facts)), rules, frozenset(gold), queries, traps)

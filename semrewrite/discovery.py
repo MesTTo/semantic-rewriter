@@ -1,12 +1,14 @@
-"""Purpose: semantic rule discovery: for a goal predicate, retrieve candidate
-predicates, ask a judge whether each entails the goal in either argument
-order, and return the admitted rewrites, counting the model work spent.
+"""Purpose: semantic rule discovery: for a goal predicate, retrieve candidate premises
+of the same arity, ask a judge whether each entails the goal under every
+argument mapping, admit what the admission policy accepts, and return the
+rewrites, counting the model work spent.
 
-A rewrite (= (parent $X $Y) (mother $X $Y)) is admitted when the judge scores
-"mother(A, B) entails parent(A, B)" at or above its threshold; a swapped one,
-(= (parent $X $Y) (child_of $Y $X)), when it scores "child_of(B, A) entails
-parent(A, B)". The goal against itself swapped asks whether the goal is
-symmetric, as spouse is.
+For a binary goal parent with candidate mother, the judge is asked whether
+"A is the mother of B" entails "A is a parent of B" (mapping (0, 1)) and
+whether "B is the mother of A" does (mapping (1, 0)); the goal against itself
+under each non-identity mapping asks whether the goal is symmetric, as spouse
+is. An expansion of an n-ary goal with k candidates asks k·n! + n! - 1
+proposals, 2k + 1 for binary goals.
 """
 
 from __future__ import annotations
@@ -14,43 +16,22 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 
-from semrewrite.judging import Judge, Predicate, Proposal
-from semrewrite.kb import Rule, implication_rule
-from semrewrite.retrieve import Retriever
-
-
-@dataclass(frozen=True, slots=True)
-class Rewrite:
-    """An admitted implication premise => conclusion, read as a rewrite of conclusion goals."""
-
-    conclusion: str
-    premise: str
-    swapped: bool
-    score: float
-
-    @property
-    def key(self) -> tuple[str, str, bool]:
-        """The implication triple, as semrewrite.judging.Proposal.key."""
-        return (self.premise, self.conclusion, self.swapped)
-
-    def rule(self) -> Rule:
-        """The Horn rule the rewrite states."""
-        return implication_rule(self.premise, self.conclusion, self.swapped)
-
-    def metta(self) -> str:
-        """The rewrite as a native equation, such as (= (parent $X $Y) (child_of $Y $X))."""
-        return self.rule().metta()
+from semrewrite.admission import Threshold
+from semrewrite.model import Key, Predicate, Proposal, Rewrite, identity, mappings
+from semrewrite.protocols import Admission, Judge, Retriever
 
 
 class ScoreCache:
-    """A judge wrapper that remembers scores, so strategies compared on one
-    judge share its forward passes while each still counts every proposal it
-    asked for. `logical` counts proposals asked, `computed` those the judge saw.
+    """A judge wrapper that remembers scores by the sentences a proposal states.
+
+    Strategies compared on one judge share its model calls while each still
+    counts every proposal it asked for: `logical` counts proposals asked,
+    `computed` those the judge actually scored.
     """
 
     def __init__(self, judge: Judge) -> None:
         self.judge = judge
-        self._scores: dict[tuple[str, str, bool], float] = {}
+        self._scores: dict[tuple[str, str, tuple[int, ...]], float] = {}
         self.logical = 0
         self.computed = 0
 
@@ -60,8 +41,8 @@ class ScoreCache:
         return self.judge.threshold
 
     @staticmethod
-    def _key(p: Proposal) -> tuple[str, str, bool]:
-        return (p.premise.gloss, p.conclusion.gloss, p.swapped)
+    def _key(p: Proposal) -> tuple[str, str, tuple[int, ...]]:
+        return (p.premise.gloss, p.conclusion.gloss, p.mapping)
 
     def scores(self) -> list[float]:
         """Every score computed so far, one per distinct proposal."""
@@ -74,7 +55,11 @@ class ScoreCache:
         if missing:
             self.computed += len(missing)
             for p, s in zip(missing, self.judge.score(missing), strict=True):
-                self._scores[self._key(p)] = float(s)
+                s = float(s)
+                if not 0.0 <= s <= 1.0:
+                    msg = f"judge {self.judge.name} scored {s} for {p.key}; scores must lie in [0, 1]"
+                    raise ValueError(msg)
+                self._scores[self._key(p)] = s
         return [self._scores[self._key(p)] for p in proposals]
 
 
@@ -92,8 +77,9 @@ class Discoverer:
     """Admitted rewrites per goal predicate over a frozen catalogue.
 
     With `memo` each predicate is expanded once and later asks answer from the
-    memo; without it every ask retrieves and judges again, which is what a
-    rewriter that rediscovers on every reduction step does.
+    memo, which is what makes rewriting terminate under tables; without it
+    every ask retrieves and judges again, as a rewriter that rediscovers on
+    every reduction step does.
     """
 
     def __init__(
@@ -102,25 +88,42 @@ class Discoverer:
         retriever: Retriever | None,
         scorer: ScoreCache,
         *,
-        k: int,
-        memo: bool,
+        k: int = 8,
+        memo: bool = True,
+        admission: Admission | None = None,
     ) -> None:
         self.catalogue = dict(catalogue)
         self.retriever = retriever
         self.scorer = scorer
         self.k = k
         self.memo = memo
+        self.admission: Admission = admission if admission is not None else Threshold()
         self.stats = DiscoveryStats()
         self._memo: dict[str, tuple[Rewrite, ...]] = {}
 
     def candidates(self, goal: str) -> list[str]:
-        """The k retrieved neighbours of `goal`, or the whole catalogue when there is no retriever."""
+        """The k retrieved neighbours of `goal` of its arity, or every predicate of its arity without a retriever."""
         self.stats.retrievals += 1
+        target = self.catalogue[goal]
+        among = {n: p for n, p in self.catalogue.items() if n != goal and p.arity == target.arity}
         if self.retriever is None:
-            return sorted(name for name in self.catalogue if name != goal)
-        return [name for name, _ in self.retriever.top_k(self.catalogue[goal], self.catalogue, self.k)]
+            return sorted(among)
+        found = [name for name, _ in self.retriever.top_k(target, among, self.k)]
+        stray = [n for n in found if n not in among]
+        if stray:
+            msg = f"retriever proposed {stray} for {goal}, outside the same-arity catalogue"
+            raise ValueError(msg)
+        return found
 
-    # Time: one retrieval plus one judge call over 2k + 1 proposals per expansion.
+    def proposals(self, goal: str) -> list[Proposal]:
+        """Every proposal one expansion of `goal` asks: each candidate under each mapping, and the goal's own symmetries."""
+        target = self.catalogue[goal]
+        out = [Proposal(self.catalogue[q], target, m) for q in self.candidates(goal) for m in mappings(target.arity)]
+        out += [Proposal(target, target, m) for m in mappings(target.arity) if m != identity(target.arity)]
+        return out
+
+    # Time: one retrieval plus one judge call over k·n! + n! - 1 proposals per expansion,
+    # twice that with a policy that needs converse scores.
     def rewrites(self, goal: str) -> tuple[Rewrite, ...]:
         """Admitted rewrites concluding `goal`, strongest first."""
         if self.memo and goal in self._memo:
@@ -130,24 +133,20 @@ class Discoverer:
             raise KeyError(msg)
         self.stats.expansions += 1
         self.stats.expanded.add(goal)
-        target = self.catalogue[goal]
-        proposals = [
-            Proposal(self.catalogue[q], target, swapped)
-            for q in self.candidates(goal)
-            for swapped in (False, True)
-        ]
-        proposals.append(Proposal(target, target, swapped=True))
+        proposals = self.proposals(goal)
         scores = self.scorer.score(proposals)
-        self.stats.proposals += len(proposals)
+        converse = self.scorer.score([p.converse() for p in proposals]) if self.admission.needs_converse else None
+        self.stats.proposals += len(proposals) * (2 if converse is not None else 1)
+        verdicts = self.admission.admit(proposals, scores, converse, self.scorer.threshold)
         admitted = sorted(
-            (
-                Rewrite(goal, p.premise.name, p.swapped, s)
-                for p, s in zip(proposals, scores, strict=True)
-                if s >= self.scorer.threshold
-            ),
-            key=lambda r: (-r.score, r.premise, r.swapped),
+            (p.rewrite(s) for p, s, ok in zip(proposals, scores, verdicts, strict=True) if ok),
+            key=lambda r: (-r.score, r.premise, r.mapping),
         )
         found = tuple(admitted)
         if self.memo:
             self._memo[goal] = found
         return found
+
+    def keys(self) -> set[Key]:
+        """Every rewrite key this discoverer has admitted so far."""
+        return {rw.key for found in self._memo.values() for rw in found}

@@ -92,17 +92,17 @@ def strategies_table() -> str:
         if cold is None:
             continue
         rows.append([
-            s, cold["precision"], cold["recall"], cold["terminated_rate"], cold["proposals_per_query"],
+            s, cold["precision"], cold["recall"], cold["finished_rate"], cold["proposals_per_query"],
             warm["proposals_per_query"] if warm else "n/a", cold["expansions_per_query"],
-            int(cold["inferences_per_query"]), cold["tables_per_query"],
+            int(cold["work_per_query"]), cold["tables_per_query"],
         ])
-    return _table(["strategy", "precision", "recall", "terminated", "proposals/query cold", "proposals/query warm",
+    return _table(["strategy", "precision", "recall", "finished", "proposals/query cold", "proposals/query warm",
                    "expansions/query", "inferences/query", "tables/query"], rows)
 
 
 def divergence_table() -> str:
     """The untabled strategies' work at rising budgets on mother(X, Y), against lazy-tabled."""
-    rows = [[d["strategy"], d["budget"], d["status"], d["inferences"], d["expansions"], d["proposals"], d["answers"], d["seconds"]]
+    rows = [[d["strategy"], d["budget"], d["status"], d["work"], d["expansions"], d["proposals"], d["answers"], d["seconds"]]
             for d in _load("implementations.oracle.json")["divergence"]]
     return _table(["strategy", "budget (inferences)", "status", "inferences", "expansions", "proposals", "answers", "seconds"], rows)
 
@@ -137,7 +137,7 @@ def judges_in_kb_table() -> str:
         sweep = next((s for s in summary["sweep"] if s["judge"] == judge and s["strategy"] == "lazy-tabled"), {})
         rows.append([
             judge, admitted, true / admitted if admitted else 1.0, kinds.get("reversed", 0), kinds.get("swap", 0),
-            kinds.get("trap", 0), kinds.get("unrelated", 0), lazy.get("terminated_rate", "n/a"), lazy.get("f1", "n/a"),
+            kinds.get("trap", 0), kinds.get("unrelated", 0), lazy.get("finished_rate", "n/a"), lazy.get("f1", "n/a"),
             sweep.get("f1_held_out_pooled", "n/a"),
         ])
     return _table(["judge", "rewrites admitted", "rewrite precision", "reversed", "wrong argument order", "trap",
@@ -155,7 +155,7 @@ def judges_strategies_table() -> str:
         for s in ("exact", "depth-bounded", "depth-tabled", "lazy-tabled", "eager-worklist", "alias-canonical", "saturate"):
             a = agg.get((s, "cold"))
             if a:
-                rows.append([judge, s, a["terminated_rate"], a["precision"], a["recall"], a["f1"],
+                rows.append([judge, s, a["finished_rate"], a["precision"], a["recall"], a["f1"],
                              a["precision_finished"], a["recall_finished"], a["proposals_per_query"]])
     return _table(["judge", "strategy", "finished", "precision", "recall", "F1", "precision (finished)",
                    "recall (finished)", "proposals/query"], rows)
@@ -208,7 +208,7 @@ def sweep_table() -> str:
 
 def blowup_table() -> str:
     """A permissive judge's closure against the oracle's on the same hard queries, with no budget in the way."""
-    rows = [[r["query"], r["judge"], r["strategy"], r["status"], r["inferences"], r["tables"], r["rewrites"],
+    rows = [[r["query"], r["judge"], r["strategy"], r["status"], r["work"], r["tables"], r["rewrites"],
              f"{r['true']}/{r['answers']}", r["gold"]] for r in _load("blowup.json")]
     return _table(["query", "judge", "strategy", "status", "inferences", "tables", "rewrites", "true/answers", "gold"], rows)
 

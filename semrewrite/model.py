@@ -108,7 +108,9 @@ class Predicate:
     arity: int = field(init=False)
 
     def __post_init__(self) -> None:
-        check_symbol(self.name, "predicate")
+        if not self.name:
+            msg = "a predicate needs a name"
+            raise ValueError(msg)
         positions = set(gloss_positions(self.gloss))
         if not positions or positions != set(range(len(positions))):
             msg = f"gloss of {self.name!r} must mention every argument position from 0 up: {self.gloss!r}"
@@ -264,9 +266,13 @@ class Proposal:
         """For binary predicates, whether the premise reads its arguments the other way round."""
         return self.mapping == (1, 0)
 
-    def sentences(self, fillers: Sequence[str]) -> tuple[str, str]:
+    def sentences(self, fillers: Sequence[str] = ("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")) -> tuple[str, str]:
         """The premise and conclusion sentences, conclusion argument i written as fillers[i]."""
-        return self.premise.sentence(*(fillers[m] for m in self.mapping)), self.conclusion.sentence(*fillers)
+        if len(fillers) < self.conclusion.arity:
+            msg = f"{len(fillers)} fillers for the {self.conclusion.arity} arguments of {self.conclusion.name}"
+            raise ValueError(msg)
+        premise = self.premise.sentence(*(fillers[m] for m in self.mapping))
+        return premise, self.conclusion.sentence(*fillers[: self.conclusion.arity])
 
     def converse(self) -> Proposal:
         """The proposal read backwards, conclusion ⇒ premise, which a direction judge should score differently."""

@@ -1,10 +1,11 @@
-"""Purpose: rank catalogue predicates by gloss-embedding similarity, the
-candidate step before a judge sees any proposal.
+"""Purpose: candidate retrieval, the step before a judge sees any proposal:
+EmbeddingRetriever ranks catalogue predicates by gloss-embedding similarity,
+and AllCandidates proposes every predicate, which suits small catalogues.
 
-Each predicate's gloss is filled with neutral placeholders ("A is the mother
-of B") and embedded once; a goal's candidates are the k catalogue predicates
+Each predicate's gloss is filled with neutral letters ("A is the mother of B")
+and embedded once; a goal's candidates are the k predicates of its arity
 nearest it by cosine. Retrieval is symmetric and says nothing about direction;
-the judge decides which way, and whether arguments swap.
+the judge decides which way, and how the arguments map.
 """
 
 from __future__ import annotations
@@ -13,19 +14,19 @@ from collections.abc import Iterable, Mapping
 
 import numpy as np
 
-from semrewrite.judging import Predicate
+from semrewrite.model import LETTERS, Predicate
 
 DEFAULT_MODEL = "BAAI/bge-small-en-v1.5"
 
 
-class Retriever:
+class EmbeddingRetriever:
     """Top-k gloss neighbours over a catalogue, with embedding work counted in `usage`.
 
     Vectors are cached by gloss sentence, so a predicate name reused with a
     different gloss in another knowledge base gets its own vector.
     """
 
-    def __init__(self, model: str = DEFAULT_MODEL, fillers: tuple[str, str] = ("A", "B")) -> None:
+    def __init__(self, model: str = DEFAULT_MODEL, fillers: tuple[str, ...] = LETTERS) -> None:
         from sentence_transformers import SentenceTransformer
 
         self.model_name = model
@@ -35,7 +36,7 @@ class Retriever:
         self.usage: dict[str, int] = {"encoded": 0, "queries": 0}
 
     def _sentence(self, predicate: Predicate) -> str:
-        return predicate.sentence(*self.fillers)
+        return predicate.sentence(*self.fillers[: predicate.arity])
 
     # Time: one batched forward pass over the glosses not yet cached.
     def index(self, predicates: Iterable[Predicate]) -> None:
@@ -49,14 +50,21 @@ class Retriever:
 
     # Time: |among| dot products of the embedding width, then a sort of |among|.
     def top_k(self, goal: Predicate, among: Mapping[str, Predicate], k: int) -> list[tuple[str, float]]:
-        """The k predicates of `among`, `goal` excluded, nearest `goal` by cosine, nearest first."""
+        """The k predicates of `among` of the goal's arity, `goal` excluded, nearest `goal` by cosine, nearest first."""
         self.index([goal, *among.values()])
         self.usage["queries"] += 1
         anchor = self._vectors[self._sentence(goal)]
         scored = [
             (name, float(anchor @ self._vectors[self._sentence(p)]))
             for name, p in among.items()
-            if name != goal.name
+            if name != goal.name and p.arity == goal.arity
         ]
         scored.sort(key=lambda item: (-item[1], item[0]))
         return scored[:k]
+
+
+class AllCandidates:
+    """Every predicate of the goal's arity, by name; right when the catalogue is small enough to judge whole."""
+
+    def top_k(self, goal: Predicate, among: Mapping[str, Predicate], k: int) -> list[tuple[str, float]]:
+        return [(n, 1.0) for n in sorted(among) if n != goal.name and among[n].arity == goal.arity]

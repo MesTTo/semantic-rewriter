@@ -1,19 +1,23 @@
 """Purpose: reproduce, deterministically, an inference limit reaching the caller as a plain
-EngineError on pymetta 0.9.4, through this repository's engine.
+EngineError on pymetta 0.9.4, through this repository's PyMeTTa engine.
 
-Run: .venv/bin/python repros/limit_wrapped_after_exact.py
+Run: python repros/limit_wrapped_after_exact.py
 The exact strategy runs once, then the naive strategy runs out of budget inside
 its `impliers` op. Expected: InferenceLimitError. Observed: EngineError
 "Python InferenceLimitError in (impliers mother)" whose cause is a janus
-PrologError and whose remedy reads "report the ball with the message it
-carries; this engine did". Run alone, naive raises InferenceLimitError.
+PrologError. Run alone, naive raises InferenceLimitError. The engine reads such
+an error as a work limit by its own inference count, so this script records
+what pymetta raised before the engine reclassifies it.
 """
-from metta import parse
+
+from metta import MeTTa
 from metta.errors import EngineError, InferenceLimitError
 
-from semrewrite.engine import STRATEGIES, Budget, Rewriter
-from semrewrite.judging import OracleJudge
-from semrewrite.kb import KB, Lit, Query, Rule
+from semrewrite import Budget, Rewriter, atom
+from semrewrite.engines import make
+from semrewrite.judges.oracle import OracleJudge
+from semrewrite.kb import KB
+from semrewrite.model import Rule
 
 KB_TINY = KB(
     name="tiny",
@@ -25,26 +29,28 @@ KB_TINY = KB(
     },
     facts=(("mother", "alice", "tom"), ("father", "bob", "tom"), ("mum", "carol", "alice"),
            ("child_of", "bob", "dave"), ("guardian", "erin", "tom")),
-    rules=(Rule(Lit("grandparent", "X", "Z"), (Lit("parent", "X", "Y"), Lit("parent", "Y", "Z"))),),
+    rules=(Rule(atom("grandparent", "X", "Z"), (atom("parent", "X", "Y"), atom("parent", "Y", "Z"))),),
     gold=frozenset({("mother", "parent", False), ("father", "parent", False), ("mum", "mother", False),
                     ("mother", "mum", False), ("child_of", "parent", True)}),
 )
 
 
 def main() -> None:
-    """Run exact, then catch what naive's budget exhaustion raises and print its class."""
-    rewriter = Rewriter(KB_TINY, OracleJudge.of(KB_TINY.gold), None, budget=Budget(inferences=300_000, seconds=20))
-    rewriter.ask(STRATEGIES["exact"], Query("parent", "X", "tom"))
+    """Run exact, then record what naive's budget exhaustion raises inside pymetta and print its class."""
     seen: list[BaseException] = []
+    original = MeTTa.eval
 
-    def capture(self, m, term, out, accumulate=False):
+    def recording(self, *args, **kwargs):  # noqa: ANN001, ANN002, ANN003, ANN202
         try:
-            m.eval(parse(term), inferences=self.budget.inferences, timeout=self.budget.seconds)
+            return original(self, *args, **kwargs)
         except EngineError as e:
             seen.append(e)
+            raise
 
-    Rewriter._evaluate = capture
-    rewriter.ask(STRATEGIES["naive"], Query("parent", "X", "tom"))
+    MeTTa.eval = recording
+    rewriter = Rewriter(KB_TINY, OracleJudge.of(KB_TINY.gold), make("pymetta"), None, budget=Budget(work=300_000, seconds=20))
+    rewriter.ask(atom("parent", "X", "tom"), "exact")
+    rewriter.ask(atom("parent", "X", "tom"), "naive")
     for e in seen:
         print(type(e).__name__, "isinstance(InferenceLimitError) =", isinstance(e, InferenceLimitError), "|", str(e).splitlines()[0])
 

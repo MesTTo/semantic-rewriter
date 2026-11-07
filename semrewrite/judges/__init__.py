@@ -15,6 +15,7 @@ shared GPU.
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 from collections.abc import Iterable
 from typing import Any
@@ -24,12 +25,19 @@ from semrewrite.judges.embedding import CosineJudge
 from semrewrite.judges.jev import JevJudge
 from semrewrite.judges.nli import NLIJudge
 from semrewrite.judges.reranker import RerankerJudge
-from semrewrite.judging import Judge, OracleJudge
+from semrewrite.judges.oracle import OracleJudge
+from semrewrite.protocols import Judge
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
 THRESHOLDS = pathlib.Path(__file__).with_name("thresholds.json")
-JEV_ANSWERS = ROOT / "data" / "raw" / "jev" / "answers.jsonl"
-JEV_REQUESTS = ROOT / "data" / "raw" / "jev" / "requests.jsonl"
+# Jev's answer cache and request log: SEMREWRITE_JEV_DIR when set, else the
+# repository's data/raw/jev when running from a checkout, else the user cache.
+_CHECKOUT_JEV = pathlib.Path(__file__).resolve().parents[2] / "data" / "raw" / "jev"
+JEV_DIR = pathlib.Path(
+    os.environ.get("SEMREWRITE_JEV_DIR")
+    or (_CHECKOUT_JEV if _CHECKOUT_JEV.is_dir() else pathlib.Path.home() / ".cache" / "semrewrite" / "jev")
+)
+JEV_ANSWERS = JEV_DIR / "answers.jsonl"
+JEV_REQUESTS = JEV_DIR / "requests.jsonl"
 
 # Qwen3-Embedding's instruction for symmetric similarity tasks, given to both
 # sentences: https://github.com/QwenLM/Qwen3-Embedding/blob/main/evaluation/qwen3_embedding_model.py
@@ -60,17 +68,17 @@ def default_threshold(name: str, path: pathlib.Path | None = None) -> float:
 
 
 def make(
-    name: str, *, threshold: float | None = None, gold: Iterable[tuple[str, str, bool]] | None = None, **options: Any
+    name: str, *, threshold: float | None = None, gold: Iterable[tuple[str, str, Any]] | None = None, **options: Any
 ) -> Judge:
     """The judge called `name`, at `threshold` or its calibrated default.
 
     `options` reach the judge's constructor: `fillers=("X", "Y")` for any judge,
     `budget=` or `cache=` for Jev. "oracle" needs `gold`, the (premise,
-    conclusion, swapped) name triples that hold.
+    conclusion, mapping) triples that hold; a bool stands for a binary swap.
     """
     if name == "oracle":
         if gold is None:
-            msg = "the oracle judge needs gold=(premise, conclusion, swapped) triples"
+            msg = "the oracle judge needs gold=(premise, conclusion, mapping) triples"
             raise ValueError(msg)
         oracle = OracleJudge.of(gold)
         if threshold is not None:

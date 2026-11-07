@@ -14,7 +14,7 @@ from collections import Counter, defaultdict
 import pytest
 
 from semrewrite import pairs
-from semrewrite.judging import Predicate
+from semrewrite.model import Predicate
 
 ROWS = {name: pairs.load([name]) for name in pairs.SETS}
 
@@ -57,7 +57,7 @@ def test_levyholt_reads_argument_order_from_the_surface() -> None:
     """dev row 5 states its premise with the arguments exchanged and keeps both sentences' entities."""
     row = next(r for r in ROWS["levyholt"] if r.id == "levyholt:dev:0004")
     assert row.swapped and row.label
-    assert row.proposal.sentences(*row.instances) == ("a piedmont is common to Norway", "Norway shows a piedmont")
+    assert row.proposal.sentences(row.instances) == ("a piedmont is common to Norway", "Norway shows a piedmont")
     reverse = next(r for r in ROWS["levyholt"] if r.id == "levyholt:dev:0005")
     assert reverse.instances == (row.instances[1], row.instances[0]) and reverse.types == (row.types[1], row.types[0])
 

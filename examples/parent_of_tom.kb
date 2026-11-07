@@ -1,0 +1,26 @@
+% Tom's family, stated in words that never say "parent".
+gloss mum "{x} is the mum of {y}"
+gloss mother "{x} is the mother of {y}"
+gloss dad "{x} is the dad of {y}"
+gloss parent "{x} is a parent of {y}"
+gloss child_of "{x} is a child of {y}"
+gloss guardian "{x} is the legal guardian of {y}"
+gloss grandparent "{x} is a grandparent of {y}"
+
+mum(alice, tom).
+dad(bob, tom).
+mother(carol, alice).
+child_of(bob, dave).
+guardian(erin, tom).
+
+grandparent(X, Z) :- parent(X, Y), parent(Y, Z).
+
+query parent(X, tom).
+query grandparent(X, tom).
+
+% The implications a careful reader accepts; erin, a legal guardian, is not a parent.
+gold mum => mother.
+gold mother => mum.
+gold mother => parent.
+gold dad => parent.
+gold child_of => parent swap.

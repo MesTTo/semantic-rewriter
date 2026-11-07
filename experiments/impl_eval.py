@@ -26,10 +26,13 @@ from pathlib import Path
 
 from semrewrite.benchmarks import BENCHMARKS
 from semrewrite.discovery import ScoreCache
-from semrewrite.engine import STRATEGIES, Budget, Outcome, Rewriter
-from semrewrite.judging import Judge, OracleJudge, Proposal
-from semrewrite.kb import KB, Query
-from semrewrite.retrieve import Retriever
+from semrewrite.engines import make as make_engine
+from semrewrite.judges.oracle import OracleJudge
+from semrewrite.kb import KB, atom
+from semrewrite.model import Atom, Key, Proposal, inverse, mappings
+from semrewrite.protocols import Admission, Budget, Engine, Judge, Retriever
+from semrewrite.retrieve import EmbeddingRetriever
+from semrewrite.rewriter import STRATEGIES, Outcome, Rewriter
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
@@ -39,20 +42,20 @@ K = 8
 def make_judge(name: str, kb: KB) -> Judge:
     """The oracle judge admits exactly what the gold program entails; every other judge comes from the factory."""
     if name == "oracle":
-        return OracleJudge.of(kb.entailed())
+        return OracleJudge(kb.entailed())
     from semrewrite.judges import make
 
     return make(name)
 
 
-def classify_rewrite(key: tuple[str, str, bool], kb: KB) -> str:
+def classify_rewrite(key: Key, kb: KB) -> str:
     """true when the gold program entails it, else why it is false: reversed, swap (wrong argument order), trap or unrelated."""
-    premise, conclusion, swapped = key
-    if kb.entails(premise, conclusion, swapped):
+    premise, conclusion, mapping = key
+    if kb.entails(premise, conclusion, mapping):
         return "true"
-    if kb.entails(conclusion, premise, swapped):
+    if kb.entails(conclusion, premise, inverse(mapping)):
         return "reversed"
-    if kb.entails(premise, conclusion, not swapped):
+    if any(kb.entails(premise, conclusion, m) for m in mappings(len(mapping)) if m != mapping):
         return "swap"
     if premise in kb.traps:
         return "trap"
@@ -68,10 +71,10 @@ def row(outcome: Outcome, mode: str, gold: set, kb: KB) -> dict:
     return {
         "kb": outcome.kb, "judge": outcome.judge, "strategy": outcome.strategy, "mode": mode, "query": outcome.query,
         "gold": len(gold), "answers": len(outcome.answers), "tp": tp, "fp": len(outcome.answers) - tp, "fn": len(gold) - tp,
-        "exact": outcome.answers == gold, "status": outcome.status, "terminated": outcome.terminated,
+        "exact": outcome.answers == gold, "status": outcome.status, "finished": outcome.finished,
         "derivations": outcome.derivations, "expansions": outcome.expansions, "proposals": outcome.proposals,
-        "retrievals": outcome.retrievals, "rewrites": outcome.rewrites, "rounds": outcome.rounds,
-        "inferences": outcome.inferences, "tables": outcome.tables, "seconds": round(outcome.seconds, 4),
+        "retrievals": outcome.retrievals, "rewrites": len(outcome.admitted), "rounds": outcome.rounds,
+        "work": outcome.work, "tables": outcome.tables, "seconds": round(outcome.seconds, 4),
         "rewrite_kinds": dict(kinds),
     }
 
@@ -85,10 +88,7 @@ def warm_scores(rewriter: Rewriter) -> int:
     disc = rewriter.discoverer(memo=True)
     proposals: list[Proposal] = []
     for goal in rewriter.catalogue:
-        target = rewriter.catalogue[goal]
-        for q in disc.candidates(goal):
-            proposals += [Proposal(rewriter.catalogue[q], target, s) for s in (False, True)]
-        proposals.append(Proposal(target, target, True))
+        proposals += disc.proposals(goal)
     before = rewriter.scorer.computed
     rewriter.scorer.score(proposals)
     return rewriter.scorer.computed - before
@@ -107,7 +107,7 @@ def retrieval_recall(kb: KB, retriever: Retriever, k: int = K) -> dict:
     return {"kb": kb.name, "k": k, "closure_pairs": total, "retrieved": hits, "recall": hits / total if total else 1.0}
 
 
-def loop_prediction(kb: KB, admitted: set[tuple[str, str, bool]], query: Query) -> str:
+def loop_prediction(kb: KB, admitted: set[Key], query: Atom) -> str:
     """What untabled rewriting does on `query` under these admitted rewrites, by the tested characterization.
 
     tests/test_termination.py checks on generated catalogues that untabled
@@ -144,10 +144,11 @@ def loop_prediction(kb: KB, admitted: set[tuple[str, str, bool]], query: Query) 
 
 
 def run_kb(
-    kb: KB, judge_name: str, judge: Judge, retriever: Retriever, budget: Budget, modes: Iterable[str], strategies: Iterable[str]
+    kb: KB, judge_name: str, judge: Judge, retriever: Retriever, budget: Budget, modes: Iterable[str], strategies: Iterable[str],
+    engine: Engine | None = None, admission: Admission | None = None,
 ) -> tuple[list[dict], dict]:
     """Every strategy on every query of `kb` under one judge; returns rows and the judge's rewrite scores over the catalogue."""
-    rewriter = Rewriter(kb, ScoreCache(judge), retriever, k=K, budget=budget)
+    rewriter = Rewriter(kb, ScoreCache(judge), engine or make_engine("pymetta"), retriever, k=K, budget=budget, admission=admission)
     computed = warm_scores(rewriter)
     entailed = kb.entailed()
     answers_closure = kb.closure()
@@ -159,7 +160,7 @@ def run_kb(
                 continue
             shared = rewriter.discoverer(memo=strategy.memo) if mode == "warm" else None
             for query in kb.queries:
-                outcome = rewriter.ask(strategy, query, shared)
+                outcome = rewriter.ask(query, strategy, shared)
                 rows.append(row(outcome, mode, kb.answers(query, answers_closure), kb))
             print(f"  {kb.name} {judge_name} {name} {mode}: done", flush=True)
     full = rewriter.discoverer(memo=True)
@@ -195,7 +196,7 @@ def aggregate(rows: list[dict]) -> list[dict]:
         rc = tp / (tp + fn) if tp + fn else 1.0
         # A run that exhausts its budget answers nothing, so all-runs recall mixes
         # missing rewrites with truncated work; the finished-only figures separate them.
-        done = [r for r in rs if r["terminated"]]
+        done = [r for r in rs if r["finished"]]
         dtp, dfp, dfn = (sum(r[f] for r in done) for f in ("tp", "fp", "fn"))
         kinds: dict[str, int] = defaultdict(int)
         for r in rs:
@@ -206,13 +207,13 @@ def aggregate(rows: list[dict]) -> list[dict]:
             "kb": kb, "judge": judge, "strategy": strategy, "mode": mode, "queries": n,
             "precision": round(p, 4), "recall": round(rc, 4), "f1": round(2 * p * rc / (p + rc), 4) if p + rc else 0.0,
             "exact_rate": round(sum(r["exact"] for r in rs) / n, 4),
-            "terminated_rate": round(sum(r["terminated"] for r in rs) / n, 4),
+            "finished_rate": round(sum(r["finished"] for r in rs) / n, 4),
             "precision_finished": round(dtp / (dtp + dfp), 4) if dtp + dfp else 1.0,
             "recall_finished": round(dtp / (dtp + dfn), 4) if dtp + dfn else 1.0,
             "proposals_per_query": round(sum(r["proposals"] for r in rs) / n, 2),
             "expansions_per_query": round(sum(r["expansions"] for r in rs) / n, 2),
             "retrievals_per_query": round(sum(r["retrievals"] for r in rs) / n, 2),
-            "inferences_per_query": round(sum(r["inferences"] for r in rs) / n, 1),
+            "work_per_query": round(sum(r["work"] for r in rs) / n, 1),
             "tables_per_query": round(sum(r["tables"] for r in rs) / n, 2),
             "seconds_per_query": round(sum(r["seconds"] for r in rs) / n, 4),
             "false_rewrite_rate": round(1 - kinds.get("true", 0) / admitted, 4) if admitted else 0.0,
@@ -221,30 +222,30 @@ def aggregate(rows: list[dict]) -> list[dict]:
     return out
 
 
-def divergence(kb: KB, budgets: Iterable[int]) -> list[dict]:
+def divergence(kb: KB, budgets: Iterable[int], engine: Engine) -> list[dict]:
     """Untabled strategies on a query through an alias cycle at rising budgets: work grows with the budget, answers never come."""
-    judge = OracleJudge.of(kb.entailed())
-    query = Query("mother", "X", "Y")
+    judge = OracleJudge(kb.entailed())
+    query = atom("mother", "X", "Y")
     out = []
     for budget in budgets:
-        rewriter = Rewriter(kb, ScoreCache(judge), None, budget=Budget(inferences=budget, seconds=600))
+        rewriter = Rewriter(kb, ScoreCache(judge), engine, None, budget=Budget(work=budget, seconds=600))
         for name in ("naive", "memo-untabled", "lazy-tabled"):
-            o = rewriter.ask(STRATEGIES[name], query)
+            o = rewriter.ask(query, name)
             out.append({"kb": kb.name, "query": str(query), "strategy": name, "budget": budget, "status": o.status,
-                        "inferences": o.inferences, "expansions": o.expansions, "proposals": o.proposals,
+                        "work": o.work, "expansions": o.expansions, "proposals": o.proposals,
                         "answers": len(o.answers), "seconds": round(o.seconds, 3)})
     return out
 
 
-def run_one(kb_name: str, strategy: str, query_index: int) -> dict:
+def run_one(kb_name: str, strategy: str, query_index: int, engine_name: str) -> dict:
     """One oracle-judge run in this process, for the isolation check's subprocesses."""
     kb = BENCHMARKS[kb_name]()
-    rewriter = Rewriter(kb, OracleJudge.of(kb.entailed()), None, budget=Budget(inferences=300_000, seconds=60))
-    o = rewriter.ask(STRATEGIES[strategy], kb.queries[query_index])
+    rewriter = Rewriter(kb, OracleJudge(kb.entailed()), make_engine(engine_name), None, budget=Budget(work=300_000, seconds=60))
+    o = rewriter.ask(kb.queries[query_index], strategy)
     return {"answers": sorted(map(list, o.answers)), "status": o.status}
 
 
-def isolation_check(kb_name: str) -> dict:
+def isolation_check(kb_name: str, engine_name: str) -> dict:
     """Compare each oracle run done in one shared process with the same run in a fresh process.
 
     pymetta 0.9.4 lets state cross contexts (repros/symbol_use_leaks_across_contexts.py), so the
@@ -252,13 +253,16 @@ def isolation_check(kb_name: str) -> dict:
     answers and status for every strategy and query.
     """
     kb = BENCHMARKS[kb_name]()
-    rewriter = Rewriter(kb, OracleJudge.of(kb.entailed()), None, budget=Budget(inferences=300_000, seconds=60))
+    rewriter = Rewriter(kb, OracleJudge(kb.entailed()), make_engine(engine_name), None, budget=Budget(work=300_000, seconds=60))
+    caps = rewriter.engine.capabilities
     mismatches, checked = [], 0
-    for name in STRATEGIES:
+    for name, strategy in STRATEGIES.items():
+        if not all(getattr(caps, c) for c, need in strategy.needs().items() if need):
+            continue
         for i, query in enumerate(kb.queries):
-            shared = rewriter.ask(STRATEGIES[name], query)
+            shared = rewriter.ask(query, strategy)
             fresh = json.loads(subprocess.run(
-                [sys.executable, __file__, "--one", kb_name, name, str(i)],
+                [sys.executable, __file__, "--engine", engine_name, "--one", kb_name, name, str(i)],
                 capture_output=True, text=True, check=True,
             ).stdout.strip().splitlines()[-1])
             checked += 1
@@ -269,7 +273,7 @@ def isolation_check(kb_name: str) -> dict:
 
 
 def sweep(kbs: list[KB], judge_name: str, judge: Judge, retriever: Retriever, budget: Budget,
-          strategies: Sequence[str],
+          strategies: Sequence[str], engine: Engine,
           quantiles: Sequence[float] = (0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.925, 0.95, 0.96, 0.97, 0.98, 0.99, 0.995)) -> list[dict]:
     """Each strategy's answer quality at a grid of thresholds, and a threshold chosen without the benchmark it is scored on.
 
@@ -287,7 +291,7 @@ def sweep(kbs: list[KB], judge_name: str, judge: Judge, retriever: Retriever, bu
 
     Cost: thresholds x strategies x queries rewriter runs, each within budget.
     """
-    rewriters = [Rewriter(kb, ScoreCache(judge), retriever, k=K, budget=budget) for kb in kbs]
+    rewriters = [Rewriter(kb, ScoreCache(judge), engine, retriever, k=K, budget=budget) for kb in kbs]
     for r in rewriters:
         warm_scores(r)
     pooled = sorted(s for r in rewriters for s in r.scorer.scores())
@@ -302,11 +306,11 @@ def sweep(kbs: list[KB], judge_name: str, judge: Judge, retriever: Retriever, bu
             for strategy in strategies:
                 tp = fp = fn = finished = 0
                 for query, gold in golds:
-                    o = rewriter.ask(STRATEGIES[strategy], query)
+                    o = rewriter.ask(query, strategy)
                     tp += len(o.answers & gold)
                     fp += len(o.answers - gold)
                     fn += len(gold - o.answers)
-                    finished += o.terminated
+                    finished += o.finished
                 counts[(strategy, rewriter.kb.name, t)] = (tp, fp, fn, finished)
     judge.threshold = default
     queries = sum(len(r.kb.queries) for r in rewriters)
@@ -348,6 +352,7 @@ def main() -> None:
     """Parse arguments, run the requested parts and write the results files."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--judges", default="oracle")
+    parser.add_argument("--engine", default="pymetta", help="engine to evaluate on; the experiment in RESULTS.md used pymetta")
     parser.add_argument("--kbs", default=",".join(BENCHMARKS))
     parser.add_argument("--modes", default="cold,warm")
     parser.add_argument("--strategies", default=None,
@@ -364,12 +369,13 @@ def main() -> None:
     args = parser.parse_args()
     if args.one:
         kb_name, strategy, index = args.one
-        print(json.dumps(run_one(kb_name, strategy, int(index))))
+        print(json.dumps(run_one(kb_name, strategy, int(index), args.engine)))
         return
     RESULTS.mkdir(exist_ok=True)
     kbs = [BENCHMARKS[name]() for name in args.kbs.split(",")]
-    retriever = Retriever()
-    budget = Budget(inferences=args.budget, seconds=120)
+    retriever = EmbeddingRetriever()
+    engine = make_engine(args.engine)
+    budget = Budget(work=args.budget, seconds=120)
     modes = args.modes.split(",")
     rows: list[dict] = []
     discovery: list[dict] = []
@@ -389,11 +395,11 @@ def main() -> None:
         judge: Judge | None = None
         for kb in kbs:
             judge = make_judge(judge_name, kb) if judge_name == "oracle" or judge is None else judge
-            kb_rows, kb_discovery = run_kb(kb, judge_name, judge, retriever, budget, modes, strategies)
+            kb_rows, kb_discovery = run_kb(kb, judge_name, judge, retriever, budget, modes, strategies, engine)
             rows += kb_rows
             discovery.append(kb_discovery)
         if swept and judge_name != "oracle":
-            sweeps += sweep(kbs, judge_name, judge, retriever, budget, swept)
+            sweeps += sweep(kbs, judge_name, judge, retriever, budget, swept, engine)
             print(f"  sweep {judge_name}: done", flush=True)
         close = getattr(judge, "close", None)
         if callable(close):
@@ -403,7 +409,7 @@ def main() -> None:
         for r in rows:
             f.write(json.dumps(r, sort_keys=True) + "\n")
     summary = {
-        "judges": args.judges.split(","), "kbs": args.kbs.split(","), "modes": modes, "k": K, "budget_inferences": args.budget,
+        "judges": args.judges.split(","), "engine": args.engine, "kbs": args.kbs.split(","), "modes": modes, "k": K, "budget_work": args.budget,
         "retriever": retriever.model_name, "seconds": round(time.perf_counter() - started, 1),
         "aggregates": aggregate(rows), "discovery": discovery,
         "retrieval_recall": [retrieval_recall(kb, retriever) for kb in kbs],
@@ -413,8 +419,8 @@ def main() -> None:
         summary["sweep"] = kept_sweeps + sweeps
     if not args.skip_extras:
         budgets = [int(b) for b in args.divergence_budgets.split(",")]
-        summary["divergence"] = divergence(BENCHMARKS["family"](), budgets)
-        summary["isolation"] = isolation_check("family")
+        summary["divergence"] = divergence(BENCHMARKS["family"](), budgets, engine)
+        summary["isolation"] = isolation_check("family", args.engine)
     else:
         summary |= {key: previous[key] for key in ("divergence", "isolation") if key in previous}
     summary_path.write_text(json.dumps(summary, indent=1, sort_keys=True))
