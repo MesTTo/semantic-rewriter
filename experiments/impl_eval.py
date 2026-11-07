@@ -20,7 +20,7 @@ import subprocess
 import sys
 import time
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from pathlib import Path
 
 from semrewrite.benchmarks import BENCHMARKS
@@ -107,14 +107,53 @@ def retrieval_recall(kb: KB, retriever: Retriever, k: int = K) -> dict:
     return {"kb": kb.name, "k": k, "closure_pairs": total, "retrieved": hits, "recall": hits / total if total else 1.0}
 
 
-def run_kb(kb: KB, judge_name: str, judge: Judge, retriever: Retriever, budget: Budget, modes: Iterable[str]) -> tuple[list[dict], dict]:
+def loop_prediction(kb: KB, admitted: set[tuple[str, str, bool]], query: Query) -> str:
+    """What untabled rewriting does on `query` under these admitted rewrites, by the tested characterization.
+
+    tests/test_termination.py checks on generated catalogues that untabled
+    rewriting never stops when the query predicate lies on a cycle of rewrites,
+    and stops correctly when nothing reachable from it is cyclic; anything else
+    is left undecided.
+    """
+    rewrites: dict[str, set[str]] = defaultdict(set)
+    for premise, conclusion, _ in admitted:
+        rewrites[conclusion].add(premise)
+    calls: dict[str, set[str]] = defaultdict(set, {p: set(qs) for p, qs in rewrites.items()})
+    for rule in kb.rules:
+        calls[rule.head.pred].update(lit.pred for lit in rule.body)
+    start = query.pred
+    frontier, seen = list(rewrites.get(start, ())), set()
+    while frontier:
+        q = frontier.pop()
+        if q == start:
+            return "loops"
+        if q not in seen:
+            seen.add(q)
+            frontier.extend(rewrites.get(q, ()))
+    state: dict[str, int] = {}
+
+    def acyclic(p: str) -> bool:
+        state[p] = 1
+        for q in calls.get(p, ()):
+            if state.get(q) == 1 or (q not in state and not acyclic(q)):
+                return False
+        state[p] = 2
+        return True
+
+    return "terminates" if acyclic(start) else "undecided"
+
+
+def run_kb(
+    kb: KB, judge_name: str, judge: Judge, retriever: Retriever, budget: Budget, modes: Iterable[str], strategies: Iterable[str]
+) -> tuple[list[dict], dict]:
     """Every strategy on every query of `kb` under one judge; returns rows and the judge's rewrite scores over the catalogue."""
     rewriter = Rewriter(kb, ScoreCache(judge), retriever, k=K, budget=budget)
     computed = warm_scores(rewriter)
     closure = implication_closure(kb.gold)
     answers_closure = kb.closure()
     rows: list[dict] = []
-    for name, strategy in STRATEGIES.items():
+    for name in strategies:
+        strategy = STRATEGIES[name]
         for mode in modes:
             if mode == "warm" and not strategy.memo:
                 continue
@@ -129,11 +168,15 @@ def run_kb(kb: KB, judge_name: str, judge: Judge, retriever: Retriever, budget: 
     for key in admitted:
         kinds[classify_rewrite(key, closure, kb.traps)] += 1
     true = kinds.get("true", 0)
+    loops: dict[str, int] = defaultdict(int)
+    for query in kb.queries:
+        loops[loop_prediction(kb, admitted, query)] += 1
     discovery = {
         "kb": kb.name, "judge": judge_name, "admitted": len(admitted), "kinds": dict(kinds),
         "precision": true / len(admitted) if admitted else 1.0,
         "recall": true / len([c for c in closure if c[0] != c[1] or c[2]]) if closure else 1.0,
         "judge_computed": computed, "judge_usage": dict(getattr(judge, "usage", {})),
+        "untabled_prediction": dict(loops),
     }
     return rows, discovery
 
@@ -219,14 +262,71 @@ def isolation_check(kb_name: str) -> dict:
     return {"kb": kb_name, "checked": checked, "mismatches": mismatches}
 
 
+def sweep(kbs: list[KB], judge_name: str, judge: Judge, retriever: Retriever, budget: Budget,
+          quantiles: Sequence[float] = (0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.925, 0.95, 0.96, 0.97, 0.98, 0.99, 0.995)) -> dict:
+    """Lazy-tabled answer quality at a grid of thresholds, and a threshold chosen without the benchmark it is scored on.
+
+    The grid is quantiles of the judge's own scores over every proposal the
+    four benchmarks ask, so it adapts to how the judge spreads its scores; it
+    sits in the upper half because true implications are a small share of the
+    proposals, and below the median nearly every proposal is admitted. For
+    each benchmark the threshold maximising answer F1 on the other three is
+    chosen, then scored on the held-out one: leave-one-benchmark-out
+    calibration for the rewriter's objective, beside the pair-set default.
+    """
+    rewriters = [Rewriter(kb, ScoreCache(judge), retriever, k=K, budget=budget) for kb in kbs]
+    for r in rewriters:
+        warm_scores(r)
+    pooled = sorted(s for r in rewriters for s in r.scorer.scores())
+    grid = sorted({pooled[round(q * (len(pooled) - 1))] for q in quantiles} | {judge.threshold})
+    default = judge.threshold
+    counts: dict[tuple[str, float], tuple[int, int, int]] = {}
+    for rewriter in rewriters:
+        closure = rewriter.kb.closure()
+        for t in grid:
+            judge.threshold = t
+            tp = fp = fn = 0
+            for query in rewriter.kb.queries:
+                o = rewriter.ask(STRATEGIES["lazy-tabled"], query)
+                gold = rewriter.kb.answers(query, closure)
+                tp += len(o.answers & gold)
+                fp += len(o.answers - gold)
+                fn += len(gold - o.answers)
+            counts[(rewriter.kb.name, t)] = (tp, fp, fn)
+    judge.threshold = default
+
+    def f1(tp: int, fp: int, fn: int) -> float:
+        return 2 * tp / (2 * tp + fp + fn) if tp else 0.0
+
+    def pooled_f1(names: list[str], t: float) -> float:
+        return f1(*(sum(counts[(n, t)][i] for n in names) for i in range(3)))
+
+    names = [kb.name for kb in kbs]
+    held_out = []
+    for name in names:
+        others = [n for n in names if n != name]
+        best = max(grid, key=lambda t: (pooled_f1(others, t), -t))
+        held_out.append({"kb": name, "threshold": best, "f1_held_out": round(f1(*counts[(name, best)]), 4),
+                         "f1_at_default": round(f1(*counts[(name, default)]), 4)})
+    curve = [{"threshold": t, "f1": round(pooled_f1(names, t), 4),
+              "precision": round(sum(counts[(n, t)][0] for n in names) / max(1, sum(counts[(n, t)][0] + counts[(n, t)][1] for n in names)), 4),
+              "recall": round(sum(counts[(n, t)][0] for n in names) / max(1, sum(counts[(n, t)][0] + counts[(n, t)][2] for n in names)), 4)}
+             for t in grid]
+    tp, fp, fn = (sum(counts[(n, h["threshold"])][i] for h in held_out for n in [h["kb"]]) for i in range(3))
+    return {"judge": judge_name, "default_threshold": default, "curve": curve, "held_out": held_out,
+            "f1_held_out_pooled": round(f1(tp, fp, fn), 4), "f1_default_pooled": round(pooled_f1(names, default), 4)}
+
+
 def main() -> None:
     """Parse arguments, run the requested parts and write the results files."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--judges", default="oracle")
     parser.add_argument("--kbs", default=",".join(BENCHMARKS))
     parser.add_argument("--modes", default="cold,warm")
+    parser.add_argument("--strategies", default=",".join(STRATEGIES))
     parser.add_argument("--budget", type=int, default=2_000_000)
     parser.add_argument("--skip-extras", action="store_true", help="skip the divergence sweep and the isolation check")
+    parser.add_argument("--sweep", action="store_true", help="also sweep lazy-tabled's threshold for each judge")
     parser.add_argument("--tag", default="", help="suffix for the output files, so judge runs can be split across processes")
     parser.add_argument("--one", nargs=3, metavar=("KB", "STRATEGY", "QUERY"))
     args = parser.parse_args()
@@ -241,14 +341,18 @@ def main() -> None:
     modes = args.modes.split(",")
     rows: list[dict] = []
     discovery: list[dict] = []
+    sweeps: list[dict] = []
     started = time.perf_counter()
     for judge_name in args.judges.split(","):
         judge: Judge | None = None
         for kb in kbs:
             judge = make_judge(judge_name, kb) if judge_name == "oracle" or judge is None else judge
-            kb_rows, kb_discovery = run_kb(kb, judge_name, judge, retriever, budget, modes)
+            kb_rows, kb_discovery = run_kb(kb, judge_name, judge, retriever, budget, modes, args.strategies.split(","))
             rows += kb_rows
             discovery.append(kb_discovery)
+        if args.sweep and judge_name != "oracle":
+            sweeps.append(sweep(kbs, judge_name, judge, retriever, budget))
+            print(f"  sweep {judge_name}: done", flush=True)
         close = getattr(judge, "close", None)
         if callable(close):
             close()
@@ -262,6 +366,8 @@ def main() -> None:
         "aggregates": aggregate(rows), "discovery": discovery,
         "retrieval_recall": [retrieval_recall(kb, retriever) for kb in kbs],
     }
+    if sweeps:
+        summary["sweep"] = sweeps
     if not args.skip_extras:
         summary["divergence"] = divergence(BENCHMARKS["family"](), (10_000, 100_000, 1_000_000, 10_000_000))
         summary["isolation"] = isolation_check("family")

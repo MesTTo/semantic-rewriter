@@ -63,6 +63,10 @@ class ScoreCache:
     def _key(p: Proposal) -> tuple[str, str, bool]:
         return (p.premise.gloss, p.conclusion.gloss, p.swapped)
 
+    def scores(self) -> list[float]:
+        """Every score computed so far, one per distinct proposal."""
+        return list(self._scores.values())
+
     def score(self, proposals: Sequence[Proposal]) -> list[float]:
         """Scores for `proposals`, computing only those never seen."""
         self.logical += len(proposals)

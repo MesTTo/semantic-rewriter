@@ -42,6 +42,20 @@ def _table(header: Sequence[str], rows: Sequence[Sequence[object]]) -> str:
     return "\n".join(lines)
 
 
+def _load_judges() -> dict:
+    """The real-judge runs, written as one file per process (implementations.judges-*.json), merged."""
+    paths = sorted(RESULTS.glob("implementations.judges-*.json"))
+    if not paths:
+        msg = f"no implementations.judges-*.json under {RESULTS}; run experiments/impl_eval.py with real judges first"
+        raise FileNotFoundError(msg)
+    merged: dict = {"aggregates": [], "discovery": []}
+    for path in paths:
+        part = json.loads(path.read_text())
+        merged["aggregates"] += part["aggregates"]
+        merged["discovery"] += part["discovery"]
+    return merged
+
+
 def _aggregates(summary: dict, judge: str, kb: str = "ALL") -> dict[tuple[str, str], dict]:
     return {(a["strategy"], a["mode"]): a for a in summary["aggregates"] if a["judge"] == judge and a["kb"] == kb}
 
@@ -84,7 +98,7 @@ def retrieval_table() -> str:
 
 def judges_in_kb_table() -> str:
     """Each real judge inside the rewriter: rewrite precision over the catalogue and lazy-tabled answer quality."""
-    summary = _load("implementations.judges.json")
+    summary = _load_judges()
     by_judge: dict[str, list[dict]] = {}
     for d in summary["discovery"]:
         by_judge.setdefault(d["judge"], []).append(d)
@@ -107,7 +121,7 @@ def judges_in_kb_table() -> str:
 
 def judges_strategies_table() -> str:
     """Answer precision and recall of the main strategies under each real judge."""
-    summary = _load("implementations.judges.json")
+    summary = _load_judges()
     judges = sorted({a["judge"] for a in summary["aggregates"]})
     rows = []
     for judge in judges:
