@@ -1,0 +1,179 @@
+{
+  "head" : {
+    "vars" : [ "p", "kind" ]
+  },
+  "results" : {
+    "bindings" : [ {
+      "kind" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q18647519"
+      },
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P22"
+      }
+    }, {
+      "kind" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q18647519"
+      },
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P25"
+      }
+    }, {
+      "kind" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q18647519"
+      },
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P40"
+      }
+    }, {
+      "kind" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q18647519"
+      },
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P131"
+      }
+    }, {
+      "kind" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q18647519"
+      },
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P279"
+      }
+    }, {
+      "kind" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q18647519"
+      },
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P361"
+      }
+    }, {
+      "kind" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q18647518"
+      },
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P460"
+      }
+    }, {
+      "kind" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q18647519"
+      },
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P828"
+      }
+    }, {
+      "kind" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q18647518"
+      },
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1382"
+      }
+    }, {
+      "kind" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q18647519"
+      },
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1542"
+      }
+    }, {
+      "kind" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q18647518"
+      },
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1560"
+      }
+    }, {
+      "kind" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q18647518"
+      },
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1889"
+      }
+    }, {
+      "kind" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q18647519"
+      },
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2670"
+      }
+    }, {
+      "kind" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q18647518"
+      },
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2743"
+      }
+    }, {
+      "kind" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q18647518"
+      },
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2959"
+      }
+    }, {
+      "kind" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q18647518"
+      },
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3373"
+      }
+    }, {
+      "kind" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q18647518"
+      },
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4099"
+      }
+    }, {
+      "kind" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q18647519"
+      },
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P5607"
+      }
+    }, {
+      "kind" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q18647518"
+      },
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P14317"
+      }
+    } ]
+  }
+}

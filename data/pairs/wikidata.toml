@@ -1,0 +1,235 @@
+# Purpose: the hand audit of the Wikidata pair set that semrewrite/pairs.py applies over the raw
+# SPARQL results: glosses where rule_gloss misreads a property label, properties left out with the
+# reason, and labels corrected where the hierarchy lacks an edge.
+#
+# A gloss states a property over its subject {x} and value {y}: P25 mother is "{y} is the mother
+# of {x}", since Wikidata reads (Tom, mother, Alice) as "Alice is the mother of Tom".
+
+[glosses]
+P4675 = "{x} appears in the form of {y}"
+P1001 = "{x} applies to jurisdiction {y}"
+P485 = "the archives of {x} are at {y}"
+P9493 = "the artist files of {x} are at {y}"
+P10527 = "the documentation files of {x} are at {y}"
+P9600 = "the oral history of {x} is at {y}"
+P13612 = "{x} is a breed belonging to taxon {y}"
+P674 = "{y} is a character in {x}"
+P1547 = "{x} depends on software {y}"
+P703 = "{x} is found in taxon {y}"
+P1080 = "{x} is from narrative universe {y}"
+P2591 = "grammatical option {x} indicates {y}"
+P11747 = "{x} holds a diplomatic passport of {y}"
+P10241 = "{x} is an individual of taxon {y}"
+P751 = "{x} introduced feature {y}"
+P2522 = "{x} won competition {y}"
+P1532 = "{x} represents {y} in sport"
+P3602 = "{x} is a candidate in election {y}"
+P726 = "{y} is a candidate in {x}"
+P2176 = "{y} is a drug or therapy used to treat {x}"
+P6087 = "{x} is a coach of sports team {y}"
+P767 = "{y} is a contributor to {x}"
+P8131 = "{x} is a dialect of computer language {y}"
+P9241 = "{y} is the demographics of {x}"
+P8744 = "{y} is the economy of {x}"
+P2633 = "{y} is the geography of {x}"
+P2184 = "{y} is the history of {x}"
+P425 = "{y} is the field of the occupation {x}"
+P1916 = "{x} has a gene substitution association with {y}"
+P121 = "{x} operates {y}"
+P2936 = "{x} uses language {y}"
+P1412 = "{x} speaks, writes or signs {y}"
+P2499 = "{y} is the league level above {x}"
+P2500 = "{y} is the league level below {x}"
+P706 = "{x} is located in or on physical feature {y}"
+P186 = "{x} is made from material {y}"
+P4954 = "{x} may prevent disease {y}"
+P111 = "{x} measures physical quantity {y}"
+P2175 = "{x} treats medical condition {y}"
+P5248 = "{x} was medically evacuated to {y}"
+P5054 = "{x} is a member of cabinet {y}"
+P102 = "{x} is a member of political party {y}"
+P11491 = "{x} is a member of Roman tribe {y}"
+P54 = "{x} is a member of sports team {y}"
+P2462 = "{x} is a member of the deme {y}"
+P6875 = "the motif {x} represents {y}"
+P9899 = "{x} is a musical work created for {y}"
+P1582 = "{x} is a natural product of taxon {y}"
+P10624 = "{x} has official observer status in organization {y}"
+P2389 = "{y} is the organization directed by the office {x}"
+P2388 = "{y} is the position held by the head of {x}"
+P364 = "{y} is the original language of {x}"
+P201 = "{y} is an outflow of {x}"
+P179 = "{x} is part of the series {y}"
+P710 = "{y} is a participant in {x}"
+P129 = "{x} physically interacts with {y}"
+P931 = "{x} serves {y}"
+P8764 = "{x} called at port {y}"
+P39 = "{x} held position {y}"
+P1308 = "{y} holds position {x}"
+P5131 = "{y} is a possible medical finding of {x}"
+P1441 = "{x} is present in work {y}"
+P13360 = "{x} presented work {y}"
+P1056 = "{x} produces {y}"
+P11821 = "{x} is the result of process {y}"
+P6166 = "{x} quotes work {y}"
+P1072 = "{x} can read file format {y}"
+P1194 = "{x} receives signal type {y}"
+P8111 = "{y} is the recommended unit of measurement of {x}"
+P8371 = "{x} references work, tradition or theory {y}"
+P4661 = "{x} created reservoir {y}"
+P5707 = "{x} samples from work {y}"
+P9192 = "{y} is a sensor of {x}"
+P8411 = "{x} is set in environment {y}"
+P47 = "{x} shares a border with {y}"
+P13602 = "{x} is a single taken from the album or EP {y}"
+P1041 = "{x} supports socket {y}"
+P1990 = "{x} keeps species {y}"
+P2416 = "{x} competed in sports discipline {y}"
+P3450 = "{x} is a sports season of league or competition {y}"
+P167 = "structure {x} is replaced by {y}"
+P1398 = "structure {x} replaces {y}"
+P13296 = "{y} is a study or design for {x}"
+P2868 = "{x} has role {y}"
+P780 = "{y} is a symptom or sign of {x}"
+P1434 = "{x} takes place in fictional universe {y}"
+P6803 = "{y} is a taxon found at {x}"
+P13176 = "{y} is a taxon known by the common name {x}"
+P3179 = "the territory of {x} overlaps {y}"
+P1672 = "taxon {x} is the source of {y}"
+P2743 = "zoological name {x} is coordinate with {y}"
+P4622 = "{y} is the trophy awarded at {x}"
+P3438 = "{x} normally uses vehicle {y}"
+# Labels whose bare English reading would entail a near neighbour the property does not mean.
+P399 = "{x} is an astronomical companion of {y}"
+P3772 = "{x} is a receptor agonist of {y}"
+P3773 = "{x} is a receptor antagonist of {y}"
+P516 = "{x} is powered by the engine {y}"
+P1029 = "{y} is a crew member of the vehicle or mission {x}"
+# Prepositional labels the rule leaves without their article, among the most-linked properties.
+P463 = "{x} is a member of {y}"
+P31 = "{x} is an instance of {y}"
+P279 = "{x} is a subclass of {y}"
+P1066 = "{x} is a student of {y}"
+P1344 = "{x} is a participant in {y}"
+P1830 = "{x} is the owner of {y}"
+P1376 = "{x} is the capital of {y}"
+P1775 = "{x} is a follower of {y}"
+P3205 = "{x} is a patient of {y}"
+P8058 = "{x} is a symbol of {y}"
+P5096 = "{x} is a member of the crew of {y}"
+
+[exclude]
+P971 = "Wikimedia category metadata"
+P3876 = "Wikimedia category metadata"
+P12686 = "Wikimedia category metadata"
+P12687 = "Wikimedia category metadata"
+P5996 = "Wikimedia category metadata"
+P1740 = "Wikimedia category metadata"
+P10280 = "Wikimedia category metadata"
+P6112 = "Wikimedia category metadata"
+P1464 = "Wikimedia category metadata"
+P1791 = "Wikimedia category metadata"
+P1465 = "Wikimedia category metadata"
+P2517 = "Wikimedia category metadata"
+P1200 = "Wikimedia category metadata"
+P1792 = "Wikimedia category metadata"
+P4329 = "Wikimedia category metadata"
+P1754 = "Wikimedia category metadata"
+P301 = "Wikimedia category metadata"
+P8464 = "Wikimedia category metadata"
+P7084 = "Wikimedia category metadata"
+P910 = "Wikimedia category metadata"
+P9926 = "Wikimedia category metadata"
+P2875 = "Wikimedia category metadata"
+P1881 = "Wikimedia list metadata"
+P1811 = "Wikimedia list metadata"
+P1456 = "Wikimedia list metadata"
+P1455 = "Wikimedia list metadata"
+P1753 = "Wikimedia list metadata"
+P2354 = "Wikimedia list metadata"
+P360 = "Wikimedia list metadata"
+P1629 = "Wikidata-internal"
+P2959 = "Wikidata-internal"
+P5852 = "Wikidata-internal"
+P10726 = "Wikidata-internal"
+P14416 = "Wikimedia Commons metadata"
+P1204 = "Wikimedia portal metadata"
+P1151 = "Wikimedia portal metadata"
+P6104 = "Wikimedia project metadata"
+P2377 = "MediaWiki software metadata"
+P3858 = "Wikimedia template metadata"
+P1423 = "Wikimedia template metadata"
+P1424 = "Wikimedia template metadata"
+P1039 = "qualifier relating a statement to its subject, not two entities"
+P3831 = "qualifier relating a statement to its subject, not two entities"
+P4070 = "qualifier relating a statement to its subject, not two entities"
+P1011 = "qualifier relating a statement to its subject, not two entities"
+P13829 = "qualifier relating a statement to its subject, not two entities"
+P1013 = "qualifier relating a statement to its subject, not two entities"
+P518 = "qualifier relating a statement to its subject, not two entities"
+P654 = "qualifier relating a statement to its subject, not two entities"
+P14317 = "listed as the inverse of compatible with (P8956), contradicting its label"
+
+# Near pairs, mined as unrelated, whose glosses do entail one way; the hierarchy lacks the edge.
+[[labels]]
+premise = "P1532"
+conclusion = "P1268"
+label = true
+reason = "representing a country in sport is representing it"
+
+[[labels]]
+premise = "P1383"
+conclusion = "P4330"
+label = true
+reason = "containing a settlement is containing it"
+
+[[labels]]
+premise = "P6977"
+conclusion = "P5134"
+label = true
+reason = "a review of a work is an evaluation of it"
+
+[[labels]]
+premise = "P1582"
+conclusion = "P703"
+label = true
+reason = "a natural product of a taxon is found in that taxon"
+
+[[labels]]
+premise = "P4600"
+conclusion = "P186"
+label = true
+reason = "a polymer of a monomer is made from that monomer"
+
+[[labels]]
+premise = "P2822"
+conclusion = "P2849"
+label = true
+reason = "a by-product of a process is produced by it"
+
+[[labels]]
+premise = "P4428"
+conclusion = "P144"
+label = true
+reason = "an implementation of a specification is based on it"
+
+[[labels]]
+premise = "P3450"
+conclusion = "P118"
+label = true
+reason = "a season of a league has that league as its league"
+
+# Inverse rows the multi-inverse rule leaves False although the partner is the exact converse.
+[[labels]]
+premise = "P1344"
+conclusion = "P710"
+swapped = true
+label = true
+reason = "participant in and participant are exact converses; both glosses state the same fact"
+
+[[labels]]
+premise = "P2176"
+conclusion = "P2175"
+swapped = true
+label = true
+reason = "a drug used to treat a condition is a drug that treats it"

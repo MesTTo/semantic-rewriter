@@ -1,0 +1,575 @@
+# Purpose: hand-labelled hard predicate pairs over kinship, employment, causation and location,
+# the source semrewrite/pairs.py turns into data/pairs/hard.jsonl.
+#
+# A relation names a premise and a conclusion predicate and says which way entailment holds by
+# the meaning of the words, in every possible situation, not merely usually:
+#   forward  the premise entails the conclusion and not the reverse
+#   both     each entails the other
+#   neither  no direction holds
+# swapped = true reads the premise with its arguments exchanged: premise(y, x) against
+# conclusion(x, y). A relation from a predicate to itself with swapped = true asks whether the
+# predicate is symmetric and yields one row; every other relation yields its forward and reverse row.
+# Types name the kinds of a predicate's first and second argument, used for typed-noun fillers.
+# Glosses avoid personal names, so no filler carries a gender.
+
+[predicates]
+mother = { gloss = "{x} is the mother of {y}", types = ["person", "person"] }
+father = { gloss = "{x} is the father of {y}", types = ["person", "person"] }
+parent = { gloss = "{x} is a parent of {y}", types = ["person", "person"] }
+child = { gloss = "{x} is a child of {y}", types = ["person", "person"] }
+son = { gloss = "{x} is a son of {y}", types = ["person", "person"] }
+daughter = { gloss = "{x} is a daughter of {y}", types = ["person", "person"] }
+grandmother = { gloss = "{x} is a grandmother of {y}", types = ["person", "person"] }
+grandparent = { gloss = "{x} is a grandparent of {y}", types = ["person", "person"] }
+ancestor = { gloss = "{x} is an ancestor of {y}", types = ["person", "person"] }
+descendant = { gloss = "{x} is a descendant of {y}", types = ["person", "person"] }
+sibling = { gloss = "{x} is a sibling of {y}", types = ["person", "person"] }
+brother = { gloss = "{x} is a brother of {y}", types = ["person", "person"] }
+sister = { gloss = "{x} is a sister of {y}", types = ["person", "person"] }
+cousin = { gloss = "{x} is a cousin of {y}", types = ["person", "person"] }
+uncle = { gloss = "{x} is an uncle of {y}", types = ["person", "person"] }
+relative = { gloss = "{x} is a relative of {y}", types = ["person", "person"] }
+married_to = { gloss = "{x} is married to {y}", types = ["person", "person"] }
+spouse = { gloss = "{x} is the spouse of {y}", types = ["person", "person"] }
+husband = { gloss = "{x} is the husband of {y}", types = ["person", "person"] }
+wife = { gloss = "{x} is the wife of {y}", types = ["person", "person"] }
+legal_guardian = { gloss = "{x} is the legal guardian of {y}", types = ["person", "person"] }
+stepmother = { gloss = "{x} is the stepmother of {y}", types = ["person", "person"] }
+mother_in_law = { gloss = "{x} is the mother-in-law of {y}", types = ["person", "person"] }
+godparent = { gloss = "{x} is a godparent of {y}", types = ["person", "person"] }
+biological_mother = { gloss = "{x} is the biological mother of {y}", types = ["person", "person"] }
+adoptive_parent = { gloss = "{x} is an adoptive parent of {y}", types = ["person", "person"] }
+employs = { gloss = "{x} employs {y}", types = ["organization", "person"] }
+works_for = { gloss = "{x} works for {y}", types = ["person", "organization"] }
+employee_of = { gloss = "{x} is an employee of {y}", types = ["person", "organization"] }
+employed_by = { gloss = "{x} is employed by {y}", types = ["person", "organization"] }
+contractor_for = { gloss = "{x} is a contractor for {y}", types = ["person", "organization"] }
+member_of = { gloss = "{x} is a member of {y}", types = ["person", "organization"] }
+chief_executive_of = { gloss = "{x} is the chief executive of {y}", types = ["person", "company"] }
+founded = { gloss = "{x} founded {y}", types = ["person", "company"] }
+owns = { gloss = "{x} owns {y}", types = ["person", "company"] }
+hired = { gloss = "{x} hired {y}", types = ["company", "person"] }
+fired = { gloss = "{x} fired {y}", types = ["company", "person"] }
+manages = { gloss = "{x} manages {y}", types = ["person", "person"] }
+supervises = { gloss = "{x} supervises {y}", types = ["person", "person"] }
+supervised_by = { gloss = "{x} is supervised by {y}", types = ["person", "person"] }
+colleague = { gloss = "{x} is a colleague of {y}", types = ["person", "person"] }
+causes = { gloss = "{x} causes {y}", types = ["factor", "outcome"] }
+caused_by = { gloss = "{x} is caused by {y}", types = ["outcome", "factor"] }
+correlated_with = { gloss = "{x} is correlated with {y}", types = ["factor", "outcome"] }
+contributes_to = { gloss = "{x} contributes to {y}", types = ["factor", "outcome"] }
+prevents = { gloss = "{x} prevents {y}", types = ["factor", "outcome"] }
+influences = { gloss = "{x} influences {y}", types = ["factor", "outcome"] }
+cures = { gloss = "{x} cures {y}", types = ["medicine", "disease"] }
+treats = { gloss = "{x} treats {y}", types = ["medicine", "disease"] }
+capital_of = { gloss = "{x} is the capital of {y}", types = ["city", "country"] }
+largest_city_of = { gloss = "{x} is the largest city of {y}", types = ["city", "country"] }
+located_in = { gloss = "{x} is located in {y}", types = ["place", "region"] }
+situated_in = { gloss = "{x} is situated in {y}", types = ["place", "region"] }
+contains = { gloss = "{x} contains {y}", types = ["region", "place"] }
+headquartered_in = { gloss = "{x} is headquartered in {y}", types = ["organization", "city"] }
+borders = { gloss = "{x} borders {y}", types = ["country", "country"] }
+near = { gloss = "{x} is near {y}", types = ["place", "place"] }
+born_in = { gloss = "{x} was born in {y}", types = ["person", "city"] }
+lives_in = { gloss = "{x} lives in {y}", types = ["person", "city"] }
+died_in = { gloss = "{x} died in {y}", types = ["person", "city"] }
+citizen_of = { gloss = "{x} is a citizen of {y}", types = ["person", "country"] }
+visited = { gloss = "{x} visited {y}", types = ["person", "city"] }
+won = { gloss = "{x} won {y}", types = ["athlete", "competition"] }
+competed_in = { gloss = "{x} competed in {y}", types = ["athlete", "competition"] }
+bought = { gloss = "{x} bought {y}", types = ["person", "house"] }
+acquired = { gloss = "{x} acquired {y}", types = ["person", "house"] }
+sold = { gloss = "{x} sold {y}", types = ["person", "house"] }
+teaches = { gloss = "{x} teaches {y}", types = ["person", "person"] }
+student_of = { gloss = "{x} is a student of {y}", types = ["person", "person"] }
+murdered = { gloss = "{x} murdered {y}", types = ["person", "person"] }
+killed = { gloss = "{x} killed {y}", types = ["person", "person"] }
+graduated_from = { gloss = "{x} graduated from {y}", types = ["person", "university"] }
+attended = { gloss = "{x} attended {y}", types = ["person", "university"] }
+
+# ---------------------------------------------------------------- kinship
+
+[[relations]]
+premise = "mother"
+conclusion = "parent"
+holds = "forward"
+reason = "a mother of someone is one of their parents; a parent may be their father"
+
+[[relations]]
+premise = "father"
+conclusion = "parent"
+holds = "forward"
+reason = "a father of someone is one of their parents; a parent may be their mother"
+
+[[relations]]
+premise = "child"
+conclusion = "parent"
+swapped = true
+holds = "both"
+reason = "B being a child of A says exactly that A is a parent of B"
+
+[[relations]]
+premise = "parent"
+conclusion = "child"
+holds = "neither"
+reason = "same words, arguments in the wrong order: a parent of B is not a child of B"
+
+[[relations]]
+premise = "son"
+conclusion = "child"
+holds = "forward"
+reason = "a son of someone is their child; a child may be a daughter"
+
+[[relations]]
+premise = "daughter"
+conclusion = "child"
+holds = "forward"
+reason = "a daughter of someone is their child; a child may be a son"
+
+[[relations]]
+premise = "grandmother"
+conclusion = "grandparent"
+holds = "forward"
+reason = "a grandmother is a grandparent; a grandparent may be a grandfather"
+
+[[relations]]
+premise = "parent"
+conclusion = "ancestor"
+holds = "forward"
+reason = "a parent is an ancestor; an ancestor may be a grandparent or further back"
+
+[[relations]]
+premise = "grandparent"
+conclusion = "ancestor"
+holds = "forward"
+reason = "a grandparent is an ancestor; an ancestor may be a parent"
+
+[[relations]]
+premise = "ancestor"
+conclusion = "descendant"
+swapped = true
+holds = "both"
+reason = "B being an ancestor of A says exactly that A is a descendant of B"
+
+[[relations]]
+premise = "brother"
+conclusion = "sibling"
+holds = "forward"
+reason = "a brother is a sibling; a sibling may be a sister"
+
+[[relations]]
+premise = "sister"
+conclusion = "sibling"
+holds = "forward"
+reason = "a sister is a sibling; a sibling may be a brother"
+
+[[relations]]
+premise = "sibling"
+conclusion = "sibling"
+swapped = true
+holds = "both"
+reason = "being siblings is symmetric"
+
+[[relations]]
+premise = "parent"
+conclusion = "parent"
+swapped = true
+holds = "neither"
+reason = "being a parent is asymmetric: no one is a parent of their own parent"
+
+[[relations]]
+premise = "married_to"
+conclusion = "married_to"
+swapped = true
+holds = "both"
+reason = "being married to someone is symmetric"
+
+[[relations]]
+premise = "married_to"
+conclusion = "spouse"
+holds = "both"
+reason = "being married to someone and being their spouse say the same thing"
+
+[[relations]]
+premise = "husband"
+conclusion = "married_to"
+holds = "forward"
+reason = "a husband is married to his spouse; a married person may be a wife"
+
+[[relations]]
+premise = "wife"
+conclusion = "married_to"
+holds = "forward"
+reason = "a wife is married to her spouse; a married person may be a husband"
+
+[[relations]]
+premise = "husband"
+conclusion = "wife"
+swapped = true
+holds = "neither"
+reason = "in a marriage of two men the spouse of a husband is a husband, so B being the husband of A does not make A the wife of B, nor the reverse"
+
+[[relations]]
+premise = "legal_guardian"
+conclusion = "parent"
+holds = "neither"
+reason = "a legal guardian may be an aunt or an appointed adult, and a parent may have lost guardianship"
+
+[[relations]]
+premise = "stepmother"
+conclusion = "parent"
+holds = "neither"
+reason = "a stepmother is a parent's spouse and not a parent unless she adopts; a parent is not a stepmother"
+
+[[relations]]
+premise = "mother_in_law"
+conclusion = "mother"
+holds = "neither"
+reason = "a mother-in-law is the mother of one's spouse, not one's mother"
+
+[[relations]]
+premise = "godparent"
+conclusion = "parent"
+holds = "neither"
+reason = "a godparent is a sponsor at baptism, not a parent"
+
+[[relations]]
+premise = "biological_mother"
+conclusion = "mother"
+holds = "forward"
+reason = "a biological mother is a mother; a mother may be adoptive"
+
+[[relations]]
+premise = "adoptive_parent"
+conclusion = "parent"
+holds = "forward"
+reason = "an adoptive parent is a legal parent; most parents are not adoptive"
+
+[[relations]]
+premise = "mother"
+conclusion = "relative"
+holds = "forward"
+reason = "a mother is a relative; a relative may be a cousin"
+
+[[relations]]
+premise = "cousin"
+conclusion = "relative"
+holds = "forward"
+reason = "a cousin is a relative; a relative may be a sibling"
+
+[[relations]]
+premise = "uncle"
+conclusion = "relative"
+holds = "forward"
+reason = "an uncle is a relative; a relative may be a parent"
+
+[[relations]]
+premise = "relative"
+conclusion = "relative"
+swapped = true
+holds = "both"
+reason = "being relatives is symmetric"
+
+[[relations]]
+premise = "cousin"
+conclusion = "sibling"
+holds = "neither"
+reason = "cousins share grandparents, siblings share parents; neither is the other"
+
+[[relations]]
+premise = "grandmother"
+conclusion = "mother"
+holds = "neither"
+reason = "a grandmother of B is a mother of B's parent, not of B"
+
+[[relations]]
+premise = "mother"
+conclusion = "father"
+holds = "neither"
+reason = "the two parents of a child are different people"
+
+# ---------------------------------------------------------------- employment
+
+[[relations]]
+premise = "employs"
+conclusion = "works_for"
+swapped = true
+holds = "forward"
+reason = "an employee works for the employer, but a contractor or volunteer works for someone who does not employ them"
+
+[[relations]]
+premise = "employee_of"
+conclusion = "works_for"
+holds = "forward"
+reason = "an employee works for the employer; one who works for an organisation may be a contractor"
+
+[[relations]]
+premise = "employee_of"
+conclusion = "employs"
+swapped = true
+holds = "both"
+reason = "B being an employee of A says exactly that A employs B"
+
+[[relations]]
+premise = "employee_of"
+conclusion = "employed_by"
+holds = "both"
+reason = "being an employee of and being employed by say the same thing"
+
+[[relations]]
+premise = "employs"
+conclusion = "manages"
+holds = "neither"
+reason = "an employer need not manage an employee directly, and a manager is usually not the employer"
+
+[[relations]]
+premise = "supervises"
+conclusion = "supervised_by"
+swapped = true
+holds = "both"
+reason = "the passive says the same as the active with its arguments exchanged"
+
+[[relations]]
+premise = "chief_executive_of"
+conclusion = "works_for"
+holds = "forward"
+reason = "a chief executive works for the company they run; most who work for it are not its chief executive"
+
+[[relations]]
+premise = "founded"
+conclusion = "owns"
+holds = "neither"
+reason = "a founder may have sold the company, and an owner may have bought it from its founder"
+
+[[relations]]
+premise = "member_of"
+conclusion = "employee_of"
+holds = "neither"
+reason = "a member of an association need not be employed by it, and an employee need not be a member"
+
+[[relations]]
+premise = "contractor_for"
+conclusion = "employee_of"
+holds = "neither"
+reason = "a contractor works for a client without being its employee"
+
+[[relations]]
+premise = "colleague"
+conclusion = "colleague"
+swapped = true
+holds = "both"
+reason = "being colleagues is symmetric"
+
+[[relations]]
+premise = "manages"
+conclusion = "manages"
+swapped = true
+holds = "neither"
+reason = "managing someone is asymmetric"
+
+[[relations]]
+premise = "hired"
+conclusion = "employs"
+holds = "neither"
+reason = "hiring is a past event and the employment may have ended; an employer may have taken the employee over in a merger without hiring them"
+
+[[relations]]
+premise = "fired"
+conclusion = "employs"
+holds = "neither"
+reason = "having fired someone means no longer employing them; an employer has not fired those it still employs"
+
+[[relations]]
+premise = "employs"
+conclusion = "employs"
+swapped = true
+holds = "neither"
+reason = "employing someone is asymmetric"
+
+# ---------------------------------------------------------------- causation
+
+[[relations]]
+premise = "causes"
+conclusion = "correlated_with"
+holds = "neither"
+reason = "a cause can be masked by an opposing path or act non-linearly, leaving no correlation, so causation does not entail correlation; a correlation may come from a common cause"
+
+[[relations]]
+premise = "correlated_with"
+conclusion = "correlated_with"
+swapped = true
+holds = "both"
+reason = "correlation is symmetric"
+
+[[relations]]
+premise = "causes"
+conclusion = "causes"
+swapped = true
+holds = "neither"
+reason = "causation runs one way between a factor and its outcome"
+
+[[relations]]
+premise = "causes"
+conclusion = "contributes_to"
+holds = "forward"
+reason = "a cause contributes to its effect; a contributing factor may be insufficient to cause it"
+
+[[relations]]
+premise = "causes"
+conclusion = "caused_by"
+swapped = true
+holds = "both"
+reason = "B causing A says exactly that A is caused by B"
+
+[[relations]]
+premise = "causes"
+conclusion = "prevents"
+holds = "neither"
+reason = "causing and preventing an outcome are opposites"
+
+[[relations]]
+premise = "causes"
+conclusion = "influences"
+holds = "forward"
+reason = "causing an outcome is influencing it; influence may fall short of causing it"
+
+[[relations]]
+premise = "cures"
+conclusion = "treats"
+holds = "forward"
+reason = "a cure is a treatment; most treatments do not cure"
+
+[[relations]]
+premise = "prevents"
+conclusion = "treats"
+holds = "neither"
+reason = "prevention acts before a disease and treatment after it; a vaccine prevents without treating"
+
+# ---------------------------------------------------------------- location
+
+[[relations]]
+premise = "capital_of"
+conclusion = "located_in"
+holds = "forward"
+reason = "a capital lies in its country; most places in a country are not its capital"
+
+[[relations]]
+premise = "largest_city_of"
+conclusion = "located_in"
+holds = "forward"
+reason = "a country's largest city lies in it; most of its cities are not the largest"
+
+[[relations]]
+premise = "capital_of"
+conclusion = "largest_city_of"
+holds = "neither"
+reason = "Canberra is the capital of Australia and Sydney its largest city"
+
+[[relations]]
+premise = "located_in"
+conclusion = "contains"
+swapped = true
+holds = "both"
+reason = "B being located in A says exactly that A contains B"
+
+[[relations]]
+premise = "located_in"
+conclusion = "situated_in"
+holds = "both"
+reason = "being located in and being situated in say the same thing"
+
+[[relations]]
+premise = "located_in"
+conclusion = "located_in"
+swapped = true
+holds = "neither"
+reason = "containment is asymmetric between distinct places"
+
+[[relations]]
+premise = "borders"
+conclusion = "borders"
+swapped = true
+holds = "both"
+reason = "sharing a border is symmetric"
+
+[[relations]]
+premise = "near"
+conclusion = "near"
+swapped = true
+holds = "both"
+reason = "nearness is symmetric"
+
+[[relations]]
+premise = "headquartered_in"
+conclusion = "located_in"
+holds = "forward"
+reason = "an organisation headquartered in a city is located there; it may be located in cities that are not its headquarters"
+
+[[relations]]
+premise = "born_in"
+conclusion = "lives_in"
+holds = "neither"
+reason = "people move away from where they were born and live where they were not born"
+
+[[relations]]
+premise = "born_in"
+conclusion = "died_in"
+holds = "neither"
+reason = "the places of birth and death usually differ"
+
+[[relations]]
+premise = "born_in"
+conclusion = "citizen_of"
+holds = "neither"
+reason = "birthplace does not confer citizenship everywhere, and citizens may be born abroad"
+
+[[relations]]
+premise = "visited"
+conclusion = "lives_in"
+holds = "neither"
+reason = "a visitor does not live in the place, and a resident is not a visitor"
+
+# ---------------------------------------------------------------- other
+
+[[relations]]
+premise = "won"
+conclusion = "competed_in"
+holds = "forward"
+reason = "a winner competed; most competitors do not win"
+
+[[relations]]
+premise = "bought"
+conclusion = "acquired"
+holds = "forward"
+reason = "buying is a way of acquiring; acquisition may be by gift or inheritance"
+
+[[relations]]
+premise = "bought"
+conclusion = "owns"
+holds = "neither"
+reason = "a buyer may have sold the thing since, and an owner may have inherited it"
+
+[[relations]]
+premise = "sold"
+conclusion = "bought"
+holds = "neither"
+reason = "selling a house and buying it are different acts, usually by different people"
+
+[[relations]]
+premise = "teaches"
+conclusion = "student_of"
+swapped = true
+holds = "both"
+reason = "B teaching A says that A is a student of B"
+
+[[relations]]
+premise = "murdered"
+conclusion = "killed"
+holds = "forward"
+reason = "murder is an unlawful killing; a killing may be accidental or lawful"
+
+[[relations]]
+premise = "graduated_from"
+conclusion = "attended"
+holds = "forward"
+reason = "graduating from a university requires attending it; most who attend have not graduated yet"

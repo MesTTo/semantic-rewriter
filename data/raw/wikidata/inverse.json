@@ -1,0 +1,1835 @@
+{
+  "head" : {
+    "vars" : [ "p", "inverse" ]
+  },
+  "results" : {
+    "bindings" : [ {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1403"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P12765"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P566"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P12766"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1552"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P13044"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P14067"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P13176"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P6606"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P13296"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P427"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P13478"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P13176"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P14067"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P8956"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P14317"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P26"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P26"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1376"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P36"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1308"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P39"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P8810"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P40"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P47"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P47"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P8111"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P111"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P137"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P121"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1830"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P127"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P150"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P131"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P121"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P137"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4969"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P144"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P131"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P150"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P156"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P155"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P155"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P156"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1398"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P167"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P453"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P175"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1299"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P180"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P185"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P184"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P184"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P185"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P6087"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P286"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P910"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P301"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P749"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P355"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2354"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P360"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P527"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P361"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P398"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P397"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P397"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P398"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P399"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P399"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3095"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P425"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P13478"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P427"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P451"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P451"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P175"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P453"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P460"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P460"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P361"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P527"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P12766"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P566"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P568"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P567"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P567"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P568"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P747"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P629"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1441"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P674"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P702"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P688"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P12764"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P694"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P688"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P702"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1344"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P710"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3602"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P726"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P629"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P747"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P355"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P749"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P10695"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P751"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3919"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P767"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3082"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P770"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P170"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P800"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1066"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P802"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1542"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P828"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P201"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P885"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P301"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P910"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1343"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P921"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P926"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P925"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P925"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P926"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P5096"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1029"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1038"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1038"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P176"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1056"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P802"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1066"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1204"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1151"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1194"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1170"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1170"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1194"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1151"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1204"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1875"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1268"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2184"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1269"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2633"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1269"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P8744"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1269"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P9241"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1269"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P180"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1299"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P39"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1308"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1322"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1322"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P710"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1344"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1923"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1344"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2522"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1346"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1366"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1365"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1365"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1366"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P36"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1376"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P167"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1398"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P12765"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1403"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2453"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1411"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P12763"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1420"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1424"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1423"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1423"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1424"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1445"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1434"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P674"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1441"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1434"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1445"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1536"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1478"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1537"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1479"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2283"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1535"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1478"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1536"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1479"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1537"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P828"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1542"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P13044"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1552"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1672"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1582"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1606"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1605"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1605"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1606"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1643"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1642"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1642"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1643"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1677"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1660"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1582"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1672"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1660"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1677"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1704"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1703"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1703"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1704"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1754"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1753"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1753"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1754"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P127"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1830"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1268"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1875"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1889"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1889"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1344"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1923"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2152"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2152"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2176"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2175"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2175"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2176"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4044"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2176"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1535"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2283"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2289"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2286"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2286"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2289"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2329"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2329"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P360"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2354"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2376"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2375"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2375"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2376"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2389"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2388"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2388"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2389"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2444"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2444"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1411"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2453"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2500"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2499"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2499"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2500"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2502"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2501"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2501"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2502"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3148"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2568"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2579"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2578"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2578"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2579"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2674"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2673"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2673"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2674"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2682"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2681"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2681"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2682"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P9901"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2813"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2822"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2821"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2821"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2822"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P417"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2925"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2959"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2959"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P6803"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2974"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P770"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3082"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P425"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3095"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2568"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3148"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3190"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3189"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3189"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3190"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3262"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3261"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3261"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3262"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P170"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3342"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3373"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3373"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P726"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3602"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3730"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3729"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3729"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3730"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3781"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3780"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3780"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3781"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P7376"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3828"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P767"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3919"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4149"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4147"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4147"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4149"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P9926"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4329"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P9813"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4330"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4600"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4599"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4599"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4600"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4792"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4661"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P598"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4791"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4661"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4792"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P144"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4969"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P13360"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P5072"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1029"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P5096"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P5132"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P5131"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P5131"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P5132"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P5134"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P5133"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P5133"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P5134"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P5136"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P5135"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P5135"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P5136"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P5278"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P5278"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1027"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P5460"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P286"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P6087"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P13296"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P6606"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2974"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P6803"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P971"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P7084"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P3828"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P7376"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P7904"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P7903"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P7903"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P7904"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P111"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P8111"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P10888"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P8138"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P40"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P8810"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P8865"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P8865"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4330"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P9813"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P2813"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P9901"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P4329"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P9926"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P8138"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P10888"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P1420"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P12763"
+      }
+    }, {
+      "p" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P694"
+      },
+      "inverse" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/P12764"
+      }
+    } ]
+  }
+}

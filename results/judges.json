@@ -1,0 +1,7589 @@
+{
+ "provenance": {
+  "at": "2026-11-08T03:58:15+1100",
+  "command": "python experiments/judge_eval.py --scores SCORES",
+  "commit": "5c1d914be33ffbb0658d7d9d3ed4efd3fd9e2510",
+  "uncommitted_changes": true,
+  "pairs": {
+   "levyholt": "bdabc781b3c407fe9d3874cf733a3626b6eefe21eb5b98dc294fee245407af2e",
+   "wikidata": "71b6501ea8e54e68e425bdcf580543f3d3706e01e8f680abe96ed0173dd76dc5",
+   "hard": "36295cc3b04ddc0fbca9f9e0d4d8528c64dfe07a2a30585e51c6d03476295155"
+  }
+ },
+ "calibration": {
+  "rule": "maximum dev balanced accuracy of admitting scores at or above the threshold, middle of the optimal plateau",
+  "default": "wikidata dev rows under each variant's fillers",
+  "engine_variant": "letters"
+ },
+ "judges": {
+  "cosine-bge": {
+   "judge": "CosineJudge",
+   "model": "BAAI/bge-small-en-v1.5",
+   "usage": {
+    "pairs": 17106,
+    "calls": 3,
+    "encoded": 9400
+   },
+   "seconds": {
+    "load": 44.31,
+    "letters": 1.54,
+    "typed": 1.64,
+    "instances": 0.59
+   },
+   "gpu_peak_gib": 0.148,
+   "variants": {
+    "letters": {
+     "thresholds": {
+      "default": 0.9571969956159592,
+      "by_set": {
+       "levyholt": 0.914429783821106,
+       "wikidata": 0.9571969956159592
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.49171075837742506,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.4793650793650794,
+         "ties": 0.7365079365079366
+        },
+        "at_default": {
+         "threshold": 0.9571969956159592,
+         "rows": 630,
+         "admitted": 47,
+         "accuracy": 0.4984126984126984,
+         "balanced_accuracy": 0.4984126984126984,
+         "precision": 0.48936170212765956,
+         "recall": 0.07301587301587302
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.49145807778157613,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.4826233183856502,
+         "ties": 0.7522421524663677
+        },
+        "at_default": {
+         "threshold": 0.9571969956159592,
+         "rows": 1784,
+         "admitted": 81,
+         "accuracy": 0.4971973094170404,
+         "balanced_accuracy": 0.4971973094170404,
+         "precision": 0.4691358024691358,
+         "recall": 0.042600896860986545
+        },
+        "at_own_dev": {
+         "threshold": 0.914429783821106,
+         "rows": 1784,
+         "admitted": 679,
+         "accuracy": 0.4960762331838565,
+         "balanced_accuracy": 0.49607623318385646,
+         "precision": 0.4948453608247423,
+         "recall": 0.37668161434977576
+        }
+       }
+      },
+      "wikidata": {
+       "dev": {
+        "rows": 1463,
+        "positives": 313,
+        "auc": 0.5184331157105153,
+        "direction": {
+         "pairs": 248,
+         "accuracy": 0.46774193548387094,
+         "ties": 0.6209677419354839
+        },
+        "at_default": {
+         "threshold": 0.9571969956159592,
+         "rows": 1463,
+         "admitted": 120,
+         "accuracy": 0.7737525632262474,
+         "balanced_accuracy": 0.5514696485623003,
+         "precision": 0.425,
+         "recall": 0.16293929712460065
+        }
+       },
+       "test": {
+        "rows": 3329,
+        "positives": 677,
+        "auc": 0.5306340522801554,
+        "direction": {
+         "pairs": 552,
+         "accuracy": 0.46195652173913043,
+         "ties": 0.677536231884058
+        },
+        "at_default": {
+         "threshold": 0.9571969956159592,
+         "rows": 3329,
+         "admitted": 255,
+         "accuracy": 0.7680985280865125,
+         "balanced_accuracy": 0.5260902281603472,
+         "precision": 0.3137254901960784,
+         "recall": 0.11816838995568685
+        },
+        "at_own_dev": {
+         "threshold": 0.9571969956159592,
+         "rows": 3329,
+         "admitted": 255,
+         "accuracy": 0.7680985280865125,
+         "balanced_accuracy": 0.5260902281603472,
+         "precision": 0.3137254901960784,
+         "recall": 0.11816838995568685
+        }
+       }
+      },
+      "hard": {
+       "test": {
+        "rows": 140,
+        "positives": 56,
+        "auc": 0.6481717687074829,
+        "direction": {
+         "pairs": 29,
+         "accuracy": 0.5172413793103449,
+         "ties": 0.9655172413793104
+        },
+        "at_default": {
+         "threshold": 0.9571969956159592,
+         "rows": 140,
+         "admitted": 56,
+         "accuracy": 0.6142857142857143,
+         "balanced_accuracy": 0.5982142857142858,
+         "precision": 0.5178571428571429,
+         "recall": 0.5178571428571429
+        }
+       }
+      }
+     }
+    },
+    "typed": {
+     "thresholds": {
+      "default": 0.9749725759029388,
+      "by_set": {
+       "levyholt": 0.9631116688251495,
+       "wikidata": 0.9749725759029388
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.49736457545981355,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.4888888888888889,
+         "ties": 0.9206349206349206
+        },
+        "at_default": {
+         "threshold": 0.9749725759029388,
+         "rows": 630,
+         "admitted": 50,
+         "accuracy": 0.5,
+         "balanced_accuracy": 0.5,
+         "precision": 0.5,
+         "recall": 0.07936507936507936
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.49855906513302095,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.49271300448430494,
+         "ties": 0.9204035874439462
+        },
+        "at_default": {
+         "threshold": 0.9749725759029388,
+         "rows": 1784,
+         "admitted": 143,
+         "accuracy": 0.500560538116592,
+         "balanced_accuracy": 0.500560538116592,
+         "precision": 0.5034965034965035,
+         "recall": 0.08071748878923767
+        },
+        "at_own_dev": {
+         "threshold": 0.9631116688251495,
+         "rows": 1784,
+         "admitted": 391,
+         "accuracy": 0.500560538116592,
+         "balanced_accuracy": 0.500560538116592,
+         "precision": 0.5012787723785166,
+         "recall": 0.21973094170403587
+        }
+       }
+      },
+      "wikidata": {
+       "dev": {
+        "rows": 1463,
+        "positives": 313,
+        "auc": 0.49923322683706073,
+        "direction": {
+         "pairs": 248,
+         "accuracy": 0.46975806451612906,
+         "ties": 0.842741935483871
+        },
+        "at_default": {
+         "threshold": 0.9749725759029388,
+         "rows": 1463,
+         "admitted": 144,
+         "accuracy": 0.7696514012303486,
+         "balanced_accuracy": 0.5593249062369774,
+         "precision": 0.4166666666666667,
+         "recall": 0.19169329073482427
+        }
+       },
+       "test": {
+        "rows": 3329,
+        "positives": 677,
+        "auc": 0.5096137136822687,
+        "direction": {
+         "pairs": 552,
+         "accuracy": 0.49184782608695654,
+         "ties": 0.8605072463768116
+        },
+        "at_default": {
+         "threshold": 0.9749725759029388,
+         "rows": 3329,
+         "admitted": 350,
+         "accuracy": 0.743166115950736,
+         "balanced_accuracy": 0.513741753945073,
+         "precision": 0.24571428571428572,
+         "recall": 0.12703101920236337
+        },
+        "at_own_dev": {
+         "threshold": 0.9749725759029388,
+         "rows": 3329,
+         "admitted": 350,
+         "accuracy": 0.743166115950736,
+         "balanced_accuracy": 0.513741753945073,
+         "precision": 0.24571428571428572,
+         "recall": 0.12703101920236337
+        }
+       }
+      },
+      "hard": {
+       "test": {
+        "rows": 140,
+        "positives": 56,
+        "auc": 0.7194940476190477,
+        "direction": {
+         "pairs": 29,
+         "accuracy": 0.5,
+         "ties": 1.0
+        },
+        "at_default": {
+         "threshold": 0.9749725759029388,
+         "rows": 140,
+         "admitted": 58,
+         "accuracy": 0.6571428571428571,
+         "balanced_accuracy": 0.6458333333333333,
+         "precision": 0.5689655172413793,
+         "recall": 0.5892857142857143
+        }
+       }
+      }
+     }
+    },
+    "instances": {
+     "thresholds": {
+      "default": null,
+      "by_set": {
+       "levyholt": 0.9625431448221207
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.5,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.5,
+         "ties": 1.0
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.5,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.5,
+         "ties": 1.0
+        },
+        "at_own_dev": {
+         "threshold": 0.9625431448221207,
+         "rows": 1784,
+         "admitted": 918,
+         "accuracy": 0.5,
+         "balanced_accuracy": 0.5,
+         "precision": 0.5,
+         "recall": 0.5145739910313901
+        }
+       }
+      },
+      "wikidata": {},
+      "hard": {}
+     }
+    }
+   }
+  },
+  "cosine-qwen3": {
+   "judge": "CosineJudge",
+   "model": "Qwen/Qwen3-Embedding-0.6B",
+   "usage": {
+    "pairs": 17106,
+    "calls": 3,
+    "encoded": 9400
+   },
+   "seconds": {
+    "load": 6.43,
+    "letters": 3.34,
+    "typed": 5.15,
+    "instances": 2.6
+   },
+   "gpu_peak_gib": 1.147,
+   "variants": {
+    "letters": {
+     "thresholds": {
+      "default": 0.9751224517822266,
+      "by_set": {
+       "levyholt": 0.9468457251787186,
+       "wikidata": 0.9751224517822266
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.5074930713025951,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.526984126984127,
+         "ties": 0.7365079365079366
+        },
+        "at_default": {
+         "threshold": 0.9751224517822266,
+         "rows": 630,
+         "admitted": 26,
+         "accuracy": 0.5031746031746032,
+         "balanced_accuracy": 0.5031746031746032,
+         "precision": 0.5384615384615384,
+         "recall": 0.044444444444444446
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.5020115274789358,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.49495515695067266,
+         "ties": 0.7522421524663677
+        },
+        "at_default": {
+         "threshold": 0.9751224517822266,
+         "rows": 1784,
+         "admitted": 68,
+         "accuracy": 0.5022421524663677,
+         "balanced_accuracy": 0.5022421524663677,
+         "precision": 0.5294117647058824,
+         "recall": 0.04035874439461883
+        },
+        "at_own_dev": {
+         "threshold": 0.9468457251787186,
+         "rows": 1784,
+         "admitted": 719,
+         "accuracy": 0.5016816143497758,
+         "balanced_accuracy": 0.5016816143497758,
+         "precision": 0.502086230876217,
+         "recall": 0.4047085201793722
+        }
+       }
+      },
+      "wikidata": {
+       "dev": {
+        "rows": 1463,
+        "positives": 313,
+        "auc": 0.5231809973607445,
+        "direction": {
+         "pairs": 248,
+         "accuracy": 0.46774193548387094,
+         "ties": 0.6209677419354839
+        },
+        "at_default": {
+         "threshold": 0.9751224517822266,
+         "rows": 1463,
+         "admitted": 216,
+         "accuracy": 0.7231715652768285,
+         "balanced_accuracy": 0.5320850118071955,
+         "precision": 0.28703703703703703,
+         "recall": 0.19808306709265175
+        }
+       },
+       "test": {
+        "rows": 3329,
+        "positives": 677,
+        "auc": 0.5320234331660172,
+        "direction": {
+         "pairs": 552,
+         "accuracy": 0.49094202898550726,
+         "ties": 0.677536231884058
+        },
+        "at_default": {
+         "threshold": 0.9751224517822266,
+         "rows": 3329,
+         "admitted": 471,
+         "accuracy": 0.7284469810753981,
+         "balanced_accuracy": 0.5243040006594616,
+         "precision": 0.25902335456475584,
+         "recall": 0.18020679468242246
+        },
+        "at_own_dev": {
+         "threshold": 0.9751224517822266,
+         "rows": 3329,
+         "admitted": 471,
+         "accuracy": 0.7284469810753981,
+         "balanced_accuracy": 0.5243040006594616,
+         "precision": 0.25902335456475584,
+         "recall": 0.18020679468242246
+        }
+       }
+      },
+      "hard": {
+       "test": {
+        "rows": 140,
+        "positives": 56,
+        "auc": 0.671343537414966,
+        "direction": {
+         "pairs": 29,
+         "accuracy": 0.4827586206896552,
+         "ties": 0.9655172413793104
+        },
+        "at_default": {
+         "threshold": 0.9751224517822266,
+         "rows": 140,
+         "admitted": 69,
+         "accuracy": 0.6071428571428571,
+         "balanced_accuracy": 0.6101190476190477,
+         "precision": 0.5072463768115942,
+         "recall": 0.625
+        }
+       }
+      }
+     }
+    },
+    "typed": {
+     "thresholds": {
+      "default": 0.9761264026165009,
+      "by_set": {
+       "levyholt": 0.950287401676178,
+       "wikidata": 0.9761264026165009
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.5020408163265306,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.5174603174603175,
+         "ties": 0.9206349206349206
+        },
+        "at_default": {
+         "threshold": 0.9761264026165009,
+         "rows": 630,
+         "admitted": 118,
+         "accuracy": 0.5031746031746032,
+         "balanced_accuracy": 0.5031746031746032,
+         "precision": 0.5084745762711864,
+         "recall": 0.19047619047619047
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.5016030636047377,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.5050448430493274,
+         "ties": 0.9204035874439462
+        },
+        "at_default": {
+         "threshold": 0.9761264026165009,
+         "rows": 1784,
+         "admitted": 269,
+         "accuracy": 0.500560538116592,
+         "balanced_accuracy": 0.500560538116592,
+         "precision": 0.5018587360594795,
+         "recall": 0.15134529147982062
+        },
+        "at_own_dev": {
+         "threshold": 0.950287401676178,
+         "rows": 1784,
+         "admitted": 1260,
+         "accuracy": 0.5022421524663677,
+         "balanced_accuracy": 0.5022421524663677,
+         "precision": 0.5015873015873016,
+         "recall": 0.7085201793721974
+        }
+       }
+      },
+      "wikidata": {
+       "dev": {
+        "rows": 1463,
+        "positives": 313,
+        "auc": 0.5065425753576885,
+        "direction": {
+         "pairs": 248,
+         "accuracy": 0.4939516129032258,
+         "ties": 0.842741935483871
+        },
+        "at_default": {
+         "threshold": 0.9761264026165009,
+         "rows": 1463,
+         "admitted": 221,
+         "accuracy": 0.7265892002734108,
+         "balanced_accuracy": 0.5400722322544798,
+         "precision": 0.3031674208144796,
+         "recall": 0.21405750798722045
+        }
+       },
+       "test": {
+        "rows": 3329,
+        "positives": 677,
+        "auc": 0.506246783453752,
+        "direction": {
+         "pairs": 552,
+         "accuracy": 0.4990942028985507,
+         "ties": 0.8605072463768116
+        },
+        "at_default": {
+         "threshold": 0.9761264026165009,
+         "rows": 3329,
+         "admitted": 518,
+         "accuracy": 0.7197356563532592,
+         "balanced_accuracy": 0.5237865683712413,
+         "precision": 0.2528957528957529,
+         "recall": 0.1935007385524372
+        },
+        "at_own_dev": {
+         "threshold": 0.9761264026165009,
+         "rows": 3329,
+         "admitted": 518,
+         "accuracy": 0.7197356563532592,
+         "balanced_accuracy": 0.5237865683712413,
+         "precision": 0.2528957528957529,
+         "recall": 0.1935007385524372
+        }
+       }
+      },
+      "hard": {
+       "test": {
+        "rows": 140,
+        "positives": 56,
+        "auc": 0.6927083333333334,
+        "direction": {
+         "pairs": 29,
+         "accuracy": 0.5,
+         "ties": 1.0
+        },
+        "at_default": {
+         "threshold": 0.9761264026165009,
+         "rows": 140,
+         "admitted": 60,
+         "accuracy": 0.6857142857142857,
+         "balanced_accuracy": 0.6785714285714286,
+         "precision": 0.6,
+         "recall": 0.6428571428571429
+        }
+       }
+      }
+     }
+    },
+    "instances": {
+     "thresholds": {
+      "default": null,
+      "by_set": {
+       "levyholt": 0.9804084450006485
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.5,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.5,
+         "ties": 1.0
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.5,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.5,
+         "ties": 1.0
+        },
+        "at_own_dev": {
+         "threshold": 0.9804084450006485,
+         "rows": 1784,
+         "admitted": 854,
+         "accuracy": 0.5,
+         "balanced_accuracy": 0.5,
+         "precision": 0.5,
+         "recall": 0.4786995515695067
+        }
+       }
+      },
+      "wikidata": {},
+      "hard": {}
+     }
+    }
+   }
+  },
+  "jev": {
+   "judge": "JevJudge",
+   "model": "jev-latest",
+   "usage": {
+    "pairs": 17106,
+    "calls": 3,
+    "requests": 0,
+    "questions": 0,
+    "cached": 17106,
+    "input_tokens": 0,
+    "output_tokens": 0
+   },
+   "seconds": {
+    "load": 0.09,
+    "letters": 0.08,
+    "typed": 0.07,
+    "instances": 0.05
+   },
+   "gpu_peak_gib": 0.009,
+   "variants": {
+    "letters": {
+     "thresholds": {
+      "default": 0.165,
+      "by_set": {
+       "levyholt": 0.185,
+       "wikidata": 0.165
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.7884555303602923,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.8285714285714286,
+         "ties": 0.01904761904761905
+        },
+        "at_default": {
+         "threshold": 0.165,
+         "rows": 630,
+         "admitted": 293,
+         "accuracy": 0.746031746031746,
+         "balanced_accuracy": 0.746031746031746,
+         "precision": 0.764505119453925,
+         "recall": 0.7111111111111111
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.8113550443403246,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.8217488789237668,
+         "ties": 0.020179372197309416
+        },
+        "at_default": {
+         "threshold": 0.165,
+         "rows": 1784,
+         "admitted": 786,
+         "accuracy": 0.7376681614349776,
+         "balanced_accuracy": 0.7376681614349776,
+         "precision": 0.7697201017811705,
+         "recall": 0.6782511210762332
+        },
+        "at_own_dev": {
+         "threshold": 0.185,
+         "rows": 1784,
+         "admitted": 747,
+         "accuracy": 0.7348654708520179,
+         "balanced_accuracy": 0.7348654708520179,
+         "precision": 0.7804551539491299,
+         "recall": 0.6535874439461884
+        }
+       }
+      },
+      "wikidata": {
+       "dev": {
+        "rows": 1463,
+        "positives": 313,
+        "auc": 0.8725531323794972,
+        "direction": {
+         "pairs": 248,
+         "accuracy": 0.875,
+         "ties": 0.024193548387096774
+        },
+        "at_default": {
+         "threshold": 0.165,
+         "rows": 1463,
+         "admitted": 460,
+         "accuracy": 0.8147641831852358,
+         "balanced_accuracy": 0.8100889012362829,
+         "precision": 0.5456521739130434,
+         "recall": 0.8019169329073482
+        }
+       },
+       "test": {
+        "rows": 3329,
+        "positives": 677,
+        "auc": 0.8776590115650851,
+        "direction": {
+         "pairs": 552,
+         "accuracy": 0.894927536231884,
+         "ties": 0.028985507246376812
+        },
+        "at_default": {
+         "threshold": 0.165,
+         "rows": 3329,
+         "admitted": 1048,
+         "accuracy": 0.8194653048963653,
+         "balanced_accuracy": 0.823437510443332,
+         "precision": 0.5362595419847328,
+         "recall": 0.8301329394387001
+        },
+        "at_own_dev": {
+         "threshold": 0.165,
+         "rows": 3329,
+         "admitted": 1048,
+         "accuracy": 0.8194653048963653,
+         "balanced_accuracy": 0.823437510443332,
+         "precision": 0.5362595419847328,
+         "recall": 0.8301329394387001
+        }
+       }
+      },
+      "hard": {
+       "test": {
+        "rows": 140,
+        "positives": 56,
+        "auc": 0.9883078231292517,
+        "direction": {
+         "pairs": 29,
+         "accuracy": 1.0,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.165,
+         "rows": 140,
+         "admitted": 71,
+         "accuracy": 0.8928571428571429,
+         "balanced_accuracy": 0.9107142857142857,
+         "precision": 0.7887323943661971,
+         "recall": 1.0
+        }
+       }
+      }
+     }
+    },
+    "typed": {
+     "thresholds": {
+      "default": 0.20500000000000002,
+      "by_set": {
+       "levyholt": 0.135,
+       "wikidata": 0.20500000000000002
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.8382312925170068,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.8444444444444444,
+         "ties": 0.01904761904761905
+        },
+        "at_default": {
+         "threshold": 0.20500000000000002,
+         "rows": 630,
+         "admitted": 294,
+         "accuracy": 0.7571428571428571,
+         "balanced_accuracy": 0.7571428571428571,
+         "precision": 0.7755102040816326,
+         "recall": 0.7238095238095238
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.8070391522049508,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.8256726457399103,
+         "ties": 0.023542600896860985
+        },
+        "at_default": {
+         "threshold": 0.20500000000000002,
+         "rows": 1784,
+         "admitted": 736,
+         "accuracy": 0.7410313901345291,
+         "balanced_accuracy": 0.7410313901345291,
+         "precision": 0.7921195652173914,
+         "recall": 0.6535874439461884
+        },
+        "at_own_dev": {
+         "threshold": 0.135,
+         "rows": 1784,
+         "admitted": 898,
+         "accuracy": 0.7410313901345291,
+         "balanced_accuracy": 0.7410313901345291,
+         "precision": 0.7394209354120267,
+         "recall": 0.7443946188340808
+        }
+       }
+      },
+      "wikidata": {
+       "dev": {
+        "rows": 1463,
+        "positives": 313,
+        "auc": 0.8630782053062925,
+        "direction": {
+         "pairs": 248,
+         "accuracy": 0.8951612903225806,
+         "ties": 0.008064516129032258
+        },
+        "at_default": {
+         "threshold": 0.20500000000000002,
+         "rows": 1463,
+         "admitted": 490,
+         "accuracy": 0.7915242652084757,
+         "balanced_accuracy": 0.7929809695791082,
+         "precision": 0.5081632653061224,
+         "recall": 0.7955271565495208
+        }
+       },
+       "test": {
+        "rows": 3329,
+        "positives": 677,
+        "auc": 0.8580149648769859,
+        "direction": {
+         "pairs": 552,
+         "accuracy": 0.9302536231884058,
+         "ties": 0.016304347826086956
+        },
+        "at_default": {
+         "threshold": 0.20500000000000002,
+         "rows": 3329,
+         "admitted": 1140,
+         "accuracy": 0.7756082907780114,
+         "balanced_accuracy": 0.7810606972024123,
+         "precision": 0.4692982456140351,
+         "recall": 0.7902511078286558
+        },
+        "at_own_dev": {
+         "threshold": 0.20500000000000002,
+         "rows": 3329,
+         "admitted": 1140,
+         "accuracy": 0.7756082907780114,
+         "balanced_accuracy": 0.7810606972024123,
+         "precision": 0.4692982456140351,
+         "recall": 0.7902511078286558
+        }
+       }
+      },
+      "hard": {
+       "test": {
+        "rows": 140,
+        "positives": 56,
+        "auc": 0.9956420068027211,
+        "direction": {
+         "pairs": 29,
+         "accuracy": 1.0,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.20500000000000002,
+         "rows": 140,
+         "admitted": 69,
+         "accuracy": 0.9071428571428571,
+         "balanced_accuracy": 0.9226190476190477,
+         "precision": 0.8115942028985508,
+         "recall": 1.0
+        }
+       }
+      }
+     }
+    },
+    "instances": {
+     "thresholds": {
+      "default": null,
+      "by_set": {
+       "levyholt": 0.395
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.8656890904509952,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.8746031746031746,
+         "ties": 0.009523809523809525
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.8632462949184581,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.8649103139013453,
+         "ties": 0.007847533632286996
+        },
+        "at_own_dev": {
+         "threshold": 0.395,
+         "rows": 1784,
+         "admitted": 814,
+         "accuracy": 0.773542600896861,
+         "balanced_accuracy": 0.773542600896861,
+         "precision": 0.7997542997542998,
+         "recall": 0.7298206278026906
+        }
+       }
+      },
+      "wikidata": {},
+      "hard": {}
+     }
+    }
+   }
+  },
+  "nli-deberta-base": {
+   "judge": "NLIJudge",
+   "model": "cross-encoder/nli-deberta-v3-base",
+   "usage": {
+    "pairs": 17106,
+    "calls": 3
+   },
+   "seconds": {
+    "load": 3.05,
+    "letters": 7.57,
+    "typed": 6.76,
+    "instances": 2.02
+   },
+   "gpu_peak_gib": 0.892,
+   "variants": {
+    "letters": {
+     "thresholds": {
+      "default": 0.2221469059586525,
+      "by_set": {
+       "levyholt": 0.9697761237621307,
+       "wikidata": 0.2221469059586525
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.7039304610733182,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.7682539682539683,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.2221469059586525,
+         "rows": 630,
+         "admitted": 333,
+         "accuracy": 0.653968253968254,
+         "balanced_accuracy": 0.653968253968254,
+         "precision": 0.6456456456456456,
+         "recall": 0.6825396825396826
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.73987889360333,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.8038116591928252,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.2221469059586525,
+         "rows": 1784,
+         "admitted": 867,
+         "accuracy": 0.6855381165919282,
+         "balanced_accuracy": 0.6855381165919283,
+         "precision": 0.6908881199538639,
+         "recall": 0.67152466367713
+        },
+        "at_own_dev": {
+         "threshold": 0.9697761237621307,
+         "rows": 1784,
+         "admitted": 421,
+         "accuracy": 0.609304932735426,
+         "balanced_accuracy": 0.6093049327354261,
+         "precision": 0.7315914489311164,
+         "recall": 0.3452914798206278
+        }
+       }
+      },
+      "wikidata": {
+       "dev": {
+        "rows": 1463,
+        "positives": 313,
+        "auc": 0.740994582580914,
+        "direction": {
+         "pairs": 248,
+         "accuracy": 0.7983870967741935,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.2221469059586525,
+         "rows": 1463,
+         "admitted": 504,
+         "accuracy": 0.7286397812713602,
+         "balanced_accuracy": 0.7076371718294208,
+         "precision": 0.4166666666666667,
+         "recall": 0.670926517571885
+        }
+       },
+       "test": {
+        "rows": 3329,
+        "positives": 677,
+        "auc": 0.7440007931362523,
+        "direction": {
+         "pairs": 552,
+         "accuracy": 0.7898550724637681,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.2221469059586525,
+         "rows": 3329,
+         "admitted": 1127,
+         "accuracy": 0.729047762090718,
+         "balanced_accuracy": 0.7056361687954354,
+         "precision": 0.40017746228926354,
+         "recall": 0.6661742983751846
+        },
+        "at_own_dev": {
+         "threshold": 0.2221469059586525,
+         "rows": 3329,
+         "admitted": 1127,
+         "accuracy": 0.729047762090718,
+         "balanced_accuracy": 0.7056361687954354,
+         "precision": 0.40017746228926354,
+         "recall": 0.6661742983751846
+        }
+       }
+      },
+      "hard": {
+       "test": {
+        "rows": 140,
+        "positives": 56,
+        "auc": 0.8656462585034014,
+        "direction": {
+         "pairs": 29,
+         "accuracy": 0.896551724137931,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.2221469059586525,
+         "rows": 140,
+         "admitted": 81,
+         "accuracy": 0.7642857142857142,
+         "balanced_accuracy": 0.7916666666666667,
+         "precision": 0.6419753086419753,
+         "recall": 0.9285714285714286
+        }
+       }
+      }
+     }
+    },
+    "typed": {
+     "thresholds": {
+      "default": 0.036115990951657295,
+      "by_set": {
+       "levyholt": 0.9063650667667389,
+       "wikidata": 0.036115990951657295
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.7021415973796926,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.7936507936507936,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.036115990951657295,
+         "rows": 630,
+         "admitted": 444,
+         "accuracy": 0.6428571428571429,
+         "balanced_accuracy": 0.6428571428571428,
+         "precision": 0.6013513513513513,
+         "recall": 0.8476190476190476
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.7329947063081904,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.7791479820627802,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.036115990951657295,
+         "rows": 1784,
+         "admitted": 1173,
+         "accuracy": 0.6709641255605381,
+         "balanced_accuracy": 0.6709641255605381,
+         "precision": 0.6300085251491901,
+         "recall": 0.82847533632287
+        },
+        "at_own_dev": {
+         "threshold": 0.9063650667667389,
+         "rows": 1784,
+         "admitted": 788,
+         "accuracy": 0.6849775784753364,
+         "balanced_accuracy": 0.6849775784753362,
+         "precision": 0.7093908629441624,
+         "recall": 0.6266816143497758
+        }
+       }
+      },
+      "wikidata": {
+       "dev": {
+        "rows": 1463,
+        "positives": 313,
+        "auc": 0.7170801500208362,
+        "direction": {
+         "pairs": 248,
+         "accuracy": 0.8548387096774194,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.036115990951657295,
+         "rows": 1463,
+         "admitted": 737,
+         "accuracy": 0.6103896103896104,
+         "balanced_accuracy": 0.6672996249479094,
+         "precision": 0.3256445047489824,
+         "recall": 0.7667731629392971
+        }
+       },
+       "test": {
+        "rows": 3329,
+        "positives": 677,
+        "auc": 0.6936984656378175,
+        "direction": {
+         "pairs": 552,
+         "accuracy": 0.8568840579710145,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.036115990951657295,
+         "rows": 3329,
+         "admitted": 1683,
+         "accuracy": 0.5914689095824572,
+         "balanced_accuracy": 0.6462370029252469,
+         "precision": 0.29708853238265004,
+         "recall": 0.7385524372230429
+        },
+        "at_own_dev": {
+         "threshold": 0.036115990951657295,
+         "rows": 3329,
+         "admitted": 1683,
+         "accuracy": 0.5914689095824572,
+         "balanced_accuracy": 0.6462370029252469,
+         "precision": 0.29708853238265004,
+         "recall": 0.7385524372230429
+        }
+       }
+      },
+      "hard": {
+       "test": {
+        "rows": 140,
+        "positives": 56,
+        "auc": 0.8278061224489796,
+        "direction": {
+         "pairs": 29,
+         "accuracy": 0.9655172413793104,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.036115990951657295,
+         "rows": 140,
+         "admitted": 80,
+         "accuracy": 0.7428571428571429,
+         "balanced_accuracy": 0.7678571428571429,
+         "precision": 0.625,
+         "recall": 0.8928571428571429
+        }
+       }
+      }
+     }
+    },
+    "instances": {
+     "thresholds": {
+      "default": null,
+      "by_set": {
+       "levyholt": 0.9267692565917969
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.7271050642479214,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.7936507936507936,
+         "ties": 0.0
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.7360707534838826,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.8262331838565022,
+         "ties": 0.0
+        },
+        "at_own_dev": {
+         "threshold": 0.9267692565917969,
+         "rows": 1784,
+         "admitted": 957,
+         "accuracy": 0.6900224215246636,
+         "balanced_accuracy": 0.6900224215246638,
+         "precision": 0.677115987460815,
+         "recall": 0.726457399103139
+        }
+       }
+      },
+      "wikidata": {},
+      "hard": {}
+     }
+    }
+   }
+  },
+  "nli-deberta-large": {
+   "judge": "NLIJudge",
+   "model": "cross-encoder/nli-deberta-v3-large",
+   "usage": {
+    "pairs": 17106,
+    "calls": 3
+   },
+   "seconds": {
+    "load": 66.7,
+    "letters": 53.9,
+    "typed": 26.2,
+    "instances": 14.66
+   },
+   "gpu_peak_gib": 1.946,
+   "variants": {
+    "letters": {
+     "thresholds": {
+      "default": 0.659252792596817,
+      "by_set": {
+       "levyholt": 0.05251435004174709,
+       "wikidata": 0.659252792596817
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.7166994205089443,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.8,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.659252792596817,
+         "rows": 630,
+         "admitted": 275,
+         "accuracy": 0.653968253968254,
+         "balanced_accuracy": 0.653968253968254,
+         "precision": 0.6763636363636364,
+         "recall": 0.5904761904761905
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.7199684791570311,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.7701793721973094,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.659252792596817,
+         "rows": 1784,
+         "admitted": 710,
+         "accuracy": 0.6670403587443946,
+         "balanced_accuracy": 0.6670403587443946,
+         "precision": 0.7098591549295775,
+         "recall": 0.5650224215246636
+        },
+        "at_own_dev": {
+         "threshold": 0.05251435004174709,
+         "rows": 1784,
+         "admitted": 809,
+         "accuracy": 0.679932735426009,
+         "balanced_accuracy": 0.679932735426009,
+         "precision": 0.6983930778739185,
+         "recall": 0.6334080717488789
+        }
+       }
+      },
+      "wikidata": {
+       "dev": {
+        "rows": 1463,
+        "positives": 313,
+        "auc": 0.7376038338658147,
+        "direction": {
+         "pairs": 248,
+         "accuracy": 0.7983870967741935,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.659252792596817,
+         "rows": 1463,
+         "admitted": 413,
+         "accuracy": 0.7634996582365003,
+         "balanced_accuracy": 0.7065578552576747,
+         "precision": 0.4600484261501211,
+         "recall": 0.6070287539936102
+        }
+       },
+       "test": {
+        "rows": 3329,
+        "positives": 677,
+        "auc": 0.7544285297348118,
+        "direction": {
+         "pairs": 552,
+         "accuracy": 0.8514492753623188,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.659252792596817,
+         "rows": 3329,
+         "admitted": 892,
+         "accuracy": 0.7659957945328928,
+         "balanced_accuracy": 0.6980253469414126,
+         "precision": 0.4428251121076233,
+         "recall": 0.5834564254062038
+        },
+        "at_own_dev": {
+         "threshold": 0.659252792596817,
+         "rows": 3329,
+         "admitted": 892,
+         "accuracy": 0.7659957945328928,
+         "balanced_accuracy": 0.6980253469414126,
+         "precision": 0.4428251121076233,
+         "recall": 0.5834564254062038
+        }
+       }
+      },
+      "hard": {
+       "test": {
+        "rows": 140,
+        "positives": 56,
+        "auc": 0.8414115646258503,
+        "direction": {
+         "pairs": 29,
+         "accuracy": 1.0,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.659252792596817,
+         "rows": 140,
+         "admitted": 71,
+         "accuracy": 0.7642857142857142,
+         "balanced_accuracy": 0.7767857142857143,
+         "precision": 0.6619718309859155,
+         "recall": 0.8392857142857143
+        }
+       }
+      }
+     }
+    },
+    "typed": {
+     "thresholds": {
+      "default": 0.0832364410161972,
+      "by_set": {
+       "levyholt": 0.9664081335067749,
+       "wikidata": 0.0832364410161972
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.7089543965734442,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.819047619047619,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.0832364410161972,
+         "rows": 630,
+         "admitted": 374,
+         "accuracy": 0.665079365079365,
+         "balanced_accuracy": 0.665079365079365,
+         "precision": 0.6390374331550802,
+         "recall": 0.7587301587301587
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.7279303826740936,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.7892376681614349,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.0832364410161972,
+         "rows": 1784,
+         "admitted": 968,
+         "accuracy": 0.6816143497757847,
+         "balanced_accuracy": 0.6816143497757847,
+         "precision": 0.6673553719008265,
+         "recall": 0.7242152466367713
+        },
+        "at_own_dev": {
+         "threshold": 0.9664081335067749,
+         "rows": 1784,
+         "admitted": 763,
+         "accuracy": 0.679932735426009,
+         "balanced_accuracy": 0.679932735426009,
+         "precision": 0.7103538663171691,
+         "recall": 0.6076233183856502
+        }
+       }
+      },
+      "wikidata": {
+       "dev": {
+        "rows": 1463,
+        "positives": 313,
+        "auc": 0.7277621891929434,
+        "direction": {
+         "pairs": 248,
+         "accuracy": 0.8104838709677419,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.0832364410161972,
+         "rows": 1463,
+         "admitted": 554,
+         "accuracy": 0.6944634313055366,
+         "balanced_accuracy": 0.6858980413946382,
+         "precision": 0.37906137184115524,
+         "recall": 0.670926517571885
+        }
+       },
+       "test": {
+        "rows": 3329,
+        "positives": 677,
+        "auc": 0.7278088942655804,
+        "direction": {
+         "pairs": 552,
+         "accuracy": 0.8478260869565217,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.0832364410161972,
+         "rows": 3329,
+         "admitted": 1272,
+         "accuracy": 0.6854911384800241,
+         "balanced_accuracy": 0.6782983105752243,
+         "precision": 0.35455974842767296,
+         "recall": 0.6661742983751846
+        },
+        "at_own_dev": {
+         "threshold": 0.0832364410161972,
+         "rows": 3329,
+         "admitted": 1272,
+         "accuracy": 0.6854911384800241,
+         "balanced_accuracy": 0.6782983105752243,
+         "precision": 0.35455974842767296,
+         "recall": 0.6661742983751846
+        }
+       }
+      },
+      "hard": {
+       "test": {
+        "rows": 140,
+        "positives": 56,
+        "auc": 0.8656462585034014,
+        "direction": {
+         "pairs": 29,
+         "accuracy": 0.9310344827586207,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.0832364410161972,
+         "rows": 140,
+         "admitted": 78,
+         "accuracy": 0.7714285714285715,
+         "balanced_accuracy": 0.7946428571428572,
+         "precision": 0.6538461538461539,
+         "recall": 0.9107142857142857
+        }
+       }
+      }
+     }
+    },
+    "instances": {
+     "thresholds": {
+      "default": null,
+      "by_set": {
+       "levyholt": 0.8758364915847778
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.7388158226253464,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.7904761904761904,
+         "ties": 0.0
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.7376549649098112,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.8262331838565022,
+         "ties": 0.0
+        },
+        "at_own_dev": {
+         "threshold": 0.8758364915847778,
+         "rows": 1784,
+         "admitted": 1083,
+         "accuracy": 0.6967488789237668,
+         "balanced_accuracy": 0.6967488789237668,
+         "precision": 0.6620498614958449,
+         "recall": 0.8038116591928252
+        }
+       }
+      },
+      "wikidata": {},
+      "hard": {}
+     }
+    }
+   }
+  },
+  "nli-deberta-large-wanli": {
+   "judge": "NLIJudge",
+   "model": "MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli",
+   "usage": {
+    "pairs": 17106,
+    "calls": 3
+   },
+   "seconds": {
+    "load": 5.58,
+    "letters": 6.02,
+    "typed": 6.59,
+    "instances": 1.89
+   },
+   "gpu_peak_gib": 0.981,
+   "variants": {
+    "letters": {
+     "thresholds": {
+      "default": 0.05405977740883827,
+      "by_set": {
+       "levyholt": 0.1158381886780262,
+       "wikidata": 0.05405977740883827
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.7439455782312925,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.8253968253968254,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.05405977740883827,
+         "rows": 630,
+         "admitted": 383,
+         "accuracy": 0.7015873015873015,
+         "balanced_accuracy": 0.7015873015873015,
+         "precision": 0.6657963446475196,
+         "recall": 0.8095238095238095
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.7791492388747009,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.8340807174887892,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.05405977740883827,
+         "rows": 1784,
+         "admitted": 1087,
+         "accuracy": 0.7079596412556054,
+         "balanced_accuracy": 0.7079596412556053,
+         "precision": 0.6706531738730451,
+         "recall": 0.8172645739910314
+        },
+        "at_own_dev": {
+         "threshold": 0.1158381886780262,
+         "rows": 1784,
+         "admitted": 999,
+         "accuracy": 0.7068385650224215,
+         "balanced_accuracy": 0.7068385650224216,
+         "precision": 0.6846846846846847,
+         "recall": 0.7668161434977578
+        }
+       }
+      },
+      "wikidata": {
+       "dev": {
+        "rows": 1463,
+        "positives": 313,
+        "auc": 0.8058341436310599,
+        "direction": {
+         "pairs": 248,
+         "accuracy": 0.8669354838709677,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.05405977740883827,
+         "rows": 1463,
+         "admitted": 520,
+         "accuracy": 0.7518796992481203,
+         "balanced_accuracy": 0.7514863175441033,
+         "precision": 0.4519230769230769,
+         "recall": 0.7507987220447284
+        }
+       },
+       "test": {
+        "rows": 3329,
+        "positives": 677,
+        "auc": 0.8015452232478039,
+        "direction": {
+         "pairs": 552,
+         "accuracy": 0.8713768115942029,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.05405977740883827,
+         "rows": 3329,
+         "admitted": 1207,
+         "accuracy": 0.7404626013817963,
+         "balanced_accuracy": 0.7452514865734954,
+         "precision": 0.4225352112676056,
+         "recall": 0.7533234859675036
+        },
+        "at_own_dev": {
+         "threshold": 0.05405977740883827,
+         "rows": 3329,
+         "admitted": 1207,
+         "accuracy": 0.7404626013817963,
+         "balanced_accuracy": 0.7452514865734954,
+         "precision": 0.4225352112676056,
+         "recall": 0.7533234859675036
+        }
+       }
+      },
+      "hard": {
+       "test": {
+        "rows": 140,
+        "positives": 56,
+        "auc": 0.9190051020408163,
+        "direction": {
+         "pairs": 29,
+         "accuracy": 0.9655172413793104,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.05405977740883827,
+         "rows": 140,
+         "admitted": 76,
+         "accuracy": 0.8571428571428571,
+         "balanced_accuracy": 0.8809523809523809,
+         "precision": 0.7368421052631579,
+         "recall": 1.0
+        }
+       }
+      }
+     }
+    },
+    "typed": {
+     "thresholds": {
+      "default": 0.3111717849969864,
+      "by_set": {
+       "levyholt": 0.04396547190845013,
+       "wikidata": 0.3111717849969864
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.7833812043335853,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.8222222222222222,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.3111717849969864,
+         "rows": 630,
+         "admitted": 295,
+         "accuracy": 0.7238095238095238,
+         "balanced_accuracy": 0.7238095238095238,
+         "precision": 0.7389830508474576,
+         "recall": 0.692063492063492
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.8037060869914939,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.8295964125560538,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.3111717849969864,
+         "rows": 1784,
+         "admitted": 776,
+         "accuracy": 0.7331838565022422,
+         "balanced_accuracy": 0.7331838565022422,
+         "precision": 0.7680412371134021,
+         "recall": 0.6681614349775785
+        },
+        "at_own_dev": {
+         "threshold": 0.04396547190845013,
+         "rows": 1784,
+         "admitted": 1013,
+         "accuracy": 0.7315022421524664,
+         "balanced_accuracy": 0.7315022421524664,
+         "precision": 0.7038499506416585,
+         "recall": 0.7993273542600897
+        }
+       }
+      },
+      "wikidata": {
+       "dev": {
+        "rows": 1463,
+        "positives": 313,
+        "auc": 0.7924545075704958,
+        "direction": {
+         "pairs": 248,
+         "accuracy": 0.875,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.3111717849969864,
+         "rows": 1463,
+         "admitted": 386,
+         "accuracy": 0.7819548872180451,
+         "balanced_accuracy": 0.7182969856924573,
+         "precision": 0.49222797927461137,
+         "recall": 0.6070287539936102
+        }
+       },
+       "test": {
+        "rows": 3329,
+        "positives": 677,
+        "auc": 0.7747972044175016,
+        "direction": {
+         "pairs": 552,
+         "accuracy": 0.894927536231884,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.3111717849969864,
+         "rows": 3329,
+         "admitted": 907,
+         "accuracy": 0.7542805647341544,
+         "balanced_accuracy": 0.6840722199571796,
+         "precision": 0.422271223814774,
+         "recall": 0.5657311669128509
+        },
+        "at_own_dev": {
+         "threshold": 0.3111717849969864,
+         "rows": 3329,
+         "admitted": 907,
+         "accuracy": 0.7542805647341544,
+         "balanced_accuracy": 0.6840722199571796,
+         "precision": 0.422271223814774,
+         "recall": 0.5657311669128509
+        }
+       }
+      },
+      "hard": {
+       "test": {
+        "rows": 140,
+        "positives": 56,
+        "auc": 0.9621598639455783,
+        "direction": {
+         "pairs": 29,
+         "accuracy": 1.0,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.3111717849969864,
+         "rows": 140,
+         "admitted": 68,
+         "accuracy": 0.9,
+         "balanced_accuracy": 0.9136904761904762,
+         "precision": 0.8088235294117647,
+         "recall": 0.9821428571428571
+        }
+       }
+      }
+     }
+    },
+    "instances": {
+     "thresholds": {
+      "default": null,
+      "by_set": {
+       "levyholt": 0.9334717392921448
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.8018442932728647,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.8793650793650793,
+         "ties": 0.0
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.8222113857105512,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.8867713004484304,
+         "ties": 0.0
+        },
+        "at_own_dev": {
+         "threshold": 0.9334717392921448,
+         "rows": 1784,
+         "admitted": 811,
+         "accuracy": 0.7449551569506726,
+         "balanced_accuracy": 0.7449551569506727,
+         "precision": 0.7694204685573366,
+         "recall": 0.6995515695067265
+        }
+       }
+      },
+      "wikidata": {},
+      "hard": {}
+     }
+    }
+   }
+  },
+  "reranker-qwen3": {
+   "judge": "RerankerJudge",
+   "model": "Qwen/Qwen3-Reranker-0.6B",
+   "usage": {
+    "pairs": 17106,
+    "calls": 3
+   },
+   "seconds": {
+    "load": 1.85,
+    "letters": 26.67,
+    "typed": 28.61,
+    "instances": 8.97
+   },
+   "gpu_peak_gib": 1.227,
+   "variants": {
+    "letters": {
+     "thresholds": {
+      "default": 0.8078806102275848,
+      "by_set": {
+       "levyholt": 0.8594942986965179,
+       "wikidata": 0.8078806102275848
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.6058755353993449,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.6873015873015873,
+         "ties": 0.02857142857142857
+        },
+        "at_default": {
+         "threshold": 0.8078806102275848,
+         "rows": 630,
+         "admitted": 336,
+         "accuracy": 0.5761904761904761,
+         "balanced_accuracy": 0.5761904761904761,
+         "precision": 0.5714285714285714,
+         "recall": 0.6095238095238096
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.6557365923304309,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.6939461883408071,
+         "ties": 0.02466367713004484
+        },
+        "at_default": {
+         "threshold": 0.8078806102275848,
+         "rows": 1784,
+         "admitted": 868,
+         "accuracy": 0.6278026905829597,
+         "balanced_accuracy": 0.6278026905829597,
+         "precision": 0.631336405529954,
+         "recall": 0.6143497757847534
+        },
+        "at_own_dev": {
+         "threshold": 0.8594942986965179,
+         "rows": 1784,
+         "admitted": 736,
+         "accuracy": 0.6233183856502242,
+         "balanced_accuracy": 0.6233183856502242,
+         "precision": 0.6494565217391305,
+         "recall": 0.5358744394618834
+        }
+       }
+      },
+      "wikidata": {
+       "dev": {
+        "rows": 1463,
+        "positives": 313,
+        "auc": 0.61895402139186,
+        "direction": {
+         "pairs": 248,
+         "accuracy": 0.7157258064516129,
+         "ties": 0.020161290322580645
+        },
+        "at_default": {
+         "threshold": 0.8078806102275848,
+         "rows": 1463,
+         "admitted": 508,
+         "accuracy": 0.6561859193438141,
+         "balanced_accuracy": 0.6022544797888596,
+         "precision": 0.31299212598425197,
+         "recall": 0.5079872204472844
+        }
+       },
+       "test": {
+        "rows": 3329,
+        "positives": 677,
+        "auc": 0.668290813655311,
+        "direction": {
+         "pairs": 552,
+         "accuracy": 0.7617753623188406,
+         "ties": 0.019927536231884056
+        },
+        "at_default": {
+         "threshold": 0.8078806102275848,
+         "rows": 3329,
+         "admitted": 1108,
+         "accuracy": 0.6812856713727846,
+         "balanced_accuracy": 0.6267074151555861,
+         "precision": 0.3267148014440433,
+         "recall": 0.534711964549483
+        },
+        "at_own_dev": {
+         "threshold": 0.8078806102275848,
+         "rows": 3329,
+         "admitted": 1108,
+         "accuracy": 0.6812856713727846,
+         "balanced_accuracy": 0.6267074151555861,
+         "precision": 0.3267148014440433,
+         "recall": 0.534711964549483
+        }
+       }
+      },
+      "hard": {
+       "test": {
+        "rows": 140,
+        "positives": 56,
+        "auc": 0.7781675170068028,
+        "direction": {
+         "pairs": 29,
+         "accuracy": 0.8275862068965517,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.8078806102275848,
+         "rows": 140,
+         "admitted": 78,
+         "accuracy": 0.6857142857142857,
+         "balanced_accuracy": 0.7053571428571428,
+         "precision": 0.5769230769230769,
+         "recall": 0.8035714285714286
+        }
+       }
+      }
+     }
+    },
+    "typed": {
+     "thresholds": {
+      "default": 0.8739163875579834,
+      "by_set": {
+       "levyholt": 0.963764101266861,
+       "wikidata": 0.8739163875579834
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.6603527336860671,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.7158730158730159,
+         "ties": 0.015873015873015872
+        },
+        "at_default": {
+         "threshold": 0.8739163875579834,
+         "rows": 630,
+         "admitted": 465,
+         "accuracy": 0.6158730158730159,
+         "balanced_accuracy": 0.6158730158730159,
+         "precision": 0.578494623655914,
+         "recall": 0.8539682539682539
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.6355591053510025,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.7085201793721974,
+         "ties": 0.02466367713004484
+        },
+        "at_default": {
+         "threshold": 0.8739163875579834,
+         "rows": 1784,
+         "admitted": 1265,
+         "accuracy": 0.5812780269058296,
+         "balanced_accuracy": 0.5812780269058296,
+         "precision": 0.5573122529644269,
+         "recall": 0.7903587443946188
+        },
+        "at_own_dev": {
+         "threshold": 0.963764101266861,
+         "rows": 1784,
+         "admitted": 801,
+         "accuracy": 0.5947309417040358,
+         "balanced_accuracy": 0.5947309417040358,
+         "precision": 0.6054931335830213,
+         "recall": 0.5437219730941704
+        }
+       }
+      },
+      "wikidata": {
+       "dev": {
+        "rows": 1463,
+        "positives": 313,
+        "auc": 0.6211779413807473,
+        "direction": {
+         "pairs": 248,
+         "accuracy": 0.782258064516129,
+         "ties": 0.016129032258064516
+        },
+        "at_default": {
+         "threshold": 0.8739163875579834,
+         "rows": 1463,
+         "admitted": 799,
+         "accuracy": 0.5352016404647983,
+         "balanced_accuracy": 0.5915696624531185,
+         "precision": 0.27033792240300375,
+         "recall": 0.6900958466453674
+        }
+       },
+       "test": {
+        "rows": 3329,
+        "positives": 677,
+        "auc": 0.6373546009700324,
+        "direction": {
+         "pairs": 552,
+         "accuracy": 0.7916666666666666,
+         "ties": 0.018115942028985508
+        },
+        "at_default": {
+         "threshold": 0.8739163875579834,
+         "rows": 3329,
+         "admitted": 1764,
+         "accuracy": 0.5485130669870832,
+         "balanced_accuracy": 0.602225738608135,
+         "precision": 0.26587301587301587,
+         "recall": 0.6927621861152142
+        },
+        "at_own_dev": {
+         "threshold": 0.8739163875579834,
+         "rows": 3329,
+         "admitted": 1764,
+         "accuracy": 0.5485130669870832,
+         "balanced_accuracy": 0.602225738608135,
+         "precision": 0.26587301587301587,
+         "recall": 0.6927621861152142
+        }
+       }
+      },
+      "hard": {
+       "test": {
+        "rows": 140,
+        "positives": 56,
+        "auc": 0.7857142857142857,
+        "direction": {
+         "pairs": 29,
+         "accuracy": 0.9137931034482759,
+         "ties": 0.034482758620689655
+        },
+        "at_default": {
+         "threshold": 0.8739163875579834,
+         "rows": 140,
+         "admitted": 90,
+         "accuracy": 0.6714285714285714,
+         "balanced_accuracy": 0.7083333333333334,
+         "precision": 0.5555555555555556,
+         "recall": 0.8928571428571429
+        }
+       }
+      }
+     }
+    },
+    "instances": {
+     "thresholds": {
+      "default": null,
+      "by_set": {
+       "levyholt": 0.979026198387146
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.622262534643487,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.7063492063492064,
+         "ties": 0.02857142857142857
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.6332120090892638,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.6961883408071748,
+         "ties": 0.01569506726457399
+        },
+        "at_own_dev": {
+         "threshold": 0.979026198387146,
+         "rows": 1784,
+         "admitted": 1159,
+         "accuracy": 0.5947309417040358,
+         "balanced_accuracy": 0.5947309417040358,
+         "precision": 0.5729076790336497,
+         "recall": 0.7443946188340808
+        }
+       }
+      },
+      "wikidata": {},
+      "hard": {}
+     }
+    }
+   }
+  }
+ },
+ "hard_rows": [
+  {
+   "id": "hard:mother>parent",
+   "premise": "A is the mother of B",
+   "conclusion": "A is a parent of B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a mother of someone is one of their parents; a parent may be their father",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9686,
+     "typed": 0.9784
+    },
+    "cosine-qwen3": {
+     "letters": 0.9839,
+     "typed": 0.9748
+    },
+    "jev": {
+     "letters": 0.99,
+     "typed": 0.99
+    },
+    "nli-deberta-base": {
+     "letters": 0.9897,
+     "typed": 0.9896
+    },
+    "nli-deberta-large": {
+     "letters": 0.9962,
+     "typed": 0.9967
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9953,
+     "typed": 0.9959
+    },
+    "reranker-qwen3": {
+     "letters": 0.9883,
+     "typed": 0.9951
+    }
+   }
+  },
+  {
+   "id": "hard:mother>parent:reverse",
+   "premise": "A is a parent of B",
+   "conclusion": "A is the mother of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a mother of someone is one of their parents; a parent may be their father",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9686,
+     "typed": 0.9784
+    },
+    "cosine-qwen3": {
+     "letters": 0.9839,
+     "typed": 0.9748
+    },
+    "jev": {
+     "letters": 0.03,
+     "typed": 0.04
+    },
+    "nli-deberta-base": {
+     "letters": 0.0043,
+     "typed": 0.0022
+    },
+    "nli-deberta-large": {
+     "letters": 0.0324,
+     "typed": 0.0096
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0026,
+     "typed": 0.0008
+    },
+    "reranker-qwen3": {
+     "letters": 0.3775,
+     "typed": 0.982
+    }
+   }
+  },
+  {
+   "id": "hard:father>parent",
+   "premise": "A is the father of B",
+   "conclusion": "A is a parent of B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a father of someone is one of their parents; a parent may be their mother",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9646,
+     "typed": 0.9801
+    },
+    "cosine-qwen3": {
+     "letters": 0.99,
+     "typed": 0.9854
+    },
+    "jev": {
+     "letters": 0.98,
+     "typed": 0.99
+    },
+    "nli-deberta-base": {
+     "letters": 0.9889,
+     "typed": 0.9876
+    },
+    "nli-deberta-large": {
+     "letters": 0.9939,
+     "typed": 0.9946
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9945,
+     "typed": 0.9948
+    },
+    "reranker-qwen3": {
+     "letters": 0.9978,
+     "typed": 0.9977
+    }
+   }
+  },
+  {
+   "id": "hard:father>parent:reverse",
+   "premise": "A is a parent of B",
+   "conclusion": "A is the father of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a father of someone is one of their parents; a parent may be their mother",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9646,
+     "typed": 0.9801
+    },
+    "cosine-qwen3": {
+     "letters": 0.99,
+     "typed": 0.9854
+    },
+    "jev": {
+     "letters": 0.03,
+     "typed": 0.03
+    },
+    "nli-deberta-base": {
+     "letters": 0.0294,
+     "typed": 0.0103
+    },
+    "nli-deberta-large": {
+     "letters": 0.0065,
+     "typed": 0.0021
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0076,
+     "typed": 0.0016
+    },
+    "reranker-qwen3": {
+     "letters": 0.9933,
+     "typed": 0.9951
+    }
+   }
+  },
+  {
+   "id": "hard:child>parent~",
+   "premise": "B is a child of A",
+   "conclusion": "A is a parent of B",
+   "label": true,
+   "kind": "both",
+   "reason": "B being a child of A says exactly that A is a parent of B",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9516,
+     "typed": 0.975
+    },
+    "cosine-qwen3": {
+     "letters": 0.9767,
+     "typed": 0.9589
+    },
+    "jev": {
+     "letters": 0.97,
+     "typed": 0.97
+    },
+    "nli-deberta-base": {
+     "letters": 0.9865,
+     "typed": 0.6893
+    },
+    "nli-deberta-large": {
+     "letters": 0.9976,
+     "typed": 0.9913
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9914,
+     "typed": 0.9945
+    },
+    "reranker-qwen3": {
+     "letters": 0.9399,
+     "typed": 0.977
+    }
+   }
+  },
+  {
+   "id": "hard:child>parent~:reverse",
+   "premise": "B is a parent of A",
+   "conclusion": "A is a child of B",
+   "label": true,
+   "kind": "both",
+   "reason": "B being a child of A says exactly that A is a parent of B",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.952,
+     "typed": 0.9733
+    },
+    "cosine-qwen3": {
+     "letters": 0.9777,
+     "typed": 0.957
+    },
+    "jev": {
+     "letters": 0.91,
+     "typed": 0.93
+    },
+    "nli-deberta-base": {
+     "letters": 0.9888,
+     "typed": 0.0033
+    },
+    "nli-deberta-large": {
+     "letters": 0.9941,
+     "typed": 0.994
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9852,
+     "typed": 0.9413
+    },
+    "reranker-qwen3": {
+     "letters": 0.9897,
+     "typed": 0.974
+    }
+   }
+  },
+  {
+   "id": "hard:parent>child",
+   "premise": "A is a parent of B",
+   "conclusion": "A is a child of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "same words, arguments in the wrong order: a parent of B is not a child of B",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9635,
+     "typed": 0.9752
+    },
+    "cosine-qwen3": {
+     "letters": 0.9827,
+     "typed": 0.9734
+    },
+    "jev": {
+     "letters": 0.01,
+     "typed": 0.01
+    },
+    "nli-deberta-base": {
+     "letters": 0.0002,
+     "typed": 0.0002
+    },
+    "nli-deberta-large": {
+     "letters": 0.0,
+     "typed": 0.0
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0004,
+     "typed": 0.0004
+    },
+    "reranker-qwen3": {
+     "letters": 0.5927,
+     "typed": 0.2227
+    }
+   }
+  },
+  {
+   "id": "hard:parent>child:reverse",
+   "premise": "A is a child of B",
+   "conclusion": "A is a parent of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "same words, arguments in the wrong order: a parent of B is not a child of B",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9635,
+     "typed": 0.9752
+    },
+    "cosine-qwen3": {
+     "letters": 0.9827,
+     "typed": 0.9734
+    },
+    "jev": {
+     "letters": 0.01,
+     "typed": 0.01
+    },
+    "nli-deberta-base": {
+     "letters": 0.0002,
+     "typed": 0.0004
+    },
+    "nli-deberta-large": {
+     "letters": 0.0,
+     "typed": 0.0
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0003,
+     "typed": 0.0003
+    },
+    "reranker-qwen3": {
+     "letters": 0.2689,
+     "typed": 0.7311
+    }
+   }
+  },
+  {
+   "id": "hard:son>child",
+   "premise": "A is a son of B",
+   "conclusion": "A is a child of B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a son of someone is their child; a child may be a daughter",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.961,
+     "typed": 0.9712
+    },
+    "cosine-qwen3": {
+     "letters": 0.9898,
+     "typed": 0.9772
+    },
+    "jev": {
+     "letters": 0.98,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.9673,
+     "typed": 0.9724
+    },
+    "nli-deberta-large": {
+     "letters": 0.9883,
+     "typed": 0.9917
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9834,
+     "typed": 0.9823
+    },
+    "reranker-qwen3": {
+     "letters": 0.9897,
+     "typed": 0.9937
+    }
+   }
+  },
+  {
+   "id": "hard:son>child:reverse",
+   "premise": "A is a child of B",
+   "conclusion": "A is a son of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a son of someone is their child; a child may be a daughter",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.961,
+     "typed": 0.9712
+    },
+    "cosine-qwen3": {
+     "letters": 0.9898,
+     "typed": 0.9772
+    },
+    "jev": {
+     "letters": 0.04,
+     "typed": 0.04
+    },
+    "nli-deberta-base": {
+     "letters": 0.0059,
+     "typed": 0.0026
+    },
+    "nli-deberta-large": {
+     "letters": 0.0057,
+     "typed": 0.0033
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0042,
+     "typed": 0.0011
+    },
+    "reranker-qwen3": {
+     "letters": 0.7058,
+     "typed": 0.6514
+    }
+   }
+  },
+  {
+   "id": "hard:daughter>child",
+   "premise": "A is a daughter of B",
+   "conclusion": "A is a child of B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a daughter of someone is their child; a child may be a son",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9626,
+     "typed": 0.9715
+    },
+    "cosine-qwen3": {
+     "letters": 0.9862,
+     "typed": 0.9704
+    },
+    "jev": {
+     "letters": 0.99,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.9714,
+     "typed": 0.9815
+    },
+    "nli-deberta-large": {
+     "letters": 0.987,
+     "typed": 0.9884
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9776,
+     "typed": 0.9761
+    },
+    "reranker-qwen3": {
+     "letters": 0.9919,
+     "typed": 0.9897
+    }
+   }
+  },
+  {
+   "id": "hard:daughter>child:reverse",
+   "premise": "A is a child of B",
+   "conclusion": "A is a daughter of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a daughter of someone is their child; a child may be a son",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9626,
+     "typed": 0.9715
+    },
+    "cosine-qwen3": {
+     "letters": 0.9862,
+     "typed": 0.9704
+    },
+    "jev": {
+     "letters": 0.05,
+     "typed": 0.05
+    },
+    "nli-deberta-base": {
+     "letters": 0.0008,
+     "typed": 0.0008
+    },
+    "nli-deberta-large": {
+     "letters": 0.0009,
+     "typed": 0.0007
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0026,
+     "typed": 0.0007
+    },
+    "reranker-qwen3": {
+     "letters": 0.867,
+     "typed": 0.4378
+    }
+   }
+  },
+  {
+   "id": "hard:grandmother>grandparent",
+   "premise": "A is a grandmother of B",
+   "conclusion": "A is a grandparent of B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a grandmother is a grandparent; a grandparent may be a grandfather",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9683,
+     "typed": 0.9763
+    },
+    "cosine-qwen3": {
+     "letters": 0.9839,
+     "typed": 0.9781
+    },
+    "jev": {
+     "letters": 0.99,
+     "typed": 0.99
+    },
+    "nli-deberta-base": {
+     "letters": 0.9775,
+     "typed": 0.99
+    },
+    "nli-deberta-large": {
+     "letters": 0.9969,
+     "typed": 0.996
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9923,
+     "typed": 0.9941
+    },
+    "reranker-qwen3": {
+     "letters": 0.997,
+     "typed": 0.9948
+    }
+   }
+  },
+  {
+   "id": "hard:grandmother>grandparent:reverse",
+   "premise": "A is a grandparent of B",
+   "conclusion": "A is a grandmother of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a grandmother is a grandparent; a grandparent may be a grandfather",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9683,
+     "typed": 0.9763
+    },
+    "cosine-qwen3": {
+     "letters": 0.9839,
+     "typed": 0.9781
+    },
+    "jev": {
+     "letters": 0.05,
+     "typed": 0.03
+    },
+    "nli-deberta-base": {
+     "letters": 0.0084,
+     "typed": 0.0101
+    },
+    "nli-deberta-large": {
+     "letters": 0.9947,
+     "typed": 0.96
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0053,
+     "typed": 0.0013
+    },
+    "reranker-qwen3": {
+     "letters": 0.982,
+     "typed": 0.9924
+    }
+   }
+  },
+  {
+   "id": "hard:parent>ancestor",
+   "premise": "A is a parent of B",
+   "conclusion": "A is an ancestor of B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a parent is an ancestor; an ancestor may be a grandparent or further back",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9314,
+     "typed": 0.9337
+    },
+    "cosine-qwen3": {
+     "letters": 0.9812,
+     "typed": 0.9785
+    },
+    "jev": {
+     "letters": 0.94,
+     "typed": 0.89
+    },
+    "nli-deberta-base": {
+     "letters": 0.9953,
+     "typed": 0.9914
+    },
+    "nli-deberta-large": {
+     "letters": 0.2103,
+     "typed": 0.0041
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0668,
+     "typed": 0.0054
+    },
+    "reranker-qwen3": {
+     "letters": 0.9914,
+     "typed": 0.9914
+    }
+   }
+  },
+  {
+   "id": "hard:parent>ancestor:reverse",
+   "premise": "A is an ancestor of B",
+   "conclusion": "A is a parent of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a parent is an ancestor; an ancestor may be a grandparent or further back",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9314,
+     "typed": 0.9337
+    },
+    "cosine-qwen3": {
+     "letters": 0.9812,
+     "typed": 0.9785
+    },
+    "jev": {
+     "letters": 0.04,
+     "typed": 0.03
+    },
+    "nli-deberta-base": {
+     "letters": 0.9846,
+     "typed": 0.9865
+    },
+    "nli-deberta-large": {
+     "letters": 0.0109,
+     "typed": 0.0046
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0022,
+     "typed": 0.0007
+    },
+    "reranker-qwen3": {
+     "letters": 0.7058,
+     "typed": 0.9149
+    }
+   }
+  },
+  {
+   "id": "hard:grandparent>ancestor",
+   "premise": "A is a grandparent of B",
+   "conclusion": "A is an ancestor of B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a grandparent is an ancestor; an ancestor may be a parent",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9317,
+     "typed": 0.9399
+    },
+    "cosine-qwen3": {
+     "letters": 0.9842,
+     "typed": 0.9815
+    },
+    "jev": {
+     "letters": 0.98,
+     "typed": 0.97
+    },
+    "nli-deberta-base": {
+     "letters": 0.9959,
+     "typed": 0.9958
+    },
+    "nli-deberta-large": {
+     "letters": 0.9982,
+     "typed": 0.9981
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9896,
+     "typed": 0.9921
+    },
+    "reranker-qwen3": {
+     "letters": 0.9983,
+     "typed": 0.9959
+    }
+   }
+  },
+  {
+   "id": "hard:grandparent>ancestor:reverse",
+   "premise": "A is an ancestor of B",
+   "conclusion": "A is a grandparent of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a grandparent is an ancestor; an ancestor may be a parent",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9317,
+     "typed": 0.9399
+    },
+    "cosine-qwen3": {
+     "letters": 0.9842,
+     "typed": 0.9815
+    },
+    "jev": {
+     "letters": 0.04,
+     "typed": 0.03
+    },
+    "nli-deberta-base": {
+     "letters": 0.8621,
+     "typed": 0.8791
+    },
+    "nli-deberta-large": {
+     "letters": 0.013,
+     "typed": 0.9788
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0022,
+     "typed": 0.0022
+    },
+    "reranker-qwen3": {
+     "letters": 0.5,
+     "typed": 0.7549
+    }
+   }
+  },
+  {
+   "id": "hard:ancestor>descendant~",
+   "premise": "B is an ancestor of A",
+   "conclusion": "A is a descendant of B",
+   "label": true,
+   "kind": "both",
+   "reason": "B being an ancestor of A says exactly that A is a descendant of B",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9589,
+     "typed": 0.9776
+    },
+    "cosine-qwen3": {
+     "letters": 0.986,
+     "typed": 0.9817
+    },
+    "jev": {
+     "letters": 0.98,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.9906,
+     "typed": 0.0906
+    },
+    "nli-deberta-large": {
+     "letters": 0.997,
+     "typed": 0.0764
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9886,
+     "typed": 0.9855
+    },
+    "reranker-qwen3": {
+     "letters": 0.985,
+     "typed": 0.9627
+    }
+   }
+  },
+  {
+   "id": "hard:ancestor>descendant~:reverse",
+   "premise": "B is a descendant of A",
+   "conclusion": "A is an ancestor of B",
+   "label": true,
+   "kind": "both",
+   "reason": "B being an ancestor of A says exactly that A is a descendant of B",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9689,
+     "typed": 0.9775
+    },
+    "cosine-qwen3": {
+     "letters": 0.9828,
+     "typed": 0.9666
+    },
+    "jev": {
+     "letters": 0.98,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.9944,
+     "typed": 0.9926
+    },
+    "nli-deberta-large": {
+     "letters": 0.997,
+     "typed": 0.9983
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9926,
+     "typed": 0.996
+    },
+    "reranker-qwen3": {
+     "letters": 0.9868,
+     "typed": 0.9909
+    }
+   }
+  },
+  {
+   "id": "hard:brother>sibling",
+   "premise": "A is a brother of B",
+   "conclusion": "A is a sibling of B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a brother is a sibling; a sibling may be a sister",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9806,
+     "typed": 0.9863
+    },
+    "cosine-qwen3": {
+     "letters": 0.9945,
+     "typed": 0.9888
+    },
+    "jev": {
+     "letters": 0.98,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.9886,
+     "typed": 0.9904
+    },
+    "nli-deberta-large": {
+     "letters": 0.9945,
+     "typed": 0.9966
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9894,
+     "typed": 0.9903
+    },
+    "reranker-qwen3": {
+     "letters": 0.9979,
+     "typed": 0.9985
+    }
+   }
+  },
+  {
+   "id": "hard:brother>sibling:reverse",
+   "premise": "A is a sibling of B",
+   "conclusion": "A is a brother of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a brother is a sibling; a sibling may be a sister",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9806,
+     "typed": 0.9863
+    },
+    "cosine-qwen3": {
+     "letters": 0.9945,
+     "typed": 0.9888
+    },
+    "jev": {
+     "letters": 0.05,
+     "typed": 0.04
+    },
+    "nli-deberta-base": {
+     "letters": 0.0218,
+     "typed": 0.0233
+    },
+    "nli-deberta-large": {
+     "letters": 0.0133,
+     "typed": 0.0278
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0031,
+     "typed": 0.0009
+    },
+    "reranker-qwen3": {
+     "letters": 0.9707,
+     "typed": 0.9919
+    }
+   }
+  },
+  {
+   "id": "hard:sister>sibling",
+   "premise": "A is a sister of B",
+   "conclusion": "A is a sibling of B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a sister is a sibling; a sibling may be a brother",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9777,
+     "typed": 0.9844
+    },
+    "cosine-qwen3": {
+     "letters": 0.9916,
+     "typed": 0.9789
+    },
+    "jev": {
+     "letters": 0.98,
+     "typed": 0.99
+    },
+    "nli-deberta-base": {
+     "letters": 0.9909,
+     "typed": 0.9918
+    },
+    "nli-deberta-large": {
+     "letters": 0.9972,
+     "typed": 0.9979
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9904,
+     "typed": 0.9889
+    },
+    "reranker-qwen3": {
+     "letters": 0.9975,
+     "typed": 0.9975
+    }
+   }
+  },
+  {
+   "id": "hard:sister>sibling:reverse",
+   "premise": "A is a sibling of B",
+   "conclusion": "A is a sister of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a sister is a sibling; a sibling may be a brother",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9777,
+     "typed": 0.9844
+    },
+    "cosine-qwen3": {
+     "letters": 0.9916,
+     "typed": 0.9789
+    },
+    "jev": {
+     "letters": 0.05,
+     "typed": 0.04
+    },
+    "nli-deberta-base": {
+     "letters": 0.0077,
+     "typed": 0.0107
+    },
+    "nli-deberta-large": {
+     "letters": 0.0079,
+     "typed": 0.0142
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0022,
+     "typed": 0.0009
+    },
+    "reranker-qwen3": {
+     "letters": 0.8355,
+     "typed": 0.9526
+    }
+   }
+  },
+  {
+   "id": "hard:sibling>sibling~",
+   "premise": "B is a sibling of A",
+   "conclusion": "A is a sibling of B",
+   "label": true,
+   "kind": "both",
+   "reason": "being siblings is symmetric",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9898,
+     "typed": 0.998
+    },
+    "cosine-qwen3": {
+     "letters": 0.9944,
+     "typed": 0.9809
+    },
+    "jev": {
+     "letters": 0.98,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.0021,
+     "typed": 0.0003
+    },
+    "nli-deberta-large": {
+     "letters": 0.0011,
+     "typed": 0.3957
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9687,
+     "typed": 0.9964
+    },
+    "reranker-qwen3": {
+     "letters": 0.6225,
+     "typed": 0.9149
+    }
+   }
+  },
+  {
+   "id": "hard:parent>parent~",
+   "premise": "B is a parent of A",
+   "conclusion": "A is a parent of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "being a parent is asymmetric: no one is a parent of their own parent",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9897,
+     "typed": 0.9983
+    },
+    "cosine-qwen3": {
+     "letters": 0.9921,
+     "typed": 0.9801
+    },
+    "jev": {
+     "letters": 0.01,
+     "typed": 0.01
+    },
+    "nli-deberta-base": {
+     "letters": 0.0001,
+     "typed": 0.0002
+    },
+    "nli-deberta-large": {
+     "letters": 0.0,
+     "typed": 0.0
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0016,
+     "typed": 0.019
+    },
+    "reranker-qwen3": {
+     "letters": 0.018,
+     "typed": 0.5
+    }
+   }
+  },
+  {
+   "id": "hard:married_to>married_to~",
+   "premise": "B is married to A",
+   "conclusion": "A is married to B",
+   "label": true,
+   "kind": "both",
+   "reason": "being married to someone is symmetric",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9888,
+     "typed": 0.9977
+    },
+    "cosine-qwen3": {
+     "letters": 0.9911,
+     "typed": 0.9823
+    },
+    "jev": {
+     "letters": 0.97,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.9365,
+     "typed": 0.0654
+    },
+    "nli-deberta-large": {
+     "letters": 0.0,
+     "typed": 0.67
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9787,
+     "typed": 0.9465
+    },
+    "reranker-qwen3": {
+     "letters": 0.0421,
+     "typed": 0.2451
+    }
+   }
+  },
+  {
+   "id": "hard:married_to>spouse",
+   "premise": "A is married to B",
+   "conclusion": "A is the spouse of B",
+   "label": true,
+   "kind": "both",
+   "reason": "being married to someone and being their spouse say the same thing",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9759,
+     "typed": 0.9732
+    },
+    "cosine-qwen3": {
+     "letters": 0.99,
+     "typed": 0.9796
+    },
+    "jev": {
+     "letters": 0.98,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.9975,
+     "typed": 0.9975
+    },
+    "nli-deberta-large": {
+     "letters": 0.9973,
+     "typed": 0.998
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9954,
+     "typed": 0.9946
+    },
+    "reranker-qwen3": {
+     "letters": 0.9924,
+     "typed": 0.9983
+    }
+   }
+  },
+  {
+   "id": "hard:married_to>spouse:reverse",
+   "premise": "A is the spouse of B",
+   "conclusion": "A is married to B",
+   "label": true,
+   "kind": "both",
+   "reason": "being married to someone and being their spouse say the same thing",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9759,
+     "typed": 0.9732
+    },
+    "cosine-qwen3": {
+     "letters": 0.99,
+     "typed": 0.9796
+    },
+    "jev": {
+     "letters": 0.95,
+     "typed": 0.97
+    },
+    "nli-deberta-base": {
+     "letters": 0.9958,
+     "typed": 0.9954
+    },
+    "nli-deberta-large": {
+     "letters": 0.996,
+     "typed": 0.9975
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9894,
+     "typed": 0.9762
+    },
+    "reranker-qwen3": {
+     "letters": 0.9968,
+     "typed": 0.9972
+    }
+   }
+  },
+  {
+   "id": "hard:husband>married_to",
+   "premise": "A is the husband of B",
+   "conclusion": "A is married to B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a husband is married to his spouse; a married person may be a wife",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9714,
+     "typed": 0.9734
+    },
+    "cosine-qwen3": {
+     "letters": 0.9883,
+     "typed": 0.9757
+    },
+    "jev": {
+     "letters": 0.98,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.996,
+     "typed": 0.9956
+    },
+    "nli-deberta-large": {
+     "letters": 0.9965,
+     "typed": 0.9978
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9867,
+     "typed": 0.9773
+    },
+    "reranker-qwen3": {
+     "letters": 0.9944,
+     "typed": 0.997
+    }
+   }
+  },
+  {
+   "id": "hard:husband>married_to:reverse",
+   "premise": "A is married to B",
+   "conclusion": "A is the husband of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a husband is married to his spouse; a married person may be a wife",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9714,
+     "typed": 0.9734
+    },
+    "cosine-qwen3": {
+     "letters": 0.9883,
+     "typed": 0.9757
+    },
+    "jev": {
+     "letters": 0.08,
+     "typed": 0.06
+    },
+    "nli-deberta-base": {
+     "letters": 0.9967,
+     "typed": 0.99
+    },
+    "nli-deberta-large": {
+     "letters": 0.9879,
+     "typed": 0.9899
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.4783,
+     "typed": 0.3547
+    },
+    "reranker-qwen3": {
+     "letters": 0.9809,
+     "typed": 0.9941
+    }
+   }
+  },
+  {
+   "id": "hard:wife>married_to",
+   "premise": "A is the wife of B",
+   "conclusion": "A is married to B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a wife is married to her spouse; a married person may be a husband",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9677,
+     "typed": 0.9709
+    },
+    "cosine-qwen3": {
+     "letters": 0.9866,
+     "typed": 0.9737
+    },
+    "jev": {
+     "letters": 0.98,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.9919,
+     "typed": 0.9907
+    },
+    "nli-deberta-large": {
+     "letters": 0.9958,
+     "typed": 0.9979
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.996,
+     "typed": 0.9929
+    },
+    "reranker-qwen3": {
+     "letters": 0.9968,
+     "typed": 0.997
+    }
+   }
+  },
+  {
+   "id": "hard:wife>married_to:reverse",
+   "premise": "A is married to B",
+   "conclusion": "A is the wife of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a wife is married to her spouse; a married person may be a husband",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9677,
+     "typed": 0.9709
+    },
+    "cosine-qwen3": {
+     "letters": 0.9866,
+     "typed": 0.9737
+    },
+    "jev": {
+     "letters": 0.06,
+     "typed": 0.06
+    },
+    "nli-deberta-base": {
+     "letters": 0.9938,
+     "typed": 0.9852
+    },
+    "nli-deberta-large": {
+     "letters": 0.9709,
+     "typed": 0.9803
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9878,
+     "typed": 0.5489
+    },
+    "reranker-qwen3": {
+     "letters": 0.8933,
+     "typed": 0.982
+    }
+   }
+  },
+  {
+   "id": "hard:husband>wife~",
+   "premise": "B is the husband of A",
+   "conclusion": "A is the wife of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "in a marriage of two men the spouse of a husband is a husband, so B being the husband of A does not make A the wife of B, nor the reverse",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9538,
+     "typed": 0.9718
+    },
+    "cosine-qwen3": {
+     "letters": 0.9819,
+     "typed": 0.9699
+    },
+    "jev": {
+     "letters": 0.78,
+     "typed": 0.69
+    },
+    "nli-deberta-base": {
+     "letters": 0.2152,
+     "typed": 0.0009
+    },
+    "nli-deberta-large": {
+     "letters": 0.9964,
+     "typed": 0.96
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9895,
+     "typed": 0.9562
+    },
+    "reranker-qwen3": {
+     "letters": 0.1824,
+     "typed": 0.6225
+    }
+   }
+  },
+  {
+   "id": "hard:husband>wife~:reverse",
+   "premise": "B is the wife of A",
+   "conclusion": "A is the husband of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "in a marriage of two men the spouse of a husband is a husband, so B being the husband of A does not make A the wife of B, nor the reverse",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.957,
+     "typed": 0.9729
+    },
+    "cosine-qwen3": {
+     "letters": 0.9826,
+     "typed": 0.9583
+    },
+    "jev": {
+     "letters": 0.85,
+     "typed": 0.77
+    },
+    "nli-deberta-base": {
+     "letters": 0.9495,
+     "typed": 0.0026
+    },
+    "nli-deberta-large": {
+     "letters": 0.9893,
+     "typed": 0.9706
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9819,
+     "typed": 0.6476
+    },
+    "reranker-qwen3": {
+     "letters": 0.0716,
+     "typed": 0.8808
+    }
+   }
+  },
+  {
+   "id": "hard:legal_guardian>parent",
+   "premise": "A is the legal guardian of B",
+   "conclusion": "A is a parent of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a legal guardian may be an aunt or an appointed adult, and a parent may have lost guardianship",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9022,
+     "typed": 0.9095
+    },
+    "cosine-qwen3": {
+     "letters": 0.9717,
+     "typed": 0.9616
+    },
+    "jev": {
+     "letters": 0.05,
+     "typed": 0.06
+    },
+    "nli-deberta-base": {
+     "letters": 0.9787,
+     "typed": 0.9888
+    },
+    "nli-deberta-large": {
+     "letters": 0.823,
+     "typed": 0.1025
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0044,
+     "typed": 0.0038
+    },
+    "reranker-qwen3": {
+     "letters": 0.9689,
+     "typed": 0.9897
+    }
+   }
+  },
+  {
+   "id": "hard:legal_guardian>parent:reverse",
+   "premise": "A is a parent of B",
+   "conclusion": "A is the legal guardian of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a legal guardian may be an aunt or an appointed adult, and a parent may have lost guardianship",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9022,
+     "typed": 0.9095
+    },
+    "cosine-qwen3": {
+     "letters": 0.9717,
+     "typed": 0.9616
+    },
+    "jev": {
+     "letters": 0.09,
+     "typed": 0.1
+    },
+    "nli-deberta-base": {
+     "letters": 0.01,
+     "typed": 0.0153
+    },
+    "nli-deberta-large": {
+     "letters": 0.0019,
+     "typed": 0.0003
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0155,
+     "typed": 0.0178
+    },
+    "reranker-qwen3": {
+     "letters": 0.977,
+     "typed": 0.9868
+    }
+   }
+  },
+  {
+   "id": "hard:stepmother>parent",
+   "premise": "A is the stepmother of B",
+   "conclusion": "A is a parent of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a stepmother is a parent's spouse and not a parent unless she adopts; a parent is not a stepmother",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9314,
+     "typed": 0.951
+    },
+    "cosine-qwen3": {
+     "letters": 0.9711,
+     "typed": 0.9666
+    },
+    "jev": {
+     "letters": 0.32,
+     "typed": 0.53
+    },
+    "nli-deberta-base": {
+     "letters": 0.9854,
+     "typed": 0.9755
+    },
+    "nli-deberta-large": {
+     "letters": 0.9934,
+     "typed": 0.981
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9505,
+     "typed": 0.9175
+    },
+    "reranker-qwen3": {
+     "letters": 0.9399,
+     "typed": 0.9399
+    }
+   }
+  },
+  {
+   "id": "hard:stepmother>parent:reverse",
+   "premise": "A is a parent of B",
+   "conclusion": "A is the stepmother of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a stepmother is a parent's spouse and not a parent unless she adopts; a parent is not a stepmother",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9314,
+     "typed": 0.951
+    },
+    "cosine-qwen3": {
+     "letters": 0.9711,
+     "typed": 0.9666
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.03
+    },
+    "nli-deberta-base": {
+     "letters": 0.0003,
+     "typed": 0.0011
+    },
+    "nli-deberta-large": {
+     "letters": 0.0049,
+     "typed": 0.0081
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0033,
+     "typed": 0.0042
+    },
+    "reranker-qwen3": {
+     "letters": 0.2689,
+     "typed": 0.852
+    }
+   }
+  },
+  {
+   "id": "hard:mother_in_law>mother",
+   "premise": "A is the mother-in-law of B",
+   "conclusion": "A is the mother of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a mother-in-law is the mother of one's spouse, not one's mother",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9742,
+     "typed": 0.9825
+    },
+    "cosine-qwen3": {
+     "letters": 0.9852,
+     "typed": 0.985
+    },
+    "jev": {
+     "letters": 0.05,
+     "typed": 0.03
+    },
+    "nli-deberta-base": {
+     "letters": 0.9885,
+     "typed": 0.9945
+    },
+    "nli-deberta-large": {
+     "letters": 0.9605,
+     "typed": 0.9883
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0045,
+     "typed": 0.0044
+    },
+    "reranker-qwen3": {
+     "letters": 0.9627,
+     "typed": 0.9797
+    }
+   }
+  },
+  {
+   "id": "hard:mother_in_law>mother:reverse",
+   "premise": "A is the mother of B",
+   "conclusion": "A is the mother-in-law of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a mother-in-law is the mother of one's spouse, not one's mother",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9742,
+     "typed": 0.9825
+    },
+    "cosine-qwen3": {
+     "letters": 0.9852,
+     "typed": 0.985
+    },
+    "jev": {
+     "letters": 0.01,
+     "typed": 0.01
+    },
+    "nli-deberta-base": {
+     "letters": 0.0069,
+     "typed": 0.0023
+    },
+    "nli-deberta-large": {
+     "letters": 0.0014,
+     "typed": 0.0005
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0103,
+     "typed": 0.0073
+    },
+    "reranker-qwen3": {
+     "letters": 0.9627,
+     "typed": 0.9929
+    }
+   }
+  },
+  {
+   "id": "hard:godparent>parent",
+   "premise": "A is a godparent of B",
+   "conclusion": "A is a parent of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a godparent is a sponsor at baptism, not a parent",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9628,
+     "typed": 0.9663
+    },
+    "cosine-qwen3": {
+     "letters": 0.9654,
+     "typed": 0.9562
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.03
+    },
+    "nli-deberta-base": {
+     "letters": 0.972,
+     "typed": 0.9934
+    },
+    "nli-deberta-large": {
+     "letters": 0.9542,
+     "typed": 0.5539
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0021,
+     "typed": 0.0039
+    },
+    "reranker-qwen3": {
+     "letters": 0.9909,
+     "typed": 0.9944
+    }
+   }
+  },
+  {
+   "id": "hard:godparent>parent:reverse",
+   "premise": "A is a parent of B",
+   "conclusion": "A is a godparent of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a godparent is a sponsor at baptism, not a parent",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9628,
+     "typed": 0.9663
+    },
+    "cosine-qwen3": {
+     "letters": 0.9654,
+     "typed": 0.9562
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.02
+    },
+    "nli-deberta-base": {
+     "letters": 0.0018,
+     "typed": 0.0018
+    },
+    "nli-deberta-large": {
+     "letters": 0.0139,
+     "typed": 0.001
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0027,
+     "typed": 0.0065
+    },
+    "reranker-qwen3": {
+     "letters": 0.6225,
+     "typed": 0.9526
+    }
+   }
+  },
+  {
+   "id": "hard:biological_mother>mother",
+   "premise": "A is the biological mother of B",
+   "conclusion": "A is the mother of B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a biological mother is a mother; a mother may be adoptive",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9679,
+     "typed": 0.9775
+    },
+    "cosine-qwen3": {
+     "letters": 0.9918,
+     "typed": 0.9864
+    },
+    "jev": {
+     "letters": 0.97,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.992,
+     "typed": 0.9942
+    },
+    "nli-deberta-large": {
+     "letters": 0.9872,
+     "typed": 0.9947
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9828,
+     "typed": 0.9832
+    },
+    "reranker-qwen3": {
+     "letters": 0.9944,
+     "typed": 0.9959
+    }
+   }
+  },
+  {
+   "id": "hard:biological_mother>mother:reverse",
+   "premise": "A is the mother of B",
+   "conclusion": "A is the biological mother of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a biological mother is a mother; a mother may be adoptive",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9679,
+     "typed": 0.9775
+    },
+    "cosine-qwen3": {
+     "letters": 0.9918,
+     "typed": 0.9864
+    },
+    "jev": {
+     "letters": 0.14,
+     "typed": 0.09
+    },
+    "nli-deberta-base": {
+     "letters": 0.0125,
+     "typed": 0.0051
+    },
+    "nli-deberta-large": {
+     "letters": 0.0007,
+     "typed": 0.0006
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0038,
+     "typed": 0.0033
+    },
+    "reranker-qwen3": {
+     "letters": 0.867,
+     "typed": 0.9707
+    }
+   }
+  },
+  {
+   "id": "hard:adoptive_parent>parent",
+   "premise": "A is an adoptive parent of B",
+   "conclusion": "A is a parent of B",
+   "label": true,
+   "kind": "forward",
+   "reason": "an adoptive parent is a legal parent; most parents are not adoptive",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9531,
+     "typed": 0.9681
+    },
+    "cosine-qwen3": {
+     "letters": 0.9776,
+     "typed": 0.9736
+    },
+    "jev": {
+     "letters": 0.9,
+     "typed": 0.85
+    },
+    "nli-deberta-base": {
+     "letters": 0.9887,
+     "typed": 0.9955
+    },
+    "nli-deberta-large": {
+     "letters": 0.9873,
+     "typed": 0.9916
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9703,
+     "typed": 0.9796
+    },
+    "reranker-qwen3": {
+     "letters": 0.9883,
+     "typed": 0.9909
+    }
+   }
+  },
+  {
+   "id": "hard:adoptive_parent>parent:reverse",
+   "premise": "A is a parent of B",
+   "conclusion": "A is an adoptive parent of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "an adoptive parent is a legal parent; most parents are not adoptive",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9531,
+     "typed": 0.9681
+    },
+    "cosine-qwen3": {
+     "letters": 0.9776,
+     "typed": 0.9736
+    },
+    "jev": {
+     "letters": 0.04,
+     "typed": 0.03
+    },
+    "nli-deberta-base": {
+     "letters": 0.0007,
+     "typed": 0.0004
+    },
+    "nli-deberta-large": {
+     "letters": 0.0002,
+     "typed": 0.0002
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0019,
+     "typed": 0.001
+    },
+    "reranker-qwen3": {
+     "letters": 0.5622,
+     "typed": 0.977
+    }
+   }
+  },
+  {
+   "id": "hard:mother>relative",
+   "premise": "A is the mother of B",
+   "conclusion": "A is a relative of B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a mother is a relative; a relative may be a cousin",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9274,
+     "typed": 0.9549
+    },
+    "cosine-qwen3": {
+     "letters": 0.9716,
+     "typed": 0.9605
+    },
+    "jev": {
+     "letters": 0.97,
+     "typed": 0.97
+    },
+    "nli-deberta-base": {
+     "letters": 0.9781,
+     "typed": 0.9831
+    },
+    "nli-deberta-large": {
+     "letters": 0.0082,
+     "typed": 0.9006
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9762,
+     "typed": 0.9842
+    },
+    "reranker-qwen3": {
+     "letters": 0.9876,
+     "typed": 0.9627
+    }
+   }
+  },
+  {
+   "id": "hard:mother>relative:reverse",
+   "premise": "A is a relative of B",
+   "conclusion": "A is the mother of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a mother is a relative; a relative may be a cousin",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9274,
+     "typed": 0.9549
+    },
+    "cosine-qwen3": {
+     "letters": 0.9716,
+     "typed": 0.9605
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.02
+    },
+    "nli-deberta-base": {
+     "letters": 0.0003,
+     "typed": 0.0002
+    },
+    "nli-deberta-large": {
+     "letters": 0.0007,
+     "typed": 0.0002
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.001,
+     "typed": 0.0005
+    },
+    "reranker-qwen3": {
+     "letters": 0.4073,
+     "typed": 0.5927
+    }
+   }
+  },
+  {
+   "id": "hard:cousin>relative",
+   "premise": "A is a cousin of B",
+   "conclusion": "A is a relative of B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a cousin is a relative; a relative may be a sibling",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9602,
+     "typed": 0.9789
+    },
+    "cosine-qwen3": {
+     "letters": 0.9888,
+     "typed": 0.9812
+    },
+    "jev": {
+     "letters": 0.97,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.9865,
+     "typed": 0.9866
+    },
+    "nli-deberta-large": {
+     "letters": 0.9957,
+     "typed": 0.9961
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9766,
+     "typed": 0.9789
+    },
+    "reranker-qwen3": {
+     "letters": 0.9933,
+     "typed": 0.9951
+    }
+   }
+  },
+  {
+   "id": "hard:cousin>relative:reverse",
+   "premise": "A is a relative of B",
+   "conclusion": "A is a cousin of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a cousin is a relative; a relative may be a sibling",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9602,
+     "typed": 0.9789
+    },
+    "cosine-qwen3": {
+     "letters": 0.9888,
+     "typed": 0.9812
+    },
+    "jev": {
+     "letters": 0.03,
+     "typed": 0.03
+    },
+    "nli-deberta-base": {
+     "letters": 0.0086,
+     "typed": 0.0049
+    },
+    "nli-deberta-large": {
+     "letters": 0.0021,
+     "typed": 0.0026
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0014,
+     "typed": 0.0005
+    },
+    "reranker-qwen3": {
+     "letters": 0.6225,
+     "typed": 0.8355
+    }
+   }
+  },
+  {
+   "id": "hard:uncle>relative",
+   "premise": "A is an uncle of B",
+   "conclusion": "A is a relative of B",
+   "label": true,
+   "kind": "forward",
+   "reason": "an uncle is a relative; a relative may be a parent",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9566,
+     "typed": 0.9799
+    },
+    "cosine-qwen3": {
+     "letters": 0.9753,
+     "typed": 0.9709
+    },
+    "jev": {
+     "letters": 0.96,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.9828,
+     "typed": 0.9867
+    },
+    "nli-deberta-large": {
+     "letters": 0.9959,
+     "typed": 0.9964
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9876,
+     "typed": 0.9859
+    },
+    "reranker-qwen3": {
+     "letters": 0.9914,
+     "typed": 0.9944
+    }
+   }
+  },
+  {
+   "id": "hard:uncle>relative:reverse",
+   "premise": "A is a relative of B",
+   "conclusion": "A is an uncle of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "an uncle is a relative; a relative may be a parent",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9566,
+     "typed": 0.9799
+    },
+    "cosine-qwen3": {
+     "letters": 0.9753,
+     "typed": 0.9709
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.02
+    },
+    "nli-deberta-base": {
+     "letters": 0.0031,
+     "typed": 0.0015
+    },
+    "nli-deberta-large": {
+     "letters": 0.0006,
+     "typed": 0.0005
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0013,
+     "typed": 0.0004
+    },
+    "reranker-qwen3": {
+     "letters": 0.4688,
+     "typed": 0.6792
+    }
+   }
+  },
+  {
+   "id": "hard:relative>relative~",
+   "premise": "B is a relative of A",
+   "conclusion": "A is a relative of B",
+   "label": true,
+   "kind": "both",
+   "reason": "being relatives is symmetric",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9912,
+     "typed": 0.998
+    },
+    "cosine-qwen3": {
+     "letters": 0.9921,
+     "typed": 0.9793
+    },
+    "jev": {
+     "letters": 0.93,
+     "typed": 0.96
+    },
+    "nli-deberta-base": {
+     "letters": 0.0208,
+     "typed": 0.0017
+    },
+    "nli-deberta-large": {
+     "letters": 0.0002,
+     "typed": 0.0057
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9102,
+     "typed": 0.9954
+    },
+    "reranker-qwen3": {
+     "letters": 0.1192,
+     "typed": 0.2451
+    }
+   }
+  },
+  {
+   "id": "hard:cousin>sibling",
+   "premise": "A is a cousin of B",
+   "conclusion": "A is a sibling of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "cousins share grandparents, siblings share parents; neither is the other",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9605,
+     "typed": 0.968
+    },
+    "cosine-qwen3": {
+     "letters": 0.9896,
+     "typed": 0.9764
+    },
+    "jev": {
+     "letters": 0.01,
+     "typed": 0.02
+    },
+    "nli-deberta-base": {
+     "letters": 0.0026,
+     "typed": 0.0007
+    },
+    "nli-deberta-large": {
+     "letters": 0.0029,
+     "typed": 0.0305
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0005,
+     "typed": 0.0003
+    },
+    "reranker-qwen3": {
+     "letters": 0.9526,
+     "typed": 0.9876
+    }
+   }
+  },
+  {
+   "id": "hard:cousin>sibling:reverse",
+   "premise": "A is a sibling of B",
+   "conclusion": "A is a cousin of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "cousins share grandparents, siblings share parents; neither is the other",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9605,
+     "typed": 0.968
+    },
+    "cosine-qwen3": {
+     "letters": 0.9896,
+     "typed": 0.9764
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.01
+    },
+    "nli-deberta-base": {
+     "letters": 0.0008,
+     "typed": 0.0002
+    },
+    "nli-deberta-large": {
+     "letters": 0.0002,
+     "typed": 0.0008
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0006,
+     "typed": 0.0005
+    },
+    "reranker-qwen3": {
+     "letters": 0.5622,
+     "typed": 0.7982
+    }
+   }
+  },
+  {
+   "id": "hard:grandmother>mother",
+   "premise": "A is a grandmother of B",
+   "conclusion": "A is the mother of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a grandmother of B is a mother of B's parent, not of B",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9453,
+     "typed": 0.9499
+    },
+    "cosine-qwen3": {
+     "letters": 0.9812,
+     "typed": 0.966
+    },
+    "jev": {
+     "letters": 0.04,
+     "typed": 0.05
+    },
+    "nli-deberta-base": {
+     "letters": 0.0005,
+     "typed": 0.0006
+    },
+    "nli-deberta-large": {
+     "letters": 0.0024,
+     "typed": 0.0009
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0005,
+     "typed": 0.0007
+    },
+    "reranker-qwen3": {
+     "letters": 0.5927,
+     "typed": 0.9579
+    }
+   }
+  },
+  {
+   "id": "hard:grandmother>mother:reverse",
+   "premise": "A is the mother of B",
+   "conclusion": "A is a grandmother of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a grandmother of B is a mother of B's parent, not of B",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9453,
+     "typed": 0.9499
+    },
+    "cosine-qwen3": {
+     "letters": 0.9812,
+     "typed": 0.966
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.01
+    },
+    "nli-deberta-base": {
+     "letters": 0.0072,
+     "typed": 0.0013
+    },
+    "nli-deberta-large": {
+     "letters": 0.0001,
+     "typed": 0.0001
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0034,
+     "typed": 0.0023
+    },
+    "reranker-qwen3": {
+     "letters": 0.7311,
+     "typed": 0.9325
+    }
+   }
+  },
+  {
+   "id": "hard:mother>father",
+   "premise": "A is the mother of B",
+   "conclusion": "A is the father of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "the two parents of a child are different people",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9557,
+     "typed": 0.9633
+    },
+    "cosine-qwen3": {
+     "letters": 0.9757,
+     "typed": 0.9637
+    },
+    "jev": {
+     "letters": 0.01,
+     "typed": 0.01
+    },
+    "nli-deberta-base": {
+     "letters": 0.0,
+     "typed": 0.0001
+    },
+    "nli-deberta-large": {
+     "letters": 0.0,
+     "typed": 0.0
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0003,
+     "typed": 0.0004
+    },
+    "reranker-qwen3": {
+     "letters": 0.0351,
+     "typed": 0.1824
+    }
+   }
+  },
+  {
+   "id": "hard:mother>father:reverse",
+   "premise": "A is the father of B",
+   "conclusion": "A is the mother of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "the two parents of a child are different people",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9557,
+     "typed": 0.9633
+    },
+    "cosine-qwen3": {
+     "letters": 0.9757,
+     "typed": 0.9637
+    },
+    "jev": {
+     "letters": 0.01,
+     "typed": 0.01
+    },
+    "nli-deberta-base": {
+     "letters": 0.0,
+     "typed": 0.0001
+    },
+    "nli-deberta-large": {
+     "letters": 0.0001,
+     "typed": 0.0
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0006,
+     "typed": 0.0003
+    },
+    "reranker-qwen3": {
+     "letters": 0.0293,
+     "typed": 0.1067
+    }
+   }
+  },
+  {
+   "id": "hard:employs>works_for~",
+   "premise": "B employs A",
+   "conclusion": "A works for B",
+   "label": true,
+   "kind": "forward",
+   "reason": "an employee works for the employer, but a contractor or volunteer works for someone who does not employ them",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9269,
+     "typed": 0.9805
+    },
+    "cosine-qwen3": {
+     "letters": 0.9577,
+     "typed": 0.9742
+    },
+    "jev": {
+     "letters": 0.94,
+     "typed": 0.94
+    },
+    "nli-deberta-base": {
+     "letters": 0.997,
+     "typed": 0.9979
+    },
+    "nli-deberta-large": {
+     "letters": 0.999,
+     "typed": 0.999
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9945,
+     "typed": 0.9961
+    },
+    "reranker-qwen3": {
+     "letters": 0.3208,
+     "typed": 0.9876
+    }
+   }
+  },
+  {
+   "id": "hard:employs>works_for~:reverse",
+   "premise": "B works for A",
+   "conclusion": "A employs B",
+   "label": false,
+   "kind": "forward",
+   "reason": "an employee works for the employer, but a contractor or volunteer works for someone who does not employ them",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9061,
+     "typed": 0.9805
+    },
+    "cosine-qwen3": {
+     "letters": 0.9691,
+     "typed": 0.9742
+    },
+    "jev": {
+     "letters": 0.83,
+     "typed": 0.84
+    },
+    "nli-deberta-base": {
+     "letters": 0.9972,
+     "typed": 0.9976
+    },
+    "nli-deberta-large": {
+     "letters": 0.9987,
+     "typed": 0.9989
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9944,
+     "typed": 0.9938
+    },
+    "reranker-qwen3": {
+     "letters": 0.5,
+     "typed": 0.9929
+    }
+   }
+  },
+  {
+   "id": "hard:employee_of>works_for",
+   "premise": "A is an employee of B",
+   "conclusion": "A works for B",
+   "label": true,
+   "kind": "forward",
+   "reason": "an employee works for the employer; one who works for an organisation may be a contractor",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9155,
+     "typed": 0.9808
+    },
+    "cosine-qwen3": {
+     "letters": 0.97,
+     "typed": 0.9859
+    },
+    "jev": {
+     "letters": 0.93,
+     "typed": 0.94
+    },
+    "nli-deberta-base": {
+     "letters": 0.9975,
+     "typed": 0.998
+    },
+    "nli-deberta-large": {
+     "letters": 0.9986,
+     "typed": 0.9989
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9953,
+     "typed": 0.9967
+    },
+    "reranker-qwen3": {
+     "letters": 0.9941,
+     "typed": 0.9975
+    }
+   }
+  },
+  {
+   "id": "hard:employee_of>works_for:reverse",
+   "premise": "A works for B",
+   "conclusion": "A is an employee of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "an employee works for the employer; one who works for an organisation may be a contractor",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9155,
+     "typed": 0.9808
+    },
+    "cosine-qwen3": {
+     "letters": 0.97,
+     "typed": 0.9859
+    },
+    "jev": {
+     "letters": 0.67,
+     "typed": 0.59
+    },
+    "nli-deberta-base": {
+     "letters": 0.9973,
+     "typed": 0.9974
+    },
+    "nli-deberta-large": {
+     "letters": 0.9963,
+     "typed": 0.9971
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9978,
+     "typed": 0.9965
+    },
+    "reranker-qwen3": {
+     "letters": 0.9909,
+     "typed": 0.9968
+    }
+   }
+  },
+  {
+   "id": "hard:employee_of>employs~",
+   "premise": "B is an employee of A",
+   "conclusion": "A employs B",
+   "label": true,
+   "kind": "both",
+   "reason": "B being an employee of A says exactly that A employs B",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9445,
+     "typed": 0.9735
+    },
+    "cosine-qwen3": {
+     "letters": 0.9759,
+     "typed": 0.9656
+    },
+    "jev": {
+     "letters": 0.99,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.9966,
+     "typed": 0.9976
+    },
+    "nli-deberta-large": {
+     "letters": 0.999,
+     "typed": 0.9989
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9916,
+     "typed": 0.9969
+    },
+    "reranker-qwen3": {
+     "letters": 0.5312,
+     "typed": 0.9924
+    }
+   }
+  },
+  {
+   "id": "hard:employee_of>employs~:reverse",
+   "premise": "B employs A",
+   "conclusion": "A is an employee of B",
+   "label": true,
+   "kind": "both",
+   "reason": "B being an employee of A says exactly that A employs B",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9206,
+     "typed": 0.9735
+    },
+    "cosine-qwen3": {
+     "letters": 0.9703,
+     "typed": 0.9656
+    },
+    "jev": {
+     "letters": 0.89,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.9979,
+     "typed": 0.998
+    },
+    "nli-deberta-large": {
+     "letters": 0.9988,
+     "typed": 0.9988
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9959,
+     "typed": 0.9976
+    },
+    "reranker-qwen3": {
+     "letters": 0.6514,
+     "typed": 0.9941
+    }
+   }
+  },
+  {
+   "id": "hard:employee_of>employed_by",
+   "premise": "A is an employee of B",
+   "conclusion": "A is employed by B",
+   "label": true,
+   "kind": "both",
+   "reason": "being an employee of and being employed by say the same thing",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9616,
+     "typed": 0.9841
+    },
+    "cosine-qwen3": {
+     "letters": 0.9937,
+     "typed": 0.9931
+    },
+    "jev": {
+     "letters": 0.99,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.9976,
+     "typed": 0.9979
+    },
+    "nli-deberta-large": {
+     "letters": 0.9983,
+     "typed": 0.9988
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9981,
+     "typed": 0.997
+    },
+    "reranker-qwen3": {
+     "letters": 0.997,
+     "typed": 0.9977
+    }
+   }
+  },
+  {
+   "id": "hard:employee_of>employed_by:reverse",
+   "premise": "A is employed by B",
+   "conclusion": "A is an employee of B",
+   "label": true,
+   "kind": "both",
+   "reason": "being an employee of and being employed by say the same thing",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9616,
+     "typed": 0.9841
+    },
+    "cosine-qwen3": {
+     "letters": 0.9937,
+     "typed": 0.9931
+    },
+    "jev": {
+     "letters": 0.96,
+     "typed": 0.97
+    },
+    "nli-deberta-base": {
+     "letters": 0.998,
+     "typed": 0.9983
+    },
+    "nli-deberta-large": {
+     "letters": 0.9984,
+     "typed": 0.9986
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9986,
+     "typed": 0.9972
+    },
+    "reranker-qwen3": {
+     "letters": 0.9968,
+     "typed": 0.9977
+    }
+   }
+  },
+  {
+   "id": "hard:employs>manages",
+   "premise": "A employs B",
+   "conclusion": "A manages B",
+   "label": false,
+   "kind": "neither",
+   "reason": "an employer need not manage an employee directly, and a manager is usually not the employer",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9259,
+     "typed": 0.9655
+    },
+    "cosine-qwen3": {
+     "letters": 0.974,
+     "typed": 0.9748
+    },
+    "jev": {
+     "letters": 0.29,
+     "typed": 0.41
+    },
+    "nli-deberta-base": {
+     "letters": 0.9922,
+     "typed": 0.9972
+    },
+    "nli-deberta-large": {
+     "letters": 0.9989,
+     "typed": 0.9987
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9751,
+     "typed": 0.9284
+    },
+    "reranker-qwen3": {
+     "letters": 0.9241,
+     "typed": 0.9707
+    }
+   }
+  },
+  {
+   "id": "hard:employs>manages:reverse",
+   "premise": "A manages B",
+   "conclusion": "A employs B",
+   "label": false,
+   "kind": "neither",
+   "reason": "an employer need not manage an employee directly, and a manager is usually not the employer",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9259,
+     "typed": 0.9655
+    },
+    "cosine-qwen3": {
+     "letters": 0.974,
+     "typed": 0.9748
+    },
+    "jev": {
+     "letters": 0.18,
+     "typed": 0.23
+    },
+    "nli-deberta-base": {
+     "letters": 0.9934,
+     "typed": 0.9945
+    },
+    "nli-deberta-large": {
+     "letters": 0.9938,
+     "typed": 0.9949
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9639,
+     "typed": 0.691
+    },
+    "reranker-qwen3": {
+     "letters": 0.982,
+     "typed": 0.9883
+    }
+   }
+  },
+  {
+   "id": "hard:supervises>supervised_by~",
+   "premise": "B supervises A",
+   "conclusion": "A is supervised by B",
+   "label": true,
+   "kind": "both",
+   "reason": "the passive says the same as the active with its arguments exchanged",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9528,
+     "typed": 0.9771
+    },
+    "cosine-qwen3": {
+     "letters": 0.9696,
+     "typed": 0.9786
+    },
+    "jev": {
+     "letters": 0.99,
+     "typed": 0.99
+    },
+    "nli-deberta-base": {
+     "letters": 0.9978,
+     "typed": 0.9982
+    },
+    "nli-deberta-large": {
+     "letters": 0.9979,
+     "typed": 0.9985
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9973,
+     "typed": 0.9991
+    },
+    "reranker-qwen3": {
+     "letters": 0.9883,
+     "typed": 0.9954
+    }
+   }
+  },
+  {
+   "id": "hard:supervises>supervised_by~:reverse",
+   "premise": "B is supervised by A",
+   "conclusion": "A supervises B",
+   "label": true,
+   "kind": "both",
+   "reason": "the passive says the same as the active with its arguments exchanged",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9534,
+     "typed": 0.9759
+    },
+    "cosine-qwen3": {
+     "letters": 0.9619,
+     "typed": 0.9798
+    },
+    "jev": {
+     "letters": 0.99,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.9978,
+     "typed": 0.998
+    },
+    "nli-deberta-large": {
+     "letters": 0.9989,
+     "typed": 0.9991
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9987,
+     "typed": 0.999
+    },
+    "reranker-qwen3": {
+     "letters": 0.9466,
+     "typed": 0.9797
+    }
+   }
+  },
+  {
+   "id": "hard:chief_executive_of>works_for",
+   "premise": "A is the chief executive of B",
+   "conclusion": "A works for B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a chief executive works for the company they run; most who work for it are not its chief executive",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.8559,
+     "typed": 0.9267
+    },
+    "cosine-qwen3": {
+     "letters": 0.9425,
+     "typed": 0.9546
+    },
+    "jev": {
+     "letters": 0.49,
+     "typed": 0.76
+    },
+    "nli-deberta-base": {
+     "letters": 0.9773,
+     "typed": 0.9766
+    },
+    "nli-deberta-large": {
+     "letters": 0.9849,
+     "typed": 0.9913
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9621,
+     "typed": 0.8536
+    },
+    "reranker-qwen3": {
+     "letters": 0.9466,
+     "typed": 0.9868
+    }
+   }
+  },
+  {
+   "id": "hard:chief_executive_of>works_for:reverse",
+   "premise": "A works for B",
+   "conclusion": "A is the chief executive of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a chief executive works for the company they run; most who work for it are not its chief executive",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.8559,
+     "typed": 0.9267
+    },
+    "cosine-qwen3": {
+     "letters": 0.9425,
+     "typed": 0.9546
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.02
+    },
+    "nli-deberta-base": {
+     "letters": 0.0003,
+     "typed": 0.0002
+    },
+    "nli-deberta-large": {
+     "letters": 0.0001,
+     "typed": 0.0001
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0019,
+     "typed": 0.0053
+    },
+    "reranker-qwen3": {
+     "letters": 0.5,
+     "typed": 0.2451
+    }
+   }
+  },
+  {
+   "id": "hard:founded>owns",
+   "premise": "A founded B",
+   "conclusion": "A owns B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a founder may have sold the company, and an owner may have bought it from its founder",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9059,
+     "typed": 0.945
+    },
+    "cosine-qwen3": {
+     "letters": 0.9348,
+     "typed": 0.9536
+    },
+    "jev": {
+     "letters": 0.19,
+     "typed": 0.07
+    },
+    "nli-deberta-base": {
+     "letters": 0.8651,
+     "typed": 0.059
+    },
+    "nli-deberta-large": {
+     "letters": 0.0024,
+     "typed": 0.905
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0125,
+     "typed": 0.0168
+    },
+    "reranker-qwen3": {
+     "letters": 0.7311,
+     "typed": 0.6225
+    }
+   }
+  },
+  {
+   "id": "hard:founded>owns:reverse",
+   "premise": "A owns B",
+   "conclusion": "A founded B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a founder may have sold the company, and an owner may have bought it from its founder",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9059,
+     "typed": 0.945
+    },
+    "cosine-qwen3": {
+     "letters": 0.9348,
+     "typed": 0.9536
+    },
+    "jev": {
+     "letters": 0.03,
+     "typed": 0.05
+    },
+    "nli-deberta-base": {
+     "letters": 0.0226,
+     "typed": 0.0003
+    },
+    "nli-deberta-large": {
+     "letters": 0.0002,
+     "typed": 0.0046
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0009,
+     "typed": 0.009
+    },
+    "reranker-qwen3": {
+     "letters": 0.5927,
+     "typed": 0.2942
+    }
+   }
+  },
+  {
+   "id": "hard:member_of>employee_of",
+   "premise": "A is a member of B",
+   "conclusion": "A is an employee of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a member of an association need not be employed by it, and an employee need not be a member",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9364,
+     "typed": 0.97
+    },
+    "cosine-qwen3": {
+     "letters": 0.9655,
+     "typed": 0.9677
+    },
+    "jev": {
+     "letters": 0.06,
+     "typed": 0.05
+    },
+    "nli-deberta-base": {
+     "letters": 0.6691,
+     "typed": 0.1745
+    },
+    "nli-deberta-large": {
+     "letters": 0.0045,
+     "typed": 0.0187
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0044,
+     "typed": 0.0025
+    },
+    "reranker-qwen3": {
+     "letters": 0.2689,
+     "typed": 0.9047
+    }
+   }
+  },
+  {
+   "id": "hard:member_of>employee_of:reverse",
+   "premise": "A is an employee of B",
+   "conclusion": "A is a member of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a member of an association need not be employed by it, and an employee need not be a member",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9364,
+     "typed": 0.97
+    },
+    "cosine-qwen3": {
+     "letters": 0.9655,
+     "typed": 0.9677
+    },
+    "jev": {
+     "letters": 0.41,
+     "typed": 0.33
+    },
+    "nli-deberta-base": {
+     "letters": 0.9828,
+     "typed": 0.9309
+    },
+    "nli-deberta-large": {
+     "letters": 0.9899,
+     "typed": 0.9928
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.6223,
+     "typed": 0.1496
+    },
+    "reranker-qwen3": {
+     "letters": 0.8355,
+     "typed": 0.4688
+    }
+   }
+  },
+  {
+   "id": "hard:contractor_for>employee_of",
+   "premise": "A is a contractor for B",
+   "conclusion": "A is an employee of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a contractor works for a client without being its employee",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9271,
+     "typed": 0.9512
+    },
+    "cosine-qwen3": {
+     "letters": 0.9695,
+     "typed": 0.9693
+    },
+    "jev": {
+     "letters": 0.03,
+     "typed": 0.05
+    },
+    "nli-deberta-base": {
+     "letters": 0.8869,
+     "typed": 0.0014
+    },
+    "nli-deberta-large": {
+     "letters": 0.2481,
+     "typed": 0.0117
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0954,
+     "typed": 0.0039
+    },
+    "reranker-qwen3": {
+     "letters": 0.011,
+     "typed": 0.0203
+    }
+   }
+  },
+  {
+   "id": "hard:contractor_for>employee_of:reverse",
+   "premise": "A is an employee of B",
+   "conclusion": "A is a contractor for B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a contractor works for a client without being its employee",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9271,
+     "typed": 0.9512
+    },
+    "cosine-qwen3": {
+     "letters": 0.9695,
+     "typed": 0.9693
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.03
+    },
+    "nli-deberta-base": {
+     "letters": 0.0069,
+     "typed": 0.0003
+    },
+    "nli-deberta-large": {
+     "letters": 0.0005,
+     "typed": 0.0002
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0065,
+     "typed": 0.0054
+    },
+    "reranker-qwen3": {
+     "letters": 0.0132,
+     "typed": 0.0086
+    }
+   }
+  },
+  {
+   "id": "hard:colleague>colleague~",
+   "premise": "B is a colleague of A",
+   "conclusion": "A is a colleague of B",
+   "label": true,
+   "kind": "both",
+   "reason": "being colleagues is symmetric",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9912,
+     "typed": 0.9976
+    },
+    "cosine-qwen3": {
+     "letters": 0.995,
+     "typed": 0.9798
+    },
+    "jev": {
+     "letters": 0.95,
+     "typed": 0.96
+    },
+    "nli-deberta-base": {
+     "letters": 0.0472,
+     "typed": 0.0011
+    },
+    "nli-deberta-large": {
+     "letters": 0.0005,
+     "typed": 0.5015
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9817,
+     "typed": 0.9954
+    },
+    "reranker-qwen3": {
+     "letters": 0.0244,
+     "typed": 0.3486
+    }
+   }
+  },
+  {
+   "id": "hard:manages>manages~",
+   "premise": "B manages A",
+   "conclusion": "A manages B",
+   "label": false,
+   "kind": "neither",
+   "reason": "managing someone is asymmetric",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9767,
+     "typed": 0.9985
+    },
+    "cosine-qwen3": {
+     "letters": 0.9816,
+     "typed": 0.9729
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.02
+    },
+    "nli-deberta-base": {
+     "letters": 0.0,
+     "typed": 0.0
+    },
+    "nli-deberta-large": {
+     "letters": 0.0,
+     "typed": 0.0
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0075,
+     "typed": 0.0003
+    },
+    "reranker-qwen3": {
+     "letters": 0.0601,
+     "typed": 0.0373
+    }
+   }
+  },
+  {
+   "id": "hard:hired>employs",
+   "premise": "A hired B",
+   "conclusion": "A employs B",
+   "label": false,
+   "kind": "neither",
+   "reason": "hiring is a past event and the employment may have ended; an employer may have taken the employee over in a merger without hiring them",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9511,
+     "typed": 0.9677
+    },
+    "cosine-qwen3": {
+     "letters": 0.9509,
+     "typed": 0.9732
+    },
+    "jev": {
+     "letters": 0.85,
+     "typed": 0.61
+    },
+    "nli-deberta-base": {
+     "letters": 0.9977,
+     "typed": 0.9982
+    },
+    "nli-deberta-large": {
+     "letters": 0.9991,
+     "typed": 0.9992
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9952,
+     "typed": 0.9844
+    },
+    "reranker-qwen3": {
+     "letters": 0.9627,
+     "typed": 0.9962
+    }
+   }
+  },
+  {
+   "id": "hard:hired>employs:reverse",
+   "premise": "A employs B",
+   "conclusion": "A hired B",
+   "label": false,
+   "kind": "neither",
+   "reason": "hiring is a past event and the employment may have ended; an employer may have taken the employee over in a merger without hiring them",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9511,
+     "typed": 0.9677
+    },
+    "cosine-qwen3": {
+     "letters": 0.9509,
+     "typed": 0.9732
+    },
+    "jev": {
+     "letters": 0.65,
+     "typed": 0.49
+    },
+    "nli-deberta-base": {
+     "letters": 0.9975,
+     "typed": 0.9977
+    },
+    "nli-deberta-large": {
+     "letters": 0.9988,
+     "typed": 0.9989
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9961,
+     "typed": 0.9631
+    },
+    "reranker-qwen3": {
+     "letters": 0.9841,
+     "typed": 0.9883
+    }
+   }
+  },
+  {
+   "id": "hard:fired>employs",
+   "premise": "A fired B",
+   "conclusion": "A employs B",
+   "label": false,
+   "kind": "neither",
+   "reason": "having fired someone means no longer employing them; an employer has not fired those it still employs",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.8929,
+     "typed": 0.8991
+    },
+    "cosine-qwen3": {
+     "letters": 0.9273,
+     "typed": 0.9275
+    },
+    "jev": {
+     "letters": 0.07,
+     "typed": 0.02
+    },
+    "nli-deberta-base": {
+     "letters": 0.0001,
+     "typed": 0.0
+    },
+    "nli-deberta-large": {
+     "letters": 0.0,
+     "typed": 0.0
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0003,
+     "typed": 0.0005
+    },
+    "reranker-qwen3": {
+     "letters": 0.2337,
+     "typed": 0.3208
+    }
+   }
+  },
+  {
+   "id": "hard:fired>employs:reverse",
+   "premise": "A employs B",
+   "conclusion": "A fired B",
+   "label": false,
+   "kind": "neither",
+   "reason": "having fired someone means no longer employing them; an employer has not fired those it still employs",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.8929,
+     "typed": 0.8991
+    },
+    "cosine-qwen3": {
+     "letters": 0.9273,
+     "typed": 0.9275
+    },
+    "jev": {
+     "letters": 0.01,
+     "typed": 0.01
+    },
+    "nli-deberta-base": {
+     "letters": 0.0,
+     "typed": 0.0
+    },
+    "nli-deberta-large": {
+     "letters": 0.0,
+     "typed": 0.0
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0003,
+     "typed": 0.0009
+    },
+    "reranker-qwen3": {
+     "letters": 0.0567,
+     "typed": 0.0421
+    }
+   }
+  },
+  {
+   "id": "hard:employs>employs~",
+   "premise": "B employs A",
+   "conclusion": "A employs B",
+   "label": false,
+   "kind": "neither",
+   "reason": "employing someone is asymmetric",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9831,
+     "typed": 0.9918
+    },
+    "cosine-qwen3": {
+     "letters": 0.982,
+     "typed": 0.9882
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.08
+    },
+    "nli-deberta-base": {
+     "letters": 0.0001,
+     "typed": 0.0001
+    },
+    "nli-deberta-large": {
+     "letters": 0.0,
+     "typed": 0.0245
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0053,
+     "typed": 0.0016
+    },
+    "reranker-qwen3": {
+     "letters": 0.1824,
+     "typed": 0.852
+    }
+   }
+  },
+  {
+   "id": "hard:causes>correlated_with",
+   "premise": "A causes B",
+   "conclusion": "A is correlated with B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a cause can be masked by an opposing path or act non-linearly, leaving no correlation, so causation does not entail correlation; a correlation may come from a common cause",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9009,
+     "typed": 0.9634
+    },
+    "cosine-qwen3": {
+     "letters": 0.9532,
+     "typed": 0.9721
+    },
+    "jev": {
+     "letters": 0.65,
+     "typed": 0.7
+    },
+    "nli-deberta-base": {
+     "letters": 0.9822,
+     "typed": 0.9661
+    },
+    "nli-deberta-large": {
+     "letters": 0.9711,
+     "typed": 0.0167
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.389,
+     "typed": 0.2233
+    },
+    "reranker-qwen3": {
+     "letters": 0.8176,
+     "typed": 0.9831
+    }
+   }
+  },
+  {
+   "id": "hard:causes>correlated_with:reverse",
+   "premise": "A is correlated with B",
+   "conclusion": "A causes B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a cause can be masked by an opposing path or act non-linearly, leaving no correlation, so causation does not entail correlation; a correlation may come from a common cause",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9009,
+     "typed": 0.9634
+    },
+    "cosine-qwen3": {
+     "letters": 0.9532,
+     "typed": 0.9721
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.02
+    },
+    "nli-deberta-base": {
+     "letters": 0.0017,
+     "typed": 0.0131
+    },
+    "nli-deberta-large": {
+     "letters": 0.0005,
+     "typed": 0.0037
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0015,
+     "typed": 0.0035
+    },
+    "reranker-qwen3": {
+     "letters": 0.6225,
+     "typed": 0.9466
+    }
+   }
+  },
+  {
+   "id": "hard:correlated_with>correlated_with~",
+   "premise": "B is correlated with A",
+   "conclusion": "A is correlated with B",
+   "label": true,
+   "kind": "both",
+   "reason": "correlation is symmetric",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9908,
+     "typed": 0.9982
+    },
+    "cosine-qwen3": {
+     "letters": 0.9938,
+     "typed": 0.9934
+    },
+    "jev": {
+     "letters": 0.98,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.9837,
+     "typed": 0.9974
+    },
+    "nli-deberta-large": {
+     "letters": 0.0169,
+     "typed": 0.9984
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9887,
+     "typed": 0.996
+    },
+    "reranker-qwen3": {
+     "letters": 0.5312,
+     "typed": 0.9876
+    }
+   }
+  },
+  {
+   "id": "hard:causes>causes~",
+   "premise": "B causes A",
+   "conclusion": "A causes B",
+   "label": false,
+   "kind": "neither",
+   "reason": "causation runs one way between a factor and its outcome",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9775,
+     "typed": 0.9973
+    },
+    "cosine-qwen3": {
+     "letters": 0.9819,
+     "typed": 0.9945
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.03
+    },
+    "nli-deberta-base": {
+     "letters": 0.0001,
+     "typed": 0.0233
+    },
+    "nli-deberta-large": {
+     "letters": 0.0,
+     "typed": 0.0009
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0036,
+     "typed": 0.0027
+    },
+    "reranker-qwen3": {
+     "letters": 0.1192,
+     "typed": 0.9868
+    }
+   }
+  },
+  {
+   "id": "hard:causes>contributes_to",
+   "premise": "A causes B",
+   "conclusion": "A contributes to B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a cause contributes to its effect; a contributing factor may be insufficient to cause it",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9159,
+     "typed": 0.9801
+    },
+    "cosine-qwen3": {
+     "letters": 0.9678,
+     "typed": 0.9886
+    },
+    "jev": {
+     "letters": 0.9,
+     "typed": 0.88
+    },
+    "nli-deberta-base": {
+     "letters": 0.9953,
+     "typed": 0.992
+    },
+    "nli-deberta-large": {
+     "letters": 0.9931,
+     "typed": 0.9796
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.473,
+     "typed": 0.4716
+    },
+    "reranker-qwen3": {
+     "letters": 0.9627,
+     "typed": 0.9985
+    }
+   }
+  },
+  {
+   "id": "hard:causes>contributes_to:reverse",
+   "premise": "A contributes to B",
+   "conclusion": "A causes B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a cause contributes to its effect; a contributing factor may be insufficient to cause it",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9159,
+     "typed": 0.9801
+    },
+    "cosine-qwen3": {
+     "letters": 0.9678,
+     "typed": 0.9886
+    },
+    "jev": {
+     "letters": 0.1,
+     "typed": 0.08
+    },
+    "nli-deberta-base": {
+     "letters": 0.9927,
+     "typed": 0.982
+    },
+    "nli-deberta-large": {
+     "letters": 0.977,
+     "typed": 0.9836
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0527,
+     "typed": 0.0335
+    },
+    "reranker-qwen3": {
+     "letters": 0.985,
+     "typed": 0.9981
+    }
+   }
+  },
+  {
+   "id": "hard:causes>caused_by~",
+   "premise": "B causes A",
+   "conclusion": "A is caused by B",
+   "label": true,
+   "kind": "both",
+   "reason": "B causing A says exactly that A is caused by B",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9689,
+     "typed": 0.9925
+    },
+    "cosine-qwen3": {
+     "letters": 0.9741,
+     "typed": 0.9926
+    },
+    "jev": {
+     "letters": 0.99,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.9967,
+     "typed": 0.9981
+    },
+    "nli-deberta-large": {
+     "letters": 0.9978,
+     "typed": 0.9986
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9959,
+     "typed": 0.9969
+    },
+    "reranker-qwen3": {
+     "letters": 0.7773,
+     "typed": 0.9975
+    }
+   }
+  },
+  {
+   "id": "hard:causes>caused_by~:reverse",
+   "premise": "B is caused by A",
+   "conclusion": "A causes B",
+   "label": true,
+   "kind": "both",
+   "reason": "B causing A says exactly that A is caused by B",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9614,
+     "typed": 0.9925
+    },
+    "cosine-qwen3": {
+     "letters": 0.9756,
+     "typed": 0.9926
+    },
+    "jev": {
+     "letters": 0.97,
+     "typed": 0.96
+    },
+    "nli-deberta-base": {
+     "letters": 0.996,
+     "typed": 0.9974
+    },
+    "nli-deberta-large": {
+     "letters": 0.9983,
+     "typed": 0.999
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.997,
+     "typed": 0.9954
+    },
+    "reranker-qwen3": {
+     "letters": 0.5927,
+     "typed": 0.9914
+    }
+   }
+  },
+  {
+   "id": "hard:causes>prevents",
+   "premise": "A causes B",
+   "conclusion": "A prevents B",
+   "label": false,
+   "kind": "neither",
+   "reason": "causing and preventing an outcome are opposites",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.908,
+     "typed": 0.9484
+    },
+    "cosine-qwen3": {
+     "letters": 0.9598,
+     "typed": 0.9565
+    },
+    "jev": {
+     "letters": 0.01,
+     "typed": 0.01
+    },
+    "nli-deberta-base": {
+     "letters": 0.0001,
+     "typed": 0.0001
+    },
+    "nli-deberta-large": {
+     "letters": 0.0002,
+     "typed": 0.0003
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0009,
+     "typed": 0.0009
+    },
+    "reranker-qwen3": {
+     "letters": 0.4073,
+     "typed": 0.1259
+    }
+   }
+  },
+  {
+   "id": "hard:causes>prevents:reverse",
+   "premise": "A prevents B",
+   "conclusion": "A causes B",
+   "label": false,
+   "kind": "neither",
+   "reason": "causing and preventing an outcome are opposites",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.908,
+     "typed": 0.9484
+    },
+    "cosine-qwen3": {
+     "letters": 0.9598,
+     "typed": 0.9565
+    },
+    "jev": {
+     "letters": 0.01,
+     "typed": 0.01
+    },
+    "nli-deberta-base": {
+     "letters": 0.0001,
+     "typed": 0.0003
+    },
+    "nli-deberta-large": {
+     "letters": 0.0002,
+     "typed": 0.0003
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0004,
+     "typed": 0.0004
+    },
+    "reranker-qwen3": {
+     "letters": 0.8933,
+     "typed": 0.4073
+    }
+   }
+  },
+  {
+   "id": "hard:causes>influences",
+   "premise": "A causes B",
+   "conclusion": "A influences B",
+   "label": true,
+   "kind": "forward",
+   "reason": "causing an outcome is influencing it; influence may fall short of causing it",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.8724,
+     "typed": 0.9726
+    },
+    "cosine-qwen3": {
+     "letters": 0.9717,
+     "typed": 0.9875
+    },
+    "jev": {
+     "letters": 0.93,
+     "typed": 0.95
+    },
+    "nli-deberta-base": {
+     "letters": 0.9929,
+     "typed": 0.9868
+    },
+    "nli-deberta-large": {
+     "letters": 0.9617,
+     "typed": 0.9811
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.3404,
+     "typed": 0.5922
+    },
+    "reranker-qwen3": {
+     "letters": 0.9399,
+     "typed": 0.9978
+    }
+   }
+  },
+  {
+   "id": "hard:causes>influences:reverse",
+   "premise": "A influences B",
+   "conclusion": "A causes B",
+   "label": false,
+   "kind": "forward",
+   "reason": "causing an outcome is influencing it; influence may fall short of causing it",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.8724,
+     "typed": 0.9726
+    },
+    "cosine-qwen3": {
+     "letters": 0.9717,
+     "typed": 0.9875
+    },
+    "jev": {
+     "letters": 0.17,
+     "typed": 0.12
+    },
+    "nli-deberta-base": {
+     "letters": 0.9874,
+     "typed": 0.9746
+    },
+    "nli-deberta-large": {
+     "letters": 0.509,
+     "typed": 0.8317
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0375,
+     "typed": 0.0232
+    },
+    "reranker-qwen3": {
+     "letters": 0.9914,
+     "typed": 0.9957
+    }
+   }
+  },
+  {
+   "id": "hard:cures>treats",
+   "premise": "A cures B",
+   "conclusion": "A treats B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a cure is a treatment; most treatments do not cure",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9008,
+     "typed": 0.9672
+    },
+    "cosine-qwen3": {
+     "letters": 0.9625,
+     "typed": 0.9908
+    },
+    "jev": {
+     "letters": 0.71,
+     "typed": 0.85
+    },
+    "nli-deberta-base": {
+     "letters": 0.9955,
+     "typed": 0.9888
+    },
+    "nli-deberta-large": {
+     "letters": 0.9987,
+     "typed": 0.999
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9893,
+     "typed": 0.9731
+    },
+    "reranker-qwen3": {
+     "letters": 0.852,
+     "typed": 0.9975
+    }
+   }
+  },
+  {
+   "id": "hard:cures>treats:reverse",
+   "premise": "A treats B",
+   "conclusion": "A cures B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a cure is a treatment; most treatments do not cure",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9008,
+     "typed": 0.9672
+    },
+    "cosine-qwen3": {
+     "letters": 0.9625,
+     "typed": 0.9908
+    },
+    "jev": {
+     "letters": 0.04,
+     "typed": 0.06
+    },
+    "nli-deberta-base": {
+     "letters": 0.9654,
+     "typed": 0.0223
+    },
+    "nli-deberta-large": {
+     "letters": 0.928,
+     "typed": 0.9969
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.979,
+     "typed": 0.0104
+    },
+    "reranker-qwen3": {
+     "letters": 0.4378,
+     "typed": 0.9903
+    }
+   }
+  },
+  {
+   "id": "hard:prevents>treats",
+   "premise": "A prevents B",
+   "conclusion": "A treats B",
+   "label": false,
+   "kind": "neither",
+   "reason": "prevention acts before a disease and treatment after it; a vaccine prevents without treating",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.8798,
+     "typed": 0.9422
+    },
+    "cosine-qwen3": {
+     "letters": 0.9508,
+     "typed": 0.9713
+    },
+    "jev": {
+     "letters": 0.07,
+     "typed": 0.04
+    },
+    "nli-deberta-base": {
+     "letters": 0.8945,
+     "typed": 0.9818
+    },
+    "nli-deberta-large": {
+     "letters": 0.0008,
+     "typed": 0.9922
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0018,
+     "typed": 0.0135
+    },
+    "reranker-qwen3": {
+     "letters": 0.7773,
+     "typed": 0.9924
+    }
+   }
+  },
+  {
+   "id": "hard:prevents>treats:reverse",
+   "premise": "A treats B",
+   "conclusion": "A prevents B",
+   "label": false,
+   "kind": "neither",
+   "reason": "prevention acts before a disease and treatment after it; a vaccine prevents without treating",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.8798,
+     "typed": 0.9422
+    },
+    "cosine-qwen3": {
+     "letters": 0.9508,
+     "typed": 0.9713
+    },
+    "jev": {
+     "letters": 0.04,
+     "typed": 0.04
+    },
+    "nli-deberta-base": {
+     "letters": 0.4586,
+     "typed": 0.3448
+    },
+    "nli-deberta-large": {
+     "letters": 0.0006,
+     "typed": 0.001
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0024,
+     "typed": 0.0021
+    },
+    "reranker-qwen3": {
+     "letters": 0.3486,
+     "typed": 0.7773
+    }
+   }
+  },
+  {
+   "id": "hard:capital_of>located_in",
+   "premise": "A is the capital of B",
+   "conclusion": "A is located in B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a capital lies in its country; most places in a country are not its capital",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9245,
+     "typed": 0.9528
+    },
+    "cosine-qwen3": {
+     "letters": 0.9721,
+     "typed": 0.9522
+    },
+    "jev": {
+     "letters": 0.72,
+     "typed": 0.81
+    },
+    "nli-deberta-base": {
+     "letters": 0.9657,
+     "typed": 0.9735
+    },
+    "nli-deberta-large": {
+     "letters": 0.9131,
+     "typed": 0.3438
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.8614,
+     "typed": 0.9188
+    },
+    "reranker-qwen3": {
+     "letters": 0.977,
+     "typed": 0.9047
+    }
+   }
+  },
+  {
+   "id": "hard:capital_of>located_in:reverse",
+   "premise": "A is located in B",
+   "conclusion": "A is the capital of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a capital lies in its country; most places in a country are not its capital",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9245,
+     "typed": 0.9528
+    },
+    "cosine-qwen3": {
+     "letters": 0.9721,
+     "typed": 0.9522
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.02
+    },
+    "nli-deberta-base": {
+     "letters": 0.0004,
+     "typed": 0.0002
+    },
+    "nli-deberta-large": {
+     "letters": 0.0001,
+     "typed": 0.0
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0008,
+     "typed": 0.0006
+    },
+    "reranker-qwen3": {
+     "letters": 0.3775,
+     "typed": 0.0601
+    }
+   }
+  },
+  {
+   "id": "hard:largest_city_of>located_in",
+   "premise": "A is the largest city of B",
+   "conclusion": "A is located in B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a country's largest city lies in it; most of its cities are not the largest",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9011,
+     "typed": 0.9254
+    },
+    "cosine-qwen3": {
+     "letters": 0.9451,
+     "typed": 0.942
+    },
+    "jev": {
+     "letters": 0.76,
+     "typed": 0.93
+    },
+    "nli-deberta-base": {
+     "letters": 0.9658,
+     "typed": 0.927
+    },
+    "nli-deberta-large": {
+     "letters": 0.9746,
+     "typed": 0.9712
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9878,
+     "typed": 0.9838
+    },
+    "reranker-qwen3": {
+     "letters": 0.8808,
+     "typed": 0.9579
+    }
+   }
+  },
+  {
+   "id": "hard:largest_city_of>located_in:reverse",
+   "premise": "A is located in B",
+   "conclusion": "A is the largest city of B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a country's largest city lies in it; most of its cities are not the largest",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9011,
+     "typed": 0.9254
+    },
+    "cosine-qwen3": {
+     "letters": 0.9451,
+     "typed": 0.942
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.02
+    },
+    "nli-deberta-base": {
+     "letters": 0.0003,
+     "typed": 0.0002
+    },
+    "nli-deberta-large": {
+     "letters": 0.0001,
+     "typed": 0.0001
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0011,
+     "typed": 0.0007
+    },
+    "reranker-qwen3": {
+     "letters": 0.1733,
+     "typed": 0.0293
+    }
+   }
+  },
+  {
+   "id": "hard:capital_of>largest_city_of",
+   "premise": "A is the capital of B",
+   "conclusion": "A is the largest city of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "Canberra is the capital of Australia and Sydney its largest city",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9367,
+     "typed": 0.9416
+    },
+    "cosine-qwen3": {
+     "letters": 0.9664,
+     "typed": 0.9708
+    },
+    "jev": {
+     "letters": 0.07,
+     "typed": 0.05
+    },
+    "nli-deberta-base": {
+     "letters": 0.0002,
+     "typed": 0.0002
+    },
+    "nli-deberta-large": {
+     "letters": 0.0001,
+     "typed": 0.0001
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0016,
+     "typed": 0.0009
+    },
+    "reranker-qwen3": {
+     "letters": 0.5927,
+     "typed": 0.2942
+    }
+   }
+  },
+  {
+   "id": "hard:capital_of>largest_city_of:reverse",
+   "premise": "A is the largest city of B",
+   "conclusion": "A is the capital of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "Canberra is the capital of Australia and Sydney its largest city",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9367,
+     "typed": 0.9416
+    },
+    "cosine-qwen3": {
+     "letters": 0.9664,
+     "typed": 0.9708
+    },
+    "jev": {
+     "letters": 0.05,
+     "typed": 0.05
+    },
+    "nli-deberta-base": {
+     "letters": 0.0015,
+     "typed": 0.0001
+    },
+    "nli-deberta-large": {
+     "letters": 0.0001,
+     "typed": 0.0001
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.001,
+     "typed": 0.001
+    },
+    "reranker-qwen3": {
+     "letters": 0.7982,
+     "typed": 0.2227
+    }
+   }
+  },
+  {
+   "id": "hard:located_in>contains~",
+   "premise": "B is located in A",
+   "conclusion": "A contains B",
+   "label": true,
+   "kind": "both",
+   "reason": "B being located in A says exactly that A contains B",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.917,
+     "typed": 0.9878
+    },
+    "cosine-qwen3": {
+     "letters": 0.9574,
+     "typed": 0.9877
+    },
+    "jev": {
+     "letters": 0.96,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.9944,
+     "typed": 0.9953
+    },
+    "nli-deberta-large": {
+     "letters": 0.9987,
+     "typed": 0.999
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9969,
+     "typed": 0.986
+    },
+    "reranker-qwen3": {
+     "letters": 0.9669,
+     "typed": 0.9627
+    }
+   }
+  },
+  {
+   "id": "hard:located_in>contains~:reverse",
+   "premise": "B contains A",
+   "conclusion": "A is located in B",
+   "label": true,
+   "kind": "both",
+   "reason": "B being located in A says exactly that A contains B",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9312,
+     "typed": 0.9878
+    },
+    "cosine-qwen3": {
+     "letters": 0.9635,
+     "typed": 0.9877
+    },
+    "jev": {
+     "letters": 0.93,
+     "typed": 0.97
+    },
+    "nli-deberta-base": {
+     "letters": 0.997,
+     "typed": 0.9974
+    },
+    "nli-deberta-large": {
+     "letters": 0.9984,
+     "typed": 0.999
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9941,
+     "typed": 0.9901
+    },
+    "reranker-qwen3": {
+     "letters": 0.9399,
+     "typed": 0.982
+    }
+   }
+  },
+  {
+   "id": "hard:located_in>situated_in",
+   "premise": "A is located in B",
+   "conclusion": "A is situated in B",
+   "label": true,
+   "kind": "both",
+   "reason": "being located in and being situated in say the same thing",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9933,
+     "typed": 0.9977
+    },
+    "cosine-qwen3": {
+     "letters": 0.9999,
+     "typed": 0.9998
+    },
+    "jev": {
+     "letters": 0.97,
+     "typed": 0.96
+    },
+    "nli-deberta-base": {
+     "letters": 0.9981,
+     "typed": 0.998
+    },
+    "nli-deberta-large": {
+     "letters": 0.9964,
+     "typed": 0.9986
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9983,
+     "typed": 0.9961
+    },
+    "reranker-qwen3": {
+     "letters": 0.9975,
+     "typed": 0.9989
+    }
+   }
+  },
+  {
+   "id": "hard:located_in>situated_in:reverse",
+   "premise": "A is situated in B",
+   "conclusion": "A is located in B",
+   "label": true,
+   "kind": "both",
+   "reason": "being located in and being situated in say the same thing",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9933,
+     "typed": 0.9977
+    },
+    "cosine-qwen3": {
+     "letters": 0.9999,
+     "typed": 0.9998
+    },
+    "jev": {
+     "letters": 0.97,
+     "typed": 0.96
+    },
+    "nli-deberta-base": {
+     "letters": 0.998,
+     "typed": 0.9981
+    },
+    "nli-deberta-large": {
+     "letters": 0.9965,
+     "typed": 0.9987
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9983,
+     "typed": 0.9964
+    },
+    "reranker-qwen3": {
+     "letters": 0.997,
+     "typed": 0.999
+    }
+   }
+  },
+  {
+   "id": "hard:located_in>located_in~",
+   "premise": "B is located in A",
+   "conclusion": "A is located in B",
+   "label": false,
+   "kind": "neither",
+   "reason": "containment is asymmetric between distinct places",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9717,
+     "typed": 0.9949
+    },
+    "cosine-qwen3": {
+     "letters": 0.9901,
+     "typed": 0.9939
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.04
+    },
+    "nli-deberta-base": {
+     "letters": 0.0005,
+     "typed": 0.9953
+    },
+    "nli-deberta-large": {
+     "letters": 0.0,
+     "typed": 0.0089
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0051,
+     "typed": 0.095
+    },
+    "reranker-qwen3": {
+     "letters": 0.0503,
+     "typed": 0.8808
+    }
+   }
+  },
+  {
+   "id": "hard:borders>borders~",
+   "premise": "B borders A",
+   "conclusion": "A borders B",
+   "label": true,
+   "kind": "both",
+   "reason": "sharing a border is symmetric",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9831,
+     "typed": 0.9973
+    },
+    "cosine-qwen3": {
+     "letters": 0.9745,
+     "typed": 0.9781
+    },
+    "jev": {
+     "letters": 0.96,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.0114,
+     "typed": 0.0009
+    },
+    "nli-deberta-large": {
+     "letters": 0.2003,
+     "typed": 0.0009
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9837,
+     "typed": 0.9937
+    },
+    "reranker-qwen3": {
+     "letters": 0.4073,
+     "typed": 0.3208
+    }
+   }
+  },
+  {
+   "id": "hard:near>near~",
+   "premise": "B is near A",
+   "conclusion": "A is near B",
+   "label": true,
+   "kind": "both",
+   "reason": "nearness is symmetric",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9837,
+     "typed": 0.9957
+    },
+    "cosine-qwen3": {
+     "letters": 0.9923,
+     "typed": 0.9807
+    },
+    "jev": {
+     "letters": 0.97,
+     "typed": 0.96
+    },
+    "nli-deberta-base": {
+     "letters": 0.5881,
+     "typed": 0.003
+    },
+    "nli-deberta-large": {
+     "letters": 0.0041,
+     "typed": 0.0001
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.8636,
+     "typed": 0.985
+    },
+    "reranker-qwen3": {
+     "letters": 0.9466,
+     "typed": 0.148
+    }
+   }
+  },
+  {
+   "id": "hard:headquartered_in>located_in",
+   "premise": "A is headquartered in B",
+   "conclusion": "A is located in B",
+   "label": true,
+   "kind": "forward",
+   "reason": "an organisation headquartered in a city is located there; it may be located in cities that are not its headquarters",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9266,
+     "typed": 0.9476
+    },
+    "cosine-qwen3": {
+     "letters": 0.9851,
+     "typed": 0.9797
+    },
+    "jev": {
+     "letters": 0.8,
+     "typed": 0.6
+    },
+    "nli-deberta-base": {
+     "letters": 0.982,
+     "typed": 0.9873
+    },
+    "nli-deberta-large": {
+     "letters": 0.9944,
+     "typed": 0.9973
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.7835,
+     "typed": 0.9058
+    },
+    "reranker-qwen3": {
+     "letters": 0.9929,
+     "typed": 0.974
+    }
+   }
+  },
+  {
+   "id": "hard:headquartered_in>located_in:reverse",
+   "premise": "A is located in B",
+   "conclusion": "A is headquartered in B",
+   "label": false,
+   "kind": "forward",
+   "reason": "an organisation headquartered in a city is located there; it may be located in cities that are not its headquarters",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9266,
+     "typed": 0.9476
+    },
+    "cosine-qwen3": {
+     "letters": 0.9851,
+     "typed": 0.9797
+    },
+    "jev": {
+     "letters": 0.06,
+     "typed": 0.08
+    },
+    "nli-deberta-base": {
+     "letters": 0.0229,
+     "typed": 0.1224
+    },
+    "nli-deberta-large": {
+     "letters": 0.0537,
+     "typed": 0.0012
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0082,
+     "typed": 0.0067
+    },
+    "reranker-qwen3": {
+     "letters": 0.6792,
+     "typed": 0.5927
+    }
+   }
+  },
+  {
+   "id": "hard:born_in>lives_in",
+   "premise": "A was born in B",
+   "conclusion": "A lives in B",
+   "label": false,
+   "kind": "neither",
+   "reason": "people move away from where they were born and live where they were not born",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9167,
+     "typed": 0.9531
+    },
+    "cosine-qwen3": {
+     "letters": 0.9323,
+     "typed": 0.9594
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.02
+    },
+    "nli-deberta-base": {
+     "letters": 0.0506,
+     "typed": 0.8612
+    },
+    "nli-deberta-large": {
+     "letters": 0.0028,
+     "typed": 0.0658
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0041,
+     "typed": 0.0034
+    },
+    "reranker-qwen3": {
+     "letters": 0.9497,
+     "typed": 0.8176
+    }
+   }
+  },
+  {
+   "id": "hard:born_in>lives_in:reverse",
+   "premise": "A lives in B",
+   "conclusion": "A was born in B",
+   "label": false,
+   "kind": "neither",
+   "reason": "people move away from where they were born and live where they were not born",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9167,
+     "typed": 0.9531
+    },
+    "cosine-qwen3": {
+     "letters": 0.9323,
+     "typed": 0.9594
+    },
+    "jev": {
+     "letters": 0.03,
+     "typed": 0.02
+    },
+    "nli-deberta-base": {
+     "letters": 0.0002,
+     "typed": 0.0006
+    },
+    "nli-deberta-large": {
+     "letters": 0.0003,
+     "typed": 0.0005
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0007,
+     "typed": 0.0006
+    },
+    "reranker-qwen3": {
+     "letters": 0.7058,
+     "typed": 0.5
+    }
+   }
+  },
+  {
+   "id": "hard:born_in>died_in",
+   "premise": "A was born in B",
+   "conclusion": "A died in B",
+   "label": false,
+   "kind": "neither",
+   "reason": "the places of birth and death usually differ",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.8837,
+     "typed": 0.8985
+    },
+    "cosine-qwen3": {
+     "letters": 0.9185,
+     "typed": 0.9369
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.02
+    },
+    "nli-deberta-base": {
+     "letters": 0.0002,
+     "typed": 0.0002
+    },
+    "nli-deberta-large": {
+     "letters": 0.0002,
+     "typed": 0.0003
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0013,
+     "typed": 0.0006
+    },
+    "reranker-qwen3": {
+     "letters": 0.1824,
+     "typed": 0.0759
+    }
+   }
+  },
+  {
+   "id": "hard:born_in>died_in:reverse",
+   "premise": "A died in B",
+   "conclusion": "A was born in B",
+   "label": false,
+   "kind": "neither",
+   "reason": "the places of birth and death usually differ",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.8837,
+     "typed": 0.8985
+    },
+    "cosine-qwen3": {
+     "letters": 0.9185,
+     "typed": 0.9369
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.02
+    },
+    "nli-deberta-base": {
+     "letters": 0.0003,
+     "typed": 0.0024
+    },
+    "nli-deberta-large": {
+     "letters": 0.0002,
+     "typed": 0.0001
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0005,
+     "typed": 0.0005
+    },
+    "reranker-qwen3": {
+     "letters": 0.2942,
+     "typed": 0.1561
+    }
+   }
+  },
+  {
+   "id": "hard:born_in>citizen_of",
+   "premise": "A was born in B",
+   "conclusion": "A is a citizen of B",
+   "label": false,
+   "kind": "neither",
+   "reason": "birthplace does not confer citizenship everywhere, and citizens may be born abroad",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9082,
+     "typed": 0.9432
+    },
+    "cosine-qwen3": {
+     "letters": 0.9094,
+     "typed": 0.9467
+    },
+    "jev": {
+     "letters": 0.05,
+     "typed": 0.06
+    },
+    "nli-deberta-base": {
+     "letters": 0.5307,
+     "typed": 0.5522
+    },
+    "nli-deberta-large": {
+     "letters": 0.6896,
+     "typed": 0.977
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.122,
+     "typed": 0.0497
+    },
+    "reranker-qwen3": {
+     "letters": 0.8176,
+     "typed": 0.7773
+    }
+   }
+  },
+  {
+   "id": "hard:born_in>citizen_of:reverse",
+   "premise": "A is a citizen of B",
+   "conclusion": "A was born in B",
+   "label": false,
+   "kind": "neither",
+   "reason": "birthplace does not confer citizenship everywhere, and citizens may be born abroad",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9082,
+     "typed": 0.9432
+    },
+    "cosine-qwen3": {
+     "letters": 0.9094,
+     "typed": 0.9467
+    },
+    "jev": {
+     "letters": 0.05,
+     "typed": 0.03
+    },
+    "nli-deberta-base": {
+     "letters": 0.0017,
+     "typed": 0.0066
+    },
+    "nli-deberta-large": {
+     "letters": 0.0013,
+     "typed": 0.0017
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.003,
+     "typed": 0.0017
+    },
+    "reranker-qwen3": {
+     "letters": 0.9149,
+     "typed": 0.9669
+    }
+   }
+  },
+  {
+   "id": "hard:visited>lives_in",
+   "premise": "A visited B",
+   "conclusion": "A lives in B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a visitor does not live in the place, and a resident is not a visitor",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.915,
+     "typed": 0.9529
+    },
+    "cosine-qwen3": {
+     "letters": 0.951,
+     "typed": 0.9583
+    },
+    "jev": {
+     "letters": 0.04,
+     "typed": 0.02
+    },
+    "nli-deberta-base": {
+     "letters": 0.0002,
+     "typed": 0.0007
+    },
+    "nli-deberta-large": {
+     "letters": 0.0004,
+     "typed": 0.0049
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0006,
+     "typed": 0.0016
+    },
+    "reranker-qwen3": {
+     "letters": 0.3208,
+     "typed": 0.2689
+    }
+   }
+  },
+  {
+   "id": "hard:visited>lives_in:reverse",
+   "premise": "A lives in B",
+   "conclusion": "A visited B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a visitor does not live in the place, and a resident is not a visitor",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.915,
+     "typed": 0.9529
+    },
+    "cosine-qwen3": {
+     "letters": 0.951,
+     "typed": 0.9583
+    },
+    "jev": {
+     "letters": 0.6,
+     "typed": 0.35
+    },
+    "nli-deberta-base": {
+     "letters": 0.0002,
+     "typed": 0.0001
+    },
+    "nli-deberta-large": {
+     "letters": 0.0014,
+     "typed": 0.0008
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0085,
+     "typed": 0.0015
+    },
+    "reranker-qwen3": {
+     "letters": 0.8808,
+     "typed": 0.4378
+    }
+   }
+  },
+  {
+   "id": "hard:won>competed_in",
+   "premise": "A won B",
+   "conclusion": "A competed in B",
+   "label": true,
+   "kind": "forward",
+   "reason": "a winner competed; most competitors do not win",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9252,
+     "typed": 0.9853
+    },
+    "cosine-qwen3": {
+     "letters": 0.9482,
+     "typed": 0.9715
+    },
+    "jev": {
+     "letters": 0.59,
+     "typed": 0.96
+    },
+    "nli-deberta-base": {
+     "letters": 0.9717,
+     "typed": 0.9614
+    },
+    "nli-deberta-large": {
+     "letters": 0.9834,
+     "typed": 0.9948
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.976,
+     "typed": 0.9923
+    },
+    "reranker-qwen3": {
+     "letters": 0.8355,
+     "typed": 0.9876
+    }
+   }
+  },
+  {
+   "id": "hard:won>competed_in:reverse",
+   "premise": "A competed in B",
+   "conclusion": "A won B",
+   "label": false,
+   "kind": "forward",
+   "reason": "a winner competed; most competitors do not win",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9252,
+     "typed": 0.9853
+    },
+    "cosine-qwen3": {
+     "letters": 0.9482,
+     "typed": 0.9715
+    },
+    "jev": {
+     "letters": 0.02,
+     "typed": 0.02
+    },
+    "nli-deberta-base": {
+     "letters": 0.0004,
+     "typed": 0.0002
+    },
+    "nli-deberta-large": {
+     "letters": 0.0005,
+     "typed": 0.0004
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0011,
+     "typed": 0.0006
+    },
+    "reranker-qwen3": {
+     "letters": 0.7773,
+     "typed": 0.6792
+    }
+   }
+  },
+  {
+   "id": "hard:bought>acquired",
+   "premise": "A bought B",
+   "conclusion": "A acquired B",
+   "label": true,
+   "kind": "forward",
+   "reason": "buying is a way of acquiring; acquisition may be by gift or inheritance",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.946,
+     "typed": 0.9826
+    },
+    "cosine-qwen3": {
+     "letters": 0.9732,
+     "typed": 0.9788
+    },
+    "jev": {
+     "letters": 0.97,
+     "typed": 0.98
+    },
+    "nli-deberta-base": {
+     "letters": 0.9974,
+     "typed": 0.998
+    },
+    "nli-deberta-large": {
+     "letters": 0.9957,
+     "typed": 0.9972
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9842,
+     "typed": 0.9897
+    },
+    "reranker-qwen3": {
+     "letters": 0.9897,
+     "typed": 0.9962
+    }
+   }
+  },
+  {
+   "id": "hard:bought>acquired:reverse",
+   "premise": "A acquired B",
+   "conclusion": "A bought B",
+   "label": false,
+   "kind": "forward",
+   "reason": "buying is a way of acquiring; acquisition may be by gift or inheritance",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.946,
+     "typed": 0.9826
+    },
+    "cosine-qwen3": {
+     "letters": 0.9732,
+     "typed": 0.9788
+    },
+    "jev": {
+     "letters": 0.08,
+     "typed": 0.09
+    },
+    "nli-deberta-base": {
+     "letters": 0.9966,
+     "typed": 0.9981
+    },
+    "nli-deberta-large": {
+     "letters": 0.9844,
+     "typed": 0.9946
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9698,
+     "typed": 0.1296
+    },
+    "reranker-qwen3": {
+     "letters": 0.9914,
+     "typed": 0.9966
+    }
+   }
+  },
+  {
+   "id": "hard:bought>owns",
+   "premise": "A bought B",
+   "conclusion": "A owns B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a buyer may have sold the thing since, and an owner may have inherited it",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9461,
+     "typed": 0.9694
+    },
+    "cosine-qwen3": {
+     "letters": 0.9739,
+     "typed": 0.9637
+    },
+    "jev": {
+     "letters": 0.85,
+     "typed": 0.89
+    },
+    "nli-deberta-base": {
+     "letters": 0.8804,
+     "typed": 0.2711
+    },
+    "nli-deberta-large": {
+     "letters": 0.9961,
+     "typed": 0.9936
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9894,
+     "typed": 0.9426
+    },
+    "reranker-qwen3": {
+     "letters": 0.985,
+     "typed": 0.974
+    }
+   }
+  },
+  {
+   "id": "hard:bought>owns:reverse",
+   "premise": "A owns B",
+   "conclusion": "A bought B",
+   "label": false,
+   "kind": "neither",
+   "reason": "a buyer may have sold the thing since, and an owner may have inherited it",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9461,
+     "typed": 0.9694
+    },
+    "cosine-qwen3": {
+     "letters": 0.9739,
+     "typed": 0.9637
+    },
+    "jev": {
+     "letters": 0.03,
+     "typed": 0.07
+    },
+    "nli-deberta-base": {
+     "letters": 0.0546,
+     "typed": 0.2055
+    },
+    "nli-deberta-large": {
+     "letters": 0.9784,
+     "typed": 0.393
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.2248,
+     "typed": 0.0114
+    },
+    "reranker-qwen3": {
+     "letters": 0.7773,
+     "typed": 0.7549
+    }
+   }
+  },
+  {
+   "id": "hard:sold>bought",
+   "premise": "A sold B",
+   "conclusion": "A bought B",
+   "label": false,
+   "kind": "neither",
+   "reason": "selling a house and buying it are different acts, usually by different people",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9634,
+     "typed": 0.976
+    },
+    "cosine-qwen3": {
+     "letters": 0.9603,
+     "typed": 0.9523
+    },
+    "jev": {
+     "letters": 0.01,
+     "typed": 0.02
+    },
+    "nli-deberta-base": {
+     "letters": 0.0001,
+     "typed": 0.0
+    },
+    "nli-deberta-large": {
+     "letters": 0.0003,
+     "typed": 0.0
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0002,
+     "typed": 0.0066
+    },
+    "reranker-qwen3": {
+     "letters": 0.9325,
+     "typed": 0.0716
+    }
+   }
+  },
+  {
+   "id": "hard:sold>bought:reverse",
+   "premise": "A bought B",
+   "conclusion": "A sold B",
+   "label": false,
+   "kind": "neither",
+   "reason": "selling a house and buying it are different acts, usually by different people",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9634,
+     "typed": 0.976
+    },
+    "cosine-qwen3": {
+     "letters": 0.9603,
+     "typed": 0.9523
+    },
+    "jev": {
+     "letters": 0.01,
+     "typed": 0.01
+    },
+    "nli-deberta-base": {
+     "letters": 0.0001,
+     "typed": 0.0
+    },
+    "nli-deberta-large": {
+     "letters": 0.0003,
+     "typed": 0.0001
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0019,
+     "typed": 0.0064
+    },
+    "reranker-qwen3": {
+     "letters": 0.133,
+     "typed": 0.0421
+    }
+   }
+  },
+  {
+   "id": "hard:teaches>student_of~",
+   "premise": "B teaches A",
+   "conclusion": "A is a student of B",
+   "label": true,
+   "kind": "both",
+   "reason": "B teaching A says that A is a student of B",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9283,
+     "typed": 0.962
+    },
+    "cosine-qwen3": {
+     "letters": 0.9592,
+     "typed": 0.9462
+    },
+    "jev": {
+     "letters": 0.75,
+     "typed": 0.73
+    },
+    "nli-deberta-base": {
+     "letters": 0.9856,
+     "typed": 0.9374
+    },
+    "nli-deberta-large": {
+     "letters": 0.9005,
+     "typed": 0.997
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.1173,
+     "typed": 0.9558
+    },
+    "reranker-qwen3": {
+     "letters": 0.9149,
+     "typed": 0.9241
+    }
+   }
+  },
+  {
+   "id": "hard:teaches>student_of~:reverse",
+   "premise": "B is a student of A",
+   "conclusion": "A teaches B",
+   "label": true,
+   "kind": "both",
+   "reason": "B teaching A says that A is a student of B",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.94,
+     "typed": 0.9557
+    },
+    "cosine-qwen3": {
+     "letters": 0.9623,
+     "typed": 0.9364
+    },
+    "jev": {
+     "letters": 0.64,
+     "typed": 0.73
+    },
+    "nli-deberta-base": {
+     "letters": 0.9872,
+     "typed": 0.1837
+    },
+    "nli-deberta-large": {
+     "letters": 0.9929,
+     "typed": 0.9984
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.8403,
+     "typed": 0.9267
+    },
+    "reranker-qwen3": {
+     "letters": 0.867,
+     "typed": 0.5622
+    }
+   }
+  },
+  {
+   "id": "hard:murdered>killed",
+   "premise": "A murdered B",
+   "conclusion": "A killed B",
+   "label": true,
+   "kind": "forward",
+   "reason": "murder is an unlawful killing; a killing may be accidental or lawful",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.979,
+     "typed": 0.9937
+    },
+    "cosine-qwen3": {
+     "letters": 0.9853,
+     "typed": 0.9938
+    },
+    "jev": {
+     "letters": 0.96,
+     "typed": 0.97
+    },
+    "nli-deberta-base": {
+     "letters": 0.9962,
+     "typed": 0.9976
+    },
+    "nli-deberta-large": {
+     "letters": 0.9979,
+     "typed": 0.9989
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9925,
+     "typed": 0.9961
+    },
+    "reranker-qwen3": {
+     "letters": 0.9831,
+     "typed": 0.9929
+    }
+   }
+  },
+  {
+   "id": "hard:murdered>killed:reverse",
+   "premise": "A killed B",
+   "conclusion": "A murdered B",
+   "label": false,
+   "kind": "forward",
+   "reason": "murder is an unlawful killing; a killing may be accidental or lawful",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.979,
+     "typed": 0.9937
+    },
+    "cosine-qwen3": {
+     "letters": 0.9853,
+     "typed": 0.9938
+    },
+    "jev": {
+     "letters": 0.14,
+     "typed": 0.15
+    },
+    "nli-deberta-base": {
+     "letters": 0.9817,
+     "typed": 0.9952
+    },
+    "nli-deberta-large": {
+     "letters": 0.9923,
+     "typed": 0.9982
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9779,
+     "typed": 0.9507
+    },
+    "reranker-qwen3": {
+     "letters": 0.9962,
+     "typed": 0.9929
+    }
+   }
+  },
+  {
+   "id": "hard:graduated_from>attended",
+   "premise": "A graduated from B",
+   "conclusion": "A attended B",
+   "label": true,
+   "kind": "forward",
+   "reason": "graduating from a university requires attending it; most who attend have not graduated yet",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9305,
+     "typed": 0.974
+    },
+    "cosine-qwen3": {
+     "letters": 0.9324,
+     "typed": 0.974
+    },
+    "jev": {
+     "letters": 0.76,
+     "typed": 0.94
+    },
+    "nli-deberta-base": {
+     "letters": 0.9909,
+     "typed": 0.9882
+    },
+    "nli-deberta-large": {
+     "letters": 0.9878,
+     "typed": 0.995
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.9808,
+     "typed": 0.9914
+    },
+    "reranker-qwen3": {
+     "letters": 0.8808,
+     "typed": 0.9841
+    }
+   }
+  },
+  {
+   "id": "hard:graduated_from>attended:reverse",
+   "premise": "A attended B",
+   "conclusion": "A graduated from B",
+   "label": false,
+   "kind": "forward",
+   "reason": "graduating from a university requires attending it; most who attend have not graduated yet",
+   "scores": {
+    "cosine-bge": {
+     "letters": 0.9305,
+     "typed": 0.974
+    },
+    "cosine-qwen3": {
+     "letters": 0.9324,
+     "typed": 0.974
+    },
+    "jev": {
+     "letters": 0.06,
+     "typed": 0.03
+    },
+    "nli-deberta-base": {
+     "letters": 0.001,
+     "typed": 0.0007
+    },
+    "nli-deberta-large": {
+     "letters": 0.0004,
+     "typed": 0.0003
+    },
+    "nli-deberta-large-wanli": {
+     "letters": 0.0026,
+     "typed": 0.0011
+    },
+    "reranker-qwen3": {
+     "letters": 0.5622,
+     "typed": 0.4073
+    }
+   }
+  }
+ ]
+}
