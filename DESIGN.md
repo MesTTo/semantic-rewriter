@@ -232,7 +232,7 @@ An engine implements the protocol when it passes the conformance kit, `semrewrit
 | each answer has one proof whose steps are program rules or rewrites, whose leaves are program facts, and whose height respects the depth bound | `proofs` |
 | without tables, a query on a rewrite cycle never finishes, and one that reaches no cycle finishes with the fixpoint | `untabled` |
 
-The reference fixpoint is a semi-naive bottom-up evaluator with no dependencies, so the kit checks an engine against something other than itself. Run it with `semrewrite conformance --engine NAME` or from pytest.
+A run with tables, or with a depth bound of 1, must finish with exactly the reference answers. An untabled run deeper than that may instead stop at its budget with no answers, because top-down search without tables enumerates every derivation, and through a join their number grows faster than any budget the kit could promise; a run that reports a limit must actually have reached it. The reference evaluator is a naive bottom-up fixpoint with no dependencies, so the kit checks an engine against something other than itself. Run it with `semrewrite conformance --engine NAME` or from pytest.
 
 ## Choosing settings
 
