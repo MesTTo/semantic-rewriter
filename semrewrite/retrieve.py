@@ -1,0 +1,62 @@
+"""Purpose: rank catalogue predicates by gloss-embedding similarity, the
+candidate step before a judge sees any proposal.
+
+Each predicate's gloss is filled with neutral placeholders ("A is the mother
+of B") and embedded once; a goal's candidates are the k catalogue predicates
+nearest it by cosine. Retrieval is symmetric and says nothing about direction;
+the judge decides which way, and whether arguments swap.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterable, Mapping
+
+import numpy as np
+
+from semrewrite.judging import Predicate
+
+DEFAULT_MODEL = "BAAI/bge-small-en-v1.5"
+
+
+class Retriever:
+    """Top-k gloss neighbours over a catalogue, with embedding work counted in `usage`.
+
+    Vectors are cached by gloss sentence, so a predicate name reused with a
+    different gloss in another knowledge base gets its own vector.
+    """
+
+    def __init__(self, model: str = DEFAULT_MODEL, fillers: tuple[str, str] = ("A", "B")) -> None:
+        from sentence_transformers import SentenceTransformer
+
+        self.model_name = model
+        self.fillers = fillers
+        self._model = SentenceTransformer(model)
+        self._vectors: dict[str, np.ndarray] = {}
+        self.usage: dict[str, int] = {"encoded": 0, "queries": 0}
+
+    def _sentence(self, predicate: Predicate) -> str:
+        return predicate.sentence(*self.fillers)
+
+    # Time: one batched forward pass over the glosses not yet cached.
+    def index(self, predicates: Iterable[Predicate]) -> None:
+        """Embed every gloss not yet cached, in one batch."""
+        fresh = sorted({self._sentence(p) for p in predicates} - set(self._vectors))
+        if not fresh:
+            return
+        vectors = self._model.encode(fresh, normalize_embeddings=True, convert_to_numpy=True)
+        self._vectors.update(zip(fresh, vectors, strict=True))
+        self.usage["encoded"] += len(fresh)
+
+    # Time: |among| dot products of the embedding width, then a sort of |among|.
+    def top_k(self, goal: Predicate, among: Mapping[str, Predicate], k: int) -> list[tuple[str, float]]:
+        """The k predicates of `among`, `goal` excluded, nearest `goal` by cosine, nearest first."""
+        self.index([goal, *among.values()])
+        self.usage["queries"] += 1
+        anchor = self._vectors[self._sentence(goal)]
+        scored = [
+            (name, float(anchor @ self._vectors[self._sentence(p)]))
+            for name, p in among.items()
+            if name != goal.name
+        ]
+        scored.sort(key=lambda item: (-item[1], item[0]))
+        return scored[:k]
