@@ -138,16 +138,59 @@ def pairs_table() -> str:
     judges = _load("judges.json")["judges"]
     rows = []
     for name, j in judges.items():
-        variant = j["variants"].get("letters", {})
-        for pair_set, m in sorted(variant.get("sets", {}).items()):
-            test = m.get("test", m)
-            rows.append([name, pair_set, test.get("rows", "n/a"), test.get("auc", "n/a"),
-                         test.get("direction", {}).get("accuracy", "n/a") if isinstance(test.get("direction"), dict) else test.get("direction", "n/a"),
-                         test.get("precision", "n/a"), test.get("recall", "n/a"), test.get("accuracy", "n/a")])
-    return _table(["judge", "pair set", "rows", "ROC AUC", "direction accuracy", "precision", "recall", "accuracy"], rows)
+        variant = j["variants"]["letters"]
+        for pair_set in ("levyholt", "wikidata", "hard"):
+            test = variant["sets"][pair_set]["test"]
+            at = test["at_default"]
+            rows.append([name, pair_set, test["rows"], test["direction"]["pairs"], test["direction"]["accuracy"],
+                         test["auc"], at["threshold"], at["precision"], at["recall"], at["balanced_accuracy"]])
+    return _table(["judge", "pair set", "rows", "one-way pairs", "direction accuracy", "ROC AUC", "threshold",
+                   "precision", "recall", "balanced accuracy"], rows)
+
+
+def direction_policy_table() -> str:
+    """Plain against direction-aware admission per judge: the calibrated slack, Wikidata test pairs, and lazy-tabled answers."""
+    rows = []
+    for path in sorted(RESULTS.glob("direction_policy.*.json")):
+        for entry in json.loads(path.read_text()):
+            wd = entry["pair_sets"]["wikidata"]
+            rewriter = {a["judge"].split(":")[1]: a for a in entry["rewriter"]}
+            for policy in ("plain", "directional"):
+                a = rewriter[policy]
+                rows.append([entry["judge"], policy, entry["slack"] if policy == "directional" else "",
+                             wd[policy]["precision"], wd[policy]["recall"], wd[policy]["balanced_accuracy"],
+                             a["precision"], a["recall"], a["f1"], a["false_rewrite_rate"]])
+    return _table(["judge", "policy", "slack", "Wikidata precision", "Wikidata recall", "Wikidata balanced accuracy",
+                   "answer precision", "answer recall", "answer F1", "false rewrites"], rows)
+
+
+NAMED_CASES = (
+    "hard:mother>parent", "hard:mother>parent:reverse", "hard:legal_guardian>parent", "hard:stepmother>parent",
+    "hard:mother_in_law>mother", "hard:employs>manages", "hard:employs>manages:reverse",
+    "hard:causes>correlated_with", "hard:causes>prevents",
+)
+
+
+def named_cases_table() -> str:
+    """Each judge's score on the cases the design discussion named; a star marks a score at or over the judge's threshold."""
+    data = _load("judges.json")
+    names = list(data["judges"])
+    thresholds = {n: data["judges"][n]["variants"]["letters"]["thresholds"]["default"] for n in names}
+    rows_by_id = {r["id"]: r for r in data["hard_rows"]}
+    rows = []
+    for case in NAMED_CASES:
+        r = rows_by_id[case]
+        cells = []
+        for n in names:
+            s = r["scores"][n]["letters"]
+            cells.append(f"{s:.2f}{'*' if s >= thresholds[n] else ''}")
+        rows.append([f"{r['premise']} ⇒ {r['conclusion']}", "yes" if r["label"] else "no", *cells])
+    return _table(["implication", "holds", *names], rows)
 
 
 GENERATORS: dict[str, Callable[[], str]] = {
+    "named-cases": named_cases_table,
+    "direction-policy": direction_policy_table,
     "strategies": strategies_table,
     "divergence": divergence_table,
     "isolation": isolation_table,
