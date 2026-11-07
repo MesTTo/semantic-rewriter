@@ -1,17 +1,34 @@
-# Purpose: declare the semantic rewriter's package, its dependencies and the CUDA torch index uv installs from.
+# Purpose: declare the semantic rewriter's package: a dependency-free core, optional extras for each backend, the command line, and the CUDA torch index uv installs from.
 [project]
 name = "semantic-rewriter"
 version = "0.1.0"
-description = "Semantic rule discovery for goal-directed MeTTa rewriting on pymetta, with the experiment that measures it."
-requires-python = ">=3.13,<3.14"
-dependencies = [
-    "pymetta==0.9.4",
-    "torch>=2.8",
-    "sentence-transformers>=5.0",
-    "transformers>=4.51",
-    "typesafe-sdk==0.7.0",
-    "numpy>=2.0",
+description = "Semantic rewriting for logic engines: discover implications between predicates with an entailment judge, admit them as rules, and evaluate exactly on any engine with tables."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "MesTTo", email = "a.mesto@student.unsw.edu.au" }]
+requires-python = ">=3.11"
+keywords = ["logic programming", "tabling", "SLG", "MeTTa", "natural language inference", "query rewriting", "Datalog"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Intended Audience :: Science/Research",
 ]
+dependencies = []
+
+[project.optional-dependencies]
+pymetta = ["pymetta>=0.9.4,<0.10"]
+models = ["torch>=2.8", "sentence-transformers>=5.0", "transformers>=4.51", "numpy>=2.0"]
+jev = ["typesafe-sdk==0.7.0"]
+conformance = ["hypothesis>=6.100"]
+all = ["semantic-rewriter[pymetta,models,jev,conformance]"]
+
+[project.scripts]
+semrewrite = "semrewrite.cli:main"
+
+[project.urls]
+Design = "https://github.com/MesTTo/semantic-rewriter/blob/main/DESIGN.md"
+Results = "https://github.com/MesTTo/semantic-rewriter/blob/main/RESULTS.md"
 
 [dependency-groups]
 dev = [
@@ -31,11 +48,14 @@ url = "https://download.pytorch.org/whl/cu128"
 explicit = true
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["semrewrite"]
+
+[tool.hatch.build.targets.sdist]
+exclude = ["ai-tmp", "ai-battery-*", "worktrees", "data/raw", "results", ".docutouch"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

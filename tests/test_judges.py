@@ -97,7 +97,11 @@ def test_factory_builds_the_oracle_from_gold() -> None:
 
 @pytest.fixture(scope="module", params=NAMES)
 def judge(request: pytest.FixtureRequest):  # noqa: ANN201
-    """Each registered judge in turn, one model resident at a time; Jev answers only from its cache."""
+    """Each registered judge in turn, one model resident at a time; Jev answers only from its cache.
+
+    A judge whose library is not installed (the models or jev extra) is skipped.
+    """
+    pytest.importorskip("typesafe_sdk" if request.param == "jev" else "sentence_transformers")
     options = {"budget": 0} if request.param == "jev" else {}
     built = make(request.param, threshold=0.5, **options)
     yield built

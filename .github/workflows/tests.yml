@@ -1,0 +1,27 @@
+# Purpose: run the test suite on every push and pull request: the dependency-free core with the pure-Python engine on three Python versions, and the PyMeTTa engine with its conformance check.
+name: tests
+on: [push, pull_request]
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -e ".[conformance]" pytest
+      - run: pytest -q -rs
+      - run: semrewrite conformance --engine python --examples 200
+  pymetta:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -e ".[pymetta,conformance]" pytest
+      - run: pytest -q -rs
+      - run: semrewrite conformance --engine pymetta --examples 100
