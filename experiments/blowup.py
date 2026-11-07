@@ -21,7 +21,7 @@ from semrewrite.discovery import ScoreCache
 from semrewrite.engine import STRATEGIES, Budget, Rewriter
 from semrewrite.judges import make
 from semrewrite.judging import OracleJudge
-from semrewrite.kb import Query, implication_closure
+from semrewrite.kb import Query
 from semrewrite.retrieve import Retriever
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -42,7 +42,7 @@ def main() -> None:
     for kb_name, query in CASES:
         kb = BENCHMARKS[kb_name]()
         gold = kb.answers(query)
-        judges = (("nli-deberta-base", ScoreCache(permissive)), ("oracle", ScoreCache(OracleJudge.of(implication_closure(kb.gold)))))
+        judges = (("nli-deberta-base", ScoreCache(permissive)), ("oracle", ScoreCache(OracleJudge.of(kb.entailed()))))
         for judge_name, scorer in judges:
             rewriter = Rewriter(kb, scorer, retriever, k=8, budget=Budget(inferences=200_000_000, seconds=900))
             for strategy in ("lazy-tabled", "eager-worklist"):

@@ -10,10 +10,11 @@ or oracle for the gold implications.
 from __future__ import annotations
 
 import sys
+from dataclasses import replace
 
 from semrewrite.engine import STRATEGIES, Budget, Rewriter
 from semrewrite.judging import OracleJudge
-from semrewrite.kb import Query, from_metta, implication_closure
+from semrewrite.kb import Query, from_metta
 
 SOURCE = """
 (gloss mum "{x} is the mum of {y}")
@@ -39,7 +40,7 @@ def main(judge_name: str) -> None:
     """Load the MeTTa source, discover rewrites with `judge_name`, and answer the parent and grandparent questions."""
     kb = from_metta(SOURCE, "parent-of-tom")
     if judge_name == "oracle":
-        judge = OracleJudge.of(implication_closure(GOLD))
+        judge = OracleJudge.of(replace(kb, gold=frozenset(GOLD)).entailed())
     else:
         from semrewrite.judges import make
 

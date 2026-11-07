@@ -187,6 +187,18 @@ def direction_policy_table() -> str:
                    "answer precision", "answer recall", "answer F1", "false rewrites"], rows)
 
 
+def sweep_table() -> str:
+    """Lazy-tabled answer F1 at each judge's pair-calibrated default against a threshold calibrated on the other benchmarks."""
+    rows = []
+    for s in _load_judges()["sweep"]:
+        folds = ", ".join(f"{h['kb']} {h['threshold']:.3f}" for h in s["held_out"])
+        best = max(s["curve"], key=lambda c: c["f1"])
+        rows.append([s["judge"], s["default_threshold"], s["f1_default_pooled"], folds, s["f1_held_out_pooled"],
+                     best["threshold"], best["f1"], best["precision"], best["recall"]])
+    return _table(["judge", "default threshold", "F1 at default", "held-out threshold per benchmark", "F1 held-out",
+                   "best threshold in hindsight", "F1", "precision", "recall"], rows)
+
+
 def blowup_table() -> str:
     """A permissive judge's closure against the oracle's on the same hard queries, with no budget in the way."""
     rows = [[r["query"], r["judge"], r["strategy"], r["status"], r["inferences"], r["tables"], r["rewrites"],
@@ -222,6 +234,7 @@ GENERATORS: dict[str, Callable[[], str]] = {
     "named-cases": named_cases_table,
     "direction-policy": direction_policy_table,
     "blowup": blowup_table,
+    "sweep": sweep_table,
     "strategies": strategies_table,
     "divergence": divergence_table,
     "isolation": isolation_table,

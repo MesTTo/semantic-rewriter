@@ -136,33 +136,8 @@ def implication_rule(premise: str, conclusion: str, swapped: bool) -> Rule:
     return Rule(Lit(conclusion, "X", "Y"), (body,))
 
 
-# Time: one breadth-first search per conclusion over (predicate, parity) nodes,
-# so |P| * (|P| + |gold|) steps for |P| predicates. Space: |P|^2 triples at most.
-def implication_closure(gold: Iterable[Implication]) -> frozenset[Implication]:
-    """Every implication the gold triples entail by chaining, the trivial p => p excluded.
-
-    Chaining (r, q, s2) then (q, p, s1) gives (r, p, s1 xor s2): two argument
-    swaps cancel. A symmetric p, (p, p, True), is kept, and lets every premise
-    of p reach p at both parities.
-    """
-    into: dict[str, list[tuple[str, bool]]] = defaultdict(list)
-    names: set[str] = set()
-    for premise, conclusion, swapped in gold:
-        into[conclusion].append((premise, swapped))
-        names.update((premise, conclusion))
-    closed: set[Implication] = set()
-    for conclusion in names:
-        seen = {(conclusion, False)}
-        frontier = [(conclusion, False)]
-        while frontier:
-            node, parity = frontier.pop()
-            for premise, swapped in into.get(node, ()):
-                step = (premise, parity ^ swapped)
-                if step not in seen:
-                    seen.add(step)
-                    frontier.append(step)
-        closed.update((p, conclusion, s) for p, s in seen if (p, s) != (conclusion, False))
-    return frozenset(closed)
+#: Fresh constants for the canonical database; no knowledge base may use them.
+CANONICAL = ("canonical_a", "canonical_b")
 
 
 @dataclass(frozen=True)
@@ -224,6 +199,42 @@ class KB:
         """The gold answers to `query`: the pairs of its predicate's closure matching its constants."""
         table = (closure if closure is not None else self.closure()).get(query.pred, set())
         return {pair for pair in table if _matches(query.lit, pair)}
+
+    def derives(self, premise: str) -> dict[str, set[Pair]]:
+        """Everything the gold program derives from the single fact premise(a, b) over fresh constants."""
+        a, b = CANONICAL
+        return fixpoint(((premise, a, b),), self.gold_rules())
+
+    def entails(self, premise: str, conclusion: str, swapped: bool) -> bool:
+        """Whether premise(x, y), or premise(y, x) when swapped, entails conclusion(x, y) under the gold program.
+
+        For Horn rules this is decided by one canonical database: the rewrite
+        holds in every model exactly when the fixpoint of the single fact
+        premise(a, b) over fresh constants a and b contains conclusion(a, b),
+        or conclusion(b, a) when swapped (the Herbrand-model argument behind
+        Datalog query containment). It counts what the gold implications and
+        the user rules force together, so parent => ancestor holds through
+        the rule ancestor(X, Y) :- parent(X, Y) with no gold triple naming it.
+        """
+        a, b = CANONICAL
+        target = (b, a) if swapped else (a, b)
+        return target in self.derives(premise).get(conclusion, set())
+
+    # Time: |P| fixpoints, each over the gold program from one fact, for |P| glossed predicates.
+    def entailed(self) -> frozenset[Implication]:
+        """Every non-trivial (premise, conclusion, swapped) triple over the glossed predicates the gold program entails."""
+        a, b = CANONICAL
+        out: set[Implication] = set()
+        for premise in self.glosses:
+            derived = self.derives(premise)
+            for conclusion, pairs in derived.items():
+                if conclusion not in self.glosses:
+                    continue
+                if (a, b) in pairs and conclusion != premise:
+                    out.add((premise, conclusion, False))
+                if (b, a) in pairs:
+                    out.add((premise, conclusion, True))
+        return frozenset(out)
 
 
 def _metta_string(text: str) -> str:

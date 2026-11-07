@@ -1,6 +1,6 @@
 """Purpose: the implementation experiment: run every rewriter strategy with each
 judge on every benchmark knowledge base, score answers against the gold answers
-and admitted rewrites against the gold implication closure, and write
+and admitted rewrites against what the gold program entails, and write
 results/implementations.jsonl (one row per run) and results/implementations.json
 (aggregates, retrieval recall, the divergence sweep and the isolation check).
 
@@ -27,7 +27,7 @@ from semrewrite.benchmarks import BENCHMARKS
 from semrewrite.discovery import ScoreCache
 from semrewrite.engine import STRATEGIES, Budget, Outcome, Rewriter
 from semrewrite.judging import Judge, OracleJudge, Proposal
-from semrewrite.kb import KB, Query, implication_closure
+from semrewrite.kb import KB, Query
 from semrewrite.retrieve import Retriever
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,33 +36,33 @@ K = 8
 
 
 def make_judge(name: str, kb: KB) -> Judge:
-    """The oracle judge knows the knowledge base's gold closure; every other judge comes from the factory."""
+    """The oracle judge admits exactly what the gold program entails; every other judge comes from the factory."""
     if name == "oracle":
-        return OracleJudge.of(implication_closure(kb.gold))
+        return OracleJudge.of(kb.entailed())
     from semrewrite.judges import make
 
     return make(name)
 
 
-def classify_rewrite(key: tuple[str, str, bool], closure: frozenset, traps: frozenset[str]) -> str:
-    """true, or why an admitted rewrite is false: reversed, swap (wrong argument order), trap or unrelated."""
+def classify_rewrite(key: tuple[str, str, bool], kb: KB) -> str:
+    """true when the gold program entails it, else why it is false: reversed, swap (wrong argument order), trap or unrelated."""
     premise, conclusion, swapped = key
-    if key in closure:
+    if kb.entails(premise, conclusion, swapped):
         return "true"
-    if (conclusion, premise, swapped) in closure:
+    if kb.entails(conclusion, premise, swapped):
         return "reversed"
-    if (premise, conclusion, not swapped) in closure:
+    if kb.entails(premise, conclusion, not swapped):
         return "swap"
-    if premise in traps:
+    if premise in kb.traps:
         return "trap"
     return "unrelated"
 
 
-def row(outcome: Outcome, mode: str, gold: set, closure: frozenset, traps: frozenset[str]) -> dict:
+def row(outcome: Outcome, mode: str, gold: set, kb: KB) -> dict:
     """One run as a flat record: answer counts against gold, cost, termination and admitted-rewrite kinds."""
     kinds: dict[str, int] = defaultdict(int)
     for key in outcome.admitted:
-        kinds[classify_rewrite(key, closure, traps)] += 1
+        kinds[classify_rewrite(key, kb)] += 1
     tp = len(outcome.answers & gold)
     return {
         "kb": outcome.kb, "judge": outcome.judge, "strategy": outcome.strategy, "mode": mode, "query": outcome.query,
@@ -94,11 +94,10 @@ def warm_scores(rewriter: Rewriter) -> int:
 
 
 def retrieval_recall(kb: KB, retriever: Retriever, k: int = K) -> dict:
-    """Share of gold-closure implications whose premise is among the conclusion's k retrieved candidates."""
-    closure = implication_closure(kb.gold)
+    """Share of entailed implications between distinct predicates whose premise is among the conclusion's k retrieved candidates."""
     catalogue = kb.catalogue()
     hits = total = 0
-    for premise, conclusion, _ in closure:
+    for premise, conclusion, _ in kb.entailed():
         if premise == conclusion:
             continue
         total += 1
@@ -149,7 +148,7 @@ def run_kb(
     """Every strategy on every query of `kb` under one judge; returns rows and the judge's rewrite scores over the catalogue."""
     rewriter = Rewriter(kb, ScoreCache(judge), retriever, k=K, budget=budget)
     computed = warm_scores(rewriter)
-    closure = implication_closure(kb.gold)
+    entailed = kb.entailed()
     answers_closure = kb.closure()
     rows: list[dict] = []
     for name in strategies:
@@ -160,13 +159,13 @@ def run_kb(
             shared = rewriter.discoverer(memo=strategy.memo) if mode == "warm" else None
             for query in kb.queries:
                 outcome = rewriter.ask(strategy, query, shared)
-                rows.append(row(outcome, mode, kb.answers(query, answers_closure), closure, kb.traps))
+                rows.append(row(outcome, mode, kb.answers(query, answers_closure), kb))
             print(f"  {kb.name} {judge_name} {name} {mode}: done", flush=True)
     full = rewriter.discoverer(memo=True)
     admitted = {rw.key for goal in rewriter.catalogue for rw in full.rewrites(goal)}
     kinds: dict[str, int] = defaultdict(int)
     for key in admitted:
-        kinds[classify_rewrite(key, closure, kb.traps)] += 1
+        kinds[classify_rewrite(key, kb)] += 1
     true = kinds.get("true", 0)
     loops: dict[str, int] = defaultdict(int)
     for query in kb.queries:
@@ -174,7 +173,7 @@ def run_kb(
     discovery = {
         "kb": kb.name, "judge": judge_name, "admitted": len(admitted), "kinds": dict(kinds),
         "precision": true / len(admitted) if admitted else 1.0,
-        "recall": true / len([c for c in closure if c[0] != c[1] or c[2]]) if closure else 1.0,
+        "recall": true / len(entailed) if entailed else 1.0,
         "judge_computed": computed, "judge_usage": dict(getattr(judge, "usage", {})),
         "untabled_prediction": dict(loops),
     }
@@ -223,7 +222,7 @@ def aggregate(rows: list[dict]) -> list[dict]:
 
 def divergence(kb: KB, budgets: Iterable[int]) -> list[dict]:
     """Untabled strategies on a query through an alias cycle at rising budgets: work grows with the budget, answers never come."""
-    judge = OracleJudge.of(implication_closure(kb.gold))
+    judge = OracleJudge.of(kb.entailed())
     query = Query("mother", "X", "Y")
     out = []
     for budget in budgets:
@@ -239,7 +238,7 @@ def divergence(kb: KB, budgets: Iterable[int]) -> list[dict]:
 def run_one(kb_name: str, strategy: str, query_index: int) -> dict:
     """One oracle-judge run in this process, for the isolation check's subprocesses."""
     kb = BENCHMARKS[kb_name]()
-    rewriter = Rewriter(kb, OracleJudge.of(implication_closure(kb.gold)), None, budget=Budget(inferences=300_000, seconds=60))
+    rewriter = Rewriter(kb, OracleJudge.of(kb.entailed()), None, budget=Budget(inferences=300_000, seconds=60))
     o = rewriter.ask(STRATEGIES[strategy], kb.queries[query_index])
     return {"answers": sorted(map(list, o.answers)), "status": o.status}
 
@@ -252,7 +251,7 @@ def isolation_check(kb_name: str) -> dict:
     answers and status for every strategy and query.
     """
     kb = BENCHMARKS[kb_name]()
-    rewriter = Rewriter(kb, OracleJudge.of(implication_closure(kb.gold)), None, budget=Budget(inferences=300_000, seconds=60))
+    rewriter = Rewriter(kb, OracleJudge.of(kb.entailed()), None, budget=Budget(inferences=300_000, seconds=60))
     mismatches, checked = [], 0
     for name in STRATEGIES:
         for i, query in enumerate(kb.queries):

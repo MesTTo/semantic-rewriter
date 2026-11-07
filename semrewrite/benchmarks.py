@@ -8,8 +8,14 @@ its seed. A true relation is written as a fact under one of its surface forms,
 chosen at random: a parent link may be stored as (mother alice tom),
 (mum alice tom), (has_mother tom alice) or (son_of tom alice), so a query needs
 the rewrites that join those forms. Gold implications are the author's labels
-and are marked so in RESULTS.md; traps are predicates that look related to a
-query predicate but do not entail it (guardian_of is not parent).
+of what the glosses entail in every situation by the meaning of their words,
+audited once against every rewrite the seven judges admitted: the audit added
+entailments the first labels missed (mother(y, x) entails has_mother(x, y),
+grandparent entails ancestor, near is symmetric) and made geographic
+containment transitive, as "located in" is in English. A rewrite counts as
+true when the gold program entails it (KB.entails), user rules included.
+Traps are predicates that look related to a query predicate but do not entail
+it (guardian_of is not parent).
 """
 
 from __future__ import annotations
@@ -133,12 +139,12 @@ def family(seed: int = 7) -> KB:
         ("mother", "parent", F), ("father", "parent", F),
         ("mum", "mother", F), ("mother", "mum", F), ("mom", "mother", F), ("mother", "mom", F),
         ("biological_mother", "mother", F), ("dad", "father", F), ("father", "dad", F),
-        ("has_mother", "mother", T), ("son_of", "child", F), ("daughter_of", "child", F),
+        ("has_mother", "mother", T), ("mother", "has_mother", T), ("son_of", "child", F), ("daughter_of", "child", F),
         ("child", "parent", T), ("parent", "child", T),
         ("married_to", "spouse", F), ("spouse", "married_to", F), ("married_to", "married_to", T), ("spouse", "spouse", T),
         ("husband_of", "spouse", F), ("wife_of", "spouse", F),
         ("brother_of", "sibling", F), ("sister_of", "sibling", F), ("sibling", "sibling", T),
-        ("grandmother_of", "grandparent", F),
+        ("grandmother_of", "grandparent", F), ("grandparent", "ancestor", F),
     }
     rules = (_rule(("grandparent", "X", "Z"), ("parent", "X", "Y"), ("parent", "Y", "Z")), *_transitive("ancestor", "parent"))
     married = [p for pair in couples for p in pair]
@@ -216,13 +222,14 @@ def work(seed: int = 11) -> KB:
     glosses = {
         "manager_of": "{x} is the manager of {y}", "supervises": "{x} supervises {y}",
         "line_manager_of": "{x} is the line manager of {y}", "reports_to": "{x} reports to {y}",
-        "works_for": "{x} works for {y}", "employed_by": "{x} is employed by {y}", "employs": "{x} employs {y}",
-        "on_payroll_of": "{x} is on the payroll of {y}",
+        "works_for": "{x} works for the company {y}", "employed_by": "{x} is employed by the company {y}",
+        "employs": "the company {x} employs {y}", "on_payroll_of": "{x} is on the payroll of the company {y}",
         "boss_of": "{x} is the boss of {y}", "subordinate_of": "{x} is a subordinate of {y}",
-        "employee_of": "{x} is an employee of {y}", "employer_of": "{x} is the employer of {y}",
+        "employee_of": "{x} is an employee of the company {y}", "employer_of": "the company {x} is the employer of {y}",
         "skip_level_boss": "{x} is the boss of the boss of {y}", "superior_of": "{x} is above {y} in the chain of command",
-        "mentor_of": "{x} is a mentor of {y}", "client_of": "{x} is a client of {y}", "founded": "{x} founded {y}",
-        "invested_in": "{x} invested in {y}", "colleague_of": "{x} is a colleague of {y}",
+        "mentor_of": "{x} is a mentor of {y}", "client_of": "{x} is a client of the company {y}",
+        "founded": "{x} founded the company {y}", "invested_in": "{x} invested in the company {y}",
+        "colleague_of": "{x} is a colleague of {y}",
     }
     gold = {
         ("manager_of", "supervises", F), ("supervises", "manager_of", F), ("line_manager_of", "manager_of", F),
@@ -234,6 +241,7 @@ def work(seed: int = 11) -> KB:
         ("works_for", "employee_of", F), ("employee_of", "works_for", F),
         ("employer_of", "employee_of", T), ("employee_of", "employer_of", T),
         ("colleague_of", "colleague_of", T),
+        ("skip_level_boss", "superior_of", F), ("employed_by", "on_payroll_of", F),
     }
     rules = (
         _rule(("skip_level_boss", "X", "Z"), ("boss_of", "X", "Y"), ("boss_of", "Y", "Z")),
@@ -333,8 +341,13 @@ def geography(seed: int = 13) -> KB:
         ("borders", "shares_border_with", F), ("shares_border_with", "borders", F),
         ("borders", "borders", T), ("shares_border_with", "shares_border_with", T),
         ("neighbour_of", "borders", F), ("borders", "neighbour_of", F),
+        ("inside", "located_in", F), ("capital_of", "city_in", F), ("largest_city_of", "city_in", F),
+        ("near", "near", T), ("twinned_with", "twinned_with", T), ("borders", "near", F),
     }
-    rules = _transitive("inside", "within")
+    # "Located in" is transitive in English, and the facts state only the direct
+    # step (city in region, region in country), so the knowledge base says so.
+    rules = (*_transitive("inside", "within"),
+             _rule(("located_in", "X", "Z"), ("located_in", "X", "Y"), ("located_in", "Y", "Z")))
     regions = [r for rs in countries.values() for r in rs]
     queries = (
         *(Query("within", "X", r) for r in rng.sample(regions, 2)),
@@ -397,6 +410,8 @@ def medicine(seed: int = 17) -> KB:
         ("cures", "treats", F), ("relieves", "treats", F), ("treats", "remedy_for", F), ("remedy_for", "treats", F),
         ("leads_to", "causes", F), ("causes", "leads_to", F), ("symptom_of", "causes", T), ("side_effect_of", "causes", T),
         ("causes", "brings_about", F), ("brings_about", "causes", F), ("result_of", "causes", T), ("causes", "result_of", T),
+        ("cures", "relieves", F), ("correlated_with", "associated_with", F), ("causes", "associated_with", F),
+        ("treats", "associated_with", F), ("associated_with", "associated_with", T), ("correlated_with", "correlated_with", T),
     }
     rules = (_rule(("indirectly_brings_about", "X", "Z"), ("brings_about", "X", "Y"), ("brings_about", "Y", "Z")),)
     queries = (

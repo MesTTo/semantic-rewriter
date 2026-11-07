@@ -11,7 +11,7 @@ import pytest
 from semrewrite.benchmarks import BENCHMARKS
 from semrewrite.engine import STRATEGIES, Budget, Evaluation, ParityUnionFind, Rewriter
 from semrewrite.judging import OracleJudge
-from semrewrite.kb import KB, Lit, Query, Rule, fixpoint, from_metta, implication_closure
+from semrewrite.kb import KB, Lit, Query, Rule, fixpoint, from_metta
 
 KBS = {name: make() for name, make in BENCHMARKS.items()}
 TABLED = [name for name, s in STRATEGIES.items() if s.evaluation is Evaluation.TABLED and s.timing.value != "none"]
@@ -40,13 +40,21 @@ def test_fixpoint_chains_and_swaps() -> None:
     assert closed["grandparent"] == {("carol", "tom")}
 
 
-def test_implication_closure_composes_swaps() -> None:
-    """Two swaps cancel, one survives, and a symmetric conclusion takes both parities."""
-    closed = implication_closure({("son_of", "child", False), ("child", "parent", True), ("spouse", "spouse", True), ("wife_of", "spouse", False)})
-    assert ("son_of", "parent", True) in closed
-    assert ("son_of", "parent", False) not in closed
-    assert {("wife_of", "spouse", False), ("wife_of", "spouse", True), ("spouse", "spouse", True)} <= closed
-    assert ("parent", "parent", False) not in closed
+def test_entailment_reads_gold_implications_and_user_rules_together() -> None:
+    """Two swaps cancel, one survives, a symmetric conclusion takes both orders, and a user rule entails too."""
+    kb = KB(
+        name="entail",
+        glosses={p: f"{{x}} is {p} of {{y}}" for p in ("son_of", "child", "parent", "ancestor", "spouse", "wife_of")},
+        facts=(),
+        rules=(Rule(Lit("ancestor", "X", "Y"), (Lit("parent", "X", "Y"),)),),
+        gold=frozenset({("son_of", "child", False), ("child", "parent", True), ("spouse", "spouse", True), ("wife_of", "spouse", False)}),
+    )
+    assert kb.entails("son_of", "parent", True)
+    assert not kb.entails("son_of", "parent", False)
+    assert kb.entails("wife_of", "spouse", False) and kb.entails("wife_of", "spouse", True)
+    assert kb.entails("son_of", "ancestor", True)
+    assert ("parent", "parent", False) not in kb.entailed()
+    assert ("spouse", "spouse", True) in kb.entailed()
 
 
 def test_parity_union_find_joins_aliases_and_spots_symmetry() -> None:
@@ -81,7 +89,7 @@ def test_canonicalisation_keeps_a_symmetry_found_inside_one_alias_class() -> Non
 
 
 def _oracle_rewriter(kb: KB) -> Rewriter:
-    return Rewriter(kb, OracleJudge.of(implication_closure(kb.gold)), None, budget=Budget(inferences=3_000_000, seconds=60))
+    return Rewriter(kb, OracleJudge.of(kb.entailed()), None, budget=Budget(inferences=3_000_000, seconds=60))
 
 
 @pytest.mark.parametrize("strategy", TABLED)
@@ -116,7 +124,7 @@ def test_exact_matching_is_sound_and_misses_mismatched_vocabulary(name: str) -> 
 def test_untabled_rewriting_never_finishes_on_an_alias_cycle() -> None:
     """mother <=> mum makes SLD resolution loop, with or without a discovery memo, until the budget ends it."""
     kb = KBS["family"]
-    rewriter = Rewriter(kb, OracleJudge.of(implication_closure(kb.gold)), None, budget=Budget(inferences=200_000, seconds=30))
+    rewriter = Rewriter(kb, OracleJudge.of(kb.entailed()), None, budget=Budget(inferences=200_000, seconds=30))
     for strategy in ("naive", "memo-untabled"):
         outcome = rewriter.ask(STRATEGIES[strategy], Query("mother", "X", "Y"))
         assert outcome.status in ("inference_limit", "time_limit"), (strategy, outcome.status)
@@ -125,7 +133,7 @@ def test_untabled_rewriting_never_finishes_on_an_alias_cycle() -> None:
 def test_naive_rediscovery_keeps_calling_the_judge() -> None:
     """Without a memo the same predicate is expanded again on every call, so expansions far exceed the catalogue."""
     kb = KBS["family"]
-    rewriter = Rewriter(kb, OracleJudge.of(implication_closure(kb.gold)), None, budget=Budget(inferences=200_000, seconds=30))
+    rewriter = Rewriter(kb, OracleJudge.of(kb.entailed()), None, budget=Budget(inferences=200_000, seconds=30))
     naive = rewriter.ask(STRATEGIES["naive"], Query("mother", "X", "Y"))
     memo = rewriter.ask(STRATEGIES["memo-untabled"], Query("mother", "X", "Y"))
     assert memo.expansions <= len(kb.glosses)
