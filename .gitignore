@@ -1,4 +1,4 @@
-# Purpose: keep the virtualenv, scratch, battery trees, worktrees and caches out of git.
+# Purpose: keep the virtualenv, scratch, battery trees, worktrees, caches and build output out of git.
 .venv/
 ai-tmp/
 ai-battery-*/
@@ -7,3 +7,6 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .hypothesis/
+dist/
+build/
+*.egg-info/
