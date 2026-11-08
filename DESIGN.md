@@ -180,7 +180,7 @@ class Engine(Protocol):
 | `rewrite_depth` | honours `depth > 0` with `depth_counts = "rewrites"`, counting rewrite steps alone |
 | `lazy` | calls `expand` during evaluation instead of needing every rewrite up front |
 | `untabled` | can run `tabled=False` as plain top-down resolution (only useful for experiments) |
-| `reached` | reports which predicates evaluation called, needed by the rounds strategy |
+| `reached` | with no depth bound, reports every predicate evaluation called, and possibly more of the program's; the rounds strategy expands what it reports, so a predicate left out loses the answers its rewrites give, while an extra one only costs an expansion. Under a depth bound it may report fewer |
 | `proofs` | returns a derivation for each answer |
 
 `Budget` gives the most a run may spend: work in the engine's own unit (inferences for a Prolog engine, candidate rows examined for the Python engine) and wall-clock seconds, which may be infinite. `Solution` carries the answers (one tuple of constants per answer, the query's arguments with its variables filled), a status (`ok`, `work_limit`, `time_limit` or `error`), the work spent, the predicates reached when the engine reports them, and proofs when it provides them.
@@ -195,7 +195,7 @@ An engine must keep this contract:
 
 Two patterns implement the lazy capability, and either is enough:
 
-- A meta-interpreter. Predicates become data, `holds(P, Args)`, and one clause asks the discovery callback for rewrites of P and follows each: `holds(P, Args) :- expand(P, Q, Map), permute(Map, Args, QArgs), holds(Q, QArgs)`. Tabling `holds` gives SLG resolution with semantic goal expansion. This is how the PyMeTTa backend works, through a Python op that MeTTa calls. Any Prolog with foreign predicates (SWI through janus, Scryer, Trealla), any MeTTa implementation with grounded operations, and any engine with external atoms (HEX programs) can do the same.
+- A meta-interpreter. Predicates become data, `holds(P, Args)`, and one clause asks the discovery callback for rewrites of P and follows each: `holds(P, Args) :- expand(P, Q, Map), permute(Map, Args, QArgs), holds(Q, QArgs)`. Tabling `holds` gives SLG resolution with semantic goal expansion. This is how the PyMeTTa backend works, through a Python op that MeTTa calls. Any Prolog with foreign predicates (SWI through janus, Scryer, Trealla), any MeTTa implementation with grounded operations, and any engine with external atoms (HEX programs) can do the same. Measure what one call of the callback costs on the engine at hand: in PyMeTTa, how the op's parameter is annotated changed its cost per call by more than half and decided whether the first run of a process stopped at its budget (RESULTS.md, under pymetta).
 - Demand-driven bottom-up evaluation. The engine computes which predicates the query depends on, calls `expand` for each new one, adds the returned rewrites as rules and extends the dependency set, then runs a semi-naive fixpoint over the relevant predicates. Round k of the fixpoint derives exactly the facts of derivation height k, so a depth bound is a round limit. A bound on rewrites alone runs the fixpoint in levels: each level first closes under the user rules, then one round of rewrites starts the next level, so level k holds the facts that need at most k rewrites on any path, a generalisation of Dijkstra's algorithm to such costs (Knuth, 1977). This is how the pure-Python backend works, and it carries over to Datalog engines and to SQL with recursive common table expressions.
 
 An engine without the lazy capability still runs every strategy except the lazy ones: the rewriter computes the rewrites first and passes them in `program.rewrites`.
@@ -231,7 +231,7 @@ An engine implements the protocol when it passes the conformance kit, `semrewrit
 
 | property | needs capability |
 |---|---|
-| with tables and no depth bound, answers equal a reference fixpoint on generated programs with rewrite cycles, joins and arities 1 to 3 | `tabling` |
+| with tables and no depth bound, answers equal a reference fixpoint on generated programs with rewrite cycles, arities 0 to 3, and up to three user rules of one to three body atoms with constants and repeated variables | `tabling` |
 | with a depth bound, answers equal the reference fixpoint restricted to derivations of at most that many steps, with tables on or off | `depth` |
 | with a bound on rewrites, answers equal the reference fixpoint restricted to derivations of at most that many rewrites on any path, and recursion through user rules answers completely, with tables on or off | `rewrite_depth` |
 | lazy expansion gives the same answers as passing every rewrite up front | `lazy` |
@@ -239,6 +239,7 @@ An engine implements the protocol when it passes the conformance kit, `semrewrit
 | constants and predicates spelled like the engine's reserved words keep their answers, with every rewrite up front and through the callback | `tabling`, `depth` or `rewrite_depth` |
 | each answer has one proof whose steps are program rules or rewrites, whose leaves are program facts, and whose height in counted steps respects the depth bound | `proofs` |
 | without tables, a query on a rewrite cycle never finishes, and one that reaches no cycle finishes with the fixpoint | `untabled` |
+| evaluating, adding the rewrites of every predicate a run reached and evaluating again, until a run reaches nothing new, gives the reference answers | `reached` and `tabling` |
 
 A run with tables, or with a depth bound of 1 step, must finish with exactly the reference answers; it gets the default work budget and no time limit, so a loaded machine cannot fail an engine, while the work limit still stops one that does not terminate. An untabled run deeper than that may instead stop at its budget with no answers, because top-down search without tables enumerates every derivation, and through a join their number grows faster than any budget the kit could promise; so may an untabled run bounding rewrites alone, whose user rules may recurse forever. A run that reports a limit must actually have reached it. The reference evaluator is a naive bottom-up fixpoint with no dependencies, so the kit checks an engine against something other than itself. Run it with `semrewrite conformance --engine NAME` or from pytest.
 

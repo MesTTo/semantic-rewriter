@@ -10,8 +10,11 @@ the judge decides which way, and how the arguments map.
 
 from __future__ import annotations
 
+import gc
+import sys
 from collections.abc import Iterable, Mapping
-from typing import TYPE_CHECKING
+from types import TracebackType
+from typing import TYPE_CHECKING, Self
 
 from semrewrite.model import LETTERS, Predicate
 
@@ -27,7 +30,9 @@ class EmbeddingRetriever:
     """Top-k gloss neighbours over a catalogue, with embedding work counted in `usage`.
 
     Vectors are cached by gloss sentence, so a predicate name reused with a
-    different gloss in another knowledge base gets its own vector.
+    different gloss in another knowledge base gets its own vector. close()
+    releases the model, as a judge's does, and the cached vectors still serve
+    the glosses already embedded.
     """
 
     def __init__(self, model: str = DEFAULT_MODEL, fillers: tuple[str, ...] = LETTERS) -> None:
@@ -48,6 +53,9 @@ class EmbeddingRetriever:
         fresh = sorted({self._sentence(p) for p in predicates} - set(self._vectors))
         if not fresh:
             return
+        if self._model is None:
+            msg = f"the retriever was closed, so it cannot embed {len(fresh)} new glosses; make a new one"
+            raise RuntimeError(msg)
         vectors = self._model.encode(fresh, normalize_embeddings=True, convert_to_numpy=True)
         self._vectors.update(zip(fresh, vectors, strict=True))
         self.usage["encoded"] += len(fresh)
@@ -65,6 +73,20 @@ class EmbeddingRetriever:
         ]
         scored.sort(key=lambda item: (-item[1], item[0]))
         return scored[:k]
+
+    def close(self) -> None:
+        """Release the model and the GPU memory it held; only a process that imported torch can hold any."""
+        self._model = None
+        gc.collect()
+        torch = sys.modules.get("torch")
+        if torch is not None and torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, kind: type[BaseException] | None, error: BaseException | None, trace: TracebackType | None) -> None:
+        self.close()
 
 
 class AllCandidates:

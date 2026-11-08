@@ -45,7 +45,8 @@ class Capabilities:
     rewrite_depth: honours Program.depth > 0 counting rewrite steps alone.
     lazy: calls the expander during evaluation instead of needing every rewrite up front.
     untabled: can run Program.tabled=False as plain top-down resolution.
-    reached: reports the predicates evaluation called, which the rounds strategy needs.
+    reached: with no depth bound, reports every predicate evaluation called, and possibly more of the program's,
+        which the rounds strategy expands; under a depth bound it may report fewer.
     proofs: returns one derivation per answer.
     """
 
