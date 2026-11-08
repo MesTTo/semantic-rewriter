@@ -99,6 +99,52 @@ def test_a_strategy_outside_its_knobs_is_refused_where_it_is_defined(knobs: dict
         Strategy("custom", **knobs)
 
 
+def test_a_strategy_named_by_its_timing_string_is_the_same_strategy() -> None:
+    """Timing is a StrEnum, so "lazy" once passed the dispatch but failed the identity checks, skipping the lazy need."""
+    by_name = Strategy("by-name", "lazy", depth=3)
+    assert by_name.timing is Timing.LAZY and by_name.needs() == Strategy("by-member", Timing.LAZY, depth=3).needs()
+    assert Strategy("by-name", "eager", canonical=True).timing is Timing.EAGER
+    with pytest.raises(ValueError, match="sideways"):
+        Strategy("by-name", "sideways")
+
+    class Bare:
+        name = "bare"
+        capabilities = Capabilities(tabling=True)
+
+        def solve(self, program, query, budget, expand=None):
+            raise AssertionError("must not be called")
+
+    kb = KBS["family"]
+    with pytest.raises(CapabilityError, match="lacks lazy"):
+        Rewriter(kb, OracleJudge(kb.entailed()), Bare(), None).ask("parent(X, Y)", Strategy("by-name", "lazy"))
+
+
+@pytest.mark.parametrize("engine_name", [e for e in ENGINES if "rounds" in _runnable(e)])
+def test_rounds_share_one_budget_and_stop_once_a_round_adds_nothing(engine_name: str) -> None:
+    """Each evaluation gets only what the earlier ones left, and a round whose expansions add no rewrite is the last."""
+    kb = KB("chain", {"p": "{x} is p", "q": "{x} is q", "r": "{x} is r"}, tuple(atom("q", f"c{i}") for i in range(40)),
+            gold=frozenset({("q", "p", (0,))}))
+    roomy = Rewriter(kb, OracleJudge(kb.entailed()), make(engine_name), None, budget=Budget(work=10**9, seconds=60))
+    whole = roomy.ask("p(X)", "rounds")
+    # Round 1 reaches p and admits q => p; round 2 reaches q, whose expansion admits nothing, so no third round.
+    assert whole.finished and whole.rounds == 2 and len(whole.answers) == 40
+    tight = Rewriter(kb, OracleJudge(kb.entailed()), make(engine_name), None, budget=Budget(work=whole.work - 1, seconds=60))
+    short = tight.ask("p(X)", "rounds")
+    assert not short.finished and short.status == "work_limit" and not short.answers, short
+
+
+@pytest.mark.parametrize("engine_name", ENGINES)
+def test_a_shared_discoverer_admits_afresh_when_the_threshold_moves(engine_name: str) -> None:
+    kb = KB("k", {"mother": "{x} is the mother of {y}", "parent": "{x} is a parent of {y}"}, (atom("mother", "ann", "tom"),),
+            gold=frozenset({("mother", "parent", (0, 1))}))
+    judge = OracleJudge(kb.entailed())
+    rewriter = Rewriter(kb, judge, make(engine_name), None)
+    shared = rewriter.discoverer()
+    assert rewriter.ask("parent(X, tom)", "lazy-tabled", shared).answers == {("ann", "tom")}
+    judge.threshold = 2.0
+    assert rewriter.ask("parent(X, tom)", "lazy-tabled", shared).answers == set()
+
+
 @pytest.mark.parametrize("engine_name", [e for e in ENGINES if "naive" in _runnable(e)])
 def test_the_first_solve_of_a_process_stops_at_its_work_budget(engine_name: str) -> None:
     """A fresh process's first run of a rewrite loop stops at its inference budget, not at its time limit.

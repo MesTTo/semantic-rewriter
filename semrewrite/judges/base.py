@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import gc
 import math
+import sys
 from collections.abc import Sequence
 from types import TracebackType
 from typing import Self
@@ -86,12 +87,15 @@ class SentenceJudge:
         """Drop the model; a judge holding none has nothing to do."""
 
     def close(self) -> None:
-        """Release the model and the GPU memory it held, so the next judge can load."""
+        """Release the model and the GPU memory it held, so the next judge can load.
+
+        Only a process that imported torch can hold CUDA memory, so a judge on an
+        install without torch, such as Jev's extra alone, closes without it.
+        """
         self._release()
         gc.collect()
-        import torch
-
-        if torch.cuda.is_available():
+        torch = sys.modules.get("torch")
+        if torch is not None and torch.cuda.is_available():
             torch.cuda.empty_cache()
 
     def __enter__(self) -> Self:

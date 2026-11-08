@@ -26,7 +26,7 @@ from semrewrite.engines import make as make_engine
 from semrewrite.kb import KB
 from semrewrite.model import Rewrite, parse_atom
 from semrewrite.protocols import Budget
-from semrewrite.rewriter import STRATEGIES, Rewriter
+from semrewrite.rewriter import STRATEGIES, CapabilityError, Rewriter
 
 # The pyproject.toml extra that installs each optional library, by import name;
 # tests/test_packaging.py checks it against the extras.
@@ -49,7 +49,7 @@ def _judge(args: argparse.Namespace, kb: KB):
         if not gold:
             msg = "the oracle judge needs gold implications in the knowledge base (gold lines)"
             raise SystemExit(msg)
-        return make("oracle", gold=gold)
+        return make("oracle", gold=gold, **({"threshold": args.threshold} if args.threshold is not None else {}))
     return make(args.judge, **({"threshold": args.threshold} if args.threshold is not None else {}))
 
 
@@ -192,8 +192,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
     try:
         return args.run(args)
-    except (KeyError, ValueError) as e:
-        print(f"semrewrite: {e}", file=sys.stderr)
+    except (LookupError, ValueError, CapabilityError) as e:
+        # LookupError covers an unknown name and a judge with no calibrated threshold; a KeyError's message is its repr.
+        print(f"semrewrite: {e.args[0] if isinstance(e, KeyError) and e.args else e}", file=sys.stderr)
         return 1
     except ImportError as e:
         # A judge, engine or the conformance kit needs a library its extra installs.

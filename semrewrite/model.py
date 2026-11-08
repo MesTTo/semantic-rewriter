@@ -14,12 +14,17 @@ from __future__ import annotations
 import itertools
 import re
 import string
+import unicodedata
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 
-_SYMBOL = re.compile(r"^[a-z][A-Za-z0-9_]*$")
-_VARIABLE = re.compile(r"^[A-Z][A-Za-z0-9_]*$")
+# Matched whole with fullmatch: `$` alone would also accept a name followed by a newline, such as "tom\n".
+_SYMBOL = re.compile(r"[a-z][A-Za-z0-9_]*")
+_VARIABLE = re.compile(r"[A-Z][A-Za-z0-9_]*")
 _NAMED = {"x": 0, "y": 1, "z": 2}
+# Unicode categories a one-line gloss may not hold: control characters, lone surrogates (no UTF-8 file can hold
+# one), and the line and paragraph separators str.splitlines() breaks on.
+_NOT_IN_A_LINE = frozenset({"Cc", "Cs", "Zl", "Zp"})
 
 Mapping = tuple[int, ...]
 """A permutation: position i of the premise takes conclusion argument mapping[i]."""
@@ -30,12 +35,12 @@ Key = tuple[str, str, Mapping]
 
 def is_variable(term: str) -> bool:
     """A variable is capitalised: X, Y, Person; a constant or predicate is a lowercase symbol."""
-    return bool(_VARIABLE.match(term))
+    return bool(_VARIABLE.fullmatch(term))
 
 
 def check_symbol(term: str, role: str) -> str:
     """Return `term` when it is a lowercase symbol such as alice or has_mother, else raise naming `role`."""
-    if not _SYMBOL.match(term):
+    if not _SYMBOL.fullmatch(term):
         msg = f"{role} {term!r} must start with a lowercase letter and use only letters, digits and _"
         raise ValueError(msg)
     return term
@@ -43,7 +48,7 @@ def check_symbol(term: str, role: str) -> str:
 
 def check_term(term: str) -> str:
     """Return `term` when it is a variable or a constant, else raise."""
-    if not (is_variable(term) or _SYMBOL.match(term)):
+    if not (is_variable(term) or _SYMBOL.fullmatch(term)):
         msg = f"term {term!r} is neither a capitalised variable nor a lowercase constant"
         raise ValueError(msg)
     return term
@@ -100,7 +105,10 @@ class Predicate:
 
     mother with gloss "{x} is the mother of {y}" is binary, and the fact
     mother(alice, tom) means "alice is the mother of tom". The arity is the
-    number of distinct placeholders, which must be positions 0 to n-1.
+    number of distinct placeholders, which must be positions 0 to n-1, so a
+    gloss with none, such as "it is raining", states an arity-0 predicate.
+    A gloss is one line of text: a control character, a line break or a lone
+    surrogate is refused, so every file format can quote it on one line.
     """
 
     name: str
@@ -111,9 +119,12 @@ class Predicate:
         if not self.name:
             msg = "a predicate needs a name"
             raise ValueError(msg)
+        if any(unicodedata.category(ch) in _NOT_IN_A_LINE for ch in self.gloss):
+            msg = f"gloss of {self.name!r} must be one line of text, without control characters or line breaks: {self.gloss!r}"
+            raise ValueError(msg)
         positions = set(gloss_positions(self.gloss))
-        if not positions or positions != set(range(len(positions))):
-            msg = f"gloss of {self.name!r} must mention every argument position from 0 up: {self.gloss!r}"
+        if positions != set(range(len(positions))):
+            msg = f"gloss of {self.name!r} must mention the argument positions 0 to n-1 with none missing: {self.gloss!r}"
             raise ValueError(msg)
         object.__setattr__(self, "arity", len(positions))
 

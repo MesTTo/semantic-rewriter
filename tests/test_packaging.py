@@ -84,6 +84,25 @@ def test_a_missing_library_names_the_extra_that_installs_it(argv: list[str], mis
     assert run.stderr.strip() == f"semrewrite: {missing} is not installed; pip install 'semantic-rewriter[{extra}]'"
 
 
+def test_command_line_honours_the_oracle_threshold_and_names_a_strategy_the_engine_cannot_run() -> None:
+    base = ["ask", EXAMPLE, "parent(X, tom)", "--judge", "oracle", "--retriever", "all", "--engine", "python"]
+    run = cli([*base, "--threshold", "1.5"])
+    assert run.returncode == 0 and run.stdout == "", run.stdout
+    run = cli([*base, "--strategy", "naive"])
+    assert run.returncode == 1 and "Traceback" not in run.stderr
+    assert run.stderr.strip() == "semrewrite: engine python cannot run naive: it lacks untabled"
+
+
+def test_a_judge_closes_without_torch() -> None:
+    """Jev's extra installs no torch, so closing a judge, by hand or by leaving its with block, must not import it."""
+    run = blocked("from semrewrite.judges.jev import JevJudge\n"
+                  "JevJudge('jev', 0.5).close()\n"
+                  "with JevJudge('jev', 0.5):\n"
+                  "    pass\n"
+                  "print('closed')\n")
+    assert run.returncode == 0 and run.stdout.strip() == "closed", run.stderr
+
+
 def test_extras_table_matches_pyproject() -> None:
     """Each installed library an extra lists is in the table under that extra, and each table entry is so listed."""
     def canonical(name: str) -> str:

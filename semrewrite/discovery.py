@@ -81,7 +81,10 @@ class Discoverer:
     With `memo` each predicate is expanded once and later asks answer from the
     memo, which is what makes rewriting terminate under tables; without it
     every ask retrieves and judges again, as a rewriter that rediscovers on
-    every reduction step does.
+    every reduction step does. The memo is keyed on the goal and the judge's
+    threshold at the time, so a discoverer shared across queries admits afresh
+    once calibration moves the threshold; the score cache makes that free of
+    model calls.
     """
 
     def __init__(
@@ -101,7 +104,7 @@ class Discoverer:
         self.memo = memo
         self.admission: Admission = admission if admission is not None else Threshold()
         self.stats = DiscoveryStats()
-        self._memo: dict[str, tuple[Rewrite, ...]] = {}
+        self._memo: dict[tuple[str, float], tuple[Rewrite, ...]] = {}
 
     def candidates(self, goal: str) -> list[str]:
         """The k retrieved neighbours of `goal` of its arity, or every predicate of its arity without a retriever."""
@@ -128,8 +131,9 @@ class Discoverer:
     # twice that with a policy that needs converse scores.
     def rewrites(self, goal: str) -> tuple[Rewrite, ...]:
         """Admitted rewrites concluding `goal`, strongest first."""
-        if self.memo and goal in self._memo:
-            return self._memo[goal]
+        key = (goal, self.scorer.threshold)
+        if self.memo and key in self._memo:
+            return self._memo[key]
         if goal not in self.catalogue:
             msg = f"goal predicate {goal!r} has no gloss in the catalogue"
             raise KeyError(msg)
@@ -146,7 +150,7 @@ class Discoverer:
         )
         found = tuple(admitted)
         if self.memo:
-            self._memo[goal] = found
+            self._memo[key] = found
         return found
 
     def keys(self) -> set[Key]:

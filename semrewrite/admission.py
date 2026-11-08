@@ -1,5 +1,6 @@
 """Purpose: admission policies, which decide which scored proposals become rewrites,
-and the calibration of their parameters on labelled pairs.
+and the calibration of the direction-aware policy's slack on labelled pairs; the
+threshold's calibration is judges.metrics.calibrate.
 
 Threshold admits a proposal whose score reaches the judge's threshold.
 Directional also asks the judge about each proposal's converse and admits a
@@ -45,28 +46,20 @@ class Directional:
 
 
 def balanced_accuracy(admitted: Sequence[bool], labels: Sequence[bool]) -> float:
-    """Mean of the true-positive and true-negative rates; 0.5 for a constant answer."""
+    """Mean of the true-positive and true-negative rates; 0.5 for a constant answer.
+
+    With one class absent it is the rate on the class present, plain accuracy,
+    as judges.metrics.calibrate scores it.
+    """
+    if not labels:
+        msg = "balanced accuracy needs at least one row"
+        raise ValueError(msg)
     tp = sum(a and y for a, y in zip(admitted, labels, strict=True))
     tn = sum(not a and not y for a, y in zip(admitted, labels, strict=True))
     pos = sum(labels)
     neg = len(labels) - pos
-    tpr = tp / pos if pos else 1.0
-    tnr = tn / neg if neg else 1.0
-    return (tpr + tnr) / 2
-
-
-def calibrate_threshold(scores: Sequence[float], labels: Sequence[bool]) -> tuple[float, float]:
-    """The threshold maximising balanced accuracy on labelled scores, the higher threshold on ties, with that accuracy.
-
-    Candidate thresholds are the distinct scores themselves, so the cut always
-    falls exactly on an observed score.
-    """
-    best = (0.5, -1.0)
-    for t in sorted(set(scores)):
-        acc = balanced_accuracy([s >= t for s in scores], labels)
-        if acc > best[1] or (acc == best[1] and t > best[0]):
-            best = (t, acc)
-    return best
+    rates = [r for r, present in ((tp / pos if pos else 0.0, pos), (tn / neg if neg else 0.0, neg)) if present]
+    return sum(rates) / len(rates)
 
 
 def calibrate_slack(

@@ -58,6 +58,9 @@ class Strategy:
     canonical: bool = False
 
     def __post_init__(self) -> None:
+        # Timing is a StrEnum, so "lazy" compares equal to Timing.LAZY but is not it; store the member, so every
+        # check below sees one representation and an unknown name fails here.
+        object.__setattr__(self, "timing", Timing(self.timing))
         if self.depth < 0:
             msg = f"strategy {self.name}: a depth bound counts steps, so it can't be negative"
             raise ValueError(msg)
@@ -221,8 +224,9 @@ class Rewriter:
         return Program(facts=kb.facts, rules=kb.rules, rewrites=tuple(rewrites), tabled=tabled, depth=depth,
                        depth_counts=depth_counts)
 
-    def _solve(self, program: Program, query: Atom, out: Outcome, expand=None, *, accumulate: bool = False) -> Solution:
-        solution = self.engine.solve(program, query, self.budget, expand)
+    def _solve(self, program: Program, query: Atom, out: Outcome, expand=None, *, accumulate: bool = False,
+               budget: Budget | None = None) -> Solution:
+        solution = self.engine.solve(program, query, budget if budget is not None else self.budget, expand)
         out.status, out.detail = solution.status, solution.detail
         out.answers = set(solution.answers) if solution.finished else set()
         out.derivations = solution.derivations
@@ -287,24 +291,32 @@ class Rewriter:
     def _rounds(self, strategy: Strategy, query: Atom, disc: Discoverer, out: Outcome) -> None:
         """Evaluate, expand every predicate the evaluation reached, add the rewrites and evaluate again,
         until a round reaches nothing new: the discover-then-reduce loop run to its fixpoint.
+
+        The rounds share one budget: each evaluation gets the work and seconds the
+        earlier ones left, so `ok` means the query as a whole stayed within it. A
+        round whose expansions add no rewrite ends the loop, since evaluating the
+        same program again would reach the same predicates.
         """
         added: dict[Key, Rewrite] = {}
         expanded: set[str] = set()
+        started = time.perf_counter()
         while True:
             out.rounds += 1
-            solution = self._solve(self._program(added.values()), query, out, accumulate=True)
+            left = Budget(work=self.budget.work - out.work, seconds=self.budget.seconds - (time.perf_counter() - started))
+            solution = self._solve(self._program(added.values()), query, out, accumulate=True, budget=left)
             if not solution.finished:
                 break
             if solution.reached is None:
                 msg = f"engine {self.engine.name} claims the reached capability but reported no reached predicates"
                 raise CapabilityError(msg)
             fresh = sorted(p for p in solution.reached - expanded if p in self.catalogue)
-            if not fresh:
-                break
+            before = len(added)
             for p in fresh:
                 expanded.add(p)
                 for rw in disc.rewrites(p):
                     added.setdefault(rw.key, rw)
+            if len(added) == before:
+                break
         out.admitted = set(added)
 
 
@@ -328,16 +340,20 @@ class GroupUnionFind:
         if p not in self._parent:
             self._parent[p], self._label[p], self._arity[p] = p, identity(arity), arity
 
-    # Time: amortised inverse-Ackermann finds with path compression; labels compose in O(arity).
+    # Time: amortised O(log n) per find with path compression alone (Tarjan and van Leeuwen, JACM 1984), n = predicates;
+    # union keeps the name-order root, so the root is the class's least name; labels compose in O(arity) per step.
     def find(self, p: str) -> tuple[str, Mapping]:
         """The root of p's class and the mapping g with p(X) <=> root(X[g])."""
-        parent = self._parent[p]
-        if parent == p:
-            return p, self._label[p]
-        root, g = self.find(parent)
-        self._label[p] = compose(self._label[p], g)
-        self._parent[p] = root
-        return root, self._label[p]
+        path = []
+        while self._parent[p] != p:
+            path.append(p)
+            p = self._parent[p]
+        root, g = p, self._label[p]
+        # From the node next to the root outwards, each label is composed with its parent's, now relative to the root.
+        for node in reversed(path):
+            g = compose(self._label[node], g)
+            self._label[node], self._parent[node] = g, root
+        return root, g
 
     def _close(self, root: str) -> None:
         group = self.automorphisms[root]

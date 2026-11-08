@@ -18,13 +18,14 @@ or from a shell, `python -m semrewrite.conformance --engine python`.
 | names | tabling or a depth bound | predicates and constants spelled like reserved words keep their answers, eagerly and lazily |
 | untabled | untabled | untabled, a query on a rewrite cycle hits a limit and one reaching no cycle answers exactly |
 | proofs | proofs, and tabling or a depth bound | every answer has a proof deriving it from the program within the depth bound |
+| rounds | reached and tabling | evaluating, adding the rewrites of every predicate a run reached and evaluating again until a run reaches nothing new gives the reference answers |
 
 The reference is semrewrite.fixpoint, a naive evaluator sharing no code with any
-engine. Generated programs have 2 to 6 predicates of arity 1 to 3 over four
+engine. Generated programs have 2 to 6 predicates of arity 0 to 3 over four
 constants, a planted rewrite cycle p <=> q, random rewrites under any argument
-permutation, up to ten distinct facts, optionally a join rule whose two body atoms
-share a variable, constants and repeated variables, and a query binding some of its
-arguments. The rewrite-depth property also runs on chains of 6 to 12 nodes, whose
+permutation, up to ten distinct facts, up to three user rules of one to three body
+atoms, constants and repeated variables anywhere in their heads and bodies, and a
+query binding some of its arguments. The rewrite-depth property also runs on chains of 6 to 12 nodes, whose
 transitive closure a recursive user rule derives in up to 11 steps, more than any
 bound it tries.
 
@@ -47,6 +48,9 @@ that each run reports the query's predicate and only predicates of the program: 
 rounds strategy expands what an engine reports, so a name the engine made up
 internally, such as max_ for max, would send the rewriter after a predicate that
 doesn't exist. For the same reason expand may only be called with program predicates.
+The rounds property checks the other side, that a run reports every predicate it
+called, by running the rounds strategy itself: a predicate missing from reached never
+has its rewrites added, and the last round then lacks the answers they give.
 
 Each property is a function taking an engine and a case that raises
 ConformanceFailure, an AssertionError, when the engine breaks the claim, and
@@ -66,13 +70,14 @@ import random
 import traceback
 import unittest
 import warnings
+from collections import defaultdict
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Literal, NoReturn
 
 from semrewrite import fixpoint
 from semrewrite.engines import REGISTRY, make
-from semrewrite.model import Atom, Rewrite, Rule, identity, inverse, is_variable, mappings
+from semrewrite.model import Atom, Key, Rewrite, Rule, identity, inverse, is_variable, mappings
 from semrewrite.protocols import Budget, Capabilities, DepthCounts, Engine, Program, Proof, Solution
 
 if TYPE_CHECKING:
@@ -222,7 +227,7 @@ def cases(predicates: Sequence[str] = PREDICATES, constants: Sequence[str] = CON
         # Slices of permutations give distinct names without the rejections unique lists cost.
         names = draw(st.permutations(list(dict.fromkeys(predicates))))[:n]
         consts = tuple(draw(st.permutations(list(dict.fromkeys(constants))))[:4])
-        arity = {p: draw(st.sampled_from((1, 2, 3))) for p in names}
+        arity = {p: draw(st.sampled_from((0, 1, 2, 3))) for p in names}
         # The planted cycle: names[0] <=> names[1] under a random permutation and its inverse.
         a, b = names[0], names[1]
         arity[b] = arity[a]
@@ -238,7 +243,7 @@ def cases(predicates: Sequence[str] = PREDICATES, constants: Sequence[str] = CON
         for _ in range(draw(st.integers(1, 10))):
             pred = draw(st.sampled_from(names))
             facts.append(Atom(pred, tuple(draw(st.sampled_from(consts)) for _ in range(arity[pred]))))
-        rules = [_join_rule(draw, names, arity, consts)] if draw(st.booleans()) else []
+        rules = [_rule(draw, names, arity, consts) for _ in range(draw(st.integers(0, 3)))]
         pred = draw(st.sampled_from(names))
         terms = st.sampled_from(QUERY_VARIABLES + consts)
         query = Atom(pred, tuple(draw(terms) for _ in range(arity[pred])))
@@ -248,20 +253,19 @@ def cases(predicates: Sequence[str] = PREDICATES, constants: Sequence[str] = CON
     return draw_case()
 
 
-def _join_rule(draw: DrawFn, names: Sequence[str], arity: dict[str, int], consts: Sequence[str]) -> Rule:
-    """A rule head :- left, right whose body atoms share a variable, with constants and repeated variables allowed."""
+def _rule(draw: DrawFn, names: Sequence[str], arity: dict[str, int], consts: Sequence[str]) -> Rule:
+    """A rule of one to three body atoms whose arguments are variables or constants, repeats allowed, and whose head
+    takes the body's variables and the constants; a body variable shared by two atoms makes a join."""
     st = _hypothesis().strategies
-    head, left, right = (draw(st.sampled_from(names)) for _ in range(3))
     term = st.one_of(st.sampled_from(VARIABLES), st.sampled_from(consts))
-    left_args = [draw(term) for _ in range(arity[left])]
-    if not any(is_variable(t) for t in left_args):
-        left_args[0] = VARIABLES[0]
-    right_args = [draw(term) for _ in range(arity[right])]
-    shared = draw(st.sampled_from(sorted({t for t in left_args if is_variable(t)})))
-    right_args[draw(st.integers(0, arity[right] - 1))] = shared
-    bound = sorted({t for t in (*left_args, *right_args) if is_variable(t)})
-    head_args = [draw(st.one_of(st.sampled_from(bound), st.sampled_from(consts))) for _ in range(arity[head])]
-    return Rule(Atom(head, tuple(head_args)), (Atom(left, tuple(left_args)), Atom(right, tuple(right_args))))
+    body = []
+    for _ in range(draw(st.integers(1, 3))):
+        pred = draw(st.sampled_from(names))
+        body.append(Atom(pred, tuple(draw(term) for _ in range(arity[pred]))))
+    bound = sorted({t for a in body for t in a.args if is_variable(t)})
+    head_term = st.one_of(st.sampled_from(bound), st.sampled_from(consts)) if bound else st.sampled_from(consts)
+    head = draw(st.sampled_from(names))
+    return Rule(Atom(head, tuple(draw(head_term) for _ in range(arity[head]))), tuple(body))
 
 
 def chains(nodes: tuple[int, int] = (60, 90)) -> SearchStrategy[Case]:
@@ -722,6 +726,40 @@ def proof_problem(proof: Proof, atom: Atom, program: Program) -> str | None:
 # Properties and the runner ------------------------------------------------------------
 
 
+# Time: at most r + 1 solves, r = the case's rewrites, since every round but the last adds one of them or more.
+def check_rounds(engine: Engine, case: Case) -> None:
+    """The rounds strategy over the case's rewrites ends with exactly the reference answers.
+
+    Each round evaluates with tables and no depth bound, then adds the rewrites
+    concluding every predicate the run reached that no earlier round expanded,
+    until a round adds none. A predicate evaluation called but left out of
+    reached never has its rewrites added, so the last round lacks what they derive.
+    """
+    _require(engine, ROUNDS.needs)
+    by_conclusion: dict[str, list[Rewrite]] = defaultdict(list)
+    for rewrite in case.program.rewrites:
+        by_conclusion[rewrite.conclusion].append(rewrite)
+    added: dict[Key, Rewrite] = {}
+    expanded: set[str] = set()
+    rounds = 0
+    while True:
+        rounds += 1
+        program = replace(case.program, rewrites=tuple(added.values()), tabled=True, depth=0)
+        solution = engine.solve(program, case.query, GENEROUS)
+        what = f"rounds, round {rounds} with {len(added)} of the case's {len(case.program.rewrites)} rewrites"
+        if solution.status != "ok":
+            _fail(f"{what}: status {solution.status} ({solution.detail}), expected ok")
+        _reached(engine, solution, case, what)
+        before = len(added)
+        for pred in sorted(set(solution.reached or ()) - expanded):
+            expanded.add(pred)
+            for rewrite in by_conclusion.get(pred, ()):
+                added.setdefault(rewrite.key, rewrite)
+        if len(added) == before:
+            _exactly(solution, expected(case), what)
+            return
+
+
 @dataclass(frozen=True)
 class Property:
     """A conformance property: its name, its claim, what it needs, its cases and its check."""
@@ -750,9 +788,12 @@ UNTABLED = Property("untabled", "untabled, a query on a rewrite cycle hits a lim
                     _capability("untabled"), cases, check_untabled)
 PROOFS = Property("proofs", "every answer has a proof deriving it from the program within the depth bound",
                   _capability("proofs", _exact), cases, check_proofs)
+ROUNDS = Property("rounds", "evaluating, adding the rewrites of every predicate a run reached and evaluating again until a "
+                  "run reaches nothing new gives the reference answers", _capability("reached", _capability("tabling")),
+                  cases, check_rounds)
 
 #: Every property, in the order the report lists them.
-PROPERTIES: tuple[Property, ...] = (TABLING, DEPTH, REWRITE_DEPTH, LAZY, BUDGET, NAMES, UNTABLED, PROOFS)
+PROPERTIES: tuple[Property, ...] = (TABLING, DEPTH, REWRITE_DEPTH, LAZY, BUDGET, NAMES, UNTABLED, PROOFS, ROUNDS)
 
 
 def property_named(name: str) -> Property:

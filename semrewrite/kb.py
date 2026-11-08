@@ -11,6 +11,7 @@ in every model (the Herbrand-model argument behind Datalog query containment).
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 
@@ -80,14 +81,14 @@ class KB:
         if missing:
             msg = f"knowledge base {self.name!r} has no gloss for {missing}"
             raise ValueError(msg)
-        used = {c for f in facts for c in f.args}
-        reserved = used & {c for n in range(1, 11) for c in canonical(n)}
+        # Facts, rules and queries alike: a rule naming canonical_1 would make entails() read its own constant.
+        reserved = {c for c in self.constants() if re.fullmatch(r"canonical_[0-9]+", c)}
         if reserved:
             msg = f"constants {sorted(reserved)} are reserved for the canonical database"
             raise ValueError(msg)
 
     def mentioned(self) -> set[str]:
-        """Every predicate a fact, rule, gold implication or query names."""
+        """Every predicate a fact, rule, gold implication, query or trap names."""
         names = {f.pred for f in self.facts}
         for rule in self.rules:
             names.add(rule.head.pred)
@@ -95,6 +96,7 @@ class KB:
         for premise, conclusion, _ in self.gold:
             names.update((premise, conclusion))
         names.update(q.pred for q in self.queries)
+        names.update(self.traps)
         return names
 
     def catalogue(self) -> dict[str, Predicate]:

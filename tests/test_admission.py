@@ -9,8 +9,9 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
-from semrewrite.admission import Directional, Threshold, balanced_accuracy, calibrate_slack, calibrate_threshold
+from semrewrite.admission import Directional, Threshold, balanced_accuracy, calibrate_slack
 from semrewrite.discovery import Discoverer, ScoreCache
+from semrewrite.judges.metrics import calibrate
 from semrewrite.model import Predicate, Proposal
 
 CATALOGUE = {p.name: p for p in (
@@ -72,8 +73,14 @@ def test_calibration_picks_the_slack_and_threshold_that_separate_the_labels() ->
     assert curve[1.0] == balanced_accuracy([True, True, True, True], labels)
     assert curve[0.02] == 1.0
     assert slack == max(s for s, v in curve.items() if v == 1.0)
-    threshold, accuracy = calibrate_threshold([0.1, 0.4, 0.6, 0.9], [False, False, True, True])
-    assert (threshold, accuracy) == (0.6, 1.0)
+    assert calibrate([0.1, 0.4, 0.6, 0.9], [False, False, True, True]) == 0.5
+
+
+def test_balanced_accuracy_with_one_class_present_is_plain_accuracy() -> None:
+    """Admitting nothing on rows that are all true scores 0, not the 0.5 an absent class's rate of 1 would give."""
+    assert balanced_accuracy([False, False], [True, True]) == 0.0
+    assert balanced_accuracy([True, False], [True, True]) == 0.5
+    assert balanced_accuracy([False, True], [False, True]) == 1.0
 
 
 def test_two_predicates_sharing_a_gloss_keep_their_own_scores() -> None:

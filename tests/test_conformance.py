@@ -163,7 +163,7 @@ def test_kit_passes_a_top_down_engine_and_runs_untabled() -> None:
     outcomes = {v.prop: v.outcome for v in report.verdicts}
     assert report.passed, report.summary()
     assert outcomes == {"tabling": "skip", "depth": "pass", "rewrite-depth": "pass", "lazy": "pass",
-                        "budget": "pass", "names": "pass", "untabled": "pass", "proofs": "skip"}
+                        "budget": "pass", "names": "pass", "untabled": "pass", "proofs": "skip", "rounds": "skip"}
     depth = next(v for v in report.verdicts if v.prop == "depth")
     assert depth.may_stop == 3 * depth.cases and 0 <= depth.stopped <= depth.may_stop
     assert "untabled runs allowed to stop at a limit did" in depth.lines()[0]
@@ -372,6 +372,39 @@ class GivesUpEarly(TopDown):
         return super().solve(program, query, budget, expand)
 
 
+class DropsLongRules(_Delegate):
+    """Ignores every user rule with three or more body atoms."""
+
+    def solve(self, program, query, budget, expand=None):
+        return self.inner.solve(replace(program, rules=tuple(r for r in program.rules if len(r.body) < 3)), query,
+                                budget, expand)
+
+
+class LoosensOneAtomRules(_Delegate):
+    """Reads a one-atom rule body with a fresh variable for each constant and each repeated variable, so
+    p(X) :- q(X, X) takes every row of q."""
+
+    def solve(self, program, query, budget, expand=None):
+        rules = []
+        for rule in program.rules:
+            if len(rule.body) == 1:
+                seen: set[str] = set()
+                args = []
+                for i, term in enumerate(rule.body[0].args):
+                    args.append(term if is_variable(term) and term not in seen else f"Loose{i}")
+                    seen.add(term)
+                rule = Rule(rule.head, (Atom(rule.body[0].pred, tuple(args)),))
+            rules.append(rule)
+        return self.inner.solve(replace(program, rules=tuple(rules)), query, budget, expand)
+
+
+class ReachesQueryOnly(_Delegate):
+    """Reports only the query's predicate as reached, so the rounds strategy never expands anything else."""
+
+    def solve(self, program, query, budget, expand=None):
+        return replace(self.inner.solve(program, query, budget, expand), reached=frozenset({query.pred}))
+
+
 BROKEN: list[tuple[Engine, str]] = [
     (IgnoresDepth(), "depth"),
     (DepthOffByOne(), "depth"),
@@ -391,6 +424,9 @@ BROKEN: list[tuple[Engine, str]] = [
     (SecretlyTabled(), "untabled"),
     (UntabledIgnoresDepth(), "depth"),
     (GivesUpEarly(), "depth"),
+    (DropsLongRules(), "tabling"),
+    (LoosensOneAtomRules(), "tabling"),
+    (ReachesQueryOnly(), "rounds"),
 ]
 
 
@@ -438,9 +474,10 @@ def test_cases_have_a_rewrite_cycle_and_one_arity_per_predicate(case: kit.Case) 
     for rewrite in program.rewrites:
         assert arity.setdefault(rewrite.premise, rewrite.arity) == rewrite.arity
         assert arity.setdefault(rewrite.conclusion, rewrite.arity) == rewrite.arity
-    assert set(arity.values()) <= {1, 2, 3} and 2 <= len(case.predicates()) <= 6
+    assert set(arity.values()) <= {0, 1, 2, 3} and 2 <= len(case.predicates()) <= 6
     assert len({t for f in program.facts for t in f.args}) <= 4
-    assert len(set(program.facts)) == len(program.facts) <= 10 and len(program.rules) <= 1
+    assert len(set(program.facts)) == len(program.facts) <= 10 and len(program.rules) <= 3
+    assert all(1 <= len(rule.body) <= 3 for rule in program.rules)
 
 
 def test_missing_capability_is_a_skip() -> None:
@@ -489,9 +526,10 @@ def test_proof_problem_counts_only_rewrites_under_a_bound_on_rewrites() -> None:
 def test_summary_and_command_line(capsys: pytest.CaptureFixture[str]) -> None:
     report = kit.run(PythonEngine(), max_examples=10)
     lines = report.summary().splitlines()
-    assert lines[0].startswith("conformance of engine 'python': 8 properties")
+    assert lines[0].startswith(f"conformance of engine 'python': {len(kit.PROPERTIES)} properties")
     assert [line.split()[1] for line in lines[1:-1]] == [p.name for p in kit.PROPERTIES]
-    assert lines[-1] == "verdict: engine 'python' conforms: 7 passed, 0 failed, 1 skipped"
+    # The Python engine has every capability but untabled.
+    assert lines[-1] == f"verdict: engine 'python' conforms: {len(kit.PROPERTIES) - 1} passed, 0 failed, 1 skipped"
     assert kit.main(["--engine", "python", "--max-examples", "5", "--property", "depth"]) == 0
     out = capsys.readouterr().out
     assert "pass  depth" in out and out.rstrip().endswith("conforms: 1 passed, 0 failed, 0 skipped")
