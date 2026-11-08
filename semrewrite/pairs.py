@@ -8,7 +8,12 @@ shared arguments, swapped or not, as a Proposal does. Rows that are each other's
 reverse, (P, Q, s) and (Q, P, s), share a `pair` id, so direction accuracy can
 compare a pair's two directions.
 
-    python -m semrewrite.pairs build    # rebuild data/pairs/*.jsonl from the sources
+    python -m semrewrite.pairs fetch levyholt   # download the Levy/Holt files at the pinned commit
+    python -m semrewrite.pairs fetch wikidata   # rerun the Wikidata queries, overwriting their results
+    python -m semrewrite.pairs build [SET ...]  # rebuild data/pairs/<set>.jsonl from the sources, every set by default
+
+Building the Wikidata set needs the `models` extra, for the embedding model
+that picks its near-miss pairs; the other two sets need nothing.
 """
 
 from __future__ import annotations
@@ -139,10 +144,17 @@ def save(rows: Sequence[PairRow], path: pathlib.Path) -> None:
 
 
 def load(sets: Iterable[str] = SETS, directory: pathlib.Path = PAIRS) -> list[PairRow]:
-    """Every row of the named sets, read from data/pairs/<set>.jsonl."""
+    """Every row of the named sets, read from data/pairs/<set>.jsonl.
+
+    A missing set raises FileNotFoundError naming the commands that make it.
+    """
     rows: list[PairRow] = []
     for name in sets:
         path = directory / f"{name}.jsonl"
+        if not path.exists():
+            fetch = f"python -m semrewrite.pairs fetch {name}, then " if name == "levyholt" else ""
+            msg = f"{path} is missing: run {fetch}python -m semrewrite.pairs build {name}"
+            raise FileNotFoundError(msg)
         rows.extend(PairRow.from_json(json.loads(line)) for line in path.read_text().splitlines() if line)
     return rows
 
@@ -198,6 +210,41 @@ _TYPE_NOUNS = {
 }
 
 _RELS_CELL = re.compile(r"^\((?P<pred>[^)]*)\) (?P<a1>\S+)::(?P<t1>\S+) (?P<a2>\S+)::(?P<t2>\S+)$")
+
+# The four Levy/Holt files levyholt_rows reads, as Hosseini's entgraph_eval
+# holds them at the commit the experiment used, each with its SHA-256.
+LEVYHOLT_REPOSITORY = "mjhosseini/entgraph_eval"
+LEVYHOLT_COMMIT = "e5652b3faab2a41b1abfb4bff441b69e31925756"
+LEVYHOLT_FILES = {
+    "LevyHoltDS/dev_dir/dev_dir_s.txt": "c36ceb6aba81d73da8ab43d6136bb4b3d22ed19bb05d220b851d9c325f288d60",
+    "LevyHoltDS/dev_dir/dev_dir_rels.txt": "7049ea89031ce2ff777f9fe398a1bf43dd03953140efa6d3060eb802c3d4ad3a",
+    "LevyHoltDS/test_dir/test_dir_s.txt": "216161651ced8003a81eb37f769964384bba2d34226d86c0d1e4ad67356cf3e3",
+    "LevyHoltDS/test_dir/test_dir_rels.txt": "de6164136ce4e23d6ed330d4370c05482b69d5e55601f8c32da8f6f8efc72300",
+}
+
+
+def fetch_levyholt(directory: pathlib.Path = RAW / "levyholt") -> None:
+    """Download the Levy/Holt files from entgraph_eval at LEVYHOLT_COMMIT into directory.
+
+    Each file is checked against its SHA-256 before it is written, and written
+    whole through a temporary name, so a failed or altered download leaves no
+    file that levyholt_rows would read.
+    """
+    import urllib.request
+
+    directory.mkdir(parents=True, exist_ok=True)
+    for path, digest in LEVYHOLT_FILES.items():
+        url = f"https://raw.githubusercontent.com/{LEVYHOLT_REPOSITORY}/{LEVYHOLT_COMMIT}/{path}"
+        with urllib.request.urlopen(url) as response:
+            data = response.read()
+        got = hashlib.sha256(data).hexdigest()
+        if got != digest:
+            msg = f"{url} has SHA-256 {got}, not the pinned {digest}"
+            raise ValueError(msg)
+        target = directory / pathlib.PurePosixPath(path).name
+        partial = target.with_name(target.name + ".part")
+        partial.write_bytes(data)
+        partial.replace(target)
 
 
 def _normal(argument: str) -> str:
@@ -280,6 +327,10 @@ def levyholt_rows(raw: pathlib.Path = RAW / "levyholt") -> list[PairRow]:
     row 2k and are exchanged for row 2k+1 when its arguments are swapped.
     """
     rows: list[PairRow] = []
+    missing = [name for name in (pathlib.PurePosixPath(p).name for p in LEVYHOLT_FILES) if not (raw / name).exists()]
+    if missing:
+        msg = f"{raw} lacks {', '.join(missing)}: run python -m semrewrite.pairs fetch levyholt"
+        raise FileNotFoundError(msg)
     for split, stem in (("dev", "dev_dir"), ("test", "test_dir")):
         sentences = (raw / f"{stem}_s.txt").read_text().splitlines()
         rels = (raw / f"{stem}_rels.txt").read_text().splitlines()
@@ -360,7 +411,7 @@ def hard_rows(source: pathlib.Path = PAIRS / "hard.toml") -> list[PairRow]:
 # ---------------------------------------------------------------- Wikidata property hierarchy
 
 # The SPARQL queries whose JSON results data/raw/wikidata/<name>.json holds;
-# `python -m semrewrite.pairs fetch` reruns them. Only item-valued properties
+# `python -m semrewrite.pairs fetch wikidata` reruns them. Only item-valued properties
 # take part, since only they relate two entities.
 SPARQL = {
     "properties": """SELECT ?p ?label ?description WHERE {
@@ -396,7 +447,7 @@ SUBJECT_TYPE, VALUE_TYPE = "Q21503250", "Q21510865"
 DEV_SHARE = 0.3
 
 
-def fetch(directory: pathlib.Path = RAW / "wikidata") -> None:
+def fetch_wikidata(directory: pathlib.Path = RAW / "wikidata") -> None:
     """Rerun every SPARQL query against the Wikidata endpoint, overwriting the raw results."""
     import urllib.parse
     import urllib.request
@@ -677,21 +728,24 @@ def _near_pairs(
 # ---------------------------------------------------------------- command line
 
 
-def build(directory: pathlib.Path = PAIRS) -> dict[str, int]:
-    """Rebuild every set's JSON lines from its source; returns the row count per set."""
-    built = {"levyholt": levyholt_rows(), "wikidata": wikidata_rows(), "hard": hard_rows()}
+def build(names: Iterable[str] = SETS, directory: pathlib.Path = PAIRS) -> dict[str, int]:
+    """Rebuild the named sets' JSON lines from their sources; returns the row count per set."""
     counts = {}
-    for name, rows in built.items():
+    for name in names:
+        rows = BUILDERS[name]()
         check(rows)
         save(rows, directory / f"{name}.jsonl")
         counts[name] = len(rows)
     return counts
 
 
+BUILDERS = {"levyholt": levyholt_rows, "wikidata": wikidata_rows, "hard": hard_rows}
+FETCH = {"levyholt": fetch_levyholt, "wikidata": fetch_wikidata}
+
 if __name__ == "__main__":
-    if sys.argv[1:] == ["build"]:
-        print(json.dumps(build(), indent=1))
-    elif sys.argv[1:] == ["fetch"]:
-        fetch()
+    if sys.argv[1:2] == ["build"] and set(sys.argv[2:]) <= set(BUILDERS):
+        print(json.dumps(build(sys.argv[2:] or SETS), indent=1))
+    elif len(sys.argv) == 3 and sys.argv[1] == "fetch" and sys.argv[2] in FETCH:
+        FETCH[sys.argv[2]]()
     else:
-        sys.exit("usage: python -m semrewrite.pairs build|fetch")
+        sys.exit(f"usage: python -m semrewrite.pairs build [{' '.join(BUILDERS)}] | fetch {'|'.join(FETCH)}")

@@ -1,12 +1,15 @@
-"""Purpose: tests of the labelled predicate pairs: each committed set rebuilds
-from its source unchanged, rows pair with their reverse inside one split, the
-Levy/Holt rows keep the published sizes and balance, the hard set follows its
-relations, and the Wikidata labelling rule decides a small hand-built
-hierarchy the way its definition says.
+"""Purpose: tests of the labelled predicate pairs: each set rebuilds from its
+source unchanged, rows pair with their reverse inside one split, the Levy/Holt
+rows keep the published sizes and balance, the Levy/Holt fetch writes only
+files whose digest matches its pin, the hard set follows its relations, and
+the Wikidata labelling rule decides a small hand-built hierarchy the way its
+definition says. The Levy/Holt cases skip until that set is fetched and built.
 """
 
 from __future__ import annotations
 
+import hashlib
+import io
 import json
 import pathlib
 from collections import Counter, defaultdict
@@ -16,19 +19,25 @@ import pytest
 from semrewrite import pairs
 from semrewrite.model import Predicate
 
-ROWS = {name: pairs.load([name]) for name in pairs.SETS}
+
+def rows_of(name: str) -> list[pairs.PairRow]:
+    """The set's rows from data/pairs, skipping the test when the set has not been built."""
+    try:
+        return pairs.load([name])
+    except FileNotFoundError as missing:
+        pytest.skip(str(missing))
 
 
 @pytest.mark.parametrize("name", pairs.SETS)
 def test_committed_set_rebuilds_from_its_source(name: str) -> None:
     """data/pairs/<set>.jsonl is exactly what the builder makes from data/raw and the hand-written sources."""
-    build = {"levyholt": pairs.levyholt_rows, "wikidata": pairs.wikidata_rows, "hard": pairs.hard_rows}[name]
-    assert [r.to_json() for r in build()] == [r.to_json() for r in ROWS[name]]
+    built = rows_of(name)
+    assert [r.to_json() for r in pairs.BUILDERS[name]()] == [r.to_json() for r in built]
 
 
 @pytest.mark.parametrize("name", pairs.SETS)
 def test_rows_round_trip_and_pair_with_their_reverse(name: str) -> None:
-    rows = ROWS[name]
+    rows = rows_of(name)
     pairs.check(rows)
     assert all(pairs.PairRow.from_json(r.to_json()) == r for r in rows)
     groups: dict[str, list[pairs.PairRow]] = defaultdict(list)
@@ -43,7 +52,7 @@ def test_rows_round_trip_and_pair_with_their_reverse(name: str) -> None:
 
 def test_levyholt_keeps_the_directional_split() -> None:
     """630 dev and 1784 test rows, half true, every pair one-way."""
-    rows = ROWS["levyholt"]
+    rows = rows_of("levyholt")
     assert Counter(r.split for r in rows) == {"dev": 630, "test": 1784}
     assert Counter((r.split, r.label) for r in rows) == {("dev", True): 315, ("dev", False): 315,
                                                          ("test", True): 892, ("test", False): 892}
@@ -55,17 +64,54 @@ def test_levyholt_keeps_the_directional_split() -> None:
 
 def test_levyholt_reads_argument_order_from_the_surface() -> None:
     """dev row 5 states its premise with the arguments exchanged and keeps both sentences' entities."""
-    row = next(r for r in ROWS["levyholt"] if r.id == "levyholt:dev:0004")
+    rows = rows_of("levyholt")
+    row = next(r for r in rows if r.id == "levyholt:dev:0004")
     assert row.swapped and row.label
     assert row.proposal.sentences(row.instances) == ("a piedmont is common to Norway", "Norway shows a piedmont")
-    reverse = next(r for r in ROWS["levyholt"] if r.id == "levyholt:dev:0005")
+    reverse = next(r for r in rows if r.id == "levyholt:dev:0005")
     assert reverse.instances == (row.instances[1], row.instances[0]) and reverse.types == (row.types[1], row.types[0])
+
+
+def test_levyholt_pins_are_the_files_the_builder_read() -> None:
+    """Each pinned digest is the digest of the local file levyholt_rows reads, when that file is present."""
+    present = 0
+    for path, digest in pairs.LEVYHOLT_FILES.items():
+        local = pairs.RAW / "levyholt" / pathlib.PurePosixPath(path).name
+        if local.exists():
+            present += 1
+            assert hashlib.sha256(local.read_bytes()).hexdigest() == digest, local
+    if not present:
+        pytest.skip("data/raw/levyholt is not fetched: run python -m semrewrite.pairs fetch levyholt")
+
+
+def test_levyholt_fetch_writes_only_files_matching_their_pin(tmp_path: pathlib.Path,
+                                                            monkeypatch: pytest.MonkeyPatch) -> None:
+    """A download whose digest matches is written under its own name; one that differs raises and writes nothing."""
+    served = {"LevyHoltDS/dev_dir/dev_dir_s.txt": b"good\n", "LevyHoltDS/test_dir/test_dir_s.txt": b"altered\n"}
+    monkeypatch.setattr("urllib.request.urlopen", lambda url: io.BytesIO(served[url.split(pairs.LEVYHOLT_COMMIT + "/")[1]]))
+    good = {"LevyHoltDS/dev_dir/dev_dir_s.txt": hashlib.sha256(b"good\n").hexdigest()}
+    monkeypatch.setattr(pairs, "LEVYHOLT_FILES", good)
+    pairs.fetch_levyholt(tmp_path)
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["dev_dir_s.txt"]
+    assert (tmp_path / "dev_dir_s.txt").read_bytes() == b"good\n"
+    bad = {"LevyHoltDS/test_dir/test_dir_s.txt": hashlib.sha256(b"original\n").hexdigest()}
+    monkeypatch.setattr(pairs, "LEVYHOLT_FILES", bad)
+    with pytest.raises(ValueError, match="not the pinned"):
+        pairs.fetch_levyholt(tmp_path)
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["dev_dir_s.txt"]
+
+
+def test_missing_levyholt_names_the_command_that_fetches_it(tmp_path: pathlib.Path) -> None:
+    with pytest.raises(FileNotFoundError, match="fetch levyholt"):
+        pairs.levyholt_rows(tmp_path)
+    with pytest.raises(FileNotFoundError, match="fetch levyholt, then python -m semrewrite.pairs build levyholt"):
+        pairs.load(["levyholt"], tmp_path)
 
 
 def test_typed_nouns_tell_same_typed_arguments_apart() -> None:
     assert pairs.typed_nouns(("medicine", "disease")) == ("the medicine", "the disease")
     assert pairs.typed_nouns(("person", "person")) == ("the first person", "the second person")
-    row = ROWS["hard"][0]
+    row = rows_of("hard")[0]
     assert pairs.fillers_for(row, "letters") == ("A", "B")
     assert pairs.fillers_for(row, "instances") is None
     with pytest.raises(ValueError):
@@ -74,7 +120,7 @@ def test_typed_nouns_tell_same_typed_arguments_apart() -> None:
 
 def test_hard_rows_follow_their_relations() -> None:
     """forward is true one way, both is true both ways, neither is false both ways; a symmetric check is one row."""
-    rows = ROWS["hard"]
+    rows = rows_of("hard")
     groups: dict[str, list[pairs.PairRow]] = defaultdict(list)
     for r in rows:
         groups[r.pair].append(r)
@@ -135,7 +181,7 @@ def test_wikidata_labels_follow_reachability(tmp_path: pathlib.Path) -> None:
 
 def test_wikidata_split_keeps_pairs_together_at_the_planned_share() -> None:
     """About 30 percent of pairs are dev, and at least 200 pairs are one-way, true in exactly one direction."""
-    rows = ROWS["wikidata"]
+    rows = rows_of("wikidata")
     shares = Counter(r.split for r in {r.pair: r for r in rows}.values())
     assert 0.25 < shares["dev"] / (shares["dev"] + shares["test"]) < 0.35
     labels: dict[str, list[bool]] = defaultdict(list)
