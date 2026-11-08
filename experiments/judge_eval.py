@@ -37,9 +37,9 @@ from typing import Any
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from semrewrite import pairs  # noqa: E402
-from semrewrite.judges import JEV_REQUESTS, NAMES, REGISTRY, THRESHOLDS, make  # noqa: E402
-from semrewrite.judges.metrics import at_threshold, calibrate, direction, roc_auc  # noqa: E402
+from semrewrite import pairs
+from semrewrite.judges import JEV_REQUESTS, NAMES, REGISTRY, THRESHOLDS, make
+from semrewrite.judges.metrics import at_threshold, calibrate, direction, roc_auc
 
 RESULTS = ROOT / "results" / "judges.json"
 DEFAULT_SET = "wikidata"

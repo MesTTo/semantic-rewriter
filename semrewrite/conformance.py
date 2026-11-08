@@ -62,7 +62,7 @@ import unittest
 import warnings
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, replace
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, NoReturn
 
 from semrewrite import fixpoint
 from semrewrite.engines import REGISTRY, make
@@ -318,7 +318,7 @@ def _tabled(c: Capabilities, depth: int) -> bool:
 # Checks -------------------------------------------------------------------------------
 
 
-def _fail(message: str) -> None:
+def _fail(message: str) -> NoReturn:
     raise ConformanceFailure(message)
 
 
@@ -747,8 +747,8 @@ class Report:
     def summary(self) -> str:
         """The report as text: a header, one block per property and the verdict line."""
         seed = "random" if self.seed is None else self.seed
-        out = [f"conformance of engine {self.engine!r}: {len(self.verdicts)} properties, "
-               f"up to {self.max_examples} cases each, seed {seed}"]
+        out = [(f"conformance of engine {self.engine!r}: {len(self.verdicts)} properties, "
+                f"up to {self.max_examples} cases each, seed {seed}")]
         for v in self.verdicts:
             out += [f"  {line}" for line in v.lines()]
         out.append(self.verdict())

@@ -92,7 +92,7 @@ The rewriter owns the strategy: when discovery runs, whether its results are mem
 
 ## Protocols
 
-Each protocol below gives its operations, the contract an implementation must keep, and the reference implementations. The signatures are Python, but nothing in them depends on Python: a Prolog, Rust or SQL implementation keeps the same contract.
+Each protocol below gives its operations, the contract an implementation must keep, and the reference implementations. The signatures are Python, but nothing in them depends on Python: a Prolog, Rust or SQL implementation keeps the same contract. A member that callers only read is declared as a read-only property, so a class attribute, a frozen dataclass field or a property implements it.
 
 ### Retriever
 
@@ -109,9 +109,11 @@ Reference implementations: `EmbeddingRetriever` embeds each gloss with its place
 
 ```python
 class Judge(Protocol):
-    name: str
-    threshold: float
-    usage: dict[str, int]
+    threshold: float                      # calibration may set it
+    @property
+    def name(self) -> str: ...
+    @property
+    def usage(self) -> dict[str, int]: ...
     def score(self, proposals: Sequence[Proposal]) -> list[float]: ...
 ```
 
@@ -125,7 +127,8 @@ Reference implementations: three NLI cross-encoders (DeBERTa-v3 base and large, 
 
 ```python
 class Admission(Protocol):
-    needs_converse: bool
+    @property
+    def needs_converse(self) -> bool: ...
     def admit(self, proposals: Sequence[Proposal], scores: Sequence[float],
               converse: Sequence[float] | None, threshold: float) -> list[bool]: ...
 ```
@@ -159,8 +162,10 @@ class Program:
     depth: int = 0                 # 0: no bound; n: at most n rule or rewrite steps below the query
 
 class Engine(Protocol):
-    name: str
-    capabilities: Capabilities
+    @property
+    def name(self) -> str: ...
+    @property
+    def capabilities(self) -> Capabilities: ...
     def solve(self, program: Program, query: Atom, budget: Budget,
               expand: Callable[[str], Iterable[Rewrite]] | None = None) -> Solution: ...
 ```

@@ -29,16 +29,13 @@ from semrewrite.model import Rule
 
 T, F = True, False
 
-NAMES = (
-    "ada abe ann ben bea cal cora dan dee eli eva finn fay gus gia hal hope ian ivy jon joy kai kim "
-    "leo lia max mia ned nia otto ora pat pia quin rae ray rose sam sue ted tia uma val vic wes "
-    "wren xan yara yves zed zoe ari bo cy di ed flo gil hux iris jude kit lou mo nell oz pru rex"
-).split()
+NAMES = ["ada", "abe", "ann", "ben", "bea", "cal", "cora", "dan", "dee", "eli", "eva", "finn", "fay", "gus", "gia", "hal", "hope", "ian", "ivy", "jon", "joy", "kai", "kim", "leo", "lia", "max", "mia", "ned", "nia", "otto", "ora", "pat", "pia", "quin", "rae", "ray", "rose", "sam", "sue", "ted", "tia", "uma", "val", "vic", "wes", "wren", "xan", "yara", "yves", "zed", "zoe", "ari", "bo", "cy", "di", "ed", "flo", "gil", "hux", "iris", "jude", "kit", "lou", "mo", "nell", "oz", "pru", "rex"]
 
 
-def _choose(rng: random.Random, options: Sequence[tuple[float, Callable[[], tuple[str, str, str]]]]) -> tuple[str, str, str]:
+def _choose(rng: random.Random, options: Sequence[tuple[float, tuple[str, str, str]]]) -> tuple[str, str, str]:
+    """One of the facts, drawn with its weight."""
     weights = [w for w, _ in options]
-    return rng.choices([make for _, make in options], weights=weights)[0]()
+    return rng.choices([fact for _, fact in options], weights=weights)[0]
 
 
 def _rule(head: tuple[str, str, str], *body: tuple[str, str, str]) -> Rule:
@@ -83,17 +80,17 @@ def family(seed: int = 7) -> KB:
     for kid, (dad, mum) in parents.items():
         child_of = "son_of" if gender[kid] == "m" else "daughter_of"
         facts.add(_choose(rng, [
-            (3, lambda: ("mother", mum, kid)), (1, lambda: ("mum", mum, kid)), (1, lambda: ("mom", mum, kid)),
-            (1, lambda: ("biological_mother", mum, kid)), (1, lambda: ("has_mother", kid, mum)),
-            (1, lambda: (child_of, kid, mum)),
+            (3, ("mother", mum, kid)), (1, ("mum", mum, kid)), (1, ("mom", mum, kid)),
+            (1, ("biological_mother", mum, kid)), (1, ("has_mother", kid, mum)),
+            (1, (child_of, kid, mum)),
         ]))
         facts.add(_choose(rng, [
-            (3, lambda: ("father", dad, kid)), (1, lambda: ("dad", dad, kid)), (1, lambda: (child_of, kid, dad)),
+            (3, ("father", dad, kid)), (1, ("dad", dad, kid)), (1, (child_of, kid, dad)),
         ]))
     for man, woman in couples:
         facts.add(_choose(rng, [
-            (1, lambda: ("married_to", man, woman)), (1, lambda: ("married_to", woman, man)),
-            (1, lambda: ("husband_of", man, woman)), (1, lambda: ("wife_of", woman, man)),
+            (1, ("married_to", man, woman)), (1, ("married_to", woman, man)),
+            (1, ("husband_of", man, woman)), (1, ("wife_of", woman, man)),
         ]))
     by_parents: dict[tuple[str, str], list[str]] = defaultdict(list)
     for kid, pair in parents.items():
@@ -196,13 +193,13 @@ def work(seed: int = 11) -> KB:
     facts: set[tuple[str, str, str]] = set()
     for boss, member in manages:
         facts.add(_choose(rng, [
-            (3, lambda: ("manager_of", boss, member)), (1, lambda: ("supervises", boss, member)),
-            (1, lambda: ("line_manager_of", boss, member)), (2, lambda: ("reports_to", member, boss)),
+            (3, ("manager_of", boss, member)), (1, ("supervises", boss, member)),
+            (1, ("line_manager_of", boss, member)), (2, ("reports_to", member, boss)),
         ]))
     for person, org in employer.items():
         facts.add(_choose(rng, [
-            (2, lambda: ("works_for", person, org)), (1, lambda: ("employed_by", person, org)),
-            (1, lambda: ("employs", org, person)), (1, lambda: ("on_payroll_of", person, org)),
+            (2, ("works_for", person, org)), (1, ("employed_by", person, org)),
+            (1, ("employs", org, person)), (1, ("on_payroll_of", person, org)),
         ]))
     staff = acme + globex
     managed = {(b, m) for b, m in manages}
@@ -264,7 +261,7 @@ def work(seed: int = 11) -> KB:
 def geography(seed: int = 13) -> KB:
     """Continents, countries, regions and cities, containment under four surface forms."""
     rng = random.Random(seed)
-    syllables = "ka lo mi ra te su vo ne pa li do ri sa ko ve ta mu fi".split()
+    syllables = ["ka", "lo", "mi", "ra", "te", "su", "vo", "ne", "pa", "li", "do", "ri", "sa", "ko", "ve", "ta", "mu", "fi"]
     used: set[str] = set()
 
     def place() -> str:
@@ -301,11 +298,11 @@ def geography(seed: int = 13) -> KB:
 
     facts: set[tuple[str, str, str]] = set()
     for kind, child, parent in inside:
-        options = [(3, lambda: ("located_in", child, parent)), (2, lambda: ("contains", parent, child))]
+        options = [(3, ("located_in", child, parent)), (2, ("contains", parent, child))]
         if kind == "city":
-            options.append((1, lambda: ("city_in", child, parent)))
+            options.append((1, ("city_in", child, parent)))
         else:
-            options.append((1, lambda: ("part_of", child, parent)))
+            options.append((1, ("part_of", child, parent)))
         facts.add(_choose(rng, options))
     for country, city in capitals.items():
         facts.add(("capital_of", city, country))
@@ -378,8 +375,8 @@ def medicine(seed: int = 17) -> KB:
     side_effects = {(drug, rng.choice(symptoms)) for drug in rng.sample(drugs, 4)}
     for cause, effect in sorted(causes):
         facts.add(_choose(rng, [
-            (2, lambda: ("causes", cause, effect)), (1, lambda: ("leads_to", cause, effect)),
-            (2, lambda: ("symptom_of", effect, cause)),
+            (2, ("causes", cause, effect)), (1, ("leads_to", cause, effect)),
+            (2, ("symptom_of", effect, cause)),
         ]))
     for drug, effect in sorted(side_effects):
         facts.add(rng.choice((("side_effect_of", effect, drug), ("causes", drug, effect))))
@@ -387,8 +384,8 @@ def medicine(seed: int = 17) -> KB:
     treats |= {("painex", "migraine"), ("painex", "headache"), ("dermol", "rash")}
     for drug, target in sorted(treats):
         facts.add(_choose(rng, [
-            (2, lambda: ("treats", drug, target)), (1, lambda: ("cures", drug, target)),
-            (1, lambda: ("relieves", drug, target)),
+            (2, ("treats", drug, target)), (1, ("cures", drug, target)),
+            (1, ("relieves", drug, target)),
         ]))
     for _ in range(4):
         a, b = rng.choice(diseases), rng.choice(symptoms)

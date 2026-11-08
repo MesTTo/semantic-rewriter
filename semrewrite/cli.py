@@ -21,7 +21,8 @@ from dataclasses import fields
 from semrewrite import formats
 from semrewrite.admission import Directional, Threshold
 from semrewrite.engines import REGISTRY as ENGINES
-from semrewrite.engines import available, make as make_engine
+from semrewrite.engines import available
+from semrewrite.engines import make as make_engine
 from semrewrite.kb import KB
 from semrewrite.model import Rewrite, parse_atom
 from semrewrite.protocols import Budget

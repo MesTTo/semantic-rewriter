@@ -472,13 +472,11 @@ def _qid(uri: str) -> str:
 
 # Function words that end a Wikidata label which predicates its subject ("part of", "followed by").
 _PREPOSITIONS = frozenset(
-    "of by in on at to for from with after into as about under over against between through than via per".split()
+    ["of", "by", "in", "on", "at", "to", "for", "from", "with", "after", "into", "as", "about", "under", "over", "against", "between", "through", "than", "via", "per"]
 )
 # Finite verbs that open a label whose subject acts ("depicts", "contains settlement").
 _VERBS = frozenset(
-    "advertises carries cites commemorates computes connects contains depicts emulates encodes follows grants "
-    "innervates interacts overlies replaces repeals represents simulates suggests symbolizes translates "
-    "underlies uses wears gained gave participated contributed destroyed".split()
+    ["advertises", "carries", "cites", "commemorates", "computes", "connects", "contains", "depicts", "emulates", "encodes", "follows", "grants", "innervates", "interacts", "overlies", "replaces", "repeals", "represents", "simulates", "suggests", "symbolizes", "translates", "underlies", "uses", "wears", "gained", "gave", "participated", "contributed", "destroyed"]
 )
 
 

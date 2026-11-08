@@ -268,7 +268,7 @@ def main() -> None:
     text = REPORT.read_text()
     missing = []
     for name, generate in GENERATORS.items():
-        pattern = re.compile(rf"(<!-- BEGIN GENERATED: {re.escape(name)} -->\n)(?:.*?\n)?(<!-- END GENERATED: {re.escape(name)} -->)", re.S)
+        pattern = re.compile(rf"(<!-- BEGIN GENERATED: {re.escape(name)} -->\n)(?:.*?\n)?(<!-- END GENERATED: {re.escape(name)} -->)", re.DOTALL)
         if not pattern.search(text):
             continue
         try:

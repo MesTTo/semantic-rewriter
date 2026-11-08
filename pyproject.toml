@@ -34,6 +34,7 @@ Results = "https://github.com/MesTTo/semantic-rewriter/blob/main/RESULTS.md"
 dev = [
     "pytest>=8.0",
     "hypothesis>=6.100",
+    "ruff==0.17.4",
 ]
 
 [tool.uv]
@@ -60,6 +61,10 @@ packages = ["semrewrite"]
 
 [tool.hatch.build.targets.sdist]
 exclude = ["ai-tmp", "ai-battery-*", "worktrees", "data/raw", "results", ".docutouch"]
+
+[tool.ruff]
+# The code's own style: 99% of its lines fit in 120 columns.
+line-length = 120
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

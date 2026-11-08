@@ -19,10 +19,9 @@ from __future__ import annotations
 
 from collections import defaultdict
 
+import pytest
 from hypothesis import HealthCheck, event, given, settings
 from hypothesis import strategies as st
-
-import pytest
 
 from semrewrite.engines import available, make
 from semrewrite.judges.oracle import OracleJudge

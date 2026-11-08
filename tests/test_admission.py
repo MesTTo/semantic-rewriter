@@ -38,7 +38,7 @@ class StubJudge:
         return [self.table.get(p.key, 0.0) for p in proposals]
 
 
-def _admitted(policy, goal: str) -> set[str]:  # noqa: ANN001
+def _admitted(policy, goal: str) -> set[str]:
     disc = Discoverer(CATALOGUE, None, ScoreCache(StubJudge(SCORES)), admission=policy)
     return {rw.premise for rw in disc.rewrites(goal)}
 

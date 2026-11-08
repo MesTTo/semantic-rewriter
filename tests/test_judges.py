@@ -35,12 +35,12 @@ SYMMETRIC = ("cosine-bge", "cosine-qwen3")
 class Constant(SentenceJudge):
     """A model-free judge scoring each pair by a fixed rule, for testing the shared base."""
 
-    def __init__(self, rule) -> None:  # noqa: ANN001
+    def __init__(self, rule) -> None:
         super().__init__("constant", 0.5)
         self.rule = rule
         self.seen: list[tuple[str, str]] = []
 
-    def _score_sentences(self, pairs):  # noqa: ANN001, ANN202
+    def _score_sentences(self, pairs):
         self.seen.extend(pairs)
         return [self.rule(p, c) for p, c in pairs]
 
@@ -97,7 +97,7 @@ def test_factory_builds_the_oracle_from_gold() -> None:
 
 
 @pytest.fixture(scope="module", params=NAMES)
-def judge(request: pytest.FixtureRequest):  # noqa: ANN201
+def judge(request: pytest.FixtureRequest):
     """Each registered judge in turn, one model resident at a time; Jev answers only from its cache.
 
     A judge whose library is not installed (the models or jev extra) is skipped.
@@ -111,7 +111,7 @@ def judge(request: pytest.FixtureRequest):  # noqa: ANN201
     built.close()
 
 
-def test_every_judge_satisfies_the_protocol_and_counts(judge) -> None:  # noqa: ANN001
+def test_every_judge_satisfies_the_protocol_and_counts(judge) -> None:
     assert isinstance(judge, Judge)
     before = judge.usage["pairs"]
     scores = judge.score([FORWARD, BACKWARD, Proposal(CHILD, PARENT, (1, 0))])
@@ -119,7 +119,7 @@ def test_every_judge_satisfies_the_protocol_and_counts(judge) -> None:  # noqa: 
     assert judge.usage["pairs"] == before + 3
 
 
-def test_mother_entails_parent_and_not_the_reverse(judge) -> None:  # noqa: ANN001
+def test_mother_entails_parent_and_not_the_reverse(judge) -> None:
     """Every directional judge scores mother => parent above its threshold and above parent => mother;
     a symmetric judge scores the two alike, which is why it cannot tell direction."""
     forward, backward = judge.score([FORWARD, BACKWARD])
@@ -174,7 +174,7 @@ def test_evaluation_compares_only_one_way_pairs() -> None:
     spec = importlib.util.spec_from_file_location("judge_eval", pathlib.Path(__file__).parents[1] / "experiments" / "judge_eval.py")
     judge_eval = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(judge_eval)
-    row = lambda i, p, c, label, pair: pairs.PairRow(  # noqa: E731
+    row = lambda i, p, c, label, pair: pairs.PairRow(
         id=i, set="hard", split="test", pair=pair, kind="k", premise=p, conclusion=c, swapped=False,
         label=label, types=("person", "person"))
     spouse = Predicate("spouse", "{x} is the spouse of {y}")

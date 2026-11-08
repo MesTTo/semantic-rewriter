@@ -130,10 +130,15 @@ class Engine(Protocol):
     An implementation keeps the five rules of DESIGN.md: exact answers,
     one meaning of depth, expansion as a rule source, hard budgets, and any
     lowercase name accepted as data. `semrewrite.conformance` checks them.
+    Members a caller only reads are read-only properties, so a class
+    attribute, a frozen dataclass field or a property each implements them.
     """
 
-    name: str
-    capabilities: Capabilities
+    @property
+    def name(self) -> str: ...
+
+    @property
+    def capabilities(self) -> Capabilities: ...
 
     def solve(self, program: Program, query: Atom, budget: Budget, expand: Expander | None = None) -> Solution: ...
 
@@ -150,12 +155,17 @@ class Judge(Protocol):
     """Scores proposals: per proposal, in order, the probability that its premise sentence entails its conclusion sentence.
 
     `threshold` is the calibrated score at which the default admission policy
-    admits; `usage` counts the model work spent, under units the judge names.
+    admits, and calibration may set it; `usage` counts the model work spent,
+    under units the judge names.
     """
 
-    name: str
     threshold: float
-    usage: dict[str, int]
+
+    @property
+    def name(self) -> str: ...
+
+    @property
+    def usage(self) -> dict[str, int]: ...
 
     def score(self, proposals: Sequence[Proposal]) -> list[float]: ...
 
@@ -168,7 +178,8 @@ class Admission(Protocol):
     converse and passes those scores in `converse`, in the same order.
     """
 
-    needs_converse: bool
+    @property
+    def needs_converse(self) -> bool: ...
 
     def admit(self, proposals: Sequence[Proposal], scores: Sequence[float],
               converse: Sequence[float] | None, threshold: float) -> list[bool]: ...

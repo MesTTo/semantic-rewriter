@@ -42,7 +42,7 @@ from collections import deque
 from dataclasses import dataclass
 
 from semrewrite.model import Atom, Key, Rewrite, Rule, is_variable
-from semrewrite.protocols import Budget, Capabilities, Expander, Program, Proof, Solution
+from semrewrite.protocols import Budget, Capabilities, Expander, Program, Proof, Solution, Status
 
 Row = tuple[str, ...]
 """The constants of a ground atom in argument order: one tuple of a relation."""
@@ -67,9 +67,9 @@ _CLOCK_MASK = 256 - 1
 class _Limit(Exception):
     """Raised inside a solve when it exceeds its budget; solve turns it into the limit's Solution."""
 
-    def __init__(self, status: str, detail: str) -> None:
+    def __init__(self, status: Status, detail: str) -> None:
         super().__init__(detail)
-        self.status = status
+        self.status: Status = status
         self.detail = detail
 
 

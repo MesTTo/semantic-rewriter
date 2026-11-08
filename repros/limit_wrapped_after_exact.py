@@ -40,7 +40,7 @@ def main() -> None:
     seen: list[BaseException] = []
     original = MeTTa.eval
 
-    def recording(self, *args, **kwargs):  # noqa: ANN001, ANN002, ANN003, ANN202
+    def recording(self, *args, **kwargs):
         try:
             return original(self, *args, **kwargs)
         except EngineError as e:

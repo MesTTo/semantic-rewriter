@@ -15,7 +15,19 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 
 from semrewrite.fixpoint import Model, answers, least_model
-from semrewrite.model import Atom, Key, Predicate, Rewrite, Rule, check_symbol, identity, inverse, is_variable, keys_of, mappings
+from semrewrite.model import (
+    Atom,
+    Key,
+    Predicate,
+    Rewrite,
+    Rule,
+    check_symbol,
+    identity,
+    inverse,
+    is_variable,
+    keys_of,
+    mappings,
+)
 
 
 def atom(pred: str, *args: str) -> Atom:

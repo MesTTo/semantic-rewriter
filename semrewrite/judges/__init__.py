@@ -24,8 +24,8 @@ from semrewrite.judges.base import SentenceJudge
 from semrewrite.judges.embedding import CosineJudge
 from semrewrite.judges.jev import JevJudge
 from semrewrite.judges.nli import NLIJudge
-from semrewrite.judges.reranker import RerankerJudge
 from semrewrite.judges.oracle import OracleJudge
+from semrewrite.judges.reranker import RerankerJudge
 from semrewrite.protocols import Judge
 
 THRESHOLDS = pathlib.Path(__file__).with_name("thresholds.json")

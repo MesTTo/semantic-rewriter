@@ -13,6 +13,7 @@ import gc
 import math
 from collections.abc import Sequence
 from types import TracebackType
+from typing import Self
 
 from semrewrite.model import LETTERS as _LETTERS
 from semrewrite.model import Proposal
@@ -93,7 +94,7 @@ class SentenceJudge:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
-    def __enter__(self) -> SentenceJudge:
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, kind: type[BaseException] | None, error: BaseException | None, trace: TracebackType | None) -> None:

@@ -1,4 +1,4 @@
-# Purpose: run the test suite on every push and pull request: the dependency-free core with the pure-Python engine on three Python versions, with the Levy/Holt pairs fetched at their pinned commit, and the PyMeTTa engine, whose property tests and conformance run under the ci Hypothesis profile (100 cases each).
+# Purpose: run the test suite on every push and pull request: the dependency-free core with the pure-Python engine on three Python versions, with the Levy/Holt pairs fetched at their pinned commit, and the PyMeTTa engine, whose property tests and conformance run under the ci Hypothesis profile (100 cases each), and ruff 0.17.4 over the tree.
 name: tests
 on: [push, pull_request]
 jobs:
@@ -25,3 +25,12 @@ jobs:
           python-version: "3.13"
       - run: pip install -e ".[pymetta,conformance]" pytest
       - run: pytest -q -rs --hypothesis-profile=ci
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install ruff==0.17.4
+      - run: ruff check .

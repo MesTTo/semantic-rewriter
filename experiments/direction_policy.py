@@ -12,6 +12,8 @@ import argparse
 import json
 from pathlib import Path
 
+from impl_eval import aggregate, run_kb
+
 from semrewrite import pairs
 from semrewrite.admission import Directional, Threshold, balanced_accuracy, calibrate_slack
 from semrewrite.benchmarks import BENCHMARKS
@@ -19,8 +21,6 @@ from semrewrite.engines import make as make_engine
 from semrewrite.judges import make
 from semrewrite.protocols import Budget
 from semrewrite.retrieve import EmbeddingRetriever
-
-from impl_eval import aggregate, run_kb
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"

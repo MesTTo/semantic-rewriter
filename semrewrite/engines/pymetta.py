@@ -60,7 +60,7 @@ class _Names:
         return f"${name}" if is_variable(name) else self.prefix + name
 
     def undo(self, symbol: str) -> str:
-        return symbol[len(self.prefix):] if symbol.startswith(self.prefix) else symbol
+        return symbol.removeprefix(self.prefix)
 
 
 class PyMeTTaEngine:

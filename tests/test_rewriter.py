@@ -67,7 +67,7 @@ def test_a_strategy_the_engine_cannot_run_is_refused_by_name() -> None:
         name = "bare"
         capabilities = Capabilities(tabling=True)
 
-        def solve(self, program, query, budget, expand=None):  # noqa: ANN001, ANN201
+        def solve(self, program, query, budget, expand=None):
             raise AssertionError("must not be called")
 
     kb = KBS["family"]

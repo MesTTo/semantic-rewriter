@@ -14,7 +14,7 @@ from semrewrite import formats
 from semrewrite.benchmarks import BENCHMARKS
 from semrewrite.fixpoint import answers, least_model
 from semrewrite.kb import KB, atom
-from semrewrite.model import Atom, Predicate, Proposal, Rewrite, Rule, compose, identity, inverse, mappings, parse_atom
+from semrewrite.model import Atom, Predicate, Proposal, Rewrite, Rule, compose, identity, inverse, parse_atom
 from semrewrite.rewriter import GroupUnionFind, canonicalise
 
 KBS = {name: make() for name, make in BENCHMARKS.items()}
@@ -94,7 +94,7 @@ def test_entailment_works_for_ternary_predicates() -> None:
 
 @pytest.mark.parametrize("name", sorted(KBS))
 @pytest.mark.parametrize("dumps, loads", [(formats.dumps_text, formats.loads_text), (formats.dumps_json, formats.loads_json)])
-def test_text_and_json_round_trip_every_benchmark(name: str, dumps, loads) -> None:  # noqa: ANN001
+def test_text_and_json_round_trip_every_benchmark(name: str, dumps, loads) -> None:
     kb = KBS[name]
     back = loads(dumps(kb), name)
     assert (dict(back.glosses), back.facts, back.rules, back.queries, back.gold) == (dict(kb.glosses), kb.facts, kb.rules, kb.queries, kb.gold)
@@ -152,7 +152,7 @@ def _programs(draw: st.DrawFn) -> tuple[KB, list[Rewrite], Atom]:
             continue
         rw = Rewrite(p, q, m)
         rewrites[rw.key] = rw
-        if draw(st.booleans()) and not (p == q):
+        if draw(st.booleans()) and p != q:
             back = Rewrite(q, p, inverse(m))
             rewrites[back.key] = back
     query_pred = draw(st.sampled_from(names))

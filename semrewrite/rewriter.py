@@ -29,6 +29,9 @@ from semrewrite.kb import KB
 from semrewrite.model import Atom, Key, Mapping, Rewrite, Rule, compose, identity, inverse, parse_atom
 from semrewrite.protocols import Admission, Budget, Engine, Judge, Program, Proof, Retriever, Solution
 
+# The protocol's default budget; a Budget is frozen, so one instance serves every rewriter.
+DEFAULT_BUDGET = Budget()
+
 
 class Timing(StrEnum):
     """When rewrites are discovered relative to evaluation."""
@@ -142,7 +145,7 @@ class Rewriter:
         retriever: Retriever | None = None,
         *,
         k: int = 8,
-        budget: Budget = Budget(),
+        budget: Budget = DEFAULT_BUDGET,
         admission: Admission | None = None,
     ) -> None:
         self.kb = kb
@@ -373,9 +376,7 @@ def canonicalise(kb: KB, rewrites: Iterable[Rewrite], query: Atom) -> tuple[KB, 
     for name, pred in catalogue.items():
         uf.add(name, pred.arity)
     for premise, conclusion, m in keys:
-        if premise == conclusion:
-            uf.union(conclusion, premise, m)
-        elif (conclusion, premise, inverse(m)) in keys:
+        if premise == conclusion or (conclusion, premise, inverse(m)) in keys:
             uf.union(conclusion, premise, m)
 
     def rename(a: Atom) -> Atom:
