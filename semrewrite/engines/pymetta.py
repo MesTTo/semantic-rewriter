@@ -12,10 +12,11 @@ tabling `holds` makes that SLG resolution with semantic goal expansion, and an
 extra depth argument makes it depth-bounded. The native encoding runs when the
 program has no callback, no depth bound and tables on; otherwise the meta one.
 
-Names are data: a predicate or constant spelled like a pymetta builtin or one
-of the encoding's own symbols (max, if, holds) is renamed inside the engine and
-renamed back in the answers, since pymetta 0.9.4 silently loses answers when a
-query binds a constant spelled like a builtin (repros/builtin_named_constant_untabled.py).
+Names are data: every predicate is written as p__<name> and every constant as
+c__<name> inside the engine and read back in the answers, so no knowledge-base
+name can collide with a pymetta builtin (pymetta 0.9.4 silently loses answers
+when a query binds a constant spelled like one, repros/builtin_named_constant_untabled.py),
+a Prolog core predicate such as is, or the encodings' own symbols.
 """
 
 from __future__ import annotations
@@ -28,52 +29,37 @@ from metta import Expression, MeTTa, S, parse
 from metta.errors import EngineError, InferenceLimitError, TimeLimitError
 from metta.vocabularies import EffectClass
 
-from semrewrite.model import Atom, Rewrite, Rule, is_variable, mappings
+from semrewrite.model import Atom, Rewrite, is_variable, mappings
 from semrewrite.protocols import Budget, Capabilities, Expander, Program, Solution
-
-# Symbols the encodings use; a knowledge-base name spelled like one is renamed.
-ENCODING_SYMBOLS = frozenset({"holds", "fact", "via", "rw", "ans", "impliers", "reach", "True", "False", "let", "if", "empty"})
 
 
 def _mapping_symbol(m: tuple[int, ...]) -> str:
-    """The symbol naming an argument mapping in the meta encoding, such as m10 for the binary swap."""
-    if len(m) > 10:
-        msg = f"the PyMeTTa engine names mappings of at most 10 positions, got {len(m)}"
-        raise ValueError(msg)
-    return "m" + "".join(map(str, m))
+    """The symbol naming an argument mapping in the meta encoding, such as m1_0 for the binary swap.
+
+    The meta encoding writes one via clause per mapping of each arity present,
+    n! of them for arity n, the same growth as discovery's k·n! proposals.
+    """
+    return "m" + "_".join(map(str, m))
 
 
 class _Names:
-    """A renaming of predicates and constants that collide with reserved symbols, and its inverse.
+    """One namespace: a name becomes prefix + name in the engine and comes back without the prefix.
 
-    A colliding name gains trailing underscores until it is free; names first
-    seen during evaluation, such as a premise returned by the callback, extend
-    the renaming as they arrive.
+    The prefix makes every written symbol differ from every builtin, Prolog
+    core predicate and encoding symbol, and the mapping is injective, so no
+    list of reserved words has to be kept in step with pymetta. The bare
+    prefix itself names nothing in any knowledge base, which makes it a safe
+    sentinel.
     """
 
-    def __init__(self, reserved: frozenset[str], known: set[str]) -> None:
-        self.reserved = reserved
-        self.taken = set(known) | set(reserved)
-        self.out: dict[str, str] = {}
-        self.back: dict[str, str] = {}
+    def __init__(self, prefix: str) -> None:
+        self.prefix = prefix
 
     def __call__(self, name: str) -> str:
-        if is_variable(name):
-            return f"${name}"
-        if name in self.out:
-            return self.out[name]
-        if name not in self.reserved:
-            self.taken.add(name)
-            return name
-        fresh = name + "_"
-        while fresh in self.taken:
-            fresh += "_"
-        self.taken.add(fresh)
-        self.out[name], self.back[fresh] = fresh, name
-        return fresh
+        return f"${name}" if is_variable(name) else self.prefix + name
 
     def undo(self, symbol: str) -> str:
-        return self.back.get(symbol, symbol)
+        return symbol[len(self.prefix):] if symbol.startswith(self.prefix) else symbol
 
 
 class PyMeTTaEngine:
@@ -82,25 +68,17 @@ class PyMeTTaEngine:
     name = "pymetta"
     capabilities = Capabilities(tabling=True, depth=True, lazy=True, untabled=True, reached=True, proofs=False)
 
-    def __init__(self) -> None:
-        self._builtins: frozenset[str] | None = None
-
-    def _reserved(self) -> frozenset[str]:
-        if self._builtins is None:
-            with MeTTa() as m:
-                self._builtins = frozenset(m.self.builtins())
-        return self._builtins | ENCODING_SYMBOLS
-
     # -- the protocol ----------------------------------------------------------
 
     def solve(self, program: Program, query: Atom, budget: Budget, expand: Expander | None = None) -> Solution:
-        names = _names_in(program, query)
-        reserved = self._reserved()
-        # A constant spelled like a predicate would be read as a call in the native encoding.
-        preds = _Names(reserved, names)
-        consts = _Names(reserved | {p for p in names if _is_pred(p, program, query)}, names)
+        if budget.work <= 0 or budget.seconds <= 0:
+            # pymetta refuses non-positive limits, and a run with nothing to spend is already out of budget.
+            status = "work_limit" if budget.work <= 0 else "time_limit"
+            return Solution(status=status, detail=f"budget {budget} leaves nothing to spend", reached=frozenset())
+        preds, consts = _Names("p__"), _Names("c__")
         native = expand is None and program.depth == 0 and program.tabled
-        reached: set[str] = set()
+        # Evaluation always calls the query's predicate, even when a fact answers it before any fallback runs.
+        reached: set[str] = {query.pred}
         if native:
             source, tabled = _native_source(program, query, preds, consts)
             term = _query_term(query, preds, consts, meta=False, depth=0)
@@ -167,22 +145,6 @@ class PyMeTTaEngine:
         return solution
 
 
-def _names_in(program: Program, query: Atom) -> set[str]:
-    out = {query.pred, *query.args}
-    for a in (*program.facts, *(a for r in program.rules for a in (r.head, *r.body))):
-        out.add(a.pred)
-        out.update(a.args)
-    for rw in program.rewrites:
-        out.update((rw.conclusion, rw.premise))
-    return {n for n in out if not is_variable(n)}
-
-
-def _is_pred(name: str, program: Program, query: Atom) -> bool:
-    if name == query.pred or any(rw.conclusion == name or rw.premise == name for rw in program.rewrites):
-        return True
-    return any(a.pred == name for a in (*program.facts, *(a for r in program.rules for a in (r.head, *r.body))))
-
-
 def _term(t: str, consts: _Names) -> str:
     return f"${t}" if is_variable(t) else consts(t)
 
@@ -244,6 +206,9 @@ def _meta_source(program: Program, query: Atom, preds: _Names, consts: _Names) -
     lines = [f"(= (fact {preds(f.pred)} {' '.join(consts(t) for t in f.args)}) True)" for f in program.facts]
     for n in sorted(arities):
         xs = " ".join(f"$x{i}" for i in range(n))
+        # A sentinel fact under the bare prefix defines fact for every arity holds calls, so an arity with
+        # no facts answers nothing instead of raising an unknown-procedure error.
+        lines.append(f"(= (fact {preds('')} {' '.join(consts('') for _ in range(n))}) True)")
         lines.append(f"(= (holds $p {xs}{d}) (fact $p {xs}))")
         discover = f"(let (rw $q $m) (impliers $p) (via $q $m {xs}{dm}))"
         lines.append(f"(= (holds $p {xs}{d}) {f'(if (> $d 0) {discover} (empty))' if depth else discover})")
