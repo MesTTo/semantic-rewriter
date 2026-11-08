@@ -70,7 +70,7 @@ pip install ".[pymetta]"       # the PyMeTTa engine
 pip install ".[all]"           # everything, plus the conformance kit and the Jev judge
 ```
 
-`uv sync --all-extras` builds the environment the experiment used, with CUDA 12.8 torch. A command that needs a library you have not installed names the extra that installs it.
+The core runs on Python 3.11 or later; the PyMeTTa engine needs 3.12 or later. `uv sync --all-extras` builds the environment the experiment used, with CUDA 12.8 torch on Linux and Windows. A command that needs a library you have not installed names the extra that installs it.
 
 ## Command line
 
