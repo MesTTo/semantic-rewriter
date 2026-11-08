@@ -22,16 +22,18 @@ from semrewrite.protocols import Admission, Judge, Retriever
 
 
 class ScoreCache:
-    """A judge wrapper that remembers scores by the sentences a proposal states.
+    """A judge wrapper that remembers each proposal's score, by both predicates' names and sentences and the mapping.
 
     Strategies compared on one judge share its model calls while each still
     counts every proposal it asked for: `logical` counts proposals asked,
-    `computed` those the judge actually scored.
+    `computed` those the judge actually scored. The key holds the names as well
+    as the sentences because a judge may read either: the oracle scores by
+    name, so mum and mom glossed alike can still differ in what they entail.
     """
 
     def __init__(self, judge: Judge) -> None:
         self.judge = judge
-        self._scores: dict[tuple[str, str, tuple[int, ...]], float] = {}
+        self._scores: dict[tuple[str, str, str, str, tuple[int, ...]], float] = {}
         self.logical = 0
         self.computed = 0
 
@@ -41,8 +43,8 @@ class ScoreCache:
         return self.judge.threshold
 
     @staticmethod
-    def _key(p: Proposal) -> tuple[str, str, tuple[int, ...]]:
-        return (p.premise.gloss, p.conclusion.gloss, p.mapping)
+    def _key(p: Proposal) -> tuple[str, str, str, str, tuple[int, ...]]:
+        return (p.premise.name, p.premise.gloss, p.conclusion.name, p.conclusion.gloss, p.mapping)
 
     def scores(self) -> list[float]:
         """Every score computed so far, one per distinct proposal."""

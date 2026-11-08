@@ -1,6 +1,7 @@
 """Purpose: tests of the admission policies through the discoverer: direction-aware
 admission drops an implication read backwards and keeps an equivalence, slack 1
-admits what the threshold admits, and calibration picks the separating slack.
+admits what the threshold admits, calibration picks the separating slack, and the
+score cache keeps apart two predicates that share a gloss.
 """
 
 from __future__ import annotations
@@ -73,3 +74,16 @@ def test_calibration_picks_the_slack_and_threshold_that_separate_the_labels() ->
     assert slack == max(s for s, v in curve.items() if v == 1.0)
     threshold, accuracy = calibrate_threshold([0.1, 0.4, 0.6, 0.9], [False, False, True, True])
     assert (threshold, accuracy) == (0.6, 1.0)
+
+
+def test_two_predicates_sharing_a_gloss_keep_their_own_scores() -> None:
+    """A judge that reads names, as the oracle does, admits mom => parent and not mum => parent although both say
+    "{x} is the mother of {y}"; the cache must not hand one the other's score."""
+    catalogue = {p.name: p for p in (
+        Predicate("mum", "{x} is the mother of {y}"),
+        Predicate("mom", "{x} is the mother of {y}"),
+        Predicate("parent", "{x} is a parent of {y}"),
+    )}
+    judge = StubJudge({("mom", "parent", (0, 1)): 1.0})
+    disc = Discoverer(catalogue, None, ScoreCache(judge), admission=Threshold())
+    assert {rw.premise for rw in disc.rewrites("parent")} == {"mom"}
