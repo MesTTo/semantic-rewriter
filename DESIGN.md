@@ -176,7 +176,7 @@ class Engine(Protocol):
 | `reached` | reports which predicates evaluation called, needed by the rounds strategy |
 | `proofs` | returns a derivation for each answer |
 
-`Budget` gives the most a run may spend: work in the engine's own unit (inferences for a Prolog engine, rule applications for the Python engine) and wall-clock seconds. `Solution` carries the answers (one tuple of constants per answer, the query's arguments with its variables filled), a status (`ok`, `work_limit`, `time_limit` or `error`), the work spent, the predicates reached when the engine reports them, and proofs when it provides them.
+`Budget` gives the most a run may spend: work in the engine's own unit (inferences for a Prolog engine, candidate rows examined for the Python engine) and wall-clock seconds, which may be infinite. `Solution` carries the answers (one tuple of constants per answer, the query's arguments with its variables filled), a status (`ok`, `work_limit`, `time_limit` or `error`), the work spent, the predicates reached when the engine reports them, and proofs when it provides them.
 
 An engine must keep this contract:
 
@@ -216,7 +216,7 @@ A judge's threshold and a direction-aware policy's slack are frozen guesses unle
 - On labelled predicate pairs, a threshold maximising balanced accuracy, and the slack that maximises balanced accuracy of the direction-aware policy.
 - On knowledge bases with gold answers, the threshold maximising answer F1 of a given strategy, chosen leave-one-knowledge-base-out: for each knowledge base, the threshold that is best on the others is scored on it.
 
-The second fit is the one the rewriter needs. Balanced accuracy favours recall, while the rewriter needs precision because it applies every admitted rewrite everywhere. In the experiment, Jev's pair-calibrated threshold was 0.165 and its answer-calibrated threshold 0.65 on every held-out fold.
+The second fit is the one the rewriter needs. Balanced accuracy favours recall, while the rewriter needs precision because it applies every admitted rewrite everywhere. In the experiment, Jev's pair-calibrated threshold was 0.165, and its answer-calibrated threshold for lazy-tabled evaluation was 0.65 on every held-out fold.
 
 ## Conformance
 
@@ -232,14 +232,14 @@ An engine implements the protocol when it passes the conformance kit, `semrewrit
 | each answer has one proof whose steps are program rules or rewrites, whose leaves are program facts, and whose height respects the depth bound | `proofs` |
 | without tables, a query on a rewrite cycle never finishes, and one that reaches no cycle finishes with the fixpoint | `untabled` |
 
-A run with tables, or with a depth bound of 1, must finish with exactly the reference answers. An untabled run deeper than that may instead stop at its budget with no answers, because top-down search without tables enumerates every derivation, and through a join their number grows faster than any budget the kit could promise; a run that reports a limit must actually have reached it. The reference evaluator is a naive bottom-up fixpoint with no dependencies, so the kit checks an engine against something other than itself. Run it with `semrewrite conformance --engine NAME` or from pytest.
+A run with tables, or with a depth bound of 1, must finish with exactly the reference answers; it gets the default work budget and no time limit, so a loaded machine cannot fail an engine, while the work limit still stops one that does not terminate. An untabled run deeper than that may instead stop at its budget with no answers, because top-down search without tables enumerates every derivation, and through a join their number grows faster than any budget the kit could promise; a run that reports a limit must actually have reached it. The reference evaluator is a naive bottom-up fixpoint with no dependencies, so the kit checks an engine against something other than itself. Run it with `semrewrite conformance --engine NAME` or from pytest.
 
 ## Choosing settings
 
 These defaults come from the experiment in `RESULTS.md`: four generated knowledge bases with 75 predicates and 58 queries, seven judges, and leave-one-out threshold calibration.
 
 - Use tables and a memo. Every tabled strategy terminated on every query, and on every generated catalogue it returned exactly the fixpoint's answers; without tables, 56 of 58 queries ran until the budget stopped them.
-- Use a judge that reads direction. Jev scored 0.82 to 0.90 direction accuracy on two external pair sets and the NLI cross-encoders 0.77 to 0.87, while cosine similarity sat at chance.
+- Use a judge that reads direction. Jev scored 0.82 to 0.89 direction accuracy on two external pair sets and the NLI cross-encoders 0.77 to 0.87, while cosine similarity sat at chance.
 - Calibrate the threshold for answer F1 on held-out knowledge bases, not on pair sets.
 - With an imperfect judge, add a depth bound. A short chain limits how far each false rewrite spreads, and at held-out thresholds a depth bound of 3 matched or beat unbounded tabled evaluation for every judge in the experiment.
 - Ask the judge both ways when it is cheap. Direction-aware admission lowered every judge's false-rewrite rate.

@@ -59,14 +59,18 @@ The grandparent query composes rewrites with the knowledge base's own rule, `gra
 
 ## Install
 
+Clone the repository and install the parts you need:
+
 ```sh
-pip install semantic-rewriter                 # the core: pure-Python engine, no dependencies
-pip install "semantic-rewriter[models]"       # NLI, reranker and embedding judges, embedding retrieval (torch)
-pip install "semantic-rewriter[pymetta]"      # the PyMeTTa engine
-pip install "semantic-rewriter[all]"          # everything, plus the conformance kit and the Jev judge
+git clone https://github.com/MesTTo/semantic-rewriter
+cd semantic-rewriter
+pip install .                  # the core: pure-Python engine, no dependencies
+pip install ".[models]"        # NLI, reranker and embedding judges, embedding retrieval (torch)
+pip install ".[pymetta]"       # the PyMeTTa engine
+pip install ".[all]"           # everything, plus the conformance kit and the Jev judge
 ```
 
-From a checkout, `uv sync --all-extras` builds the environment the experiment used, with CUDA 12.8 torch.
+`uv sync --all-extras` builds the environment the experiment used, with CUDA 12.8 torch. A command that needs a library you have not installed names the extra that installs it.
 
 ## Command line
 
@@ -112,18 +116,29 @@ An engine is anything with a `solve(program, query, budget, expand)` method and 
 |---|---|---|
 | `nli-deberta-base`, `nli-deberta-large`, `nli-deberta-large-wanli` | NLI cross-encoders reading premise and conclusion together | `models` |
 | `reranker-qwen3` | Qwen3-Reranker asked yes or no | `models` |
-| `jev` | TypeSafe's hosted System One model, with answers cached on disk; needs a TypeSafe API key | `jev` |
+| `jev` | TypeSafe's hosted System One model, with answers cached on disk; reads a TypeSafe API key from `TYPESAFE_API_KEY`, or from the file `JEV_KEY_FILE` names | `jev` |
 | `cosine-bge`, `cosine-qwen3` | embedding similarity, the baseline that cannot tell direction | `models` |
 | `oracle` | admits exactly a given set of implications | nothing |
 
 Each judge's default threshold in `semrewrite/judges/thresholds.json` was calibrated on labelled predicate pairs. For the rewriter, calibrate it on your own knowledge bases instead (see RESULTS.md): the pair-set thresholds favour recall, and the rewriter needs precision because it applies every admitted rule everywhere. A judge is anything with `name`, `threshold`, `usage` and `score(proposals)`.
 
+## Data
+
+The pair sets the judges were measured on live under `data/pairs`: a hand-labelled hard set, and pairs from Wikidata's property hierarchy (CC0), whose query results are under `data/raw/wikidata`. The Levy/Holt directional pairs come from [entgraph_eval](https://github.com/mjhosseini/entgraph_eval), which states no license, so this repository does not include them. These commands download them at the commit the experiment used, check each file's SHA-256, and build the pair file:
+
+```sh
+python -m semrewrite.pairs fetch levyholt
+python -m semrewrite.pairs build levyholt
+```
+
+The Jev judge's cached answers are not included either, so rerunning it needs a TypeSafe API key.
+
 ## What the experiment found
 
-The experiment ran ten strategies with seven judges over four generated knowledge bases (75 predicates, 58 queries) on PyMeTTa:
+The experiment ran eleven strategies with a perfect judge, and five of them with each of seven model judges, over four generated knowledge bases (75 predicates, 58 queries) on PyMeTTa:
 
 - With tables and a per-predicate memo, every query terminated, on the benchmarks and on 400 generated catalogues per property; without tables, rewriting looped exactly when the query reached a cycle of rewrites.
-- Jev and the NLI cross-encoders tell which way an implication runs (direction accuracy 0.77 to 0.90 on two external pair sets); embedding similarity sits at chance.
+- Jev and the NLI cross-encoders tell which way an implication runs (direction accuracy 0.77 to 0.89 on two external pair sets); embedding similarity sits at chance.
 - Admission precision decides answer quality, so the judge's threshold has to be calibrated for answer F1, not for pair accuracy.
 - With an imperfect judge, a depth bound of 3 limits how far a false rule spreads, and at calibrated thresholds it matched or beat unbounded evaluation for every judge tested.
 
