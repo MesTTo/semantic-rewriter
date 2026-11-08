@@ -93,8 +93,14 @@ RESERVED: tuple[str, ...] = ("max", "min", "if", "let", "holds", "fact", "via", 
 VARIABLES: tuple[str, ...] = ("X", "Y", "Z", "W")
 QUERY_VARIABLES: tuple[str, ...] = ("X", "Y", "Z")
 
-#: The bounds, in counted steps, that the depth, rewrite-depth, lazy, names and proofs properties try.
+#: The bounds, in counted steps, that the depth and rewrite-depth properties try, and the lazy, names and proofs
+#: properties try counting steps.
 DEPTHS: tuple[int, ...] = (1, 2, 3, 4)
+
+#: The one bound on rewrites the lazy, names and proofs properties also try. What a bound counts is independent of
+#: what those properties check, and the rewrite-depth property tries every depth, so one bound covers each pairing
+#: of the two with a quarter of the rewrite-bounded runs; 2 needs a user rule's level closed between two rewrite levels.
+REWRITE_BOUND: int = 2
 
 #: The statuses of a run stopped by its budget.
 LIMITS: frozenset[str] = frozenset({"work_limit", "time_limit"})
@@ -326,10 +332,13 @@ def _require(engine: Engine, needs: Callable[[Capabilities], str | None]) -> Non
 
 def _exact_bounds(c: Capabilities) -> list[tuple[int, DepthCounts]]:
     """The bounds at which the engine's answers can be compared with the reference: none with tabling, then each
-    of DEPTHS counting steps with depth and counting rewrites with rewrite_depth."""
-    counted: list[DepthCounts] = [counts for counts, has in (("steps", c.depth), ("rewrites", c.rewrite_depth)) if has]
-    unbounded: list[tuple[int, DepthCounts]] = [(0, "steps")] if c.tabling else []
-    return unbounded + [(depth, counts) for counts in counted for depth in DEPTHS]
+    of DEPTHS counting steps with depth, and REWRITE_BOUND counting rewrites with rewrite_depth."""
+    bounds: list[tuple[int, DepthCounts]] = [(0, "steps")] if c.tabling else []
+    if c.depth:
+        bounds += [(depth, "steps") for depth in DEPTHS]
+    if c.rewrite_depth:
+        bounds.append((REWRITE_BOUND, "rewrites"))
+    return bounds
 
 
 def _bound(program: Program) -> str:
