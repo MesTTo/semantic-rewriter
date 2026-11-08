@@ -23,7 +23,7 @@ from semrewrite.admission import Directional, Threshold
 from semrewrite.engines import REGISTRY as ENGINES
 from semrewrite.engines import available, make as make_engine
 from semrewrite.kb import KB
-from semrewrite.model import parse_atom
+from semrewrite.model import Rewrite, parse_atom
 from semrewrite.protocols import Budget
 from semrewrite.rewriter import STRATEGIES, Rewriter
 
@@ -72,8 +72,8 @@ def cmd_ask(args: argparse.Namespace) -> int:
                 print("\n".join("    " + line for line in out.proofs[row].lines()))
         if args.explain:
             print(f"\nrewrites admitted ({len(out.admitted)}):", file=sys.stderr)
-            for p, c, m in sorted(out.admitted):
-                print(f"  {c} <= {p} {'' if m == tuple(range(len(m))) else 'mapping ' + str(m)}", file=sys.stderr)
+            for p, c, m in sorted(out.admitted, key=lambda k: (k[1], k[0], k[2])):
+                print(f"  {Rewrite(c, p, m)}", file=sys.stderr)
         print(f"{out.status}: {len(out.answers)} answers, {out.work:,} work, {out.proposals} judge questions, "
               f"{out.seconds:.2f} s", file=sys.stderr)
     return 0 if out.finished else (2 if out.status in ("work_limit", "time_limit") else 1)
