@@ -23,8 +23,10 @@ Expander = Callable[[str], Iterable[Rewrite]]
 class Budget:
     """The most a run may spend: engine work in the engine's own unit, and wall-clock seconds.
 
-    A Prolog engine counts inferences, the Python engine counts rule
-    applications; a run that exceeds either ends with no answers.
+    A Prolog engine counts inferences, the Python engine the candidate rows
+    its joins examine; a run that exceeds either limit ends with no answers.
+    `seconds` may be math.inf, for no time limit; work is always finite, so
+    every run is bounded by it.
     """
 
     work: int = 2_000_000

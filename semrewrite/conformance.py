@@ -27,7 +27,9 @@ arguments.
 
 A run must finish with exactly the reference answers when it is tabled, or when its
 depth bound is 1, whose untabled search is a few hundred clause tries on these
-cases. An untabled search deeper than that tries every derivation separately, which
+cases. Such a run gets the protocol's default work and no time limit, so the verdict
+never depends on how loaded the machine is, while the work limit still stops an
+engine that does not terminate. An untabled search deeper than that tries every derivation separately, which
 through a join of well-derived predicates grows doubly exponentially with the bound
 and is a cost no budget in an engine's own unit can be promised to cover, so such a
 run may instead stop at a limit, with no answers. Every limit a run reports must be
@@ -53,6 +55,7 @@ from __future__ import annotations
 
 import argparse
 import contextvars
+import math
 import random
 import traceback
 import unittest
@@ -90,8 +93,8 @@ DEPTHS: tuple[int, ...] = (1, 2, 3, 4)
 #: The statuses of a run stopped by its budget.
 LIMITS: frozenset[str] = frozenset({"work_limit", "time_limit"})
 
-#: The budget a run expecting to finish gets: the protocol's default.
-GENEROUS: Budget = Budget()
+#: The budget a run expecting to finish gets: the protocol's default work and no time limit.
+GENEROUS: Budget = Budget(seconds=math.inf)
 
 #: A work budget no engine can answer more than 50 answers in, whatever its unit, while
 #: each answer costs at least one unit of it; the budget property's chains need 59 or more.

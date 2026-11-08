@@ -21,6 +21,7 @@ a Prolog core predicate such as is, or the encodings' own symbols.
 
 from __future__ import annotations
 
+import math
 import time
 from collections import defaultdict
 from collections.abc import Callable, Iterator
@@ -108,7 +109,9 @@ class PyMeTTaEngine:
                     raise RuntimeError(msg)
             with m.stats() as stats:
                 try:
-                    result = m.eval(parse(term), inferences=budget.work, timeout=budget.seconds)
+                    # pymetta takes None for no time limit; SWI overflows on an infinite timeout.
+                    timeout = None if math.isinf(budget.seconds) else budget.seconds
+                    result = m.eval(parse(term), inferences=budget.work, timeout=timeout)
                 except InferenceLimitError as e:
                     solution.status, solution.detail = "work_limit", str(e)
                 except TimeLimitError as e:
