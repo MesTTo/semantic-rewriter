@@ -126,7 +126,7 @@ def _hypothesis() -> ModuleType:
         import hypothesis.strategies
     except ImportError as error:
         msg = "the conformance kit needs hypothesis: pip install 'semantic-rewriter[conformance]'"
-        raise ImportError(msg) from error
+        raise ImportError(msg, name="hypothesis") from error
     return hypothesis
 
 

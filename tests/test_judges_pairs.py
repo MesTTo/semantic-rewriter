@@ -31,6 +31,8 @@ def rows_of(name: str) -> list[pairs.PairRow]:
 @pytest.mark.parametrize("name", pairs.SETS)
 def test_committed_set_rebuilds_from_its_source(name: str) -> None:
     """data/pairs/<set>.jsonl is exactly what the builder makes from data/raw and the hand-written sources."""
+    if name == "wikidata":
+        pytest.importorskip("sentence_transformers", reason="the Wikidata builder picks near-miss pairs with MiniLM")
     built = rows_of(name)
     assert [r.to_json() for r in pairs.BUILDERS[name]()] == [r.to_json() for r in built]
 

@@ -27,6 +27,18 @@ from semrewrite.model import Rewrite, parse_atom
 from semrewrite.protocols import Budget
 from semrewrite.rewriter import STRATEGIES, Rewriter
 
+# The pyproject.toml extra that installs each optional library, by import name;
+# tests/test_packaging.py checks it against the extras.
+EXTRAS = {
+    "metta": "pymetta",
+    "torch": "models",
+    "sentence_transformers": "models",
+    "transformers": "models",
+    "numpy": "models",
+    "typesafe_sdk": "jev",
+    "hypothesis": "conformance",
+}
+
 
 def _judge(args: argparse.Namespace, kb: KB):
     from semrewrite.judges import make
@@ -180,6 +192,13 @@ def main(argv: list[str] | None = None) -> int:
         return args.run(args)
     except (KeyError, ValueError) as e:
         print(f"semrewrite: {e}", file=sys.stderr)
+        return 1
+    except ImportError as e:
+        # A judge, engine or the conformance kit needs a library its extra installs.
+        extra = EXTRAS.get((e.name or "").partition(".")[0])
+        if extra is None:
+            raise
+        print(f"semrewrite: {e.name} is not installed; pip install 'semantic-rewriter[{extra}]'", file=sys.stderr)
         return 1
 
 

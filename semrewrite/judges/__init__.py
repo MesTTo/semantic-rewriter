@@ -1,12 +1,12 @@
-"""Purpose: the judge factory, the one door the engine takes to judges.
-make(name) builds a direction judge by name, its threshold read from
-semrewrite/judges/thresholds.json, where experiments/judge_eval.py writes each
-judge's threshold calibrated on dev rows; make("oracle", gold=...) builds the
-gold oracle of semrewrite/judging.py.
+"""Purpose: the judge factory, which builds judges by name for the command
+line and the experiments. make(name) builds a direction judge, its threshold
+read from semrewrite/judges/thresholds.json, where experiments/judge_eval.py
+writes each judge's threshold calibrated on dev rows; make("oracle", gold=...)
+builds the OracleJudge of semrewrite/judges/oracle.py.
 
     from semrewrite.judges import make
     judge = make("nli-deberta-large")
-    judge.score([Proposal(mother, parent), Proposal(parent, mother)])  # high, then low
+    judge.score([Proposal(mother, parent, (0, 1)), Proposal(parent, mother, (0, 1))])  # high, then low
 
 Every judge keeps its model loaded until close(); load one at a time on a
 shared GPU.

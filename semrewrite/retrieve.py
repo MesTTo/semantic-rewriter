@@ -11,10 +11,14 @@ the judge decides which way, and how the arguments map.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-
-import numpy as np
+from typing import TYPE_CHECKING
 
 from semrewrite.model import LETTERS, Predicate
+
+# numpy names only a type here: the vectors come from the embedding model, so
+# a core install can import AllCandidates without numpy.
+if TYPE_CHECKING:
+    import numpy as np
 
 DEFAULT_MODEL = "BAAI/bge-small-en-v1.5"
 
