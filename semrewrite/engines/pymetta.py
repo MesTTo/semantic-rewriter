@@ -9,8 +9,10 @@ predicate. The meta encoding keeps predicates as data, (holds parent $x0 $x1),
 and one clause asks the `impliers` op for rewrites of a goal's predicate while
 evaluation runs and follows each through a `via` clause per argument mapping;
 tabling `holds` makes that SLG resolution with semantic goal expansion, and an
-extra depth argument makes it depth-bounded. The native encoding runs when the
-program has no callback, no depth bound and tables on; otherwise the meta one.
+extra argument holding the depth left makes it depth-bounded: every rewrite step
+spends one, and so does every user rule step unless the bound counts rewrites
+alone. The native encoding runs when the program has no callback, no depth bound
+and tables on; otherwise the meta one.
 
 Names are data: every predicate is written as p<k>__<name> and every constant as
 c__<name> inside the engine and read back in the answers, so no knowledge-base
@@ -76,7 +78,8 @@ class PyMeTTaEngine:
     """semrewrite.protocols.Engine on upstream pymetta; its work unit is the SWI-Prolog inference."""
 
     name = "pymetta"
-    capabilities = Capabilities(tabling=True, depth=True, lazy=True, untabled=True, reached=True, proofs=False)
+    capabilities = Capabilities(tabling=True, depth=True, rewrite_depth=True, lazy=True, untabled=True, reached=True,
+                                proofs=False)
 
     # -- the protocol ----------------------------------------------------------
 
@@ -208,13 +211,18 @@ def _meta_source(program: Program, query: Atom, preds: _Names, consts: _Names, t
     """The program as data under holds, with the discovery clause, a via clause per mapping, and tabling when asked.
 
     For each arity n present, holds takes the predicate and n arguments, plus
-    the depth left when the program has a depth bound: every rewrite and rule
-    step spends one unit, facts hold at any depth, and tabling then keys each
-    table on the depth left too. holds, via and fact carry the solve's tag.
+    the depth left when the program has a depth bound: every rewrite step spends
+    one unit, and every user rule step too unless the bound counts rewrites
+    alone, when a rule passes the depth left to its body unchanged; facts hold at
+    any depth, and tabling then keys each table on the depth left too. holds, via
+    and fact carry the solve's tag.
     """
     holds_, via_, fact_ = f"holds{tag}", f"via{tag}", f"fact{tag}"
     depth = program.depth > 0
     d, dm = (" $d", " (- $d 1)") if depth else ("", "")
+    # The depth left that a user rule's body goals get, and whether a rule needs depth left to fire.
+    rule_counts = depth and program.depth_counts == "steps"
+    body_left = dm if rule_counts else d
     arities = {query.arity} | {f.arity for f in program.facts} | {a.arity for r in program.rules for a in (r.head, *r.body)}
     arities |= {rw.arity for rw in program.rewrites}
     lines = [f"(= ({fact_} {preds(f.pred)} {' '.join(consts(t) for t in f.args)}) True)" for f in program.facts]
@@ -233,12 +241,12 @@ def _meta_source(program: Program, query: Atom, preds: _Names, consts: _Names, t
             lines.append(f"!(tabled ({holds_} $p {xs}{d}))")
 
     def holds(a: Atom) -> str:
-        return f"({holds_} {preds(a.pred)} {' '.join(_term(t, consts) for t in a.args)}{dm})"
+        return f"({holds_} {preds(a.pred)} {' '.join(_term(t, consts) for t in a.args)}{body_left})"
 
     for rule in program.rules:
         head = f"({holds_} {preds(rule.head.pred)} {' '.join(_term(t, consts) for t in rule.head.args)}{d})"
         body = _body(rule.body, holds)
-        lines.append(f"(= {head} {f'(if (> $d 0) {body} (empty))' if depth else body})")
+        lines.append(f"(= {head} {f'(if (> $d 0) {body} (empty))' if rule_counts else body})")
     return "\n".join(lines)
 
 

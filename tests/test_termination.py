@@ -8,7 +8,7 @@ The claims, each checked against a Python fixpoint over the gold rules:
 | every tabled strategy without a depth bound | terminates and answers exactly the fixpoint, on every catalogue |
 | untabled (naive, memo-untabled) | never terminates when the query predicate lies on a cycle of rewrites |
 | untabled (naive, memo-untabled) | terminates with the fixpoint when everything the query reaches is acyclic |
-| depth-bounded, depth-tabled | terminate, every answer is a gold answer, and tables leave the answers at a given depth unchanged |
+| depth-bounded, depth-tabled, rewrite-depth-tabled | terminate, every answer is a gold answer, and tables leave the answers under a given bound unchanged |
 
 The judge is an oracle that admits only the direct gold triples, so a chain
 p0 <= p1 <= p2 must be found by discovering p1 and then p2: recursive
@@ -178,13 +178,13 @@ def test_depth_bounded_rewriting_stops_and_is_sound(engine_name: str, kb: KB) ->
     query = kb.queries[0]
     rewriter = _rewriter(kb, 2_000_000, engine_name)
     caps = make(engine_name).capabilities
-    by_depth: dict[int, list[tuple[str, frozenset]]] = defaultdict(list)
+    by_bound: dict[tuple[int, str], list[tuple[str, frozenset]]] = defaultdict(list)
     for name in DEPTH:
         if not all(getattr(caps, c) for c, need in STRATEGIES[name].needs().items() if need):
             continue
         outcome = rewriter.ask(query, STRATEGIES[name])
         assert outcome.finished, f"{name} on {query}: {outcome.status}"
         assert outcome.answers <= kb.answers(query), f"{name} on {query}"
-        by_depth[STRATEGIES[name].depth].append((name, frozenset(outcome.answers)))
-    for depth, found in by_depth.items():
-        assert len({answers for _, answers in found}) == 1, f"depth {depth} on {query}: {found}"
+        by_bound[STRATEGIES[name].depth, STRATEGIES[name].depth_counts].append((name, frozenset(outcome.answers)))
+    for bound, found in by_bound.items():
+        assert len({answers for _, answers in found}) == 1, f"depth {bound} on {query}: {found}"

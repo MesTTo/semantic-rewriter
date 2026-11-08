@@ -7,7 +7,7 @@ implementing semrewrite.protocols.Engine, and alias canonicalisation.
 | discovery timing | none, lazy inside evaluation, eager worklist, rounds, saturate |
 | per-predicate memo | on, off |
 | tables | on, off |
-| depth bound | none, or at most n rule and rewrite steps |
+| depth bound | none, at most n rule and rewrite steps, or at most n rewrite steps |
 | alias classes | merged, kept |
 
 The rewriter owns discovery and hands the engine either every rewrite up
@@ -27,7 +27,7 @@ from enum import StrEnum
 from semrewrite.discovery import Discoverer, ScoreCache
 from semrewrite.kb import KB
 from semrewrite.model import Atom, Key, Mapping, Rewrite, Rule, compose, identity, inverse, parse_atom
-from semrewrite.protocols import Admission, Budget, Engine, Judge, Program, Proof, Retriever, Solution
+from semrewrite.protocols import Admission, Budget, DepthCounts, Engine, Judge, Program, Proof, Retriever, Solution
 
 # The protocol's default budget; a Budget is frozen, so one instance serves every rewriter.
 DEFAULT_BUDGET = Budget()
@@ -45,13 +45,15 @@ class Timing(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class Strategy:
-    """One setting of the knobs, named for the implementation it is; depth 0 means no depth bound."""
+    """One setting of the knobs, named for the implementation it is; depth 0 means no depth bound, and depth_counts
+    says whether a bound counts every rule and rewrite step or rewrite steps alone."""
 
     name: str
     timing: Timing
     memo: bool = True
     tabled: bool = True
     depth: int = 0
+    depth_counts: DepthCounts = "steps"
     canonical: bool = False
 
     def __post_init__(self) -> None:
@@ -72,7 +74,8 @@ class Strategy:
         return {
             "tabling": self.tabled,
             "untabled": not self.tabled,
-            "depth": self.depth > 0,
+            "depth": self.depth > 0 and self.depth_counts == "steps",
+            "rewrite_depth": self.depth > 0 and self.depth_counts == "rewrites",
             "lazy": self.timing is Timing.LAZY,
             "reached": self.timing is Timing.ROUNDS,
         }
@@ -87,6 +90,7 @@ STRATEGIES: dict[str, Strategy] = {
         Strategy("nomemo-tabled", Timing.LAZY, memo=False),
         Strategy("depth-bounded", Timing.LAZY, tabled=False, depth=3),
         Strategy("depth-tabled", Timing.LAZY, depth=3),
+        Strategy("rewrite-depth-tabled", Timing.LAZY, depth=3, depth_counts="rewrites"),
         Strategy("lazy-tabled", Timing.LAZY),
         Strategy("rounds", Timing.ROUNDS),
         Strategy("eager-worklist", Timing.EAGER),
@@ -206,9 +210,11 @@ class Rewriter:
 
     # -- timings -------------------------------------------------------------
 
-    def _program(self, rewrites: Iterable[Rewrite] = (), *, kb: KB | None = None, tabled: bool = True, depth: int = 0) -> Program:
+    def _program(self, rewrites: Iterable[Rewrite] = (), *, kb: KB | None = None, tabled: bool = True, depth: int = 0,
+                 depth_counts: DepthCounts = "steps") -> Program:
         kb = kb if kb is not None else self.kb
-        return Program(facts=kb.facts, rules=kb.rules, rewrites=tuple(rewrites), tabled=tabled, depth=depth)
+        return Program(facts=kb.facts, rules=kb.rules, rewrites=tuple(rewrites), tabled=tabled, depth=depth,
+                       depth_counts=depth_counts)
 
     def _solve(self, program: Program, query: Atom, out: Outcome, expand=None, *, accumulate: bool = False) -> Solution:
         solution = self.engine.solve(program, query, self.budget, expand)
@@ -269,7 +275,8 @@ class Rewriter:
                 admitted.add(rw.key)
                 yield rw
 
-        self._solve(self._program(tabled=strategy.tabled, depth=strategy.depth), query, out, expand)
+        self._solve(self._program(tabled=strategy.tabled, depth=strategy.depth, depth_counts=strategy.depth_counts),
+                    query, out, expand)
         out.admitted = admitted
 
     def _rounds(self, strategy: Strategy, query: Atom, disc: Discoverer, out: Outcome) -> None:

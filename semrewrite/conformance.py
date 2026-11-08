@@ -11,30 +11,36 @@ or from a shell, `python -m semrewrite.conformance --engine python`.
 | property | needs | claim |
 |---|---|---|
 | tabling | tabling | with tables and no depth bound, answers equal the reference fixpoint |
-| depth | depth | with a depth bound of 1 to 4, answers equal the reference cut at that depth, tables on or off (untabled runs deeper than 1 may stop) |
-| lazy | lazy, and tabling or depth | rewrites given through expand answer as rewrites given up front; expand sees only the program's predicates |
+| depth | depth | with a bound of 1 to 4 steps, answers equal the reference cut at that height, tables on or off (untabled runs deeper than 1 may stop) |
+| rewrite-depth | rewrite_depth | with a bound of 1 to 4 rewrites, answers equal the reference cut at that many rewrites and recursion through user rules answers completely, tables on or off (untabled runs may stop) |
+| lazy | lazy, and tabling or a depth bound | rewrites given through expand answer as rewrites given up front; expand sees only the program's predicates |
 | budget | | a budget too small ends with a limit status and no answers; a run reporting ok stayed in its budget |
-| names | tabling or depth | predicates and constants spelled like reserved words keep their answers, eagerly and lazily |
+| names | tabling or a depth bound | predicates and constants spelled like reserved words keep their answers, eagerly and lazily |
 | untabled | untabled | untabled, a query on a rewrite cycle hits a limit and one reaching no cycle answers exactly |
-| proofs | proofs, and tabling or depth | every answer has a proof deriving it from the program within the depth bound |
+| proofs | proofs, and tabling or a depth bound | every answer has a proof deriving it from the program within the depth bound |
 
 The reference is semrewrite.fixpoint, a naive evaluator sharing no code with any
 engine. Generated programs have 2 to 6 predicates of arity 1 to 3 over four
 constants, a planted rewrite cycle p <=> q, random rewrites under any argument
 permutation, up to ten distinct facts, optionally a join rule whose two body atoms
 share a variable, constants and repeated variables, and a query binding some of its
-arguments.
+arguments. The rewrite-depth property also runs on chains of 6 to 12 nodes, whose
+transitive closure a recursive user rule derives in up to 11 steps, more than any
+bound it tries.
 
 A run must finish with exactly the reference answers when it is tabled, or when its
-depth bound is 1, whose untabled search is a few hundred clause tries on these
+depth bound is 1 step, whose untabled search is a few hundred clause tries on these
 cases. Such a run gets the protocol's default work and no time limit, so the verdict
 never depends on how loaded the machine is, while the work limit still stops an
 engine that does not terminate. An untabled search deeper than that tries every derivation separately, which
 through a join of well-derived predicates grows doubly exponentially with the bound
 and is a cost no budget in an engine's own unit can be promised to cover, so such a
-run may instead stop at a limit, with no answers. Every limit a run reports must be
-one it reached: work at least the budget's, or seconds at least the budget's. A
-passing verdict counts the runs that were allowed to stop and the ones that did.
+run may instead stop at a limit, with no answers; so may an untabled run bounding
+rewrites alone, which leaves recursion through user rules unbounded, and when such a
+run can reach a cycle of user rules it gets the loop budget the untabled property
+gives a query on a cycle. Every limit a run reports must be one it reached: work at
+least the budget's, or seconds at least the budget's. A passing verdict counts the
+runs that were allowed to stop and the ones that did.
 
 Where an engine declares reached, the tabling, lazy and names properties also check
 that each run reports the query's predicate and only predicates of the program: the
@@ -67,7 +73,7 @@ from typing import TYPE_CHECKING, Literal, NoReturn
 from semrewrite import fixpoint
 from semrewrite.engines import REGISTRY, make
 from semrewrite.model import Atom, Rewrite, Rule, identity, inverse, is_variable, mappings
-from semrewrite.protocols import Budget, Capabilities, Engine, Program, Proof, Solution
+from semrewrite.protocols import Budget, Capabilities, DepthCounts, Engine, Program, Proof, Solution
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -87,7 +93,7 @@ RESERVED: tuple[str, ...] = ("max", "min", "if", "let", "holds", "fact", "via", 
 VARIABLES: tuple[str, ...] = ("X", "Y", "Z", "W")
 QUERY_VARIABLES: tuple[str, ...] = ("X", "Y", "Z")
 
-#: The depth bounds the depth, lazy, names and proofs properties try.
+#: The bounds, in counted steps, that the depth, rewrite-depth, lazy, names and proofs properties try.
 DEPTHS: tuple[int, ...] = (1, 2, 3, 4)
 
 #: The statuses of a run stopped by its budget.
@@ -105,8 +111,8 @@ TOO_SMALL: Budget = Budget(work=50, seconds=60.0)
 #: what a looping case costs an engine whose unit is coarser.
 LOOP: Budget = Budget(work=20_000, seconds=1.0)
 
-#: The budget an untabled run deeper than one step gets: it may stop, so a second bounds
-#: what a search too large to finish costs the kit.
+#: The budget an untabled bounded run that may stop gets: a second bounds what a search
+#: too large to finish costs the kit.
 SEARCH: Budget = Budget(work=GENEROUS.work, seconds=LOOP.seconds)
 
 # While check() runs, the depth-bounded runs it allowed to stop and the ones that stopped.
@@ -170,16 +176,23 @@ class Case:
 
 
 def reference(program: Program, query: Atom) -> set[Row]:
-    """The answers of fixpoint.least_model over the facts, the rules and every rewrite's rule, cut at program.depth."""
-    rules = (*program.rules, *(rewrite.rule() for rewrite in program.rewrites))
-    return fixpoint.answers(fixpoint.least_model(program.facts, rules, program.depth), query)
+    """The answers of fixpoint.least_model over the facts, the rules and every rewrite's rule, cut at program.depth
+    counted steps; with depth_counts "rewrites" the user rules are free, so only rewrite steps count."""
+    rewrites = tuple(rewrite.rule() for rewrite in program.rewrites)
+    if program.depth_counts == "rewrites":
+        model = fixpoint.least_model(program.facts, rewrites, program.depth, free=program.rules)
+    else:
+        model = fixpoint.least_model(program.facts, (*program.rules, *rewrites), program.depth)
+    return fixpoint.answers(model, query)
 
 
-def expected(case: Case, depth: int = 0) -> set[Row]:
-    """The answers the case must give at `depth`: its closed form when it has one, else the reference."""
-    if depth == 0 and case.answers is not None:
+def expected(case: Case, depth: int = 0, counts: DepthCounts = "steps") -> set[Row]:
+    """The answers the case must give at `depth` counted steps: its closed form when it has one and the bound can't
+    cut it, which a bound on rewrites can't in a program without rewrites, else the reference."""
+    uncut = depth == 0 or (counts == "rewrites" and not case.program.rewrites)
+    if uncut and case.answers is not None:
         return set(case.answers)
-    return reference(replace(case.program, depth=depth), case.query)
+    return reference(replace(case.program, depth=depth, depth_counts=counts), case.query)
 
 
 # Strategies ---------------------------------------------------------------------------
@@ -275,13 +288,19 @@ def chains(nodes: tuple[int, int] = (60, 90)) -> SearchStrategy[Case]:
     return draw_chain()
 
 
+def _rewrite_depth_cases() -> SearchStrategy[Case]:
+    """Generated programs, and chains of 6 to 12 nodes, whose closure a recursive user rule derives in more steps
+    than any bound in DEPTHS."""
+    return _hypothesis().strategies.one_of(cases(), chains((6, 12)))
+
+
 # Capabilities -------------------------------------------------------------------------
 
 
 def _exact(c: Capabilities) -> str | None:
-    if c.tabling or c.depth:
+    if c.tabling or c.depth or c.rewrite_depth:
         return None
-    return "the engine has neither tabling nor depth, so no run of it can be compared with the reference"
+    return "the engine has neither tabling nor a depth bound, so no run of it can be compared with the reference"
 
 
 def _capability(name: str, then: Callable[[Capabilities], str | None] | None = None) -> Callable[[Capabilities], str | None]:
@@ -305,9 +324,19 @@ def _require(engine: Engine, needs: Callable[[Capabilities], str | None]) -> Non
         raise MissingCapability(reason)
 
 
-def _exact_depths(c: Capabilities) -> list[int]:
-    """The depths at which the engine's answers can be compared with the reference: 0 with tabling, DEPTHS with depth."""
-    return ([0] if c.tabling else []) + (list(DEPTHS) if c.depth else [])
+def _exact_bounds(c: Capabilities) -> list[tuple[int, DepthCounts]]:
+    """The bounds at which the engine's answers can be compared with the reference: none with tabling, then each
+    of DEPTHS counting steps with depth and counting rewrites with rewrite_depth."""
+    counted: list[DepthCounts] = [counts for counts, has in (("steps", c.depth), ("rewrites", c.rewrite_depth)) if has]
+    unbounded: list[tuple[int, DepthCounts]] = [(0, "steps")] if c.tabling else []
+    return unbounded + [(depth, counts) for counts in counted for depth in DEPTHS]
+
+
+def _bound(program: Program) -> str:
+    """How a report names the program's bound: no depth bound, depth 3, or rewrite depth 3."""
+    if not program.depth:
+        return "no depth bound"
+    return f"{'rewrite depth' if program.depth_counts == 'rewrites' else 'depth'} {program.depth}"
 
 
 def _tabled(c: Capabilities, depth: int) -> bool:
@@ -333,19 +362,25 @@ def _exactly(solution: Solution, want: set[Row], what: str) -> None:
 
 
 def _must_finish(engine: Engine, program: Program) -> bool:
-    """Whether a depth-bounded run must finish: tabled where the engine tables, or bounded at one step."""
-    return (program.tabled and engine.capabilities.tabling) or program.depth == 1
+    """Whether a bounded run must finish: tabled where the engine tables, or bounded at one step counting steps."""
+    return (program.tabled and engine.capabilities.tabling) or (program.depth == 1 and program.depth_counts == "steps")
 
 
-def _budget(engine: Engine, program: Program) -> Budget:
-    """GENEROUS for a depth-bounded run that must finish, SEARCH for one that may stop."""
-    return GENEROUS if _must_finish(engine, program) else SEARCH
+def _budget(engine: Engine, program: Program, query: Atom) -> Budget:
+    """GENEROUS for a bounded run that must finish; LOOP for an untabled run bounding rewrites alone that can reach a
+    cycle of user rules, which its bound leaves free to loop; SEARCH for any other run that may stop."""
+    if _must_finish(engine, program):
+        return GENEROUS
+    if program.depth_counts == "rewrites" and _reaches_cycle(program, query.pred, rules_only=True):
+        return LOOP
+    return SEARCH
 
 
-def _bounded(engine: Engine, program: Program, solution: Solution, want: set[Row], what: str) -> bool:
+def _bounded(engine: Engine, program: Program, budget: Budget, solution: Solution, want: set[Row], what: str) -> bool:
     """Judge a depth-bounded run: exactly `want`, or, where it may stop, a limit it reached with no answers.
 
-    Returns whether the run finished, so callers check what only a finished run reports.
+    `budget` is the one the run had. Returns whether the run finished, so callers check
+    what only a finished run reports.
     """
     tally = _ALLOWED_TO_STOP.get()
     may_stop = not _must_finish(engine, program)
@@ -354,7 +389,7 @@ def _bounded(engine: Engine, program: Program, solution: Solution, want: set[Row
     if solution.status == "ok" or not may_stop:
         _exactly(solution, want, what)
         return True
-    _limited(solution, LIMITS, f"{what} (it may stop: untabled and deeper than one step)", _budget(engine, program))
+    _limited(solution, LIMITS, f"{what} (it may stop: an untabled search its bound does not keep small)", budget)
     if tally is not None:
         tally[1] += 1
     return False
@@ -395,12 +430,13 @@ def _lazily(engine: Engine, case: Case, program: Program, eager: Sequence[Rewrit
     """
     expander = _Expander(lazy)
     split = replace(program, rewrites=tuple(eager))
-    solution = engine.solve(split, case.query, _budget(engine, split), expander)
+    budget = _budget(engine, split, case.query)
+    solution = engine.solve(split, case.query, budget, expander)
     strangers = sorted(set(expander.calls) - case.predicates())
     if strangers:
         _fail(f"{what}: expand was called with {strangers}, which are not predicates of the program; "
               "an engine that renames names internally must undo the renaming before calling expand")
-    if _bounded(engine, split, solution, want, what):
+    if _bounded(engine, split, budget, solution, want, what):
         _reached(engine, solution, case, what)
 
 
@@ -413,37 +449,54 @@ def check_tabling(engine: Engine, case: Case) -> None:
     _reached(engine, solution, case, "tabled, no depth bound")
 
 
+def _check_bounds(engine: Engine, case: Case, counts: DepthCounts) -> None:
+    """At each depth in DEPTHS counting `counts`, with tables and without where the engine can, the answers are the
+    reference's under that bound; untabled runs may stop where _must_finish allows."""
+    c = engine.capabilities
+    modes = [tabled for tabled, has in ((True, c.tabling), (False, c.untabled)) if has] or [True]
+    for depth in DEPTHS:
+        want = expected(case, depth, counts)
+        for tabled in modes:
+            program = replace(case.program, tabled=tabled, depth=depth, depth_counts=counts)
+            budget = _budget(engine, program, case.query)
+            solution = engine.solve(program, case.query, budget)
+            _bounded(engine, program, budget, solution, want, f"{_bound(program)}, {'tabled' if tabled else 'untabled'}")
+
+
 def check_depth(engine: Engine, case: Case) -> None:
     """At each depth in DEPTHS, with tables and without where the engine can, the answers are the reference's at that depth.
 
     Untabled runs deeper than one step may stop instead, as the module docstring says.
     """
     _require(engine, DEPTH.needs)
-    c = engine.capabilities
-    modes = [tabled for tabled, has in ((True, c.tabling), (False, c.untabled)) if has] or [True]
-    for depth in DEPTHS:
-        want = expected(case, depth)
-        for tabled in modes:
-            program = replace(case.program, tabled=tabled, depth=depth)
-            solution = engine.solve(program, case.query, _budget(engine, program))
-            _bounded(engine, program, solution, want, f"depth {depth}, {'tabled' if tabled else 'untabled'}")
+    _check_bounds(engine, case, "steps")
+
+
+def check_rewrite_depth(engine: Engine, case: Case) -> None:
+    """At each bound in DEPTHS on rewrite steps alone, with tables and without where the engine can, the answers are
+    the reference's under that bound. On a chain, whose closure only a recursive user rule derives, that is every
+    path, however many steps it takes. Untabled runs may stop instead, as the module docstring says.
+    """
+    _require(engine, REWRITE_DEPTH.needs)
+    _check_bounds(engine, case, "rewrites")
 
 
 def check_lazy(engine: Engine, case: Case) -> None:
-    """Rewrites given up front, through expand, or split between the two give the reference answers at every exact depth."""
+    """Rewrites given up front, through expand, or split between the two give the reference answers at every exact bound."""
     _require(engine, LAZY.needs)
     c = engine.capabilities
     rewrites = case.program.rewrites
-    for depth in _exact_depths(c):
-        want = expected(case, depth)
-        program = replace(case.program, tabled=_tabled(c, depth), depth=depth)
-        what = f"depth {depth}, every rewrite up front"
-        solution = engine.solve(program, case.query, _budget(engine, program))
-        if _bounded(engine, program, solution, want, what):
+    for depth, counts in _exact_bounds(c):
+        want = expected(case, depth, counts)
+        program = replace(case.program, tabled=_tabled(c, depth), depth=depth, depth_counts=counts)
+        what = f"{_bound(program)}, every rewrite up front"
+        budget = _budget(engine, program, case.query)
+        solution = engine.solve(program, case.query, budget)
+        if _bounded(engine, program, budget, solution, want, what):
             _reached(engine, solution, case, what)
-        _lazily(engine, case, program, (), rewrites, want, f"depth {depth}, every rewrite through expand")
+        _lazily(engine, case, program, (), rewrites, want, f"{_bound(program)}, every rewrite through expand")
         _lazily(engine, case, program, rewrites[::2], rewrites[1::2], want,
-                f"depth {depth}, alternate rewrites up front and through expand")
+                f"{_bound(program)}, alternate rewrites up front and through expand")
 
 
 def check_budget(engine: Engine, case: Case) -> None:
@@ -498,27 +551,29 @@ def _limited(solution: Solution, statuses: Iterable[str], what: str, budget: Bud
 
 
 def check_names(engine: Engine, case: Case) -> None:
-    """A case spelled with RESERVED names answers as the reference at every exact depth, eagerly and, when lazy, lazily."""
+    """A case spelled with RESERVED names answers as the reference at every exact bound, eagerly and, when lazy, lazily."""
     _require(engine, NAMES.needs)
     c = engine.capabilities
-    for depth in _exact_depths(c):
-        want = expected(case, depth)
-        program = replace(case.program, tabled=_tabled(c, depth), depth=depth)
-        solution = engine.solve(program, case.query, _budget(engine, program))
-        if _bounded(engine, program, solution, want, f"depth {depth}, eager"):
-            _reached(engine, solution, case, f"depth {depth}, eager")
+    for depth, counts in _exact_bounds(c):
+        want = expected(case, depth, counts)
+        program = replace(case.program, tabled=_tabled(c, depth), depth=depth, depth_counts=counts)
+        budget = _budget(engine, program, case.query)
+        solution = engine.solve(program, case.query, budget)
+        if _bounded(engine, program, budget, solution, want, f"{_bound(program)}, eager"):
+            _reached(engine, solution, case, f"{_bound(program)}, eager")
         if c.lazy:
-            _lazily(engine, case, program, (), program.rewrites, want, f"depth {depth}, every rewrite through expand")
+            _lazily(engine, case, program, (), program.rewrites, want, f"{_bound(program)}, every rewrite through expand")
 
 
-def _graph(program: Program, rewrites_only: bool = False) -> dict[str, set[str]]:
-    """Each predicate's dependencies: rule body predicates (unless `rewrites_only`) and rewrite premises."""
+def _graph(program: Program, rules: bool = True, rewrites: bool = True) -> dict[str, set[str]]:
+    """Each predicate's dependencies: the body predicates of its rules and the premises of its rewrites, each when asked."""
     graph: dict[str, set[str]] = {}
-    if not rewrites_only:
+    if rules:
         for rule in program.rules:
             graph.setdefault(rule.head.pred, set()).update(a.pred for a in rule.body)
-    for rewrite in program.rewrites:
-        graph.setdefault(rewrite.conclusion, set()).add(rewrite.premise)
+    if rewrites:
+        for rewrite in program.rewrites:
+            graph.setdefault(rewrite.conclusion, set()).add(rewrite.premise)
     return graph
 
 
@@ -536,13 +591,15 @@ def _reachable(graph: dict[str, set[str]], start: str) -> set[str]:
 
 def _on_rewrite_cycle(program: Program, pred: str) -> bool:
     """Whether rewrites alone lead from `pred` back to itself, so untabled resolution renames its goal forever."""
-    return pred in _reachable(_graph(program, rewrites_only=True), pred)
+    return pred in _reachable(_graph(program, rules=False), pred)
 
 
-def _reaches_cycle(program: Program, pred: str) -> bool:
-    """Whether some predicate `pred` depends on, itself included, lies on a cycle of rules and rewrites."""
+def _reaches_cycle(program: Program, pred: str, rules_only: bool = False) -> bool:
+    """Whether some predicate `pred` depends on, itself included, lies on a cycle of rules and rewrites, or with
+    `rules_only` on a cycle of user rules alone, which a bound on rewrites does not cut."""
     graph = _graph(program)
-    return any(p in _reachable(graph, p) for p in {pred} | _reachable(graph, pred))
+    cycles = _graph(program, rewrites=False) if rules_only else graph
+    return any(p in _reachable(cycles, p) for p in {pred} | _reachable(graph, pred))
 
 
 def check_untabled(engine: Engine, case: Case) -> None:
@@ -568,22 +625,23 @@ def check_untabled(engine: Engine, case: Case) -> None:
 
 
 def check_proofs(engine: Engine, case: Case) -> None:
-    """At every exact depth each answer has exactly one proof, a valid derivation from the program within the bound."""
+    """At every exact bound each answer has exactly one proof, a valid derivation from the program within the bound."""
     _require(engine, PROOFS.needs)
     c = engine.capabilities
-    for depth in _exact_depths(c):
-        program = replace(case.program, tabled=_tabled(c, depth), depth=depth)
-        solution = engine.solve(program, case.query, _budget(engine, program))
-        if not _bounded(engine, program, solution, expected(case, depth), f"depth {depth}"):
+    for depth, counts in _exact_bounds(c):
+        program = replace(case.program, tabled=_tabled(c, depth), depth=depth, depth_counts=counts)
+        budget = _budget(engine, program, case.query)
+        solution = engine.solve(program, case.query, budget)
+        if not _bounded(engine, program, budget, solution, expected(case, depth, counts), _bound(program)):
             continue
         proofs = solution.proofs
         if proofs is None or set(proofs) != set(solution.answers):
             got = None if proofs is None else sorted(proofs)
-            _fail(f"depth {depth}: proofs for {got}, but the answers are {sorted(solution.answers)}")
+            _fail(f"{_bound(program)}: proofs for {got}, but the answers are {sorted(solution.answers)}")
         for answer, proof in sorted(proofs.items()):
             problem = proof_problem(proof, Atom(case.query.pred, answer), program)
             if problem:
-                _fail(f"depth {depth}: the proof of {Atom(case.query.pred, answer)} {problem}")
+                _fail(f"{_bound(program)}: the proof of {Atom(case.query.pred, answer)} {problem}")
 
 
 def _unifies(patterns: Sequence[Atom], atoms: Sequence[Atom]) -> bool:
@@ -607,13 +665,16 @@ def proof_problem(proof: Proof, atom: Atom, program: Program) -> str | None:
 
     Every leaf must be a program fact; every step must apply a program rule, a program
     rewrite, or a rewrite's rule, whose head and body unify with the step's atom and its
-    children; with program.depth > 0 the proof may take at most that many steps.
+    children; with program.depth > 0 the proof may take at most that many counted steps
+    on any path, where a user rule's step doesn't count under a bound on rewrites.
     """
     if proof.atom != atom:
         return f"proves {proof.atom} instead"
     facts = set(program.facts)
-    rules = set(program.rules) | {rewrite.rule() for rewrite in program.rewrites}
+    user_rules = set(program.rules)
+    rules = user_rules | {rewrite.rule() for rewrite in program.rewrites}
     keys = {rewrite.key for rewrite in program.rewrites}
+    rewrites_only = program.depth_counts == "rewrites"
     height: dict[int, int] = {}
     stack: list[tuple[Proof, bool]] = [(proof, False)]
     while stack:
@@ -640,9 +701,12 @@ def proof_problem(proof: Proof, atom: Atom, program: Program) -> str | None:
         children = [child.atom for child in node.children]
         if len(children) != len(rule.body) or not _unifies((rule.head, *rule.body), (node.atom, *children)):
             return f"derives {node.atom} from {', '.join(map(str, children)) or 'nothing'} by {node.by}, which doesn't match"
-        height[id(node)] = 1 + max(height[id(child)] for child in node.children)
+        # Under a bound on rewrites a user rule's step is free; a step by a rewrite, or by a rule only a rewrite has, counts.
+        counted = not rewrites_only or isinstance(node.by, Rewrite) or rule not in user_rules
+        height[id(node)] = int(counted) + max(height[id(child)] for child in node.children)
     if program.depth and height[id(proof)] > program.depth:
-        return f"takes {height[id(proof)]} steps, more than the depth bound {program.depth}"
+        unit = "rewrites" if rewrites_only else "steps"
+        return f"takes {height[id(proof)]} {unit}, more than the depth bound {program.depth} allows"
     return None
 
 
@@ -662,8 +726,11 @@ class Property:
 
 TABLING = Property("tabling", "with tables and no depth bound, answers equal the reference fixpoint",
                    _capability("tabling"), cases, check_tabling)
-DEPTH = Property("depth", "with a depth bound of 1 to 4, answers equal the reference cut at that depth, tables on or off",
+DEPTH = Property("depth", "with a bound of 1 to 4 steps, answers equal the reference cut at that height, tables on or off",
                  _capability("depth"), cases, check_depth)
+REWRITE_DEPTH = Property("rewrite-depth", "with a bound of 1 to 4 rewrites, answers equal the reference cut at that "
+                         "many rewrites and recursion through user rules answers completely, tables on or off",
+                         _capability("rewrite_depth"), _rewrite_depth_cases, check_rewrite_depth)
 LAZY = Property("lazy", "rewrites given through expand answer as rewrites given up front; expand sees only the program's predicates",
                 _capability("lazy", _exact), cases, check_lazy)
 BUDGET = Property("budget", "a budget too small ends with a limit status and no answers; a run reporting ok stayed in its budget",
@@ -676,7 +743,7 @@ PROOFS = Property("proofs", "every answer has a proof deriving it from the progr
                   _capability("proofs", _exact), cases, check_proofs)
 
 #: Every property, in the order the report lists them.
-PROPERTIES: tuple[Property, ...] = (TABLING, DEPTH, LAZY, BUDGET, NAMES, UNTABLED, PROOFS)
+PROPERTIES: tuple[Property, ...] = (TABLING, DEPTH, REWRITE_DEPTH, LAZY, BUDGET, NAMES, UNTABLED, PROOFS)
 
 
 def property_named(name: str) -> Property:
@@ -692,8 +759,9 @@ def property_named(name: str) -> Property:
 class Verdict:
     """One property's outcome: pass, fail with the shrunk falsifying case and what went wrong, or skip with why.
 
-    `may_stop` counts the untabled runs deeper than one step the cases made, which may
-    stop at a limit instead of finishing, and `stopped` the ones that did.
+    `may_stop` counts the untabled runs the cases made whose bound does not keep their
+    search small, which may stop at a limit instead of finishing, and `stopped` the
+    ones that did.
     """
 
     prop: str
@@ -706,11 +774,11 @@ class Verdict:
 
     def lines(self) -> list[str]:
         """The verdict as report lines, the falsifying case indented below a failure."""
-        head = f"{self.outcome:<5} {self.prop:<9}"
+        head = f"{self.outcome:<5} {self.prop:<13}"
         if self.outcome == "skip":
             return [f"{head} {self.detail}"]
-        stops = (f"; {self.stopped} of {self.may_stop} untabled runs deeper than one step stopped at a limit, "
-                 "which they may" if self.may_stop else "")
+        stops = (f"; {self.stopped} of {self.may_stop} untabled runs allowed to stop at a limit did"
+                 if self.may_stop else "")
         if self.outcome == "pass":
             return [f"{head} {self.cases} cases{stops}"]
         out = [f"{head} after {self.cases} cases (shrinking included){stops}"]

@@ -123,10 +123,11 @@ def cmd_engines(args: argparse.Namespace) -> int:
 
 
 def cmd_strategies(args: argparse.Namespace) -> int:
-    print(f"{'strategy':16} {'timing':9} {'memo':5} {'tables':7} {'depth':6} aliases")
+    print(f"{'strategy':21} {'timing':9} {'memo':5} {'tables':7} {'depth':11} aliases")
     for s in STRATEGIES.values():
-        print(f"{s.name:16} {s.timing.value:9} {'on' if s.memo else 'off':5} {'on' if s.tabled else 'off':7} "
-              f"{s.depth or '':<6} {'merged' if s.canonical else ''}")
+        depth = f"{s.depth} {s.depth_counts}" if s.depth else ""
+        print(f"{s.name:21} {s.timing.value:9} {'on' if s.memo else 'off':5} {'on' if s.tabled else 'off':7} "
+              f"{depth:11} {'merged' if s.canonical else ''}")
     return 0
 
 

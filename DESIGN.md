@@ -160,6 +160,7 @@ class Program:
     rewrites: tuple[Rewrite, ...]  # rewrites known before evaluation (eager timing)
     tabled: bool = True            # resolve cyclic programs to their fixpoint
     depth: int = 0                 # 0: no bound; n: at most n rule or rewrite steps below the query
+    depth_counts: str = "steps"    # "steps": every rule and rewrite step counts; "rewrites": only rewrite steps
 
 class Engine(Protocol):
     @property
@@ -176,6 +177,7 @@ class Engine(Protocol):
 |---|---|
 | `tabling` | with `tabled=True`, every program terminates with its exact fixpoint answers |
 | `depth` | honours `depth > 0` with the semantics below |
+| `rewrite_depth` | honours `depth > 0` with `depth_counts = "rewrites"`, counting rewrite steps alone |
 | `lazy` | calls `expand` during evaluation instead of needing every rewrite up front |
 | `untabled` | can run `tabled=False` as plain top-down resolution (only useful for experiments) |
 | `reached` | reports which predicates evaluation called, needed by the rounds strategy |
@@ -186,7 +188,7 @@ class Engine(Protocol):
 An engine must keep this contract:
 
 1. Answers are exact. With `tabling` and `tabled=True`, the answers are those of the least model of facts, rules and rewrites, restricted to the query. The rewrites are the program's rewrites plus whatever `expand` returned.
-2. Depth has one meaning. With `depth = n`, an answer is returned exactly when it has a derivation whose rule and rewrite steps, counted along every path from the query down to a fact, number at most n. A fact needs zero steps. Tables then only change the cost, never the answers.
+2. Depth has one meaning. With `depth = n`, an answer is returned exactly when it has a derivation whose counted steps, along every path from the query down to a fact, number at most n. Every rule and rewrite step counts, or with `depth_counts = "rewrites"` only rewrite steps do, so the knowledge base's own rules recurse as deep as their facts allow. A fact needs zero steps. Tables then only change the cost, never the answers.
 3. Expansion is a rule source. When `expand` is given and the engine is `lazy`, it calls `expand(P)` before it resolves a goal on P that it has not expanded in this call to `solve`, and treats each returned rewrite as a rule for P. It may call `expand` again for the same predicate; the discoverer's memo makes that free.
 4. Budgets are hard. The engine stops when it exceeds the work or the seconds of its budget and reports which limit it hit, and a status of `ok` means the run stayed within both. A budget-stopped run returns no answers; partial answers would read as complete ones.
 5. Names are data. Any constant or predicate name matching `[a-z][A-Za-z0-9_]*` must work, including names the engine's own language reserves. An engine renames them internally if it must. (PyMeTTa needed this: a person called `max` collided with the builtin `max` and lost answers until the backend renamed it.)
@@ -194,7 +196,7 @@ An engine must keep this contract:
 Two patterns implement the lazy capability, and either is enough:
 
 - A meta-interpreter. Predicates become data, `holds(P, Args)`, and one clause asks the discovery callback for rewrites of P and follows each: `holds(P, Args) :- expand(P, Q, Map), permute(Map, Args, QArgs), holds(Q, QArgs)`. Tabling `holds` gives SLG resolution with semantic goal expansion. This is how the PyMeTTa backend works, through a Python op that MeTTa calls. Any Prolog with foreign predicates (SWI through janus, Scryer, Trealla), any MeTTa implementation with grounded operations, and any engine with external atoms (HEX programs) can do the same.
-- Demand-driven bottom-up evaluation. The engine computes which predicates the query depends on, calls `expand` for each new one, adds the returned rewrites as rules and extends the dependency set, then runs a semi-naive fixpoint over the relevant predicates. Round k of the fixpoint derives exactly the facts of derivation height k, so a depth bound is a round limit. This is how the pure-Python backend works, and it carries over to Datalog engines and to SQL with recursive common table expressions.
+- Demand-driven bottom-up evaluation. The engine computes which predicates the query depends on, calls `expand` for each new one, adds the returned rewrites as rules and extends the dependency set, then runs a semi-naive fixpoint over the relevant predicates. Round k of the fixpoint derives exactly the facts of derivation height k, so a depth bound is a round limit. A bound on rewrites alone runs the fixpoint in levels: each level first closes under the user rules, then one round of rewrites starts the next level, so level k holds the facts that need at most k rewrites on any path, a generalisation of Dijkstra's algorithm to such costs (Knuth, 1977). This is how the pure-Python backend works, and it carries over to Datalog engines and to SQL with recursive common table expressions.
 
 An engine without the lazy capability still runs every strategy except the lazy ones: the rewriter computes the rewrites first and passes them in `program.rewrites`.
 
@@ -207,10 +209,10 @@ A strategy is a setting of five knobs, chosen per query:
 | discovery timing | none, lazy, eager worklist, rounds, saturate | when rewrites are found relative to evaluation |
 | memo | on, off | whether a predicate is expanded once or on every call |
 | tables | on, off | termination on cyclic rewrites, and whether answers are proved once |
-| depth bound | none, n | how many rule and rewrite steps a derivation may use |
+| depth bound | none, n steps, n rewrites | how many rule and rewrite steps, or rewrite steps alone, a derivation may use |
 | alias classes | merged, kept | whether mutually implying predicates are renamed to one before evaluation |
 
-The named strategies are settings of these knobs. `lazy-tabled` (lazy, memo, tables) is semantic goal expansion inside SLG resolution. `depth-tabled` adds a depth bound of 3 and keys each table on the depth left. `eager-worklist` expands everything reachable from the query before evaluation and hands the engine native rules. `alias-canonical` does the same and then merges alias classes with a union-find that tracks argument swaps. `rounds` evaluates, expands the predicates that evaluation reached, and evaluates again until nothing new is reached. `saturate` expands the whole catalogue first. `naive` and `memo-untabled` drop tables and exist to show the loop.
+The named strategies are settings of these knobs. `lazy-tabled` (lazy, memo, tables) is semantic goal expansion inside SLG resolution. `depth-tabled` adds a depth bound of 3 and keys each table on the depth left. `rewrite-depth-tabled` bounds rewrites alone at 3, so user rules pass the depth left on unchanged. `eager-worklist` expands everything reachable from the query before evaluation and hands the engine native rules. `alias-canonical` does the same and then merges alias classes with a union-find that tracks argument swaps. `rounds` evaluates, expands the predicates that evaluation reached, and evaluates again until nothing new is reached. `saturate` expands the whole catalogue first. `naive` and `memo-untabled` drop tables and exist to show the loop.
 
 The rewriter refuses a strategy the engine's capabilities cannot run, rather than running something else under its name.
 
@@ -231,13 +233,14 @@ An engine implements the protocol when it passes the conformance kit, `semrewrit
 |---|---|
 | with tables and no depth bound, answers equal a reference fixpoint on generated programs with rewrite cycles, joins and arities 1 to 3 | `tabling` |
 | with a depth bound, answers equal the reference fixpoint restricted to derivations of at most that many steps, with tables on or off | `depth` |
+| with a bound on rewrites, answers equal the reference fixpoint restricted to derivations of at most that many rewrites on any path, and recursion through user rules answers completely, with tables on or off | `rewrite_depth` |
 | lazy expansion gives the same answers as passing every rewrite up front | `lazy` |
 | a budget too small for the program ends the run with a limit status and no answers, and an `ok` run stayed within its budget | always |
-| constants and predicates spelled like the engine's reserved words keep their answers, with every rewrite up front and through the callback | `tabling` or `depth` |
-| each answer has one proof whose steps are program rules or rewrites, whose leaves are program facts, and whose height respects the depth bound | `proofs` |
+| constants and predicates spelled like the engine's reserved words keep their answers, with every rewrite up front and through the callback | `tabling`, `depth` or `rewrite_depth` |
+| each answer has one proof whose steps are program rules or rewrites, whose leaves are program facts, and whose height in counted steps respects the depth bound | `proofs` |
 | without tables, a query on a rewrite cycle never finishes, and one that reaches no cycle finishes with the fixpoint | `untabled` |
 
-A run with tables, or with a depth bound of 1, must finish with exactly the reference answers; it gets the default work budget and no time limit, so a loaded machine cannot fail an engine, while the work limit still stops one that does not terminate. An untabled run deeper than that may instead stop at its budget with no answers, because top-down search without tables enumerates every derivation, and through a join their number grows faster than any budget the kit could promise; a run that reports a limit must actually have reached it. The reference evaluator is a naive bottom-up fixpoint with no dependencies, so the kit checks an engine against something other than itself. Run it with `semrewrite conformance --engine NAME` or from pytest.
+A run with tables, or with a depth bound of 1 step, must finish with exactly the reference answers; it gets the default work budget and no time limit, so a loaded machine cannot fail an engine, while the work limit still stops one that does not terminate. An untabled run deeper than that may instead stop at its budget with no answers, because top-down search without tables enumerates every derivation, and through a join their number grows faster than any budget the kit could promise; so may an untabled run bounding rewrites alone, whose user rules may recurse forever. A run that reports a limit must actually have reached it. The reference evaluator is a naive bottom-up fixpoint with no dependencies, so the kit checks an engine against something other than itself. Run it with `semrewrite conformance --engine NAME` or from pytest.
 
 ## Choosing settings
 
@@ -256,7 +259,7 @@ These defaults come from the experiment in `RESULTS.md`: four generated knowledg
 - The rewriter admits rewrites and then reasons exactly. It does not score proofs, as soft-unification systems do; a score per answer would change unification, scoring and the stopping condition, and is a different system.
 - Admission decides each rewrite on its own. Choosing the rewrite set jointly under transitivity, as entailment-graph methods do, needs every pair's score before admitting anything, so it cannot run goal by goal.
 - The rewrite set grows while a query runs and is kept only in the memo. Maintaining answers incrementally as facts change is left to the engine.
-- The depth bound counts the knowledge base's own rule steps as well as rewrite steps, so besides limiting how far a false rewrite spreads, it cuts recursion through user rules deeper than the bound, such as an ancestor rule over more generations than the bound allows. A bound on admitted rewrites alone would keep that recursion complete; it needs a second counter in every engine and is not built.
+- A depth bound counting steps counts the knowledge base's own rule steps as well as rewrite steps, so besides limiting how far a false rewrite spreads, it cuts recursion through user rules deeper than the bound, such as an ancestor rule over more generations than the bound allows. A bound on rewrites alone (`rewrite-depth-tabled`) keeps that recursion complete. It guarantees termination only with tables: without them a recursive user rule can loop, as it would in Prolog.
 
 ## Prior art
 
@@ -265,3 +268,4 @@ These defaults come from the experiment in `RESULTS.md`: four generated knowledg
 - NLProlog lets Prolog unify symbols whose embeddings are similar and scores each proof (Weber et al., ACL 2019). The rewriter admits implications instead, so evaluation stays exact and terminates, and it asks a judge that reads direction instead of a symmetric similarity.
 - Entailment graphs learn directional implications between predicates from text and choose them jointly under transitivity (Berant, Dagan and Goldberger, ACL 2011; Hosseini et al., TACL 2018). Their typed relation data, with the Levy/Holt directional pairs, is how the experiment measured the judges.
 - SLG resolution and its termination on programs with bounded term size (Verbaeten, De Schreye and Sagonas, arXiv cs/0003045; Riguzzi and Swift, arXiv 1110.0631) give the termination theorem.
+- Knuth's generalisation of Dijkstra's algorithm finds least-cost derivations in grammars whose costs combine by superior functions, processing facts in cost order (Information Processing Letters 6(1), 1977, doi:10.1016/0020-0190(77)90002-3). A bound on rewrites alone is such a cost, the most rewrites on any path, with rule steps free, so evaluating it level by level finds each fact at its least cost.

@@ -1,7 +1,8 @@
 """Purpose: unit tests of the pure-Python engine: derivation heights and depth bounds,
-expansion pruned by the depth bound, proofs, budget statuses and the work unit, lazy
-expansion once per predicate, any arity, repeated variables and constants, malformed
-input, names spelled like reserved words, and runs that repeat exactly.
+bounds counting rewrites alone, expansion pruned by the depth bound, proofs, budget
+statuses and the work unit, lazy expansion once per predicate, any arity, repeated
+variables and constants, malformed input, names spelled like reserved words, and runs
+that repeat exactly.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from semrewrite import conformance as kit
+from semrewrite import fixpoint
 from semrewrite.engines import make
 from semrewrite.engines.python import PythonEngine
 from semrewrite.model import Atom, Rewrite, Rule
@@ -65,6 +67,25 @@ def distances(program: Program, start: str) -> dict[str, int]:
     return dist
 
 
+def rewrite_distances(program: Program, start: str) -> dict[str, int]:
+    """The fewest rewrite steps from `start` to each predicate, rule bodies costing none (Dijkstra on 0-1 weights)."""
+    graph: dict[str, list[tuple[str, int]]] = {}
+    for rule in program.rules:
+        graph.setdefault(rule.head.pred, []).extend((a.pred, 0) for a in rule.body)
+    for rewrite in program.rewrites:
+        graph.setdefault(rewrite.conclusion, []).append((rewrite.premise, 1))
+    dist = {start: 0}
+    frontier = [start]
+    while frontier:
+        pred = min(frontier, key=dist.__getitem__)
+        frontier.remove(pred)
+        for nxt, cost in graph.get(pred, ()):
+            if nxt not in dist or dist[pred] + cost < dist[nxt]:
+                dist[nxt] = dist[pred] + cost
+                frontier.append(nxt)
+    return dist
+
+
 class Recorder:
     """An expander serving fixed rewrites by conclusion and recording each call."""
 
@@ -98,8 +119,8 @@ def test_it_is_the_registered_engine() -> None:
     engine = make("python")
     assert isinstance(engine, PythonEngine) and isinstance(engine, Engine)
     assert engine.name == "python"
-    assert engine.capabilities == Capabilities(tabling=True, depth=True, lazy=True, untabled=False,
-                                               reached=True, proofs=True)
+    assert engine.capabilities == Capabilities(tabling=True, depth=True, rewrite_depth=True, lazy=True,
+                                               untabled=False, reached=True, proofs=True)
 
 
 def test_the_design_example() -> None:
@@ -137,6 +158,60 @@ def test_depth_bound_on_a_chain(depth: int) -> None:
     assert s.status == "ok"
     assert s.answers == ({("a",)} if reachable else set())
     assert [height(p) for p in s.proofs.values()] == ([3] if reachable else [])
+
+
+def test_a_bound_on_rewrites_keeps_user_recursion_complete() -> None:
+    """A rewrite on top of a 30-node closure: a step bound of 3 cuts the paths, one rewrite answers them all."""
+    program, _ = closure(30)
+    program = replace(program, rewrites=(Rewrite("link", "path", (0, 1)),))
+    query = Atom("link", ("X", "Y"))
+    every = {(f"n{i}", f"n{j}") for i in range(30) for j in range(i + 1, 30)}
+    assert solve(replace(program, depth=1, depth_counts="rewrites"), query).answers == every
+    # path(ni, nj) takes j - i rule steps, and link one rewrite more.
+    steps = solve(replace(program, depth=3), query)
+    assert steps.answers == {(a, b) for a, b in every if int(b[1:]) - int(a[1:]) <= 2}
+    assert solve(replace(program, depth=1, depth_counts="rewrites"), Atom("path", ("X", "Y"))).answers == every
+
+
+@pytest.mark.parametrize("depth", [1, 2, 3, 4])
+def test_a_bound_on_rewrites_cuts_rewrite_chains_and_ignores_rules_between_them(depth: int) -> None:
+    """p0 needs three rewrites, each followed by a user rule: six steps, but three rewrites."""
+    rewrites = tuple(Rewrite(f"p{i}", f"q{i}", (0,)) for i in range(3))
+    rules = tuple(Rule(Atom(f"q{i}", ("X",)), (Atom(f"p{i + 1}", ("X",)),)) for i in range(3))
+    chain = Program(facts=(Atom("p3", ("a",)),), rules=rules, rewrites=rewrites, depth=depth)
+    by_rewrites = solve(replace(chain, depth_counts="rewrites"), Atom("p0", ("X",)))
+    assert by_rewrites.answers == ({("a",)} if depth >= 3 else set())
+    assert [p.steps("rewrites") for p in by_rewrites.proofs.values()] == ([3] if depth >= 3 else [])
+    assert solve(chain, Atom("p0", ("X",))).answers == set()
+
+
+@settings(max_examples=300, deadline=None)
+@given(kit.cases(), st.integers(1, 4))
+def test_level_k_derives_the_facts_needing_k_rewrites(case: kit.Case, depth: int) -> None:
+    """Under a bound on rewrites each answer's proof is its first derivation, so it uses the fewest rewrites any
+    derivation needs on its busiest path, and the answers are the reference's."""
+    bounded = replace(case.program, depth=depth, depth_counts="rewrites")
+    s = solve(bounded, case.query)
+    assert s.status == "ok" and s.answers == kit.reference(bounded, case.query)
+    within = {0: fixpoint.answers(fixpoint.least_model(case.program.facts, case.program.rules), case.query)}
+    within |= {d: kit.reference(replace(bounded, depth=d), case.query) for d in range(1, depth + 1)}
+    for answer, proof in s.proofs.items():
+        assert proof.steps("rewrites") == min(d for d, rows in within.items() if answer in rows), proof.lines()
+        assert kit.proof_problem(proof, Atom(case.query.pred, answer), bounded) is None
+
+
+@settings(max_examples=300, deadline=None)
+@given(kit.cases(), st.integers(1, 4))
+def test_a_bound_on_rewrites_expands_only_predicates_fewer_rewrites_away(case: kit.Case, depth: int) -> None:
+    """With a bound of n rewrites, expand runs once for each predicate fewer than n rewrites from the query."""
+    recorder = Recorder(case.program.rewrites)
+    s = solve(replace(case.program, rewrites=(), depth=depth, depth_counts="rewrites"), case.query, expand=recorder)
+    dist = rewrite_distances(case.program, case.query.pred)
+    assert len(recorder.calls) == len(set(recorder.calls))
+    assert set(recorder.calls) == {p for p, d in dist.items() if d < depth}
+    assert s.reached == {p for p, d in dist.items() if d <= depth}
+    bounded = replace(case.program, depth=depth, depth_counts="rewrites")
+    assert s.status == "ok" and s.answers == kit.reference(bounded, case.query)
 
 
 @settings(max_examples=300, deadline=None)

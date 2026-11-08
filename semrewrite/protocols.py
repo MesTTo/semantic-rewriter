@@ -8,12 +8,15 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Literal, Protocol, runtime_checkable
+from typing import Literal, Protocol, get_args, runtime_checkable
 
 from semrewrite.model import Atom, Predicate, Proposal, Rewrite, Rule
 
 Status = Literal["ok", "work_limit", "time_limit", "error"]
 """How a run ended: finished, or stopped by the work budget, the time budget or an engine error."""
+
+DepthCounts = Literal["steps", "rewrites"]
+"""What a depth bound counts: every rule and rewrite step, or rewrite steps alone, leaving the user's rules unbounded."""
 
 Expander = Callable[[str], Iterable[Rewrite]]
 """Given a predicate name, the rewrites that conclude it; an engine with the lazy capability calls it while it evaluates."""
@@ -38,7 +41,8 @@ class Capabilities:
     """What an engine supports; the rewriter refuses a strategy that needs a capability the engine lacks.
 
     tabling: with Program.tabled, every program terminates with its exact fixpoint answers.
-    depth: honours Program.depth > 0 with the derivation-height semantics of DESIGN.md.
+    depth: honours Program.depth > 0 counting steps, the derivation-height semantics of DESIGN.md.
+    rewrite_depth: honours Program.depth > 0 counting rewrite steps alone.
     lazy: calls the expander during evaluation instead of needing every rewrite up front.
     untabled: can run Program.tabled=False as plain top-down resolution.
     reached: reports the predicates evaluation called, which the rounds strategy needs.
@@ -47,6 +51,7 @@ class Capabilities:
 
     tabling: bool = False
     depth: bool = False
+    rewrite_depth: bool = False
     lazy: bool = False
     untabled: bool = False
     reached: bool = False
@@ -58,8 +63,11 @@ class Program:
     """What an engine evaluates: ground facts, user rules and the rewrites known before evaluation.
 
     depth 0 means no bound; depth n admits an answer only when it has a
-    derivation using at most n rule or rewrite steps along every path from the
-    query down to a fact.
+    derivation whose counted steps, along every path from the query down to a
+    fact, number at most n. With depth_counts "steps" every rule and rewrite
+    step counts; with "rewrites" only rewrite steps do, so the user's own rules
+    recurse as deep as their facts allow while a false rewrite still spreads
+    through at most n rewrites.
     """
 
     facts: tuple[Atom, ...]
@@ -67,6 +75,7 @@ class Program:
     rewrites: tuple[Rewrite, ...] = ()
     tabled: bool = True
     depth: int = 0
+    depth_counts: DepthCounts = "steps"
 
     def __post_init__(self) -> None:
         for fact in self.facts:
@@ -75,6 +84,9 @@ class Program:
                 raise ValueError(msg)
         if self.depth < 0:
             msg = "depth counts steps, so it can't be negative"
+            raise ValueError(msg)
+        if self.depth_counts not in get_args(DepthCounts):
+            msg = f"depth_counts is {self.depth_counts!r}; a depth bound counts one of {get_args(DepthCounts)}"
             raise ValueError(msg)
 
 
@@ -86,9 +98,13 @@ class Proof:
     by: Rule | Rewrite | None = None
     children: tuple[Proof, ...] = ()
 
-    def steps(self) -> int:
-        """The derivation height: rule and rewrite steps on the longest path down to a fact."""
-        return 0 if self.by is None else 1 + max((c.steps() for c in self.children), default=0)
+    def steps(self, counts: DepthCounts = "steps") -> int:
+        """The derivation height in counted steps, on the path down to a fact that has the most: every rule and
+        rewrite step, or with counts "rewrites" the rewrite steps alone."""
+        if self.by is None:
+            return 0
+        own = 1 if counts == "steps" or isinstance(self.by, Rewrite) else 0
+        return own + max((c.steps(counts) for c in self.children), default=0)
 
     def lines(self, indent: int = 0) -> list[str]:
         """The proof as indented text, the atom first and each premise below it."""

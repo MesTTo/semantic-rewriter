@@ -46,13 +46,14 @@ class TopDown:
     backtracking unwinds, and keeps goals in a shared linked list, so a step costs the
     size of the clause it tries, however deep the search; facts are indexed on their
     first argument. Work counts the clauses tried; a depth bound n lets a goal use a
-    rule only while fewer than n rule steps lie above it. It has the untabled
-    capability the Python engine lacks, so it exercises the untabled property, and it
-    shares no code with the kit.
+    counted rule only while fewer than n counted steps lie above it, where every rule
+    counts, or under depth_counts "rewrites" only the rules of rewrites. It has the
+    untabled capability the Python engine lacks, so it exercises the untabled property,
+    and it shares no code with the kit.
     """
 
     name = "topdown"
-    capabilities = Capabilities(depth=True, lazy=True, untabled=True, reached=True)
+    capabilities = Capabilities(depth=True, rewrite_depth=True, lazy=True, untabled=True, reached=True)
 
     def solve(self, program: Program, query: Atom, budget: Budget, expand: Expander | None = None) -> Solution:
         start = time.monotonic()
@@ -65,6 +66,8 @@ class TopDown:
         rules: dict[str, list[Rule]] = {}
         for rule in (*program.rules, *(rewrite.rule() for rewrite in program.rewrites)):
             rules.setdefault(rule.head.pred, []).append(rule)
+        # The user rules, whose steps a bound on rewrites alone does not count.
+        free = set(program.rules) if program.depth_counts == "rewrites" else set()
         bindings: dict[str, str] = {}
         trail: list[str] = []
 
@@ -112,7 +115,7 @@ class TopDown:
                             rules.setdefault(pred, []).append(rewrite.rule())
                     first = deref(args[0]) if args else None
                     rows = every.get(pred, []) if first is None or is_variable(first) else indexed.get((pred, first), [])
-                    clauses = [*rows, *(rules.get(pred, []) if left != 0 else [])]
+                    clauses = [*rows, *(r for r in rules.get(pred, []) if left != 0 or r in free)]
                 stepped = False
                 while i < len(clauses):
                     clause = clauses[i]
@@ -135,7 +138,7 @@ class TopDown:
                             del bindings[trail.pop()]
                         continue
                     choices.append((goals, clauses, i, mark))
-                    below = None if left is None else left - 1
+                    below = None if left is None else left if clause in free else left - 1
                     for atom in reversed(body):
                         rest = ((atom.pred, tuple(fresh.get(t, t) for t in atom.args), below), rest)
                     goals, clauses, i = rest, [], 0
@@ -159,11 +162,13 @@ def test_kit_passes_a_top_down_engine_and_runs_untabled() -> None:
     print(report.summary())
     outcomes = {v.prop: v.outcome for v in report.verdicts}
     assert report.passed, report.summary()
-    assert outcomes == {"tabling": "skip", "depth": "pass", "lazy": "pass", "budget": "pass",
-                        "names": "pass", "untabled": "pass", "proofs": "skip"}
+    assert outcomes == {"tabling": "skip", "depth": "pass", "rewrite-depth": "pass", "lazy": "pass",
+                        "budget": "pass", "names": "pass", "untabled": "pass", "proofs": "skip"}
     depth = next(v for v in report.verdicts if v.prop == "depth")
     assert depth.may_stop == 3 * depth.cases and 0 <= depth.stopped <= depth.may_stop
-    assert "untabled runs deeper than one step stopped at a limit, which they may" in depth.lines()[0]
+    assert "untabled runs allowed to stop at a limit did" in depth.lines()[0]
+    rewrites = next(v for v in report.verdicts if v.prop == "rewrite-depth")
+    assert rewrites.may_stop == 4 * rewrites.cases and 0 <= rewrites.stopped <= rewrites.may_stop
 
 
 # Broken engines ----------------------------------------------------------------------
@@ -194,6 +199,28 @@ class DepthOffByOne(_Delegate):
 
     def solve(self, program, query, budget, expand=None):
         return self.inner.solve(replace(program, depth=program.depth and program.depth + 1), query, budget, expand)
+
+
+class RuleStepsCount(_Delegate):
+    """Counts user rule steps under a bound on rewrites, so it cuts recursion through user rules."""
+
+    def solve(self, program, query, budget, expand=None):
+        return self.inner.solve(replace(program, depth_counts="steps"), query, budget, expand)
+
+
+class IgnoresRewriteBound(_Delegate):
+    """Evaluates a program bounded on rewrites to its fixpoint, so false rewrites spread without limit."""
+
+    def solve(self, program, query, budget, expand=None):
+        return self.inner.solve(replace(program, depth=0) if program.depth_counts == "rewrites" else program,
+                                query, budget, expand)
+
+
+class StepsAsRewrites(_Delegate):
+    """Counts only rewrites under a bound on steps, so its step bound lets user rules recurse freely."""
+
+    def solve(self, program, query, budget, expand=None):
+        return self.inner.solve(replace(program, depth_counts="rewrites"), query, budget, expand)
 
 
 class IgnoresExpand(_Delegate):
@@ -348,6 +375,9 @@ class GivesUpEarly(TopDown):
 BROKEN: list[tuple[Engine, str]] = [
     (IgnoresDepth(), "depth"),
     (DepthOffByOne(), "depth"),
+    (RuleStepsCount(), "rewrite-depth"),
+    (IgnoresRewriteBound(), "rewrite-depth"),
+    (StepsAsRewrites(), "depth"),
     (IgnoresExpand(), "lazy"),
     (ExpandsQueryOnly(), "lazy"),
     (IgnoresBudget(), "budget"),
@@ -392,7 +422,7 @@ def test_chain_closed_form_is_the_reference(case: kit.Case) -> None:
 @given(kit.cases())
 def test_properties_run_inside_given(case: kit.Case) -> None:
     engine = PythonEngine()
-    for check in (kit.check_tabling, kit.check_depth, kit.check_lazy, kit.check_proofs):
+    for check in (kit.check_tabling, kit.check_depth, kit.check_rewrite_depth, kit.check_lazy, kit.check_proofs):
         check(engine, case)
 
 
@@ -440,12 +470,28 @@ def test_proof_problem_names_each_defect() -> None:
     assert "more than the depth bound" in kit.proof_problem(tall, answer, two_steps)
 
 
+def test_proof_problem_counts_only_rewrites_under_a_bound_on_rewrites() -> None:
+    """grand(ann, cy) by a user rule over two rewrite steps: two steps on each path, one of them a rewrite."""
+    facts = (Atom("mother", ("ann", "bob")), Atom("mother", ("bob", "cy")))
+    rewrite = Rewrite("parent", "mother", (0, 1))
+    grand = Rule(Atom("grand", ("X", "Z")), (Atom("parent", ("X", "Y")), Atom("parent", ("Y", "Z"))))
+    answer = Atom("grand", ("ann", "cy"))
+    proof = Proof(answer, grand, tuple(Proof(Atom("parent", f.args), rewrite, (Proof(f),)) for f in facts))
+    program = Program(facts=facts, rules=(grand,), rewrites=(rewrite,), depth=1)
+    problem = kit.proof_problem(proof, answer, program)
+    assert problem is not None and "takes 2 steps, more than the depth bound 1 allows" in problem
+    assert kit.proof_problem(proof, answer, replace(program, depth_counts="rewrites")) is None
+    assert proof.steps() == 2 and proof.steps("rewrites") == 1
+    rule_twice = Proof(answer, grand, tuple(Proof(Atom("parent", f.args), rewrite.rule(), (Proof(f),)) for f in facts))
+    assert kit.proof_problem(rule_twice, answer, replace(program, depth_counts="rewrites")) is None
+
+
 def test_summary_and_command_line(capsys: pytest.CaptureFixture[str]) -> None:
     report = kit.run(PythonEngine(), max_examples=10)
     lines = report.summary().splitlines()
-    assert lines[0].startswith("conformance of engine 'python': 7 properties")
+    assert lines[0].startswith("conformance of engine 'python': 8 properties")
     assert [line.split()[1] for line in lines[1:-1]] == [p.name for p in kit.PROPERTIES]
-    assert lines[-1] == "verdict: engine 'python' conforms: 6 passed, 0 failed, 1 skipped"
+    assert lines[-1] == "verdict: engine 'python' conforms: 7 passed, 0 failed, 1 skipped"
     assert kit.main(["--engine", "python", "--max-examples", "5", "--property", "depth"]) == 0
     out = capsys.readouterr().out
     assert "pass  depth" in out and out.rstrip().endswith("conforms: 1 passed, 0 failed, 0 skipped")
