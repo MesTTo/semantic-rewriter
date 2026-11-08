@@ -6,7 +6,7 @@ description = "Semantic rewriting for logic engines: discover implications betwe
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
-authors = [{ name = "MesTTo", email = "a.mesto@student.unsw.edu.au" }]
+authors = [{ name = "MesTTo" }]
 requires-python = ">=3.11"
 keywords = ["logic programming", "tabling", "SLG", "MeTTa", "natural language inference", "query rewriting", "Datalog"]
 classifiers = [

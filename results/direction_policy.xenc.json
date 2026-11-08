@@ -1,0 +1,1195 @@
+[
+ {
+  "dev_curve": {
+   "0.0": 0.6827281566884289,
+   "0.01": 0.7022197527434366,
+   "0.02": 0.7070218085845257,
+   "0.05": 0.7052924017224614,
+   "0.1": 0.7079108209473538,
+   "0.2": 0.7060300041672454,
+   "0.3": 0.7047256563411585,
+   "0.5": 0.7034213085150716,
+   "1.0": 0.7076371718294208
+  },
+  "discovery": [
+   {
+    "admitted": 78,
+    "judge": "nli-deberta-base:plain",
+    "judge_computed": 442,
+    "judge_usage": {
+     "calls": 9,
+     "pairs": 13874
+    },
+    "kb": "family",
+    "kinds": {
+     "reversed": 6,
+     "trap": 7,
+     "true": 53,
+     "unrelated": 12
+    },
+    "precision": 0.6794871794871795,
+    "recall": 0.7464788732394366,
+    "untabled_prediction": {
+     "loops": 11,
+     "undecided": 6
+    }
+   },
+   {
+    "admitted": 81,
+    "judge": "nli-deberta-base:plain",
+    "judge_computed": 323,
+    "judge_usage": {
+     "calls": 10,
+     "pairs": 14197
+    },
+    "kb": "work",
+    "kinds": {
+     "reversed": 1,
+     "swap": 10,
+     "trap": 5,
+     "true": 51,
+     "unrelated": 14
+    },
+    "precision": 0.6296296296296297,
+    "recall": 0.8095238095238095,
+    "untabled_prediction": {
+     "loops": 14
+    }
+   },
+   {
+    "admitted": 76,
+    "judge": "nli-deberta-base:plain",
+    "judge_computed": 255,
+    "judge_usage": {
+     "calls": 11,
+     "pairs": 14452
+    },
+    "kb": "geography",
+    "kinds": {
+     "reversed": 5,
+     "swap": 5,
+     "trap": 3,
+     "true": 45,
+     "unrelated": 18
+    },
+    "precision": 0.5921052631578947,
+    "recall": 0.6164383561643836,
+    "untabled_prediction": {
+     "loops": 12,
+     "terminates": 2
+    }
+   },
+   {
+    "admitted": 91,
+    "judge": "nli-deberta-base:plain",
+    "judge_computed": 255,
+    "judge_usage": {
+     "calls": 12,
+     "pairs": 14707
+    },
+    "kb": "medicine",
+    "kinds": {
+     "reversed": 15,
+     "swap": 1,
+     "trap": 7,
+     "true": 36,
+     "unrelated": 32
+    },
+    "precision": 0.3956043956043956,
+    "recall": 0.7058823529411765,
+    "untabled_prediction": {
+     "loops": 13
+    }
+   },
+   {
+    "admitted": 77,
+    "judge": "nli-deberta-base:directional",
+    "judge_computed": 442,
+    "judge_usage": {
+     "calls": 13,
+     "pairs": 15591
+    },
+    "kb": "family",
+    "kinds": {
+     "reversed": 6,
+     "trap": 7,
+     "true": 53,
+     "unrelated": 11
+    },
+    "precision": 0.6883116883116883,
+    "recall": 0.7464788732394366,
+    "untabled_prediction": {
+     "loops": 11,
+     "undecided": 6
+    }
+   },
+   {
+    "admitted": 76,
+    "judge": "nli-deberta-base:directional",
+    "judge_computed": 323,
+    "judge_usage": {
+     "calls": 14,
+     "pairs": 16237
+    },
+    "kb": "work",
+    "kinds": {
+     "reversed": 1,
+     "swap": 9,
+     "trap": 5,
+     "true": 50,
+     "unrelated": 11
+    },
+    "precision": 0.6578947368421053,
+    "recall": 0.7936507936507936,
+    "untabled_prediction": {
+     "loops": 12,
+     "undecided": 2
+    }
+   },
+   {
+    "admitted": 73,
+    "judge": "nli-deberta-base:directional",
+    "judge_computed": 255,
+    "judge_usage": {
+     "calls": 15,
+     "pairs": 16747
+    },
+    "kb": "geography",
+    "kinds": {
+     "reversed": 4,
+     "swap": 5,
+     "trap": 3,
+     "true": 43,
+     "unrelated": 18
+    },
+    "precision": 0.589041095890411,
+    "recall": 0.589041095890411,
+    "untabled_prediction": {
+     "loops": 8,
+     "terminates": 2,
+     "undecided": 4
+    }
+   },
+   {
+    "admitted": 85,
+    "judge": "nli-deberta-base:directional",
+    "judge_computed": 255,
+    "judge_usage": {
+     "calls": 16,
+     "pairs": 17257
+    },
+    "kb": "medicine",
+    "kinds": {
+     "reversed": 13,
+     "swap": 1,
+     "trap": 5,
+     "true": 35,
+     "unrelated": 31
+    },
+    "precision": 0.4117647058823529,
+    "recall": 0.6862745098039216,
+    "untabled_prediction": {
+     "loops": 13
+    }
+   }
+  ],
+  "judge": "nli-deberta-base",
+  "pair_sets": {
+   "hard": {
+    "directional": {
+     "admitted": 78,
+     "balanced_accuracy": 0.8095,
+     "precision": 0.6667,
+     "recall": 0.9286
+    },
+    "plain": {
+     "admitted": 81,
+     "balanced_accuracy": 0.7917,
+     "precision": 0.642,
+     "recall": 0.9286
+    }
+   },
+   "levyholt": {
+    "directional": {
+     "admitted": 806,
+     "balanced_accuracy": 0.6984,
+     "precision": 0.7196,
+     "recall": 0.6502
+    },
+    "plain": {
+     "admitted": 867,
+     "balanced_accuracy": 0.6855,
+     "precision": 0.6909,
+     "recall": 0.6715
+    }
+   },
+   "wikidata": {
+    "directional": {
+     "admitted": 1064,
+     "balanced_accuracy": 0.7064,
+     "precision": 0.4126,
+     "recall": 0.6484
+    },
+    "plain": {
+     "admitted": 1127,
+     "balanced_accuracy": 0.7056,
+     "precision": 0.4002,
+     "recall": 0.6662
+    }
+   }
+  },
+  "rewriter": [
+   {
+    "exact_rate": 0.2069,
+    "expansions_per_query": 12.97,
+    "f1": 0.4924,
+    "false_rewrite_rate": 0.4356,
+    "finished_rate": 0.569,
+    "judge": "nli-deberta-base:directional",
+    "kb": "ALL",
+    "mode": "cold",
+    "precision": 0.473,
+    "precision_finished": 0.473,
+    "proposals_per_query": 220.41,
+    "queries": 58,
+    "recall": 0.5135,
+    "recall_finished": 0.9194,
+    "retrievals_per_query": 12.97,
+    "rewrite_kinds": {
+     "reversed": 318,
+     "swap": 97,
+     "trap": 195,
+     "true": 1849,
+     "unrelated": 817
+    },
+    "seconds_per_query": 0.1423,
+    "strategy": "lazy-tabled",
+    "tables_per_query": 251.9,
+    "work_per_query": 251865.7
+   },
+   {
+    "exact_rate": 0.1897,
+    "expansions_per_query": 12.97,
+    "f1": 0.4914,
+    "false_rewrite_rate": 0.4472,
+    "finished_rate": 0.569,
+    "judge": "nli-deberta-base:plain",
+    "kb": "ALL",
+    "mode": "cold",
+    "precision": 0.4711,
+    "precision_finished": 0.4711,
+    "proposals_per_query": 220.41,
+    "queries": 58,
+    "recall": 0.5135,
+    "recall_finished": 0.9194,
+    "retrievals_per_query": 12.97,
+    "rewrite_kinds": {
+     "reversed": 356,
+     "swap": 97,
+     "trap": 221,
+     "true": 1886,
+     "unrelated": 852
+    },
+    "seconds_per_query": 0.1644,
+    "strategy": "lazy-tabled",
+    "tables_per_query": 249.93,
+    "work_per_query": 250908.5
+   }
+  ],
+  "slack": 0.1,
+  "threshold": 0.2221469059586525
+ },
+ {
+  "dev_curve": {
+   "0.0": 0.6895040977913599,
+   "0.01": 0.7062355882761495,
+   "0.02": 0.7106028615085429,
+   "0.05": 0.7058202528128907,
+   "0.1": 0.7059716627309349,
+   "0.2": 0.7062647589943047,
+   "0.3": 0.7065578552576747,
+   "0.5": 0.7065578552576747,
+   "1.0": 0.7065578552576747
+  },
+  "discovery": [
+   {
+    "admitted": 81,
+    "judge": "nli-deberta-large:plain",
+    "judge_computed": 442,
+    "judge_usage": {
+     "calls": 9,
+     "pairs": 13874
+    },
+    "kb": "family",
+    "kinds": {
+     "reversed": 7,
+     "swap": 1,
+     "trap": 3,
+     "true": 50,
+     "unrelated": 20
+    },
+    "precision": 0.6172839506172839,
+    "recall": 0.704225352112676,
+    "untabled_prediction": {
+     "loops": 13,
+     "undecided": 4
+    }
+   },
+   {
+    "admitted": 61,
+    "judge": "nli-deberta-large:plain",
+    "judge_computed": 323,
+    "judge_usage": {
+     "calls": 10,
+     "pairs": 14197
+    },
+    "kb": "work",
+    "kinds": {
+     "reversed": 1,
+     "trap": 3,
+     "true": 49,
+     "unrelated": 8
+    },
+    "precision": 0.8032786885245902,
+    "recall": 0.7777777777777778,
+    "untabled_prediction": {
+     "loops": 14
+    }
+   },
+   {
+    "admitted": 52,
+    "judge": "nli-deberta-large:plain",
+    "judge_computed": 255,
+    "judge_usage": {
+     "calls": 11,
+     "pairs": 14452
+    },
+    "kb": "geography",
+    "kinds": {
+     "reversed": 2,
+     "swap": 1,
+     "true": 44,
+     "unrelated": 5
+    },
+    "precision": 0.8461538461538461,
+    "recall": 0.6027397260273972,
+    "untabled_prediction": {
+     "loops": 12,
+     "terminates": 2
+    }
+   },
+   {
+    "admitted": 69,
+    "judge": "nli-deberta-large:plain",
+    "judge_computed": 255,
+    "judge_usage": {
+     "calls": 12,
+     "pairs": 14707
+    },
+    "kb": "medicine",
+    "kinds": {
+     "reversed": 9,
+     "trap": 3,
+     "true": 32,
+     "unrelated": 25
+    },
+    "precision": 0.463768115942029,
+    "recall": 0.6274509803921569,
+    "untabled_prediction": {
+     "loops": 13
+    }
+   },
+   {
+    "admitted": 75,
+    "judge": "nli-deberta-large:directional",
+    "judge_computed": 442,
+    "judge_usage": {
+     "calls": 13,
+     "pairs": 15591
+    },
+    "kb": "family",
+    "kinds": {
+     "reversed": 4,
+     "swap": 1,
+     "trap": 3,
+     "true": 49,
+     "unrelated": 18
+    },
+    "precision": 0.6533333333333333,
+    "recall": 0.6901408450704225,
+    "untabled_prediction": {
+     "loops": 13,
+     "undecided": 4
+    }
+   },
+   {
+    "admitted": 59,
+    "judge": "nli-deberta-large:directional",
+    "judge_computed": 323,
+    "judge_usage": {
+     "calls": 14,
+     "pairs": 16237
+    },
+    "kb": "work",
+    "kinds": {
+     "reversed": 1,
+     "trap": 3,
+     "true": 49,
+     "unrelated": 6
+    },
+    "precision": 0.8305084745762712,
+    "recall": 0.7777777777777778,
+    "untabled_prediction": {
+     "loops": 12,
+     "undecided": 2
+    }
+   },
+   {
+    "admitted": 50,
+    "judge": "nli-deberta-large:directional",
+    "judge_computed": 255,
+    "judge_usage": {
+     "calls": 15,
+     "pairs": 16747
+    },
+    "kb": "geography",
+    "kinds": {
+     "reversed": 2,
+     "swap": 1,
+     "true": 42,
+     "unrelated": 5
+    },
+    "precision": 0.84,
+    "recall": 0.5753424657534246,
+    "untabled_prediction": {
+     "loops": 12,
+     "terminates": 2
+    }
+   },
+   {
+    "admitted": 63,
+    "judge": "nli-deberta-large:directional",
+    "judge_computed": 255,
+    "judge_usage": {
+     "calls": 16,
+     "pairs": 17257
+    },
+    "kb": "medicine",
+    "kinds": {
+     "reversed": 5,
+     "trap": 3,
+     "true": 32,
+     "unrelated": 23
+    },
+    "precision": 0.5079365079365079,
+    "recall": 0.6274509803921569,
+    "untabled_prediction": {
+     "loops": 13
+    }
+   }
+  ],
+  "judge": "nli-deberta-large",
+  "pair_sets": {
+   "hard": {
+    "directional": {
+     "admitted": 68,
+     "balanced_accuracy": 0.7798,
+     "precision": 0.6765,
+     "recall": 0.8214
+    },
+    "plain": {
+     "admitted": 71,
+     "balanced_accuracy": 0.7768,
+     "precision": 0.662,
+     "recall": 0.8393
+    }
+   },
+   "levyholt": {
+    "directional": {
+     "admitted": 655,
+     "balanced_accuracy": 0.6833,
+     "precision": 0.7496,
+     "recall": 0.5504
+    },
+    "plain": {
+     "admitted": 710,
+     "balanced_accuracy": 0.667,
+     "precision": 0.7099,
+     "recall": 0.565
+    }
+   },
+   "wikidata": {
+    "directional": {
+     "admitted": 837,
+     "balanced_accuracy": 0.7019,
+     "precision": 0.4636,
+     "recall": 0.5731
+    },
+    "plain": {
+     "admitted": 892,
+     "balanced_accuracy": 0.698,
+     "precision": 0.4428,
+     "recall": 0.5835
+    }
+   }
+  },
+  "rewriter": [
+   {
+    "exact_rate": 0.4655,
+    "expansions_per_query": 9.45,
+    "f1": 0.6549,
+    "false_rewrite_rate": 0.2955,
+    "finished_rate": 0.6379,
+    "judge": "nli-deberta-large:directional",
+    "kb": "ALL",
+    "mode": "cold",
+    "precision": 0.7429,
+    "precision_finished": 0.7429,
+    "proposals_per_query": 160.62,
+    "queries": 58,
+    "recall": 0.5856,
+    "recall_finished": 0.9489,
+    "retrievals_per_query": 9.45,
+    "rewrite_kinds": {
+     "reversed": 81,
+     "swap": 14,
+     "trap": 45,
+     "true": 1366,
+     "unrelated": 433
+    },
+    "seconds_per_query": 0.1413,
+    "strategy": "lazy-tabled",
+    "tables_per_query": 323.16,
+    "work_per_query": 201310.8
+   },
+   {
+    "exact_rate": 0.431,
+    "expansions_per_query": 10.03,
+    "f1": 0.6484,
+    "false_rewrite_rate": 0.315,
+    "finished_rate": 0.6379,
+    "judge": "nli-deberta-large:plain",
+    "kb": "ALL",
+    "mode": "cold",
+    "precision": 0.7263,
+    "precision_finished": 0.7263,
+    "proposals_per_query": 170.59,
+    "queries": 58,
+    "recall": 0.5856,
+    "recall_finished": 0.9489,
+    "retrievals_per_query": 10.03,
+    "rewrite_kinds": {
+     "reversed": 153,
+     "swap": 14,
+     "trap": 45,
+     "true": 1618,
+     "unrelated": 532
+    },
+    "seconds_per_query": 0.1225,
+    "strategy": "lazy-tabled",
+    "tables_per_query": 292.47,
+    "work_per_query": 202439.3
+   }
+  ],
+  "slack": 0.02,
+  "threshold": 0.659252792596817
+ },
+ {
+  "dev_curve": {
+   "0.0": 0.7379010973746354,
+   "0.01": 0.7630351437699681,
+   "0.02": 0.7641978052507292,
+   "0.05": 0.7656535629948604,
+   "0.1": 0.7642075288234478,
+   "0.2": 0.7624781219613835,
+   "0.3": 0.7601625225725794,
+   "0.5": 0.753499097096819,
+   "1.0": 0.7514863175441033
+  },
+  "discovery": [
+   {
+    "admitted": 87,
+    "judge": "nli-deberta-large-wanli:plain",
+    "judge_computed": 442,
+    "judge_usage": {
+     "calls": 9,
+     "pairs": 13874
+    },
+    "kb": "family",
+    "kinds": {
+     "reversed": 6,
+     "swap": 7,
+     "true": 56,
+     "unrelated": 18
+    },
+    "precision": 0.6436781609195402,
+    "recall": 0.7887323943661971,
+    "untabled_prediction": {
+     "loops": 13,
+     "undecided": 4
+    }
+   },
+   {
+    "admitted": 69,
+    "judge": "nli-deberta-large-wanli:plain",
+    "judge_computed": 323,
+    "judge_usage": {
+     "calls": 10,
+     "pairs": 14197
+    },
+    "kb": "work",
+    "kinds": {
+     "reversed": 5,
+     "trap": 2,
+     "true": 56,
+     "unrelated": 6
+    },
+    "precision": 0.8115942028985508,
+    "recall": 0.8888888888888888,
+    "untabled_prediction": {
+     "loops": 14
+    }
+   },
+   {
+    "admitted": 77,
+    "judge": "nli-deberta-large-wanli:plain",
+    "judge_computed": 255,
+    "judge_usage": {
+     "calls": 11,
+     "pairs": 14452
+    },
+    "kb": "geography",
+    "kinds": {
+     "reversed": 2,
+     "swap": 13,
+     "trap": 1,
+     "true": 53,
+     "unrelated": 8
+    },
+    "precision": 0.6883116883116883,
+    "recall": 0.726027397260274,
+    "untabled_prediction": {
+     "loops": 12,
+     "terminates": 2
+    }
+   },
+   {
+    "admitted": 96,
+    "judge": "nli-deberta-large-wanli:plain",
+    "judge_computed": 255,
+    "judge_usage": {
+     "calls": 12,
+     "pairs": 14707
+    },
+    "kb": "medicine",
+    "kinds": {
+     "reversed": 8,
+     "swap": 8,
+     "trap": 10,
+     "true": 36,
+     "unrelated": 34
+    },
+    "precision": 0.375,
+    "recall": 0.7058823529411765,
+    "untabled_prediction": {
+     "loops": 13
+    }
+   },
+   {
+    "admitted": 77,
+    "judge": "nli-deberta-large-wanli:directional",
+    "judge_computed": 442,
+    "judge_usage": {
+     "calls": 13,
+     "pairs": 15591
+    },
+    "kb": "family",
+    "kinds": {
+     "reversed": 3,
+     "swap": 7,
+     "true": 56,
+     "unrelated": 11
+    },
+    "precision": 0.7272727272727273,
+    "recall": 0.7887323943661971,
+    "untabled_prediction": {
+     "loops": 13,
+     "undecided": 4
+    }
+   },
+   {
+    "admitted": 59,
+    "judge": "nli-deberta-large-wanli:directional",
+    "judge_computed": 323,
+    "judge_usage": {
+     "calls": 14,
+     "pairs": 16237
+    },
+    "kb": "work",
+    "kinds": {
+     "reversed": 1,
+     "trap": 2,
+     "true": 51,
+     "unrelated": 5
+    },
+    "precision": 0.864406779661017,
+    "recall": 0.8095238095238095,
+    "untabled_prediction": {
+     "loops": 12,
+     "undecided": 2
+    }
+   },
+   {
+    "admitted": 67,
+    "judge": "nli-deberta-large-wanli:directional",
+    "judge_computed": 255,
+    "judge_usage": {
+     "calls": 15,
+     "pairs": 16747
+    },
+    "kb": "geography",
+    "kinds": {
+     "reversed": 2,
+     "swap": 10,
+     "trap": 1,
+     "true": 46,
+     "unrelated": 8
+    },
+    "precision": 0.6865671641791045,
+    "recall": 0.6301369863013698,
+    "untabled_prediction": {
+     "loops": 12,
+     "terminates": 2
+    }
+   },
+   {
+    "admitted": 81,
+    "judge": "nli-deberta-large-wanli:directional",
+    "judge_computed": 255,
+    "judge_usage": {
+     "calls": 16,
+     "pairs": 17257
+    },
+    "kb": "medicine",
+    "kinds": {
+     "reversed": 6,
+     "swap": 8,
+     "trap": 4,
+     "true": 34,
+     "unrelated": 29
+    },
+    "precision": 0.41975308641975306,
+    "recall": 0.6666666666666666,
+    "untabled_prediction": {
+     "loops": 13
+    }
+   }
+  ],
+  "judge": "nli-deberta-large-wanli",
+  "pair_sets": {
+   "hard": {
+    "directional": {
+     "admitted": 73,
+     "balanced_accuracy": 0.8839,
+     "precision": 0.7534,
+     "recall": 0.9821
+    },
+    "plain": {
+     "admitted": 76,
+     "balanced_accuracy": 0.881,
+     "precision": 0.7368,
+     "recall": 1.0
+    }
+   },
+   "levyholt": {
+    "directional": {
+     "admitted": 880,
+     "balanced_accuracy": 0.7691,
+     "precision": 0.7727,
+     "recall": 0.7623
+    },
+    "plain": {
+     "admitted": 1087,
+     "balanced_accuracy": 0.708,
+     "precision": 0.6707,
+     "recall": 0.8173
+    }
+   },
+   "wikidata": {
+    "directional": {
+     "admitted": 1023,
+     "balanced_accuracy": 0.7531,
+     "precision": 0.4702,
+     "recall": 0.7105
+    },
+    "plain": {
+     "admitted": 1207,
+     "balanced_accuracy": 0.7453,
+     "precision": 0.4225,
+     "recall": 0.7533
+    }
+   }
+  },
+  "rewriter": [
+   {
+    "exact_rate": 0.2414,
+    "expansions_per_query": 10.62,
+    "f1": 0.4906,
+    "false_rewrite_rate": 0.2946,
+    "finished_rate": 0.569,
+    "judge": "nli-deberta-large-wanli:directional",
+    "kb": "ALL",
+    "mode": "cold",
+    "precision": 0.4588,
+    "precision_finished": 0.4588,
+    "proposals_per_query": 180.55,
+    "queries": 58,
+    "recall": 0.527,
+    "recall_finished": 0.9435,
+    "retrievals_per_query": 10.62,
+    "rewrite_kinds": {
+     "reversed": 72,
+     "swap": 254,
+     "trap": 32,
+     "true": 1638,
+     "unrelated": 326
+    },
+    "seconds_per_query": 0.1734,
+    "strategy": "lazy-tabled",
+    "tables_per_query": 356.5,
+    "work_per_query": 263128.5
+   },
+   {
+    "exact_rate": 0.2414,
+    "expansions_per_query": 11.24,
+    "f1": 0.4719,
+    "false_rewrite_rate": 0.3889,
+    "finished_rate": 0.5345,
+    "judge": "nli-deberta-large-wanli:plain",
+    "kb": "ALL",
+    "mode": "cold",
+    "precision": 0.4709,
+    "precision_finished": 0.4709,
+    "proposals_per_query": 191.1,
+    "queries": 58,
+    "recall": 0.473,
+    "recall_finished": 0.9375,
+    "retrievals_per_query": 11.24,
+    "rewrite_kinds": {
+     "reversed": 196,
+     "swap": 300,
+     "trap": 110,
+     "true": 2054,
+     "unrelated": 701
+    },
+    "seconds_per_query": 0.1789,
+    "strategy": "lazy-tabled",
+    "tables_per_query": 324.05,
+    "work_per_query": 267604.3
+   }
+  ],
+  "slack": 0.05,
+  "threshold": 0.05405977740883827
+ },
+ {
+  "dev_curve": {
+   "0.0": 0.6165245172940687,
+   "0.01": 0.6230754271426586,
+   "0.02": 0.6210529240172247,
+   "0.05": 0.610344492290596,
+   "0.1": 0.6084831226559244,
+   "0.2": 0.6022544797888596,
+   "0.3": 0.6022544797888596,
+   "0.5": 0.6022544797888596,
+   "1.0": 0.6022544797888596
+  },
+  "discovery": [
+   {
+    "admitted": 115,
+    "judge": "reranker-qwen3:plain",
+    "judge_computed": 442,
+    "judge_usage": {
+     "calls": 9,
+     "pairs": 13874
+    },
+    "kb": "family",
+    "kinds": {
+     "reversed": 16,
+     "swap": 8,
+     "trap": 4,
+     "true": 41,
+     "unrelated": 46
+    },
+    "precision": 0.3565217391304348,
+    "recall": 0.5774647887323944,
+    "untabled_prediction": {
+     "loops": 15,
+     "undecided": 2
+    }
+   },
+   {
+    "admitted": 113,
+    "judge": "reranker-qwen3:plain",
+    "judge_computed": 323,
+    "judge_usage": {
+     "calls": 10,
+     "pairs": 14197
+    },
+    "kb": "work",
+    "kinds": {
+     "reversed": 3,
+     "swap": 22,
+     "trap": 12,
+     "true": 54,
+     "unrelated": 22
+    },
+    "precision": 0.4778761061946903,
+    "recall": 0.8571428571428571,
+    "untabled_prediction": {
+     "loops": 14
+    }
+   },
+   {
+    "admitted": 88,
+    "judge": "reranker-qwen3:plain",
+    "judge_computed": 255,
+    "judge_usage": {
+     "calls": 11,
+     "pairs": 14452
+    },
+    "kb": "geography",
+    "kinds": {
+     "reversed": 4,
+     "swap": 12,
+     "trap": 6,
+     "true": 42,
+     "unrelated": 24
+    },
+    "precision": 0.4772727272727273,
+    "recall": 0.5753424657534246,
+    "untabled_prediction": {
+     "loops": 12,
+     "terminates": 2
+    }
+   },
+   {
+    "admitted": 76,
+    "judge": "reranker-qwen3:plain",
+    "judge_computed": 255,
+    "judge_usage": {
+     "calls": 12,
+     "pairs": 14707
+    },
+    "kb": "medicine",
+    "kinds": {
+     "reversed": 11,
+     "swap": 6,
+     "trap": 5,
+     "true": 26,
+     "unrelated": 28
+    },
+    "precision": 0.34210526315789475,
+    "recall": 0.5098039215686274,
+    "untabled_prediction": {
+     "loops": 13
+    }
+   },
+   {
+    "admitted": 93,
+    "judge": "reranker-qwen3:directional",
+    "judge_computed": 442,
+    "judge_usage": {
+     "calls": 13,
+     "pairs": 15591
+    },
+    "kb": "family",
+    "kinds": {
+     "reversed": 2,
+     "swap": 7,
+     "trap": 4,
+     "true": 40,
+     "unrelated": 40
+    },
+    "precision": 0.43010752688172044,
+    "recall": 0.5633802816901409,
+    "untabled_prediction": {
+     "loops": 13,
+     "undecided": 4
+    }
+   },
+   {
+    "admitted": 100,
+    "judge": "reranker-qwen3:directional",
+    "judge_computed": 323,
+    "judge_usage": {
+     "calls": 14,
+     "pairs": 16237
+    },
+    "kb": "work",
+    "kinds": {
+     "reversed": 1,
+     "swap": 19,
+     "trap": 11,
+     "true": 51,
+     "unrelated": 18
+    },
+    "precision": 0.51,
+    "recall": 0.8095238095238095,
+    "untabled_prediction": {
+     "loops": 14
+    }
+   },
+   {
+    "admitted": 71,
+    "judge": "reranker-qwen3:directional",
+    "judge_computed": 255,
+    "judge_usage": {
+     "calls": 15,
+     "pairs": 16747
+    },
+    "kb": "geography",
+    "kinds": {
+     "reversed": 4,
+     "swap": 7,
+     "trap": 5,
+     "true": 33,
+     "unrelated": 22
+    },
+    "precision": 0.4647887323943662,
+    "recall": 0.4520547945205479,
+    "untabled_prediction": {
+     "loops": 10,
+     "terminates": 4
+    }
+   },
+   {
+    "admitted": 57,
+    "judge": "reranker-qwen3:directional",
+    "judge_computed": 255,
+    "judge_usage": {
+     "calls": 16,
+     "pairs": 17257
+    },
+    "kb": "medicine",
+    "kinds": {
+     "reversed": 3,
+     "swap": 4,
+     "trap": 5,
+     "true": 22,
+     "unrelated": 23
+    },
+    "precision": 0.38596491228070173,
+    "recall": 0.43137254901960786,
+    "untabled_prediction": {
+     "loops": 7,
+     "terminates": 6
+    }
+   }
+  ],
+  "judge": "reranker-qwen3",
+  "pair_sets": {
+   "hard": {
+    "directional": {
+     "admitted": 61,
+     "balanced_accuracy": 0.7024,
+     "precision": 0.623,
+     "recall": 0.6786
+    },
+    "plain": {
+     "admitted": 78,
+     "balanced_accuracy": 0.7054,
+     "precision": 0.5769,
+     "recall": 0.8036
+    }
+   },
+   "levyholt": {
+    "directional": {
+     "admitted": 665,
+     "balanced_accuracy": 0.6788,
+     "precision": 0.7398,
+     "recall": 0.5516
+    },
+    "plain": {
+     "admitted": 868,
+     "balanced_accuracy": 0.6278,
+     "precision": 0.6313,
+     "recall": 0.6143
+    }
+   },
+   "wikidata": {
+    "directional": {
+     "admitted": 833,
+     "balanced_accuracy": 0.6396,
+     "precision": 0.3842,
+     "recall": 0.4727
+    },
+    "plain": {
+     "admitted": 1112,
+     "balanced_accuracy": 0.6278,
+     "precision": 0.3273,
+     "recall": 0.5377
+    }
+   }
+  },
+  "rewriter": [
+   {
+    "exact_rate": 0.1552,
+    "expansions_per_query": 10.55,
+    "f1": 0.5,
+    "false_rewrite_rate": 0.5388,
+    "finished_rate": 0.6724,
+    "judge": "reranker-qwen3:directional",
+    "kb": "ALL",
+    "mode": "cold",
+    "precision": 0.5143,
+    "precision_finished": 0.5143,
+    "proposals_per_query": 179.38,
+    "queries": 58,
+    "recall": 0.4865,
+    "recall_finished": 0.7883,
+    "retrievals_per_query": 10.55,
+    "rewrite_kinds": {
+     "reversed": 99,
+     "swap": 243,
+     "trap": 147,
+     "true": 1128,
+     "unrelated": 829
+    },
+    "seconds_per_query": 0.1755,
+    "strategy": "lazy-tabled",
+    "tables_per_query": 434.67,
+    "work_per_query": 193671.8
+   },
+   {
+    "exact_rate": 0.0862,
+    "expansions_per_query": 13.52,
+    "f1": 0.0944,
+    "false_rewrite_rate": 0.5991,
+    "finished_rate": 0.1034,
+    "judge": "reranker-qwen3:plain",
+    "kb": "ALL",
+    "mode": "cold",
+    "precision": 1.0,
+    "precision_finished": 1.0,
+    "proposals_per_query": 229.79,
+    "queries": 58,
+    "recall": 0.0495,
+    "recall_finished": 0.7333,
+    "retrievals_per_query": 13.52,
+    "rewrite_kinds": {
+     "reversed": 415,
+     "swap": 442,
+     "trap": 228,
+     "true": 1636,
+     "unrelated": 1360
+    },
+    "seconds_per_query": 0.2315,
+    "strategy": "lazy-tabled",
+    "tables_per_query": 229.67,
+    "work_per_query": 449514.1
+   }
+  ],
+  "slack": 0.01,
+  "threshold": 0.8078806102275848
+ }
+]

@@ -1,0 +1,1224 @@
+{
+ "aggregates": [
+  {
+   "exact_rate": 0.2759,
+   "expansions_per_query": 8.88,
+   "f1": 0.5762,
+   "false_rewrite_rate": 0.4044,
+   "finished_rate": 0.9655,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "ALL",
+   "mode": "cold",
+   "precision": 0.4555,
+   "precision_finished": 0.4555,
+   "proposals_per_query": 150.95,
+   "queries": 58,
+   "recall": 0.7838,
+   "recall_finished": 0.9457,
+   "retrievals_per_query": 8.88,
+   "rewrite_kinds": {
+    "reversed": 157,
+    "swap": 275,
+    "trap": 108,
+    "true": 1663,
+    "unrelated": 589
+   },
+   "seconds_per_query": 0.0807,
+   "strategy": "depth-bounded",
+   "tables_per_query": 0.0,
+   "work_per_query": 156547.3
+  },
+  {
+   "exact_rate": 0.2759,
+   "expansions_per_query": 8.88,
+   "f1": 0.6584,
+   "false_rewrite_rate": 0.4044,
+   "finished_rate": 1.0,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "ALL",
+   "mode": "cold",
+   "precision": 0.5024,
+   "precision_finished": 0.5024,
+   "proposals_per_query": 150.95,
+   "queries": 58,
+   "recall": 0.955,
+   "recall_finished": 0.955,
+   "retrievals_per_query": 8.88,
+   "rewrite_kinds": {
+    "reversed": 157,
+    "swap": 275,
+    "trap": 108,
+    "true": 1663,
+    "unrelated": 589
+   },
+   "seconds_per_query": 0.095,
+   "strategy": "depth-tabled",
+   "tables_per_query": 190.14,
+   "work_per_query": 24926.6
+  },
+  {
+   "exact_rate": 0.2414,
+   "expansions_per_query": 11.24,
+   "f1": 0.4885,
+   "false_rewrite_rate": 0.3901,
+   "finished_rate": 0.569,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "ALL",
+   "mode": "cold",
+   "precision": 0.4553,
+   "precision_finished": 0.4553,
+   "proposals_per_query": 191.1,
+   "queries": 58,
+   "recall": 0.527,
+   "recall_finished": 0.9435,
+   "retrievals_per_query": 11.24,
+   "rewrite_kinds": {
+    "reversed": 196,
+    "swap": 300,
+    "trap": 110,
+    "true": 2062,
+    "unrelated": 713
+   },
+   "seconds_per_query": 1.1804,
+   "strategy": "eager-worklist",
+   "tables_per_query": 711.12,
+   "work_per_query": 238920.7
+  },
+  {
+   "exact_rate": 0.0862,
+   "expansions_per_query": 0.0,
+   "f1": 0.0354,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "ALL",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 0.0,
+   "queries": 58,
+   "recall": 0.018,
+   "recall_finished": 0.018,
+   "retrievals_per_query": 0.0,
+   "rewrite_kinds": {},
+   "seconds_per_query": 0.0825,
+   "strategy": "exact",
+   "tables_per_query": 0.33,
+   "work_per_query": 1115.8
+  },
+  {
+   "exact_rate": 0.2414,
+   "expansions_per_query": 11.24,
+   "f1": 0.4719,
+   "false_rewrite_rate": 0.3889,
+   "finished_rate": 0.5345,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "ALL",
+   "mode": "cold",
+   "precision": 0.4709,
+   "precision_finished": 0.4709,
+   "proposals_per_query": 191.1,
+   "queries": 58,
+   "recall": 0.473,
+   "recall_finished": 0.9375,
+   "retrievals_per_query": 11.24,
+   "rewrite_kinds": {
+    "reversed": 196,
+    "swap": 300,
+    "trap": 110,
+    "true": 2054,
+    "unrelated": 701
+   },
+   "seconds_per_query": 0.1797,
+   "strategy": "lazy-tabled",
+   "tables_per_query": 324.14,
+   "work_per_query": 267594.1
+  },
+  {
+   "exact_rate": 0.3529,
+   "expansions_per_query": 9.41,
+   "f1": 0.72,
+   "false_rewrite_rate": 0.378,
+   "finished_rate": 1.0,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "family",
+   "mode": "cold",
+   "precision": 0.5727,
+   "precision_finished": 0.5727,
+   "proposals_per_query": 160.0,
+   "queries": 17,
+   "recall": 0.9692,
+   "recall_finished": 0.9692,
+   "retrievals_per_query": 9.41,
+   "rewrite_kinds": {
+    "reversed": 36,
+    "swap": 46,
+    "true": 446,
+    "unrelated": 189
+   },
+   "seconds_per_query": 0.0877,
+   "strategy": "depth-bounded",
+   "tables_per_query": 0.0,
+   "work_per_query": 196479.8
+  },
+  {
+   "exact_rate": 0.3529,
+   "expansions_per_query": 9.41,
+   "f1": 0.72,
+   "false_rewrite_rate": 0.378,
+   "finished_rate": 1.0,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "family",
+   "mode": "cold",
+   "precision": 0.5727,
+   "precision_finished": 0.5727,
+   "proposals_per_query": 160.0,
+   "queries": 17,
+   "recall": 0.9692,
+   "recall_finished": 0.9692,
+   "retrievals_per_query": 9.41,
+   "rewrite_kinds": {
+    "reversed": 36,
+    "swap": 46,
+    "true": 446,
+    "unrelated": 189
+   },
+   "seconds_per_query": 0.0749,
+   "strategy": "depth-tabled",
+   "tables_per_query": 217.65,
+   "work_per_query": 25809.4
+  },
+  {
+   "exact_rate": 0.3529,
+   "expansions_per_query": 11.12,
+   "f1": 0.6533,
+   "false_rewrite_rate": 0.3683,
+   "finished_rate": 1.0,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "family",
+   "mode": "cold",
+   "precision": 0.4851,
+   "precision_finished": 0.4851,
+   "proposals_per_query": 189.0,
+   "queries": 17,
+   "recall": 1.0,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 11.12,
+   "rewrite_kinds": {
+    "reversed": 38,
+    "swap": 53,
+    "true": 530,
+    "unrelated": 218
+   },
+   "seconds_per_query": 0.1476,
+   "strategy": "eager-worklist",
+   "tables_per_query": 344.65,
+   "work_per_query": 39935.4
+  },
+  {
+   "exact_rate": 0.1176,
+   "expansions_per_query": 0.0,
+   "f1": 0.0597,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "family",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 0.0,
+   "queries": 17,
+   "recall": 0.0308,
+   "recall_finished": 0.0308,
+   "retrievals_per_query": 0.0,
+   "rewrite_kinds": {},
+   "seconds_per_query": 0.0617,
+   "strategy": "exact",
+   "tables_per_query": 0.41,
+   "work_per_query": 1124.6
+  },
+  {
+   "exact_rate": 0.3529,
+   "expansions_per_query": 11.12,
+   "f1": 0.6424,
+   "false_rewrite_rate": 0.3683,
+   "finished_rate": 0.8824,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "family",
+   "mode": "cold",
+   "precision": 0.53,
+   "precision_finished": 0.53,
+   "proposals_per_query": 189.0,
+   "queries": 17,
+   "recall": 0.8154,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 11.12,
+   "rewrite_kinds": {
+    "reversed": 38,
+    "swap": 53,
+    "true": 530,
+    "unrelated": 218
+   },
+   "seconds_per_query": 0.0794,
+   "strategy": "lazy-tabled",
+   "tables_per_query": 281.76,
+   "work_per_query": 86560.9
+  },
+  {
+   "exact_rate": 0.2857,
+   "expansions_per_query": 7.86,
+   "f1": 0.4727,
+   "false_rewrite_rate": 0.2971,
+   "finished_rate": 0.8571,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "geography",
+   "mode": "cold",
+   "precision": 0.5778,
+   "precision_finished": 0.5778,
+   "proposals_per_query": 133.57,
+   "queries": 14,
+   "recall": 0.4,
+   "recall_finished": 0.963,
+   "retrievals_per_query": 7.86,
+   "rewrite_kinds": {
+    "reversed": 4,
+    "swap": 156,
+    "trap": 10,
+    "true": 440,
+    "unrelated": 16
+   },
+   "seconds_per_query": 0.0977,
+   "strategy": "depth-bounded",
+   "tables_per_query": 0.0,
+   "work_per_query": 185784.9
+  },
+  {
+   "exact_rate": 0.2857,
+   "expansions_per_query": 7.86,
+   "f1": 0.8533,
+   "false_rewrite_rate": 0.2971,
+   "finished_rate": 1.0,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "geography",
+   "mode": "cold",
+   "precision": 0.7529,
+   "precision_finished": 0.7529,
+   "proposals_per_query": 133.57,
+   "queries": 14,
+   "recall": 0.9846,
+   "recall_finished": 0.9846,
+   "retrievals_per_query": 7.86,
+   "rewrite_kinds": {
+    "reversed": 4,
+    "swap": 156,
+    "trap": 10,
+    "true": 440,
+    "unrelated": 16
+   },
+   "seconds_per_query": 0.1298,
+   "strategy": "depth-tabled",
+   "tables_per_query": 290.64,
+   "work_per_query": 39046.0
+  },
+  {
+   "exact_rate": 0.1429,
+   "expansions_per_query": 9.29,
+   "f1": 0.0597,
+   "false_rewrite_rate": 0.2975,
+   "finished_rate": 0.1429,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "geography",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 157.86,
+   "queries": 14,
+   "recall": 0.0308,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 9.29,
+   "rewrite_kinds": {
+    "reversed": 4,
+    "swap": 156,
+    "trap": 12,
+    "true": 444,
+    "unrelated": 16
+   },
+   "seconds_per_query": 1.0101,
+   "strategy": "eager-worklist",
+   "tables_per_query": 1983.57,
+   "work_per_query": 429518.8
+  },
+  {
+   "exact_rate": 0.1429,
+   "expansions_per_query": 0.0,
+   "f1": 0.0597,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "geography",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 0.0,
+   "queries": 14,
+   "recall": 0.0308,
+   "recall_finished": 0.0308,
+   "retrievals_per_query": 0.0,
+   "rewrite_kinds": {},
+   "seconds_per_query": 0.1186,
+   "strategy": "exact",
+   "tables_per_query": 0.43,
+   "work_per_query": 1139.5
+  },
+  {
+   "exact_rate": 0.1429,
+   "expansions_per_query": 9.29,
+   "f1": 0.0597,
+   "false_rewrite_rate": 0.2876,
+   "finished_rate": 0.1429,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "geography",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 157.86,
+   "queries": 14,
+   "recall": 0.0308,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 9.29,
+   "rewrite_kinds": {
+    "reversed": 4,
+    "swap": 156,
+    "trap": 12,
+    "true": 436,
+    "unrelated": 4
+   },
+   "seconds_per_query": 0.308,
+   "strategy": "lazy-tabled",
+   "tables_per_query": 640.43,
+   "work_per_query": 429636.6
+  },
+  {
+   "exact_rate": 0.0769,
+   "expansions_per_query": 10.23,
+   "f1": 0.4094,
+   "false_rewrite_rate": 0.5697,
+   "finished_rate": 1.0,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "medicine",
+   "mode": "cold",
+   "precision": 0.2574,
+   "precision_finished": 0.2574,
+   "proposals_per_query": 173.92,
+   "queries": 13,
+   "recall": 1.0,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 10.23,
+   "rewrite_kinds": {
+    "reversed": 67,
+    "swap": 73,
+    "trap": 78,
+    "true": 417,
+    "unrelated": 334
+   },
+   "seconds_per_query": 0.0775,
+   "strategy": "depth-bounded",
+   "tables_per_query": 0.0,
+   "work_per_query": 105950.0
+  },
+  {
+   "exact_rate": 0.0769,
+   "expansions_per_query": 10.23,
+   "f1": 0.4094,
+   "false_rewrite_rate": 0.5697,
+   "finished_rate": 1.0,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "medicine",
+   "mode": "cold",
+   "precision": 0.2574,
+   "precision_finished": 0.2574,
+   "proposals_per_query": 173.92,
+   "queries": 13,
+   "recall": 1.0,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 10.23,
+   "rewrite_kinds": {
+    "reversed": 67,
+    "swap": 73,
+    "trap": 78,
+    "true": 417,
+    "unrelated": 334
+   },
+   "seconds_per_query": 0.0924,
+   "strategy": "depth-tabled",
+   "tables_per_query": 110.46,
+   "work_per_query": 17672.5
+  },
+  {
+   "exact_rate": 0.0769,
+   "expansions_per_query": 13.0,
+   "f1": 0.0,
+   "false_rewrite_rate": 0.6,
+   "finished_rate": 0.0,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "medicine",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 221.0,
+   "queries": 13,
+   "recall": 0.0,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 13.0,
+   "rewrite_kinds": {
+    "reversed": 104,
+    "swap": 91,
+    "trap": 78,
+    "true": 468,
+    "unrelated": 429
+   },
+   "seconds_per_query": 3.0081,
+   "strategy": "eager-worklist",
+   "tables_per_query": 219.85,
+   "work_per_query": 501034.2
+  },
+  {
+   "exact_rate": 0.0769,
+   "expansions_per_query": 0.0,
+   "f1": 0.0,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "medicine",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 0.0,
+   "queries": 13,
+   "recall": 0.0,
+   "recall_finished": 0.0,
+   "retrievals_per_query": 0.0,
+   "rewrite_kinds": {},
+   "seconds_per_query": 0.0853,
+   "strategy": "exact",
+   "tables_per_query": 0.15,
+   "work_per_query": 1097.0
+  },
+  {
+   "exact_rate": 0.0769,
+   "expansions_per_query": 13.0,
+   "f1": 0.0,
+   "false_rewrite_rate": 0.6,
+   "finished_rate": 0.0,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "medicine",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 221.0,
+   "queries": 13,
+   "recall": 0.0,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 13.0,
+   "rewrite_kinds": {
+    "reversed": 104,
+    "swap": 91,
+    "trap": 78,
+    "true": 468,
+    "unrelated": 429
+   },
+   "seconds_per_query": 0.2334,
+   "strategy": "lazy-tabled",
+   "tables_per_query": 22.0,
+   "work_per_query": 501172.1
+  },
+  {
+   "exact_rate": 0.3571,
+   "expansions_per_query": 8.0,
+   "f1": 0.6757,
+   "false_rewrite_rate": 0.25,
+   "finished_rate": 1.0,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "work",
+   "mode": "cold",
+   "precision": 0.5495,
+   "precision_finished": 0.5495,
+   "proposals_per_query": 136.0,
+   "queries": 14,
+   "recall": 0.8772,
+   "recall_finished": 0.8772,
+   "retrievals_per_query": 8.0,
+   "rewrite_kinds": {
+    "reversed": 50,
+    "trap": 20,
+    "true": 360,
+    "unrelated": 50
+   },
+   "seconds_per_query": 0.0584,
+   "strategy": "depth-bounded",
+   "tables_per_query": 0.0,
+   "work_per_query": 125803.4
+  },
+  {
+   "exact_rate": 0.3571,
+   "expansions_per_query": 8.0,
+   "f1": 0.6757,
+   "false_rewrite_rate": 0.25,
+   "finished_rate": 1.0,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "work",
+   "mode": "cold",
+   "precision": 0.5495,
+   "precision_finished": 0.5495,
+   "proposals_per_query": 136.0,
+   "queries": 14,
+   "recall": 0.8772,
+   "recall_finished": 0.8772,
+   "retrievals_per_query": 8.0,
+   "rewrite_kinds": {
+    "reversed": 50,
+    "trap": 20,
+    "true": 360,
+    "unrelated": 50
+   },
+   "seconds_per_query": 0.0872,
+   "strategy": "depth-tabled",
+   "tables_per_query": 130.21,
+   "work_per_query": 16471.4
+  },
+  {
+   "exact_rate": 0.3571,
+   "expansions_per_query": 11.71,
+   "f1": 0.5618,
+   "false_rewrite_rate": 0.1622,
+   "finished_rate": 1.0,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "work",
+   "mode": "cold",
+   "precision": 0.4132,
+   "precision_finished": 0.4132,
+   "proposals_per_query": 199.14,
+   "queries": 14,
+   "recall": 0.8772,
+   "recall_finished": 0.8772,
+   "retrievals_per_query": 11.71,
+   "rewrite_kinds": {
+    "reversed": 50,
+    "trap": 20,
+    "true": 620,
+    "unrelated": 50
+   },
+   "seconds_per_query": 0.9074,
+   "strategy": "eager-worklist",
+   "tables_per_query": 339.86,
+   "work_per_query": 46556.5
+  },
+  {
+   "exact_rate": 0.0,
+   "expansions_per_query": 0.0,
+   "f1": 0.0,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "work",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 0.0,
+   "queries": 14,
+   "recall": 0.0,
+   "recall_finished": 0.0,
+   "retrievals_per_query": 0.0,
+   "rewrite_kinds": {},
+   "seconds_per_query": 0.0691,
+   "strategy": "exact",
+   "tables_per_query": 0.29,
+   "work_per_query": 1098.7
+  },
+  {
+   "exact_rate": 0.3571,
+   "expansions_per_query": 11.71,
+   "f1": 0.5618,
+   "false_rewrite_rate": 0.1622,
+   "finished_rate": 1.0,
+   "judge": "nli-deberta-large-wanli",
+   "kb": "work",
+   "mode": "cold",
+   "precision": 0.4132,
+   "precision_finished": 0.4132,
+   "proposals_per_query": 199.14,
+   "queries": 14,
+   "recall": 0.8772,
+   "recall_finished": 0.8772,
+   "retrievals_per_query": 11.71,
+   "rewrite_kinds": {
+    "reversed": 50,
+    "trap": 20,
+    "true": 620,
+    "unrelated": 50
+   },
+   "seconds_per_query": 0.1234,
+   "strategy": "lazy-tabled",
+   "tables_per_query": 339.86,
+   "work_per_query": 108483.8
+  }
+ ],
+ "budget_work": 500000,
+ "discovery": [
+  {
+   "admitted": 87,
+   "judge": "nli-deberta-large-wanli",
+   "judge_computed": 442,
+   "judge_usage": {
+    "calls": 1,
+    "pairs": 442
+   },
+   "kb": "family",
+   "kinds": {
+    "reversed": 6,
+    "swap": 7,
+    "true": 56,
+    "unrelated": 18
+   },
+   "precision": 0.6436781609195402,
+   "recall": 0.7887323943661971,
+   "untabled_prediction": {
+    "loops": 13,
+    "undecided": 4
+   }
+  },
+  {
+   "admitted": 69,
+   "judge": "nli-deberta-large-wanli",
+   "judge_computed": 323,
+   "judge_usage": {
+    "calls": 2,
+    "pairs": 765
+   },
+   "kb": "work",
+   "kinds": {
+    "reversed": 5,
+    "trap": 2,
+    "true": 56,
+    "unrelated": 6
+   },
+   "precision": 0.8115942028985508,
+   "recall": 0.8888888888888888,
+   "untabled_prediction": {
+    "loops": 14
+   }
+  },
+  {
+   "admitted": 77,
+   "judge": "nli-deberta-large-wanli",
+   "judge_computed": 255,
+   "judge_usage": {
+    "calls": 3,
+    "pairs": 1020
+   },
+   "kb": "geography",
+   "kinds": {
+    "reversed": 2,
+    "swap": 13,
+    "trap": 1,
+    "true": 53,
+    "unrelated": 8
+   },
+   "precision": 0.6883116883116883,
+   "recall": 0.726027397260274,
+   "untabled_prediction": {
+    "loops": 12,
+    "terminates": 2
+   }
+  },
+  {
+   "admitted": 96,
+   "judge": "nli-deberta-large-wanli",
+   "judge_computed": 255,
+   "judge_usage": {
+    "calls": 4,
+    "pairs": 1275
+   },
+   "kb": "medicine",
+   "kinds": {
+    "reversed": 8,
+    "swap": 8,
+    "trap": 10,
+    "true": 36,
+    "unrelated": 34
+   },
+   "precision": 0.375,
+   "recall": 0.7058823529411765,
+   "untabled_prediction": {
+    "loops": 13
+   }
+  }
+ ],
+ "judges": [
+  "nli-deberta-large-wanli"
+ ],
+ "k": 8,
+ "kbs": [
+  "family",
+  "work",
+  "geography",
+  "medicine"
+ ],
+ "modes": [
+  "cold"
+ ],
+ "retrieval_recall": [
+  {
+   "closure_pairs": 68,
+   "k": 8,
+   "kb": "family",
+   "recall": 0.7794117647058824,
+   "retrieved": 53
+  },
+  {
+   "closure_pairs": 62,
+   "k": 8,
+   "kb": "work",
+   "recall": 0.8870967741935484,
+   "retrieved": 55
+  },
+  {
+   "closure_pairs": 68,
+   "k": 8,
+   "kb": "geography",
+   "recall": 0.7058823529411765,
+   "retrieved": 48
+  },
+  {
+   "closure_pairs": 49,
+   "k": 8,
+   "kb": "medicine",
+   "recall": 0.6938775510204082,
+   "retrieved": 34
+  }
+ ],
+ "retriever": "BAAI/bge-small-en-v1.5",
+ "seconds": 493.9,
+ "sweep": [
+  {
+   "curve": [
+    {
+     "f1": 0.0179,
+     "finished": 0.0345,
+     "precision": 1.0,
+     "recall": 0.009,
+     "threshold": 0.002199250040575862
+    },
+    {
+     "f1": 0.3118,
+     "finished": 0.2586,
+     "precision": 0.4492,
+     "recall": 0.2387,
+     "threshold": 0.0044142743572592735
+    },
+    {
+     "f1": 0.4719,
+     "finished": 0.5345,
+     "precision": 0.4709,
+     "recall": 0.473,
+     "threshold": 0.015491572208702564
+    },
+    {
+     "f1": 0.4719,
+     "finished": 0.5345,
+     "precision": 0.4709,
+     "recall": 0.473,
+     "threshold": 0.05405977740883827
+    },
+    {
+     "f1": 0.6468,
+     "finished": 0.6379,
+     "precision": 0.7222,
+     "recall": 0.5856,
+     "threshold": 0.5409684777259827
+    },
+    {
+     "f1": 0.7224,
+     "finished": 0.8276,
+     "precision": 0.7946,
+     "recall": 0.6622,
+     "threshold": 0.9324914216995239
+    },
+    {
+     "f1": 0.6941,
+     "finished": 0.8276,
+     "precision": 1.0,
+     "recall": 0.5315,
+     "threshold": 0.9807142615318298
+    },
+    {
+     "f1": 0.6038,
+     "finished": 0.8276,
+     "precision": 1.0,
+     "recall": 0.4324,
+     "threshold": 0.9882276654243469
+    },
+    {
+     "f1": 0.7528,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.6036,
+     "threshold": 0.991249680519104
+    },
+    {
+     "f1": 0.7205,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.5631,
+     "threshold": 0.9934025406837463
+    },
+    {
+     "f1": 0.4476,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.2883,
+     "threshold": 0.9950717091560364
+    },
+    {
+     "f1": 0.3371,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.2027,
+     "threshold": 0.9959723353385925
+    },
+    {
+     "f1": 0.2311,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.1306,
+     "threshold": 0.9973279237747192
+    },
+    {
+     "f1": 0.1803,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.0991,
+     "threshold": 0.997945249080658
+    }
+   ],
+   "default_threshold": 0.05405977740883827,
+   "f1_default_pooled": 0.4719,
+   "f1_held_out_pooled": 0.5395,
+   "finished_held_out_pooled": 0.8276,
+   "held_out": [
+    {
+     "f1_at_default": 0.6424,
+     "f1_held_out": 0.8496,
+     "finished_held_out": 17,
+     "kb": "family",
+     "threshold": 0.991249680519104
+    },
+    {
+     "f1_at_default": 0.5618,
+     "f1_held_out": 0.575,
+     "finished_held_out": 14,
+     "kb": "work",
+     "threshold": 0.991249680519104
+    },
+    {
+     "f1_at_default": 0.0597,
+     "f1_held_out": 0.1429,
+     "finished_held_out": 4,
+     "kb": "geography",
+     "threshold": 0.9324914216995239
+    },
+    {
+     "f1_at_default": 0.0,
+     "f1_held_out": 0.2927,
+     "finished_held_out": 13,
+     "kb": "medicine",
+     "threshold": 0.991249680519104
+    }
+   ],
+   "judge": "nli-deberta-large-wanli",
+   "precision_held_out_pooled": 1.0,
+   "recall_held_out_pooled": 0.3694,
+   "strategy": "lazy-tabled"
+  },
+  {
+   "curve": [
+    {
+     "f1": 0.4044,
+     "finished": 0.7931,
+     "precision": 0.2902,
+     "recall": 0.6667,
+     "threshold": 0.002199250040575862
+    },
+    {
+     "f1": 0.4243,
+     "finished": 0.8276,
+     "precision": 0.3093,
+     "recall": 0.6757,
+     "threshold": 0.0044142743572592735
+    },
+    {
+     "f1": 0.5316,
+     "finished": 0.8966,
+     "precision": 0.4211,
+     "recall": 0.7207,
+     "threshold": 0.015491572208702564
+    },
+    {
+     "f1": 0.5479,
+     "finished": 0.8966,
+     "precision": 0.442,
+     "recall": 0.7207,
+     "threshold": 0.05405977740883827
+    },
+    {
+     "f1": 0.7768,
+     "finished": 0.9655,
+     "precision": 0.7699,
+     "recall": 0.7838,
+     "threshold": 0.5409684777259827
+    },
+    {
+     "f1": 0.7879,
+     "finished": 0.9655,
+     "precision": 0.8966,
+     "recall": 0.7027,
+     "threshold": 0.9324914216995239
+    },
+    {
+     "f1": 0.8063,
+     "finished": 1.0,
+     "precision": 0.9625,
+     "recall": 0.6937,
+     "threshold": 0.9807142615318298
+    },
+    {
+     "f1": 0.7368,
+     "finished": 1.0,
+     "precision": 0.9568,
+     "recall": 0.5991,
+     "threshold": 0.9882276654243469
+    },
+    {
+     "f1": 0.6338,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.464,
+     "threshold": 0.991249680519104
+    },
+    {
+     "f1": 0.5994,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.4279,
+     "threshold": 0.9934025406837463
+    },
+    {
+     "f1": 0.4421,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.2838,
+     "threshold": 0.9950717091560364
+    },
+    {
+     "f1": 0.3371,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.2027,
+     "threshold": 0.9959723353385925
+    },
+    {
+     "f1": 0.2311,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.1306,
+     "threshold": 0.9973279237747192
+    },
+    {
+     "f1": 0.1803,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.0991,
+     "threshold": 0.997945249080658
+    }
+   ],
+   "default_threshold": 0.05405977740883827,
+   "f1_default_pooled": 0.5479,
+   "f1_held_out_pooled": 0.7268,
+   "finished_held_out_pooled": 0.9655,
+   "held_out": [
+    {
+     "f1_at_default": 0.6323,
+     "f1_held_out": 0.9683,
+     "finished_held_out": 17,
+     "kb": "family",
+     "threshold": 0.9807142615318298
+    },
+    {
+     "f1_at_default": 0.6757,
+     "f1_held_out": 0.6265,
+     "finished_held_out": 14,
+     "kb": "work",
+     "threshold": 0.9807142615318298
+    },
+    {
+     "f1_at_default": 0.4727,
+     "f1_held_out": 0.4494,
+     "finished_held_out": 12,
+     "kb": "geography",
+     "threshold": 0.9324914216995239
+    },
+    {
+     "f1_at_default": 0.4094,
+     "f1_held_out": 0.7719,
+     "finished_held_out": 13,
+     "kb": "medicine",
+     "threshold": 0.9807142615318298
+    }
+   ],
+   "judge": "nli-deberta-large-wanli",
+   "precision_held_out_pooled": 0.9699,
+   "recall_held_out_pooled": 0.5811,
+   "strategy": "depth-bounded"
+  },
+  {
+   "curve": [
+    {
+     "f1": 0.4803,
+     "finished": 1.0,
+     "precision": 0.3203,
+     "recall": 0.9595,
+     "threshold": 0.002199250040575862
+    },
+    {
+     "f1": 0.5195,
+     "finished": 1.0,
+     "precision": 0.3562,
+     "recall": 0.9595,
+     "threshold": 0.0044142743572592735
+    },
+    {
+     "f1": 0.6405,
+     "finished": 1.0,
+     "precision": 0.4818,
+     "recall": 0.955,
+     "threshold": 0.015491572208702564
+    },
+    {
+     "f1": 0.6584,
+     "finished": 1.0,
+     "precision": 0.5024,
+     "recall": 0.955,
+     "threshold": 0.05405977740883827
+    },
+    {
+     "f1": 0.8689,
+     "finished": 1.0,
+     "precision": 0.797,
+     "recall": 0.955,
+     "threshold": 0.5409684777259827
+    },
+    {
+     "f1": 0.877,
+     "finished": 1.0,
+     "precision": 0.9043,
+     "recall": 0.8514,
+     "threshold": 0.9324914216995239
+    },
+    {
+     "f1": 0.8063,
+     "finished": 1.0,
+     "precision": 0.9625,
+     "recall": 0.6937,
+     "threshold": 0.9807142615318298
+    },
+    {
+     "f1": 0.7368,
+     "finished": 1.0,
+     "precision": 0.9568,
+     "recall": 0.5991,
+     "threshold": 0.9882276654243469
+    },
+    {
+     "f1": 0.6338,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.464,
+     "threshold": 0.991249680519104
+    },
+    {
+     "f1": 0.5994,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.4279,
+     "threshold": 0.9934025406837463
+    },
+    {
+     "f1": 0.4421,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.2838,
+     "threshold": 0.9950717091560364
+    },
+    {
+     "f1": 0.3371,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.2027,
+     "threshold": 0.9959723353385925
+    },
+    {
+     "f1": 0.2311,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.1306,
+     "threshold": 0.9973279237747192
+    },
+    {
+     "f1": 0.1803,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.0991,
+     "threshold": 0.997945249080658
+    }
+   ],
+   "default_threshold": 0.05405977740883827,
+   "f1_default_pooled": 0.6584,
+   "f1_held_out_pooled": 0.8584,
+   "finished_held_out_pooled": 1.0,
+   "held_out": [
+    {
+     "f1_at_default": 0.72,
+     "f1_held_out": 0.9531,
+     "finished_held_out": 17,
+     "kb": "family",
+     "threshold": 0.9324914216995239
+    },
+    {
+     "f1_at_default": 0.6757,
+     "f1_held_out": 0.8403,
+     "finished_held_out": 14,
+     "kb": "work",
+     "threshold": 0.5409684777259827
+    },
+    {
+     "f1_at_default": 0.8533,
+     "f1_held_out": 0.8548,
+     "finished_held_out": 14,
+     "kb": "geography",
+     "threshold": 0.9324914216995239
+    },
+    {
+     "f1_at_default": 0.4094,
+     "f1_held_out": 0.7297,
+     "finished_held_out": 13,
+     "kb": "medicine",
+     "threshold": 0.9324914216995239
+    }
+   ],
+   "judge": "nli-deberta-large-wanli",
+   "precision_held_out_pooled": 0.8565,
+   "recall_held_out_pooled": 0.8604,
+   "strategy": "depth-tabled"
+  }
+ ]
+}

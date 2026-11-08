@@ -1,0 +1,1160 @@
+{
+ "aggregates": [
+  {
+   "exact_rate": 0.5862,
+   "expansions_per_query": 8.4,
+   "f1": 0.7424,
+   "false_rewrite_rate": 0.2052,
+   "finished_rate": 0.9655,
+   "judge": "jev",
+   "kb": "ALL",
+   "mode": "cold",
+   "precision": 0.7203,
+   "precision_finished": 0.7203,
+   "proposals_per_query": 142.74,
+   "queries": 58,
+   "recall": 0.7658,
+   "recall_finished": 0.9239,
+   "retrievals_per_query": 8.4,
+   "rewrite_kinds": {
+    "reversed": 80,
+    "trap": 48,
+    "true": 1414,
+    "unrelated": 237
+   },
+   "seconds_per_query": 0.075,
+   "strategy": "depth-bounded",
+   "tables_per_query": 0.0,
+   "work_per_query": 138123.3
+  },
+  {
+   "exact_rate": 0.6207,
+   "expansions_per_query": 8.4,
+   "f1": 0.8387,
+   "false_rewrite_rate": 0.2052,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "ALL",
+   "mode": "cold",
+   "precision": 0.7591,
+   "precision_finished": 0.7591,
+   "proposals_per_query": 142.74,
+   "queries": 58,
+   "recall": 0.9369,
+   "recall_finished": 0.9369,
+   "retrievals_per_query": 8.4,
+   "rewrite_kinds": {
+    "reversed": 80,
+    "trap": 48,
+    "true": 1414,
+    "unrelated": 237
+   },
+   "seconds_per_query": 0.0935,
+   "strategy": "depth-tabled",
+   "tables_per_query": 108.72,
+   "work_per_query": 14667.9
+  },
+  {
+   "exact_rate": 0.5862,
+   "expansions_per_query": 10.22,
+   "f1": 0.7835,
+   "false_rewrite_rate": 0.206,
+   "finished_rate": 0.7586,
+   "judge": "jev",
+   "kb": "ALL",
+   "mode": "cold",
+   "precision": 0.8519,
+   "precision_finished": 0.8519,
+   "proposals_per_query": 173.81,
+   "queries": 58,
+   "recall": 0.7252,
+   "recall_finished": 0.9758,
+   "retrievals_per_query": 10.22,
+   "rewrite_kinds": {
+    "reversed": 104,
+    "trap": 64,
+    "true": 1684,
+    "unrelated": 269
+   },
+   "seconds_per_query": 1.0177,
+   "strategy": "eager-worklist",
+   "tables_per_query": 287.36,
+   "work_per_query": 131535.3
+  },
+  {
+   "exact_rate": 0.0862,
+   "expansions_per_query": 0.0,
+   "f1": 0.0354,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "ALL",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 0.0,
+   "queries": 58,
+   "recall": 0.018,
+   "recall_finished": 0.018,
+   "retrievals_per_query": 0.0,
+   "rewrite_kinds": {},
+   "seconds_per_query": 0.0861,
+   "strategy": "exact",
+   "tables_per_query": 0.33,
+   "work_per_query": 1115.8
+  },
+  {
+   "exact_rate": 0.5862,
+   "expansions_per_query": 10.22,
+   "f1": 0.7835,
+   "false_rewrite_rate": 0.206,
+   "finished_rate": 0.7586,
+   "judge": "jev",
+   "kb": "ALL",
+   "mode": "cold",
+   "precision": 0.8519,
+   "precision_finished": 0.8519,
+   "proposals_per_query": 173.81,
+   "queries": 58,
+   "recall": 0.7252,
+   "recall_finished": 0.9758,
+   "retrievals_per_query": 10.22,
+   "rewrite_kinds": {
+    "reversed": 104,
+    "trap": 64,
+    "true": 1684,
+    "unrelated": 269
+   },
+   "seconds_per_query": 0.1344,
+   "strategy": "lazy-tabled",
+   "tables_per_query": 145.66,
+   "work_per_query": 147324.7
+  },
+  {
+   "exact_rate": 0.9412,
+   "expansions_per_query": 8.41,
+   "f1": 0.9844,
+   "false_rewrite_rate": 0.1261,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "family",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 143.0,
+   "queries": 17,
+   "recall": 0.9692,
+   "recall_finished": 0.9692,
+   "retrievals_per_query": 8.41,
+   "rewrite_kinds": {
+    "reversed": 8,
+    "trap": 2,
+    "true": 388,
+    "unrelated": 46
+   },
+   "seconds_per_query": 0.0676,
+   "strategy": "depth-bounded",
+   "tables_per_query": 0.0,
+   "work_per_query": 143328.1
+  },
+  {
+   "exact_rate": 0.9412,
+   "expansions_per_query": 8.41,
+   "f1": 0.9844,
+   "false_rewrite_rate": 0.1261,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "family",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 143.0,
+   "queries": 17,
+   "recall": 0.9692,
+   "recall_finished": 0.9692,
+   "retrievals_per_query": 8.41,
+   "rewrite_kinds": {
+    "reversed": 8,
+    "trap": 2,
+    "true": 388,
+    "unrelated": 46
+   },
+   "seconds_per_query": 0.0852,
+   "strategy": "depth-tabled",
+   "tables_per_query": 102.18,
+   "work_per_query": 14004.1
+  },
+  {
+   "exact_rate": 1.0,
+   "expansions_per_query": 8.88,
+   "f1": 1.0,
+   "false_rewrite_rate": 0.1368,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "family",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 151.0,
+   "queries": 17,
+   "recall": 1.0,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 8.88,
+   "rewrite_kinds": {
+    "reversed": 12,
+    "trap": 2,
+    "true": 404,
+    "unrelated": 50
+   },
+   "seconds_per_query": 0.1206,
+   "strategy": "eager-worklist",
+   "tables_per_query": 67.71,
+   "work_per_query": 6639.1
+  },
+  {
+   "exact_rate": 0.1176,
+   "expansions_per_query": 0.0,
+   "f1": 0.0597,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "family",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 0.0,
+   "queries": 17,
+   "recall": 0.0308,
+   "recall_finished": 0.0308,
+   "retrievals_per_query": 0.0,
+   "rewrite_kinds": {},
+   "seconds_per_query": 0.0782,
+   "strategy": "exact",
+   "tables_per_query": 0.41,
+   "work_per_query": 1124.6
+  },
+  {
+   "exact_rate": 1.0,
+   "expansions_per_query": 8.88,
+   "f1": 1.0,
+   "false_rewrite_rate": 0.1368,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "family",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 151.0,
+   "queries": 17,
+   "recall": 1.0,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 8.88,
+   "rewrite_kinds": {
+    "reversed": 12,
+    "trap": 2,
+    "true": 404,
+    "unrelated": 50
+   },
+   "seconds_per_query": 0.0778,
+   "strategy": "lazy-tabled",
+   "tables_per_query": 75.24,
+   "work_per_query": 19693.6
+  },
+  {
+   "exact_rate": 0.6429,
+   "expansions_per_query": 7.43,
+   "f1": 0.5098,
+   "false_rewrite_rate": 0.0991,
+   "finished_rate": 0.8571,
+   "judge": "jev",
+   "kb": "geography",
+   "mode": "cold",
+   "precision": 0.7027,
+   "precision_finished": 0.7027,
+   "proposals_per_query": 126.29,
+   "queries": 14,
+   "recall": 0.4,
+   "recall_finished": 0.963,
+   "retrievals_per_query": 7.43,
+   "rewrite_kinds": {
+    "trap": 20,
+    "true": 382,
+    "unrelated": 22
+   },
+   "seconds_per_query": 0.0857,
+   "strategy": "depth-bounded",
+   "tables_per_query": 0.0,
+   "work_per_query": 173224.4
+  },
+  {
+   "exact_rate": 0.7857,
+   "expansions_per_query": 7.43,
+   "f1": 0.9143,
+   "false_rewrite_rate": 0.0991,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "geography",
+   "mode": "cold",
+   "precision": 0.8533,
+   "precision_finished": 0.8533,
+   "proposals_per_query": 126.29,
+   "queries": 14,
+   "recall": 0.9846,
+   "recall_finished": 0.9846,
+   "retrievals_per_query": 7.43,
+   "rewrite_kinds": {
+    "trap": 20,
+    "true": 382,
+    "unrelated": 22
+   },
+   "seconds_per_query": 0.0959,
+   "strategy": "depth-tabled",
+   "tables_per_query": 121.71,
+   "work_per_query": 16059.9
+  },
+  {
+   "exact_rate": 0.8571,
+   "expansions_per_query": 9.29,
+   "f1": 0.9028,
+   "false_rewrite_rate": 0.0901,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "geography",
+   "mode": "cold",
+   "precision": 0.8228,
+   "precision_finished": 0.8228,
+   "proposals_per_query": 157.86,
+   "queries": 14,
+   "recall": 1.0,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 9.29,
+   "rewrite_kinds": {
+    "trap": 20,
+    "true": 424,
+    "unrelated": 22
+   },
+   "seconds_per_query": 0.6773,
+   "strategy": "eager-worklist",
+   "tables_per_query": 180.86,
+   "work_per_query": 26283.4
+  },
+  {
+   "exact_rate": 0.1429,
+   "expansions_per_query": 0.0,
+   "f1": 0.0597,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "geography",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 0.0,
+   "queries": 14,
+   "recall": 0.0308,
+   "recall_finished": 0.0308,
+   "retrievals_per_query": 0.0,
+   "rewrite_kinds": {},
+   "seconds_per_query": 0.133,
+   "strategy": "exact",
+   "tables_per_query": 0.43,
+   "work_per_query": 1139.5
+  },
+  {
+   "exact_rate": 0.8571,
+   "expansions_per_query": 9.29,
+   "f1": 0.9028,
+   "false_rewrite_rate": 0.0901,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "geography",
+   "mode": "cold",
+   "precision": 0.8228,
+   "precision_finished": 0.8228,
+   "proposals_per_query": 157.86,
+   "queries": 14,
+   "recall": 1.0,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 9.29,
+   "rewrite_kinds": {
+    "trap": 20,
+    "true": 424,
+    "unrelated": 22
+   },
+   "seconds_per_query": 0.1213,
+   "strategy": "lazy-tabled",
+   "tables_per_query": 180.86,
+   "work_per_query": 60751.4
+  },
+  {
+   "exact_rate": 0.6154,
+   "expansions_per_query": 7.54,
+   "f1": 0.8493,
+   "false_rewrite_rate": 0.4432,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "medicine",
+   "mode": "cold",
+   "precision": 0.8158,
+   "precision_finished": 0.8158,
+   "proposals_per_query": 128.15,
+   "queries": 13,
+   "recall": 0.8857,
+   "recall_finished": 0.8857,
+   "retrievals_per_query": 7.54,
+   "rewrite_kinds": {
+    "reversed": 22,
+    "true": 152,
+    "unrelated": 99
+   },
+   "seconds_per_query": 0.0667,
+   "strategy": "depth-bounded",
+   "tables_per_query": 0.0,
+   "work_per_query": 78122.9
+  },
+  {
+   "exact_rate": 0.6154,
+   "expansions_per_query": 7.54,
+   "f1": 0.8493,
+   "false_rewrite_rate": 0.4432,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "medicine",
+   "mode": "cold",
+   "precision": 0.8158,
+   "precision_finished": 0.8158,
+   "proposals_per_query": 128.15,
+   "queries": 13,
+   "recall": 0.8857,
+   "recall_finished": 0.8857,
+   "retrievals_per_query": 7.54,
+   "rewrite_kinds": {
+    "reversed": 22,
+    "true": 152,
+    "unrelated": 99
+   },
+   "seconds_per_query": 0.0876,
+   "strategy": "depth-tabled",
+   "tables_per_query": 44.0,
+   "work_per_query": 6640.8
+  },
+  {
+   "exact_rate": 0.3846,
+   "expansions_per_query": 7.85,
+   "f1": 0.775,
+   "false_rewrite_rate": 0.4368,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "medicine",
+   "mode": "cold",
+   "precision": 0.6889,
+   "precision_finished": 0.6889,
+   "proposals_per_query": 133.38,
+   "queries": 13,
+   "recall": 0.8857,
+   "recall_finished": 0.8857,
+   "retrievals_per_query": 7.85,
+   "rewrite_kinds": {
+    "reversed": 22,
+    "true": 156,
+    "unrelated": 99
+   },
+   "seconds_per_query": 0.4961,
+   "strategy": "eager-worklist",
+   "tables_per_query": 98.54,
+   "work_per_query": 10393.2
+  },
+  {
+   "exact_rate": 0.0769,
+   "expansions_per_query": 0.0,
+   "f1": 0.0,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "medicine",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 0.0,
+   "queries": 13,
+   "recall": 0.0,
+   "recall_finished": 0.0,
+   "retrievals_per_query": 0.0,
+   "rewrite_kinds": {},
+   "seconds_per_query": 0.0709,
+   "strategy": "exact",
+   "tables_per_query": 0.15,
+   "work_per_query": 1097.0
+  },
+  {
+   "exact_rate": 0.3846,
+   "expansions_per_query": 7.85,
+   "f1": 0.775,
+   "false_rewrite_rate": 0.4368,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "medicine",
+   "mode": "cold",
+   "precision": 0.6889,
+   "precision_finished": 0.6889,
+   "proposals_per_query": 133.38,
+   "queries": 13,
+   "recall": 0.8857,
+   "recall_finished": 0.8857,
+   "retrievals_per_query": 7.85,
+   "rewrite_kinds": {
+    "reversed": 22,
+    "true": 156,
+    "unrelated": 99
+   },
+   "seconds_per_query": 0.0884,
+   "strategy": "lazy-tabled",
+   "tables_per_query": 98.54,
+   "work_per_query": 26435.7
+  },
+  {
+   "exact_rate": 0.0714,
+   "expansions_per_query": 10.14,
+   "f1": 0.6452,
+   "false_rewrite_rate": 0.2288,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "work",
+   "mode": "cold",
+   "precision": 0.5102,
+   "precision_finished": 0.5102,
+   "proposals_per_query": 172.43,
+   "queries": 14,
+   "recall": 0.8772,
+   "recall_finished": 0.8772,
+   "retrievals_per_query": 10.14,
+   "rewrite_kinds": {
+    "reversed": 50,
+    "trap": 26,
+    "true": 492,
+    "unrelated": 70
+   },
+   "seconds_per_query": 0.0811,
+   "strategy": "depth-bounded",
+   "tables_per_query": 0.0,
+   "work_per_query": 152416.8
+  },
+  {
+   "exact_rate": 0.0714,
+   "expansions_per_query": 10.14,
+   "f1": 0.6452,
+   "false_rewrite_rate": 0.2288,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "work",
+   "mode": "cold",
+   "precision": 0.5102,
+   "precision_finished": 0.5102,
+   "proposals_per_query": 172.43,
+   "queries": 14,
+   "recall": 0.8772,
+   "recall_finished": 0.8772,
+   "retrievals_per_query": 10.14,
+   "rewrite_kinds": {
+    "reversed": 50,
+    "trap": 26,
+    "true": 492,
+    "unrelated": 70
+   },
+   "seconds_per_query": 0.1068,
+   "strategy": "depth-tabled",
+   "tables_per_query": 163.79,
+   "work_per_query": 21535.6
+  },
+  {
+   "exact_rate": 0.0,
+   "expansions_per_query": 15.0,
+   "f1": 0.0,
+   "false_rewrite_rate": 0.2308,
+   "finished_rate": 0.0,
+   "judge": "jev",
+   "kb": "work",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 255.0,
+   "queries": 14,
+   "recall": 0.0,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 15.0,
+   "rewrite_kinds": {
+    "reversed": 70,
+    "trap": 42,
+    "true": 700,
+    "unrelated": 98
+   },
+   "seconds_per_query": 2.9319,
+   "strategy": "eager-worklist",
+   "tables_per_query": 835.93,
+   "work_per_query": 500935.9
+  },
+  {
+   "exact_rate": 0.0,
+   "expansions_per_query": 0.0,
+   "f1": 0.0,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "work",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 0.0,
+   "queries": 14,
+   "recall": 0.0,
+   "recall_finished": 0.0,
+   "retrievals_per_query": 0.0,
+   "rewrite_kinds": {},
+   "seconds_per_query": 0.0629,
+   "strategy": "exact",
+   "tables_per_query": 0.29,
+   "work_per_query": 1098.7
+  },
+  {
+   "exact_rate": 0.0,
+   "expansions_per_query": 15.0,
+   "f1": 0.0,
+   "false_rewrite_rate": 0.2308,
+   "finished_rate": 0.0,
+   "judge": "jev",
+   "kb": "work",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 255.0,
+   "queries": 14,
+   "recall": 0.0,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 15.0,
+   "rewrite_kinds": {
+    "reversed": 70,
+    "trap": 42,
+    "true": 700,
+    "unrelated": 98
+   },
+   "seconds_per_query": 0.2589,
+   "strategy": "lazy-tabled",
+   "tables_per_query": 239.71,
+   "work_per_query": 501132.6
+  }
+ ],
+ "budget_work": 500000,
+ "discovery": [
+  {
+   "admitted": 66,
+   "judge": "jev",
+   "judge_computed": 442,
+   "judge_usage": {
+    "cached": 442,
+    "calls": 1,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "pairs": 442,
+    "questions": 0,
+    "requests": 0
+   },
+   "kb": "family",
+   "kinds": {
+    "reversed": 1,
+    "trap": 1,
+    "true": 56,
+    "unrelated": 8
+   },
+   "precision": 0.8484848484848485,
+   "recall": 0.7887323943661971,
+   "untabled_prediction": {
+    "loops": 13,
+    "undecided": 4
+   }
+  },
+  {
+   "admitted": 75,
+   "judge": "jev",
+   "judge_computed": 323,
+   "judge_usage": {
+    "cached": 765,
+    "calls": 2,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "pairs": 765,
+    "questions": 0,
+    "requests": 0
+   },
+   "kb": "work",
+   "kinds": {
+    "reversed": 5,
+    "trap": 4,
+    "true": 56,
+    "unrelated": 10
+   },
+   "precision": 0.7466666666666667,
+   "recall": 0.8888888888888888,
+   "untabled_prediction": {
+    "loops": 12,
+    "undecided": 2
+   }
+  },
+  {
+   "admitted": 80,
+   "judge": "jev",
+   "judge_computed": 255,
+   "judge_usage": {
+    "cached": 1020,
+    "calls": 3,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "pairs": 1020,
+    "questions": 0,
+    "requests": 0
+   },
+   "kb": "geography",
+   "kinds": {
+    "trap": 5,
+    "true": 52,
+    "unrelated": 23
+   },
+   "precision": 0.65,
+   "recall": 0.7123287671232876,
+   "untabled_prediction": {
+    "loops": 12,
+    "terminates": 2
+   }
+  },
+  {
+   "admitted": 68,
+   "judge": "jev",
+   "judge_computed": 255,
+   "judge_usage": {
+    "cached": 1275,
+    "calls": 4,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "pairs": 1275,
+    "questions": 0,
+    "requests": 0
+   },
+   "kb": "medicine",
+   "kinds": {
+    "reversed": 3,
+    "swap": 1,
+    "trap": 2,
+    "true": 35,
+    "unrelated": 27
+   },
+   "precision": 0.5147058823529411,
+   "recall": 0.6862745098039216,
+   "untabled_prediction": {
+    "loops": 13
+   }
+  }
+ ],
+ "judges": [
+  "jev"
+ ],
+ "k": 8,
+ "kbs": [
+  "family",
+  "work",
+  "geography",
+  "medicine"
+ ],
+ "modes": [
+  "cold"
+ ],
+ "retrieval_recall": [
+  {
+   "closure_pairs": 68,
+   "k": 8,
+   "kb": "family",
+   "recall": 0.7794117647058824,
+   "retrieved": 53
+  },
+  {
+   "closure_pairs": 62,
+   "k": 8,
+   "kb": "work",
+   "recall": 0.8870967741935484,
+   "retrieved": 55
+  },
+  {
+   "closure_pairs": 68,
+   "k": 8,
+   "kb": "geography",
+   "recall": 0.7058823529411765,
+   "retrieved": 48
+  },
+  {
+   "closure_pairs": 49,
+   "k": 8,
+   "kb": "medicine",
+   "recall": 0.6938775510204082,
+   "retrieved": 34
+  }
+ ],
+ "retriever": "BAAI/bge-small-en-v1.5",
+ "seconds": 393.3,
+ "sweep": [
+  {
+   "curve": [
+    {
+     "f1": 0.0,
+     "finished": 0.0,
+     "precision": 0.0,
+     "recall": 0.0,
+     "threshold": 0.02
+    },
+    {
+     "f1": 0.0175,
+     "finished": 0.0345,
+     "precision": 0.3333,
+     "recall": 0.009,
+     "threshold": 0.03
+    },
+    {
+     "f1": 0.4815,
+     "finished": 0.6034,
+     "precision": 0.3844,
+     "recall": 0.6441,
+     "threshold": 0.06
+    },
+    {
+     "f1": 0.7835,
+     "finished": 0.7586,
+     "precision": 0.8519,
+     "recall": 0.7252,
+     "threshold": 0.165
+    },
+    {
+     "f1": 0.7903,
+     "finished": 1.0,
+     "precision": 0.6763,
+     "recall": 0.9505,
+     "threshold": 0.26
+    },
+    {
+     "f1": 0.8923,
+     "finished": 1.0,
+     "precision": 0.8712,
+     "recall": 0.9144,
+     "threshold": 0.65
+    },
+    {
+     "f1": 0.8731,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.7748,
+     "threshold": 0.9
+    },
+    {
+     "f1": 0.8128,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.6847,
+     "threshold": 0.95
+    },
+    {
+     "f1": 0.5994,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.4279,
+     "threshold": 0.97
+    },
+    {
+     "f1": 0.5101,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.3423,
+     "threshold": 0.98
+    },
+    {
+     "f1": 0.1577,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.0856,
+     "threshold": 0.99
+    }
+   ],
+   "default_threshold": 0.165,
+   "f1_default_pooled": 0.7835,
+   "f1_held_out_pooled": 0.8923,
+   "finished_held_out_pooled": 1.0,
+   "held_out": [
+    {
+     "f1_at_default": 1.0,
+     "f1_held_out": 1.0,
+     "finished_held_out": 17,
+     "kb": "family",
+     "threshold": 0.65
+    },
+    {
+     "f1_at_default": 0.0,
+     "f1_held_out": 0.7692,
+     "finished_held_out": 14,
+     "kb": "work",
+     "threshold": 0.65
+    },
+    {
+     "f1_at_default": 0.9028,
+     "f1_held_out": 1.0,
+     "finished_held_out": 14,
+     "kb": "geography",
+     "threshold": 0.65
+    },
+    {
+     "f1_at_default": 0.775,
+     "f1_held_out": 0.7077,
+     "finished_held_out": 13,
+     "kb": "medicine",
+     "threshold": 0.65
+    }
+   ],
+   "judge": "jev",
+   "precision_held_out_pooled": 0.8712,
+   "recall_held_out_pooled": 0.9144,
+   "strategy": "lazy-tabled"
+  },
+  {
+   "curve": [
+    {
+     "f1": 0.3839,
+     "finished": 0.7241,
+     "precision": 0.299,
+     "recall": 0.536,
+     "threshold": 0.02
+    },
+    {
+     "f1": 0.4297,
+     "finished": 0.8793,
+     "precision": 0.3022,
+     "recall": 0.7432,
+     "threshold": 0.03
+    },
+    {
+     "f1": 0.6245,
+     "finished": 0.931,
+     "precision": 0.5316,
+     "recall": 0.7568,
+     "threshold": 0.06
+    },
+    {
+     "f1": 0.7424,
+     "finished": 0.9655,
+     "precision": 0.7203,
+     "recall": 0.7658,
+     "threshold": 0.165
+    },
+    {
+     "f1": 0.771,
+     "finished": 0.9655,
+     "precision": 0.7763,
+     "recall": 0.7658,
+     "threshold": 0.26
+    },
+    {
+     "f1": 0.8959,
+     "finished": 1.0,
+     "precision": 0.9686,
+     "recall": 0.8333,
+     "threshold": 0.65
+    },
+    {
+     "f1": 0.7667,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.6216,
+     "threshold": 0.9
+    },
+    {
+     "f1": 0.7093,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.5495,
+     "threshold": 0.95
+    },
+    {
+     "f1": 0.5815,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.4099,
+     "threshold": 0.97
+    },
+    {
+     "f1": 0.4742,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.3108,
+     "threshold": 0.98
+    },
+    {
+     "f1": 0.1577,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.0856,
+     "threshold": 0.99
+    }
+   ],
+   "default_threshold": 0.165,
+   "f1_default_pooled": 0.7424,
+   "f1_held_out_pooled": 0.8959,
+   "finished_held_out_pooled": 1.0,
+   "held_out": [
+    {
+     "f1_at_default": 0.9844,
+     "f1_held_out": 0.9844,
+     "finished_held_out": 17,
+     "kb": "family",
+     "threshold": 0.65
+    },
+    {
+     "f1_at_default": 0.6452,
+     "f1_held_out": 0.9159,
+     "finished_held_out": 14,
+     "kb": "work",
+     "threshold": 0.65
+    },
+    {
+     "f1_at_default": 0.5098,
+     "f1_held_out": 0.8696,
+     "finished_held_out": 14,
+     "kb": "geography",
+     "threshold": 0.65
+    },
+    {
+     "f1_at_default": 0.8493,
+     "f1_held_out": 0.7302,
+     "finished_held_out": 13,
+     "kb": "medicine",
+     "threshold": 0.65
+    }
+   ],
+   "judge": "jev",
+   "precision_held_out_pooled": 0.9686,
+   "recall_held_out_pooled": 0.8333,
+   "strategy": "depth-bounded"
+  },
+  {
+   "curve": [
+    {
+     "f1": 0.4034,
+     "finished": 1.0,
+     "precision": 0.2551,
+     "recall": 0.964,
+     "threshold": 0.02
+    },
+    {
+     "f1": 0.5018,
+     "finished": 1.0,
+     "precision": 0.3403,
+     "recall": 0.955,
+     "threshold": 0.03
+    },
+    {
+     "f1": 0.7223,
+     "finished": 1.0,
+     "precision": 0.5808,
+     "recall": 0.955,
+     "threshold": 0.06
+    },
+    {
+     "f1": 0.8387,
+     "finished": 1.0,
+     "precision": 0.7591,
+     "recall": 0.9369,
+     "threshold": 0.165
+    },
+    {
+     "f1": 0.8685,
+     "finished": 1.0,
+     "precision": 0.8093,
+     "recall": 0.9369,
+     "threshold": 0.26
+    },
+    {
+     "f1": 0.8959,
+     "finished": 1.0,
+     "precision": 0.9686,
+     "recall": 0.8333,
+     "threshold": 0.65
+    },
+    {
+     "f1": 0.7667,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.6216,
+     "threshold": 0.9
+    },
+    {
+     "f1": 0.7093,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.5495,
+     "threshold": 0.95
+    },
+    {
+     "f1": 0.5815,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.4099,
+     "threshold": 0.97
+    },
+    {
+     "f1": 0.4742,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.3108,
+     "threshold": 0.98
+    },
+    {
+     "f1": 0.1577,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.0856,
+     "threshold": 0.99
+    }
+   ],
+   "default_threshold": 0.165,
+   "f1_default_pooled": 0.8387,
+   "f1_held_out_pooled": 0.8285,
+   "finished_held_out_pooled": 1.0,
+   "held_out": [
+    {
+     "f1_at_default": 0.9844,
+     "f1_held_out": 0.9844,
+     "finished_held_out": 17,
+     "kb": "family",
+     "threshold": 0.65
+    },
+    {
+     "f1_at_default": 0.6452,
+     "f1_held_out": 0.6993,
+     "finished_held_out": 14,
+     "kb": "work",
+     "threshold": 0.26
+    },
+    {
+     "f1_at_default": 0.9143,
+     "f1_held_out": 0.8696,
+     "finished_held_out": 14,
+     "kb": "geography",
+     "threshold": 0.65
+    },
+    {
+     "f1_at_default": 0.8493,
+     "f1_held_out": 0.7302,
+     "finished_held_out": 13,
+     "kb": "medicine",
+     "threshold": 0.65
+    }
+   ],
+   "judge": "jev",
+   "precision_held_out_pooled": 0.8194,
+   "recall_held_out_pooled": 0.8378,
+   "strategy": "depth-tabled"
+  }
+ ]
+}
