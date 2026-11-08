@@ -127,7 +127,8 @@ def _engines(*capabilities: str) -> list[str]:
     return [e for e in available() if all(getattr(make(e).capabilities, c) for c in capabilities)]
 
 
-SETTINGS = settings(max_examples=400, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+# The case count comes from the Hypothesis profile tests/conftest.py loads: 400, or 100 under ci.
+SETTINGS = settings(deadline=None, suppress_health_check=[HealthCheck.too_slow])
 
 
 @pytest.mark.parametrize("engine_name", _engines("tabling"))

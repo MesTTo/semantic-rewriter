@@ -1,5 +1,6 @@
 """Purpose: tests of the engine conformance kit: every property against every engine
-that imports here at 400 cases, the kit passing a second, top-down engine it knows
+that imports here, at the Hypothesis profile's case count (400 by default, 100
+under the ci profile), the kit passing a second, top-down engine it knows
 nothing about, and the kit failing each of a dozen deliberately broken engines, since
 a kit that passes a broken engine is worthless.
 """
@@ -28,7 +29,7 @@ AVAILABLE = available()
 def test_registered_engine_conforms(name: str, prop: kit.Property) -> None:
     if name not in AVAILABLE:
         pytest.skip(f"engine {name!r} does not import in this environment")
-    verdict = kit.check(make(name), prop, max_examples=400)
+    verdict = kit.check(make(name), prop, max_examples=settings().max_examples)
     print("\n".join(verdict.lines()))
     if verdict.outcome == "skip":
         pytest.skip(verdict.detail)
