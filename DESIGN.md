@@ -241,7 +241,7 @@ These defaults come from the experiment in `RESULTS.md`: four generated knowledg
 - Use tables and a memo. Every tabled strategy terminated on every query, and on every generated catalogue it returned exactly the fixpoint's answers; without tables, 56 of 58 queries ran until the budget stopped them.
 - Use a judge that reads direction. Jev scored 0.82 to 0.89 direction accuracy on two external pair sets and the NLI cross-encoders 0.77 to 0.87, while cosine similarity sat at chance.
 - Calibrate the threshold for answer F1 on held-out knowledge bases, not on pair sets.
-- With an imperfect judge, add a depth bound. A short chain limits how far each false rewrite spreads, and at held-out thresholds a depth bound of 3 matched or beat unbounded tabled evaluation for every judge in the experiment.
+- With an imperfect judge, add a depth bound. A short chain limits how far each false rewrite spreads. At held-out thresholds, tabled evaluation bounded at depth 3 raised answer F1 over unbounded tabled evaluation for each NLI cross-encoder, nli-deberta-large's from 0.68 to 0.91, because unbounded evaluation ran out of budget on a fifth to a sixth of the queries. For Jev, which admits few false rewrites, the bound mattered little: untabled at depth 3 it scored 0.90 against 0.89 unbounded, and tabled 0.83, because one fold's calibration picked a lower threshold. The bound also cuts recursion through user rules deeper than three steps, as the limits below say.
 - Ask the judge both ways when it is cheap. Direction-aware admission lowered every judge's false-rewrite rate.
 
 ## Limits and non-goals
