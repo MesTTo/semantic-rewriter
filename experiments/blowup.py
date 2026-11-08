@@ -11,6 +11,7 @@ Run: .venv/bin/python experiments/blowup.py
 
 from __future__ import annotations
 
+import argparse
 import json
 import time
 from pathlib import Path
@@ -35,10 +36,13 @@ CASES = (
 )
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     """Run every case under both judges with lazy-tabled and eager-worklist, and write the rows."""
+    parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    parser.add_argument("--engine", default="pymetta", help="engine to evaluate with (the experiment used pymetta)")
+    args = parser.parse_args(argv)
     retriever = EmbeddingRetriever()
-    engine = make_engine("pymetta")
+    engine = make_engine(args.engine)
     permissive = make("nli-deberta-base")
     rows = []
     for kb_name, query in CASES:

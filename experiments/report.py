@@ -259,9 +259,12 @@ def main() -> None:
     stderr; with --complete a missing file is an error, since a finished
     report must not keep a stale table.
     """
+    import argparse
     import sys
 
-    complete = "--complete" in sys.argv
+    parser = argparse.ArgumentParser(description="Fill the generated tables in RESULTS.md from the files under results/.")
+    parser.add_argument("--complete", action="store_true", help="fail when a results file a table needs is missing")
+    complete = parser.parse_args().complete
     text = REPORT.read_text()
     missing = []
     for name, generate in GENERATORS.items():

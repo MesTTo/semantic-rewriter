@@ -251,6 +251,7 @@ These defaults come from the experiment in `RESULTS.md`: four generated knowledg
 - The rewriter admits rewrites and then reasons exactly. It does not score proofs, as soft-unification systems do; a score per answer would change unification, scoring and the stopping condition, and is a different system.
 - Admission decides each rewrite on its own. Choosing the rewrite set jointly under transitivity, as entailment-graph methods do, needs every pair's score before admitting anything, so it cannot run goal by goal.
 - The rewrite set grows while a query runs and is kept only in the memo. Maintaining answers incrementally as facts change is left to the engine.
+- The depth bound counts the knowledge base's own rule steps as well as rewrite steps, so besides limiting how far a false rewrite spreads, it cuts recursion through user rules deeper than the bound, such as an ancestor rule over more generations than the bound allows. A bound on admitted rewrites alone would keep that recursion complete; it needs a second counter in every engine and is not built.
 
 ## Prior art
 
