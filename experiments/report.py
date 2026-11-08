@@ -19,8 +19,8 @@ ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
 REPORT = ROOT / "RESULTS.md"
 
-STRATEGY_ORDER = ["exact", "naive", "memo-untabled", "nomemo-tabled", "depth-bounded", "depth-tabled", "lazy-tabled",
-                  "rounds", "eager-worklist", "alias-canonical", "saturate"]
+STRATEGY_ORDER = ["exact", "naive", "memo-untabled", "nomemo-tabled", "depth-bounded", "depth-tabled",
+                  "rewrite-depth-tabled", "lazy-tabled", "rounds", "eager-worklist", "alias-canonical", "saturate"]
 
 
 def _load(name: str) -> dict:
@@ -152,7 +152,7 @@ def judges_strategies_table() -> str:
     rows = []
     for judge in judges:
         agg = _aggregates(summary, judge)
-        for s in ("exact", "depth-bounded", "depth-tabled", "lazy-tabled", "eager-worklist", "alias-canonical", "saturate"):
+        for s in STRATEGY_ORDER:
             a = agg.get((s, "cold"))
             if a:
                 rows.append([judge, s, a["finished_rate"], a["precision"], a["recall"], a["f1"],
