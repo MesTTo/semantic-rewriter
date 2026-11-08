@@ -3,9 +3,8 @@ off: one hard query per benchmark under nli-deberta-base at its default
 threshold and under the oracle, with the budget lifted to 200M inferences, and
 write the work, tables and answer quality to results/blowup.json.
 
-Tables guarantee the closure is finite; this
-measures what finite costs once a judge admits rewrites between most predicate
-pairs.
+Tables guarantee the closure is finite (DESIGN.md, Termination); this measures
+what finite costs once a judge admits rewrites between most predicate pairs.
 
 Run: .venv/bin/python experiments/blowup.py
 """

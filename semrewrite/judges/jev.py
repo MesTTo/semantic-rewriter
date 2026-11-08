@@ -6,8 +6,8 @@ that states the task and what yes and no mean; the yes probability is the score.
 Answers are cached on disk keyed by the model alias, the state and the question,
 so a rerun spends no requests; every request sent is appended to a log, and a
 judge refuses to send once the log holds `budget` requests. The API key comes
-from TYPESAFE_API_KEY or the file JEV_KEY_FILE (default ~/jevkey.txt)
-and is never logged, printed or stored.
+from TYPESAFE_API_KEY, or else from the file JEV_KEY_FILE names, and is never
+logged, printed or stored.
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ STATE: dict[str, str] = {
 # A request of 874 questions answered in 0.55 s; 800 stays inside what was measured.
 QUESTIONS_PER_REQUEST = 800
 
-# The cap on Jev requests for this experiment, counted over the request log.
+# The default cap on Jev requests, counted over the request log, so a run cannot spend without bound.
 DEFAULT_BUDGET = 300
 
 
@@ -54,9 +54,10 @@ def resolve_key() -> str:
     key = os.environ.get("TYPESAFE_API_KEY")
     if key:
         return key.strip()
-    path = pathlib.Path(os.environ.get("JEV_KEY_FILE", "~/jevkey.txt")).expanduser()
-    if not path.is_file():
-        msg = f"no TYPESAFE_API_KEY in the environment and no key file at {path}"
+    named = os.environ.get("JEV_KEY_FILE")
+    path = pathlib.Path(named).expanduser() if named else None
+    if path is None or not path.is_file():
+        msg = f"set TYPESAFE_API_KEY, or JEV_KEY_FILE to a file holding the key (JEV_KEY_FILE is {named!r})"
         raise RuntimeError(msg)
     return path.read_text().strip()
 
@@ -144,7 +145,7 @@ class JevJudge(SentenceJudge):
         from typesafe_sdk import Noul
 
         if self.budget is not None and self._logged_requests() >= self.budget:
-            msg = f"Jev request budget of {self.budget} reached in {self.log_path}; ask before raising it"
+            msg = f"Jev request budget of {self.budget} reached in {self.log_path}; pass a larger budget to raise it"
             raise RuntimeError(msg)
         names = {f"q{i}": key for i, (key, _) in enumerate(batch)}
         questions = {f"q{i}": Noul(instructions=text) for i, (_, text) in enumerate(batch)}

@@ -248,8 +248,8 @@ def run_one(kb_name: str, strategy: str, query_index: int, engine_name: str) -> 
 def isolation_check(kb_name: str, engine_name: str) -> dict:
     """Compare each oracle run done in one shared process with the same run in a fresh process.
 
-    pymetta 0.9.4 lets state cross contexts (repros/symbol_use_leaks_across_contexts.py), so the
-    shared-process results stand only if a fresh process gives the same
+    pymetta 0.9.4 lets state cross contexts (repros/symbol_use_leaks_across_contexts.py),
+    so the shared-process results stand only if a fresh process gives the same
     answers and status for every strategy and query.
     """
     kb = BENCHMARKS[kb_name]()

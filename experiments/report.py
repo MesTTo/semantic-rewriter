@@ -82,8 +82,8 @@ def strategies_table() -> str:
     """Every strategy with the oracle judge over all four benchmarks, cold and warm.
 
     Wall time is left out: per-query seconds grew over the life of the run's
-    process, so they measure when a strategy ran more
-    than what it costs; engine work is read from counted inferences instead.
+    process, so they measure when a strategy ran more than what it costs;
+    engine work is read from counted inferences instead.
     """
     agg = _aggregates(_load_oracle(), "oracle")
     rows = []

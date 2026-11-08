@@ -1,8 +1,9 @@
 """Purpose: tests of the direction judges behind semrewrite.judges.make: the
 factory and threshold contract, the shared scoring checks, the evaluation
 metrics against brute-force definitions, and each model judge on the
-mother/parent case. Jev runs from its committed
-answer cache with a request budget of zero, so these tests send no request.
+mother/parent case. Jev runs only from the experiment's answer cache, in a
+checkout that has data/raw/jev, with a request budget of zero, so these tests
+send no request.
 """
 
 from __future__ import annotations
@@ -17,7 +18,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from semrewrite import judges, pairs
-from semrewrite.judges import NAMES, default_threshold, make
+from semrewrite.judges import JEV_ANSWERS, NAMES, default_threshold, make
 from semrewrite.judges.base import SentenceJudge, sentence_pairs
 from semrewrite.judges.metrics import at_threshold, calibrate, direction, roc_auc
 from semrewrite.judges.oracle import OracleJudge
@@ -102,6 +103,8 @@ def judge(request: pytest.FixtureRequest):  # noqa: ANN201
     A judge whose library is not installed (the models or jev extra) is skipped.
     """
     pytest.importorskip("typesafe_sdk" if request.param == "jev" else "sentence_transformers")
+    if request.param == "jev" and not JEV_ANSWERS.is_file():
+        pytest.skip(f"no Jev answer cache at {JEV_ANSWERS}")
     options = {"budget": 0} if request.param == "jev" else {}
     built = make(request.param, threshold=0.5, **options)
     yield built
