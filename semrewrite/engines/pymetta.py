@@ -24,6 +24,16 @@ fact<k>, so no solve defines a function name an earlier one used: pymetta 0.9.4
 makes every call of a name that earlier contexts tabled cost more, by a few
 inferences per such context (repros/tabled_contexts_raise_inference_cost.py),
 which over a long process starved untabled runs of their budget.
+
+pymetta 0.9.4 charges an op's calls differently by its parameter's
+annotation, so each op's annotation is the one measured cheapest where it is
+called. The discovery op takes a Symbol: annotated object, an inference limit
+reached in it arrives as an EngineError from the second context of a process
+on (repros/op_object_parameter_wraps_limit.py), and the first naive solve of a
+process ran to 23 million inferences against a budget of 300,000; with the
+oracle on family, lazy-tabled cost 17,761 inferences a query with Symbol,
+19,254 unannotated and 19,810 with object. The reach op takes object, which
+cost 174 inferences a table on a tabled path closure against 287 unannotated.
 """
 
 from __future__ import annotations
@@ -34,7 +44,7 @@ import time
 from collections import defaultdict
 from collections.abc import Callable, Iterator
 
-from metta import Expression, MeTTa, S, parse
+from metta import Expression, MeTTa, S, Symbol, parse
 from metta.errors import EngineError, InferenceLimitError, TimeLimitError
 from metta.vocabularies import EffectClass
 
@@ -261,7 +271,7 @@ def _query_term(query: Atom, preds: _Names, consts: _Names, *, meta: bool, depth
     return f"(let True {call} (ans {args}))"
 
 
-def _impliers(program: Program, expand: Expander | None, reached: set[str], preds: _Names) -> Callable[[object], Iterator[Expression]]:
+def _impliers(program: Program, expand: Expander | None, reached: set[str], preds: _Names) -> Callable[[Symbol], Iterator[Expression]]:
     """The discovery op: the program's rewrites for a predicate, then whatever the callback returns for it, each once.
 
     It calls the callback on every call, as evaluation reaches the predicate,
@@ -272,7 +282,8 @@ def _impliers(program: Program, expand: Expander | None, reached: set[str], pred
     for rw in program.rewrites:
         static[rw.conclusion].append(rw)
 
-    def impliers(p: object) -> Iterator[Expression]:
+    # Symbol, not object: object lets an inference limit be missed or arrive wrapped (module docstring).
+    def impliers(p: Symbol) -> Iterator[Expression]:
         name = preds.undo(str(p))
         reached.add(name)
         seen = set()
@@ -286,6 +297,7 @@ def _impliers(program: Program, expand: Expander | None, reached: set[str], pred
 
 
 def _reach(reached: set[str], preds: _Names) -> Callable[[object], Iterator[Expression]]:
+    # object is the cheapest of the annotations measured for this call (module docstring).
     def reach(p: object) -> Iterator[Expression]:
         reached.add(preds.undo(str(getattr(p, "value", p))))
         yield from ()

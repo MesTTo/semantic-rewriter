@@ -6,8 +6,15 @@ keywords keep their answers, and without tables rewriting loops on a cycle.
 
 from __future__ import annotations
 
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
 import pytest
 
+import semrewrite
 from semrewrite.benchmarks import BENCHMARKS
 from semrewrite.engines import available, make
 from semrewrite.judges.oracle import OracleJudge
@@ -90,6 +97,34 @@ def test_a_strategy_outside_its_knobs_is_refused_where_it_is_defined(knobs: dict
     """A setting no implementation has fails when the strategy is built, not at its first run."""
     with pytest.raises(ValueError, match=message):
         Strategy("custom", **knobs)
+
+
+@pytest.mark.parametrize("engine_name", [e for e in ENGINES if "naive" in _runnable(e)])
+def test_the_first_solve_of_a_process_stops_at_its_work_budget(engine_name: str) -> None:
+    """A fresh process's first run of a rewrite loop stops at its inference budget, not at its time limit.
+
+    With an object-annotated op, pymetta 0.9.4 ran the first naive solve of mother(X, bea) to 16 million
+    inferences against 300,000, so the run gets a process of its own, importing this checkout's package.
+    """
+    code = (
+        "import json\n"
+        "from semrewrite.benchmarks import BENCHMARKS\n"
+        "from semrewrite.engines import make\n"
+        "from semrewrite.judges.oracle import OracleJudge\n"
+        "from semrewrite.protocols import Budget\n"
+        "from semrewrite.rewriter import Rewriter\n"
+        "kb = BENCHMARKS['family']()\n"
+        f"rewriter = Rewriter(kb, OracleJudge(kb.entailed()), make({engine_name!r}), None, "
+        "budget=Budget(work=300_000, seconds=30))\n"
+        "o = rewriter.ask('mother(X, bea)', 'naive')\n"
+        "print(json.dumps({'status': o.status, 'work': o.work}))\n"
+    )
+    package_root = str(Path(semrewrite.__file__).resolve().parents[1])
+    done = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True,
+                          env={**os.environ, "PYTHONPATH": package_root})
+    outcome = json.loads(done.stdout.strip().splitlines()[-1])
+    assert outcome["status"] == "work_limit", outcome
+    assert outcome["work"] <= 330_000, outcome
 
 
 @pytest.mark.parametrize("engine_name", ENGINES)
