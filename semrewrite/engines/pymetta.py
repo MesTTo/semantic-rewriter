@@ -12,15 +12,21 @@ tabling `holds` makes that SLG resolution with semantic goal expansion, and an
 extra depth argument makes it depth-bounded. The native encoding runs when the
 program has no callback, no depth bound and tables on; otherwise the meta one.
 
-Names are data: every predicate is written as p__<name> and every constant as
+Names are data: every predicate is written as p<k>__<name> and every constant as
 c__<name> inside the engine and read back in the answers, so no knowledge-base
 name can collide with a pymetta builtin (pymetta 0.9.4 silently loses answers
 when a query binds a constant spelled like one, repros/builtin_named_constant_untabled.py),
-a Prolog core predicate such as is, or the encodings' own symbols.
+a Prolog core predicate such as is, or the encodings' own symbols. k counts the
+engine's solves, and the meta encoding's own functions are holds<k>, via<k> and
+fact<k>, so no solve defines a function name an earlier one used: pymetta 0.9.4
+makes every call of a name that earlier contexts tabled cost more, by a few
+inferences per such context (repros/tabled_contexts_raise_inference_cost.py),
+which over a long process starved untabled runs of their budget.
 """
 
 from __future__ import annotations
 
+import itertools
 import math
 import time
 from collections import defaultdict
@@ -32,6 +38,9 @@ from metta.vocabularies import EffectClass
 
 from semrewrite.model import Atom, Rewrite, is_variable, mappings
 from semrewrite.protocols import Budget, Capabilities, Expander, Program, Solution
+
+# The solves this process has run, which tag every function name a solve defines.
+_SOLVES = itertools.count()
 
 
 def _mapping_symbol(m: tuple[int, ...]) -> str:
@@ -76,17 +85,18 @@ class PyMeTTaEngine:
             # pymetta refuses non-positive limits, and a run with nothing to spend is already out of budget.
             status = "work_limit" if budget.work <= 0 else "time_limit"
             return Solution(status=status, detail=f"budget {budget} leaves nothing to spend", reached=frozenset())
-        preds, consts = _Names("p__"), _Names("c__")
+        tag = next(_SOLVES)
+        preds, consts = _Names(f"p{tag}__"), _Names("c__")
         native = expand is None and program.depth == 0 and program.tabled
         # Evaluation always calls the query's predicate, even when a fact answers it before any fallback runs.
         reached: set[str] = {query.pred}
         if native:
             source, tabled = _native_source(program, query, preds, consts)
-            term = _query_term(query, preds, consts, meta=False, depth=0)
+            term = _query_term(query, preds, consts, meta=False, depth=0, tag=tag)
             ops = {"reach": _reach(reached, preds)}
         else:
-            source, tabled = _meta_source(program, query, preds, consts), []
-            term = _query_term(query, preds, consts, meta=True, depth=program.depth)
+            source, tabled = _meta_source(program, query, preds, consts, tag), []
+            term = _query_term(query, preds, consts, meta=True, depth=program.depth, tag=tag)
             ops = {"impliers": _impliers(program, expand, reached, preds)}
         return self._run(source, tabled, ops, term, budget, query, consts, reached)
 
@@ -194,46 +204,47 @@ def _native_source(program: Program, query: Atom, preds: _Names, consts: _Names)
     return "\n".join(lines), tabled
 
 
-def _meta_source(program: Program, query: Atom, preds: _Names, consts: _Names) -> str:
+def _meta_source(program: Program, query: Atom, preds: _Names, consts: _Names, tag: int) -> str:
     """The program as data under holds, with the discovery clause, a via clause per mapping, and tabling when asked.
 
     For each arity n present, holds takes the predicate and n arguments, plus
     the depth left when the program has a depth bound: every rewrite and rule
     step spends one unit, facts hold at any depth, and tabling then keys each
-    table on the depth left too.
+    table on the depth left too. holds, via and fact carry the solve's tag.
     """
+    holds_, via_, fact_ = f"holds{tag}", f"via{tag}", f"fact{tag}"
     depth = program.depth > 0
     d, dm = (" $d", " (- $d 1)") if depth else ("", "")
     arities = {query.arity} | {f.arity for f in program.facts} | {a.arity for r in program.rules for a in (r.head, *r.body)}
     arities |= {rw.arity for rw in program.rewrites}
-    lines = [f"(= (fact {preds(f.pred)} {' '.join(consts(t) for t in f.args)}) True)" for f in program.facts]
+    lines = [f"(= ({fact_} {preds(f.pred)} {' '.join(consts(t) for t in f.args)}) True)" for f in program.facts]
     for n in sorted(arities):
         xs = " ".join(f"$x{i}" for i in range(n))
         # A sentinel fact under the bare prefix defines fact for every arity holds calls, so an arity with
         # no facts answers nothing instead of raising an unknown-procedure error.
-        lines.append(f"(= (fact {preds('')} {' '.join(consts('') for _ in range(n))}) True)")
-        lines.append(f"(= (holds $p {xs}{d}) (fact $p {xs}))")
-        discover = f"(let (rw $q $m) (impliers $p) (via $q $m {xs}{dm}))"
-        lines.append(f"(= (holds $p {xs}{d}) {f'(if (> $d 0) {discover} (empty))' if depth else discover})")
+        lines.append(f"(= ({fact_} {preds('')} {' '.join(consts('') for _ in range(n))}) True)")
+        lines.append(f"(= ({holds_} $p {xs}{d}) ({fact_} $p {xs}))")
+        discover = f"(let (rw $q $m) (impliers $p) ({via_} $q $m {xs}{dm}))"
+        lines.append(f"(= ({holds_} $p {xs}{d}) {f'(if (> $d 0) {discover} (empty))' if depth else discover})")
         for m in mappings(n):
             permuted = " ".join(f"$x{i}" for i in m)
-            lines.append(f"(= (via $q {_mapping_symbol(m)} {xs}{d}) (holds $q {permuted}{d}))")
+            lines.append(f"(= ({via_} $q {_mapping_symbol(m)} {xs}{d}) ({holds_} $q {permuted}{d}))")
         if program.tabled:
-            lines.append(f"!(tabled (holds $p {xs}{d}))")
+            lines.append(f"!(tabled ({holds_} $p {xs}{d}))")
 
     def holds(a: Atom) -> str:
-        return f"(holds {preds(a.pred)} {' '.join(_term(t, consts) for t in a.args)}{dm})"
+        return f"({holds_} {preds(a.pred)} {' '.join(_term(t, consts) for t in a.args)}{dm})"
 
     for rule in program.rules:
-        head = f"(holds {preds(rule.head.pred)} {' '.join(_term(t, consts) for t in rule.head.args)}{d})"
+        head = f"({holds_} {preds(rule.head.pred)} {' '.join(_term(t, consts) for t in rule.head.args)}{d})"
         body = _body(rule.body, holds)
         lines.append(f"(= {head} {f'(if (> $d 0) {body} (empty))' if depth else body})")
     return "\n".join(lines)
 
 
-def _query_term(query: Atom, preds: _Names, consts: _Names, *, meta: bool, depth: int) -> str:
+def _query_term(query: Atom, preds: _Names, consts: _Names, *, meta: bool, depth: int, tag: int) -> str:
     args = " ".join(_term(t, consts) for t in query.args)
-    call = f"(holds {preds(query.pred)} {args}{f' {depth}' if depth else ''})" if meta else f"({preds(query.pred)} {args})"
+    call = f"(holds{tag} {preds(query.pred)} {args}{f' {depth}' if depth else ''})" if meta else f"({preds(query.pred)} {args})"
     return f"(let True {call} (ans {args}))"
 
 
