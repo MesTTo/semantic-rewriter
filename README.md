@@ -142,7 +142,7 @@ The experiment ran eleven strategies with a perfect judge, and five of them with
 - Admission precision decides answer quality, so the judge's threshold has to be calibrated for answer F1, not for pair accuracy.
 - With an imperfect judge, a depth bound of 3 limits how far a false rule spreads. At calibrated thresholds, tabled evaluation with the bound (`depth-tabled`) raised answer F1 for six of the seven judges, nli-deberta-large's from 0.68 to 0.91, and cost the perfect judge three answers that need more than three steps.
 
-RESULTS.md has every number, the method and the PyMeTTa defects found on the way, each with a reproduction under `repros/`.
+RESULTS.md has every number, the method and the eight PyMeTTa defects found on the way, five of them with a script under `repros/` that reproduces them.
 
 ## Guarantees and limits
 
@@ -152,7 +152,8 @@ Every query terminates when the catalogue of predicates is finite, rewrites only
 
 ```sh
 uv sync --all-extras
-uv run pytest                                  # unit, property and conformance tests
+uv run pytest                                  # unit, property and conformance tests, 400 cases per property
+uv run pytest --hypothesis-profile=ci          # the same with 100 cases per property, as CI runs PyMeTTa
 uv run semrewrite conformance --engine pymetta
 ```
 
