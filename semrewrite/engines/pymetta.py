@@ -30,7 +30,7 @@ annotation, so each op's annotation is the one measured cheapest where it is
 called. The discovery op takes a Symbol: annotated object, an inference limit
 reached in it arrives as an EngineError from the second context of a process
 on (repros/op_object_parameter_wraps_limit.py), and the first naive solve of a
-process ran to 23 million inferences against a budget of 300,000; with the
+process ran to 16 to 23 million inferences against a budget of 300,000; with the
 oracle on family, lazy-tabled cost 17,761 inferences a query with Symbol,
 19,254 unannotated and 19,810 with object. The reach op takes object, which
 cost 174 inferences a table on a tabled path closure against 287 unannotated.
