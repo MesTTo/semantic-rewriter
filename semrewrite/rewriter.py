@@ -23,6 +23,7 @@ from collections import defaultdict
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from enum import StrEnum
+from typing import get_args
 
 from semrewrite.discovery import Discoverer, ScoreCache
 from semrewrite.kb import KB
@@ -59,6 +60,10 @@ class Strategy:
     def __post_init__(self) -> None:
         if self.depth < 0:
             msg = f"strategy {self.name}: a depth bound counts steps, so it can't be negative"
+            raise ValueError(msg)
+        if self.depth_counts not in get_args(DepthCounts):
+            msg = (f"strategy {self.name}: depth_counts is {self.depth_counts!r}; "
+                   f"a depth bound counts one of {get_args(DepthCounts)}")
             raise ValueError(msg)
         # Discovery before evaluation needs no memo switch, tables-off or depth variants: those exist
         # to show what lazy discovery does without them.

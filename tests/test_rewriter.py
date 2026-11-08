@@ -13,7 +13,7 @@ from semrewrite.engines import available, make
 from semrewrite.judges.oracle import OracleJudge
 from semrewrite.kb import KB, atom
 from semrewrite.protocols import Budget, Capabilities
-from semrewrite.rewriter import STRATEGIES, CapabilityError, Rewriter
+from semrewrite.rewriter import STRATEGIES, CapabilityError, Rewriter, Strategy, Timing
 
 KBS = {name: make_kb() for name, make_kb in BENCHMARKS.items()}
 ENGINES = available()
@@ -76,6 +76,20 @@ def test_a_strategy_the_engine_cannot_run_is_refused_by_name() -> None:
         rewriter.ask("parent(X, Y)", "lazy-tabled")
     with pytest.raises(CapabilityError, match="lacks untabled, depth"):
         rewriter.ask("parent(X, Y)", "depth-bounded")
+
+
+@pytest.mark.parametrize(("knobs", "message"), [
+    ({"timing": Timing.LAZY, "depth": -1}, "can't be negative"),
+    ({"timing": Timing.LAZY, "depth": 3, "depth_counts": "rules"}, "depth_counts is 'rules'"),
+    ({"timing": Timing.EAGER, "depth": 3}, "only lazy discovery"),
+    ({"timing": Timing.ROUNDS, "tabled": False}, "only lazy discovery"),
+    ({"timing": Timing.SATURATE, "memo": False}, "only lazy discovery"),
+    ({"timing": Timing.LAZY, "canonical": True}, "merging alias classes"),
+])
+def test_a_strategy_outside_its_knobs_is_refused_where_it_is_defined(knobs: dict, message: str) -> None:
+    """A setting no implementation has fails when the strategy is built, not at its first run."""
+    with pytest.raises(ValueError, match=message):
+        Strategy("custom", **knobs)
 
 
 @pytest.mark.parametrize("engine_name", ENGINES)

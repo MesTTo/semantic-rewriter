@@ -183,7 +183,12 @@ def _native_source(program: Program, query: Atom, preds: _Names, consts: _Names)
     Rewrites come before user rules, so a rule body's call to a predicate only
     rewrites define is compiled after that predicate exists. Every predicate
     gets a fallback equation calling the reach op, which yields nothing but
-    records that evaluation called the predicate, for the rounds strategy.
+    records that evaluation called the predicate, for the rounds strategy. The
+    op call also keeps pymetta's tabling declarations linear in the number of
+    predicates: without a clause calling an op, declaring 240 tabled functions
+    that call each other took 2.6 s against 0.7 s with one, and a geography
+    solve three times as long. Its calls are about half of a native solve's
+    inferences.
     """
     lines = [f"(= {_call(f, preds, consts)} True)" for f in program.facts]
     arity: dict[str, int] = {f.pred: f.arity for f in program.facts}
