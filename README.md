@@ -140,7 +140,7 @@ The experiment ran eleven strategies with a perfect judge, and five of them with
 - With tables and a per-predicate memo, every query terminated, on the benchmarks and on 400 generated catalogues per property; without tables, rewriting looped exactly when the query reached a cycle of rewrites.
 - Jev and the NLI cross-encoders tell which way an implication runs (direction accuracy 0.77 to 0.89 on two external pair sets); embedding similarity sits at chance.
 - Admission precision decides answer quality, so the judge's threshold has to be calibrated for answer F1, not for pair accuracy.
-- With an imperfect judge, a depth bound of 3 limits how far a false rule spreads, and at calibrated thresholds it matched or beat unbounded evaluation for every judge tested.
+- With an imperfect judge, a depth bound of 3 limits how far a false rule spreads. At calibrated thresholds, tabled evaluation with the bound (`depth-tabled`) raised answer F1 for each NLI cross-encoder, nli-deberta-large's from 0.68 to 0.91, and cost the perfect judge three answers that need more than three steps.
 
 RESULTS.md has every number, the method and the PyMeTTa defects found on the way, each with a reproduction under `repros/`.
 
