@@ -26,7 +26,7 @@ import sys
 import tomllib
 from collections import Counter, defaultdict, deque
 from collections.abc import Iterable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from semrewrite.model import Predicate, Proposal
 
@@ -94,6 +94,7 @@ class PairRow:
         premise, conclusion = row["premise"], row["conclusion"]
         assert isinstance(premise, dict) and isinstance(conclusion, dict)
         types, instances = row["types"], row["instances"]
+        assert isinstance(types, list) and (instances is None or isinstance(instances, list))
         return cls(
             id=str(row["id"]),
             set=str(row["set"]),
@@ -104,8 +105,8 @@ class PairRow:
             conclusion=Predicate(conclusion["name"], conclusion["gloss"]),
             swapped=bool(row["swapped"]),
             label=bool(row["label"]),
-            types=(types[0], types[1]),  # type: ignore[index]
-            instances=(instances[0], instances[1]) if instances else None,  # type: ignore[index]
+            types=(types[0], types[1]),
+            instances=(instances[0], instances[1]) if instances else None,
             source=str(row.get("source", "")),
             reason=str(row.get("reason", "")),
         )
@@ -386,8 +387,8 @@ def hard_rows(source: pathlib.Path = PAIRS / "hard.toml") -> list[PairRow]:
     row when swapped, so they mention the same two entities.
     """
     spec = tomllib.loads(source.read_text())
-    predicates = {
-        name: (Predicate(name, entry["gloss"]), (entry["types"][0], entry["types"][1]))
+    predicates: dict[str, tuple[Predicate, Fillers]] = {
+        name: (Predicate(name, entry["gloss"]), (str(entry["types"][0]), str(entry["types"][1])))
         for name, entry in spec["predicates"].items()
     }
     rows: list[PairRow] = []
@@ -397,14 +398,14 @@ def hard_rows(source: pathlib.Path = PAIRS / "hard.toml") -> list[PairRow]:
         swapped = bool(relation.get("swapped", False))
         forward, backward = _HOLDS[relation["holds"]]
         pair = f"hard:{premise.name}>{conclusion.name}{'~' if swapped else ''}"
-        common = {"set": "hard", "split": "test", "pair": pair, "kind": relation["holds"],
-                  "source": f"data/pairs/hard.toml relation {n + 1}", "reason": relation["reason"]}
-        rows.append(PairRow(id=pair, premise=premise, conclusion=conclusion, swapped=swapped,
-                            label=forward, types=types, **common))
+        row = PairRow(id=pair, set="hard", split="test", pair=pair, kind=str(relation["holds"]), premise=premise,
+                      conclusion=conclusion, swapped=swapped, label=forward, types=types,
+                      source=f"data/pairs/hard.toml relation {n + 1}", reason=str(relation["reason"]))
+        rows.append(row)
         if premise != conclusion or not swapped:
             reverse_types = (types[1], types[0]) if swapped else types
-            rows.append(PairRow(id=pair + ":reverse", premise=conclusion, conclusion=premise, swapped=swapped,
-                                label=backward, types=reverse_types, **common))
+            rows.append(replace(row, id=pair + ":reverse", premise=conclusion, conclusion=premise, label=backward,
+                                types=reverse_types))
     return rows
 
 

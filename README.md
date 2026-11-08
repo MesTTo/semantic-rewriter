@@ -155,6 +155,7 @@ uv sync --all-extras
 uv run pytest                                  # unit, property and conformance tests, 400 cases per property
 uv run pytest --hypothesis-profile=ci          # the same with 100 cases per property, as CI runs PyMeTTa
 uv run ruff check .                            # lint, as CI does
+uv run ty check semrewrite                     # type check, with every extra installed
 uv run semrewrite conformance --engine pymetta
 ```
 

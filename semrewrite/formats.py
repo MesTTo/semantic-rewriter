@@ -31,7 +31,7 @@ import re
 from pathlib import Path
 
 from semrewrite.kb import KB
-from semrewrite.model import Atom, Key, Predicate, Rule, is_variable, parse_atom
+from semrewrite.model import Atom, Key, Predicate, Rule, is_variable, keys_of, parse_atom
 
 _GLOSS = re.compile(r'^gloss\s+([a-z][A-Za-z0-9_]*)\s+"((?:[^"\\]|\\.)*)"\s*\.?$')
 _GOLD = re.compile(r"^gold\s+([a-z][A-Za-z0-9_]*)\s*=>\s*([a-z][A-Za-z0-9_]*)\s*(.*?)\s*\.?$")
@@ -116,7 +116,7 @@ def loads_text(text: str, name: str = "kb") -> KB:
                 raise ValueError(msg)
             mapping = tuple(range(Predicate(conclusion, glosses[conclusion]).arity))
         resolved.append((premise, conclusion, mapping))
-    return KB(name=name, glosses=glosses, facts=tuple(facts), rules=tuple(rules), gold=frozenset(resolved), queries=tuple(queries))
+    return KB(name=name, glosses=glosses, facts=tuple(facts), rules=tuple(rules), gold=keys_of(resolved), queries=tuple(queries))
 
 
 def dumps_text(kb: KB) -> str:
@@ -148,7 +148,7 @@ def loads_json(text: str, name: str = "kb") -> KB:
         facts=tuple(Atom(f[0], tuple(f[1:])) for f in data.get("facts", ())),
         rules=tuple(parse_rule(r) for r in data.get("rules", ())),
         queries=tuple(parse_atom(q) for q in data.get("queries", ())),
-        gold=frozenset(gold),
+        gold=keys_of(gold),
     )
 
 
@@ -186,9 +186,10 @@ def dumps_metta(kb: KB) -> str:
 
 def loads_metta(source: str, name: str = "kb") -> KB:
     """Read native MeTTa as dumps_metta writes it; needs pymetta."""
-    from metta import Expression, forms
+    from metta import Atom as MeTTaAtom
+    from metta import Expression, Grounded, forms
 
-    def term(atom: object) -> str:
+    def term(atom: MeTTaAtom) -> str:
         if atom.metatype == "Variable":
             text = str(atom).lstrip("$")
             if not is_variable(text):
@@ -227,6 +228,9 @@ def loads_metta(source: str, name: str = "kb") -> KB:
         kind = str(form.children[0])
         if kind == "gloss":
             _, pred, text = form.children
+            if not isinstance(text, Grounded) or not isinstance(text.value, str):
+                msg = f"the gloss of {pred} must be a string, got {text}"
+                raise ValueError(msg)
             glosses[str(pred)] = text.value
         elif kind == "=":
             _, lhs, rhs = form.children

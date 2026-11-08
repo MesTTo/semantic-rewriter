@@ -322,6 +322,7 @@ class _Solve:
         """Apply a one-atom `plan` to the delta in round k: each matching row gives one head row, no join needed."""
         step = plan.steps[0]
         pred, by, projection = step.pred, plan.by, plan.projection
+        assert projection is not None, "project runs only one-atom plans, which carry a projection"
         filters, checks = tuple(zip(step.positions, step.key, strict=True)), step.checks
         known = self.height[plan.head_pred]
         out = fresh.setdefault(plan.head_pred, {})
@@ -336,7 +337,7 @@ class _Solve:
                     raise _Limit("time_limit", f"time budget of {self.budget.seconds}s exceeded in round {k}")
                 if any(row[p] != c for p, c in filters) or any(row[p] != row[q] for p, q in checks):
                     continue
-                head = tuple([row[t] if t.__class__ is int else t for t in projection])
+                head = tuple([row[t] if isinstance(t, int) else t for t in projection])
                 if head not in known and head not in out:
                     out[head] = (by, ((pred, row),))
         finally:
@@ -358,7 +359,7 @@ class _Solve:
         def walk(s: int) -> None:
             nonlocal work
             if s == last:
-                row = tuple([env[t] if t.__class__ is int else t for t in head])
+                row = tuple([env[t] if isinstance(t, int) else t for t in head])
                 if row not in known and row not in out:
                     out[row] = (by, tuple([(body_preds[j], matched[step_of[j]]) for j in range(len(body_preds))]))
                 return
@@ -367,7 +368,7 @@ class _Solve:
                 candidates: list[Row] | tuple[()] = delta[step.pred]
                 filters = tuple(zip(step.positions, step.key, strict=True))
             else:
-                key = tuple([env[t] if t.__class__ is int else t for t in step.key])
+                key = tuple([env[t] if isinstance(t, int) else t for t in step.key])
                 candidates = index[step.pred][step.positions].get(key, ())
                 filters = ()
             heights = height[step.pred] if step.source == _OLD else None

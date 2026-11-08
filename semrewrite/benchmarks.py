@@ -25,7 +25,7 @@ from collections import defaultdict
 from collections.abc import Callable, Sequence
 
 from semrewrite.kb import KB, atom
-from semrewrite.model import Rule
+from semrewrite.model import Rule, keys_of
 
 T, F = True, False
 
@@ -159,7 +159,7 @@ def family(seed: int = 7) -> KB:
         atom("parent", "X", "Y"),
     )
     traps = frozenset({"guardian_of", "stepmother_of", "godfather_of", "aunt_of", "uncle_of", "grandmother_of"})
-    return KB("family", glosses, tuple(sorted(facts)), rules, frozenset(gold), queries, traps)
+    return KB("family", glosses, tuple(atom(*f) for f in sorted(facts)), rules, keys_of(gold), queries, traps)
 
 
 def work(seed: int = 11) -> KB:
@@ -255,7 +255,7 @@ def work(seed: int = 11) -> KB:
         atom("boss_of", "X", "Y"),
     )
     traps = frozenset({"mentor_of", "client_of", "founded", "invested_in", "colleague_of"})
-    return KB("work", glosses, tuple(sorted(facts)), rules, frozenset(gold), queries, traps)
+    return KB("work", glosses, tuple(atom(*f) for f in sorted(facts)), rules, keys_of(gold), queries, traps)
 
 
 def geography(seed: int = 13) -> KB:
@@ -357,7 +357,7 @@ def geography(seed: int = 13) -> KB:
         *(atom("capital_of", "X", c) for c in rng.sample(list(countries), 2)),
     )
     traps = frozenset({"largest_city_of", "former_capital_of", "near", "twinned_with"})
-    return KB("geography", glosses, tuple(sorted(facts)), rules, frozenset(gold), queries, traps)
+    return KB("geography", glosses, tuple(atom(*f) for f in sorted(facts)), rules, keys_of(gold), queries, traps)
 
 
 def medicine(seed: int = 17) -> KB:
@@ -422,7 +422,7 @@ def medicine(seed: int = 17) -> KB:
         atom("remedy_for", "X", "Y"),
     )
     traps = frozenset({"correlated_with", "associated_with", "prevents", "contraindicated_for"})
-    return KB("medicine", glosses, tuple(sorted(facts)), rules, frozenset(gold), queries, traps)
+    return KB("medicine", glosses, tuple(atom(*f) for f in sorted(facts)), rules, keys_of(gold), queries, traps)
 
 
 #: Every benchmark by name, each a function of its seed.

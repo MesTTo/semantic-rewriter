@@ -25,7 +25,11 @@ class NLIJudge(SentenceJudge):
         super().__init__(name, threshold, fillers)
         self.model_name = model
         self._model = CrossEncoder(model)
-        labels = {str(label).lower(): int(index) for index, label in self._model.model.config.id2label.items()}
+        config = getattr(self._model.model, "config", None)
+        if config is None or not config.id2label:
+            msg = f"{model} has no label map to find its entailment class in"
+            raise ValueError(msg)
+        labels = {str(label).lower(): int(index) for index, label in config.id2label.items()}
         if "entailment" not in labels:
             msg = f"{model} has no entailment class among {sorted(labels)}"
             raise ValueError(msg)
