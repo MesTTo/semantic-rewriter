@@ -1,4 +1,4 @@
-# Purpose: run the test suite on every push and pull request: the dependency-free core with the pure-Python engine on three Python versions, and the PyMeTTa engine with its conformance check.
+# Purpose: run the test suite on every push and pull request: the dependency-free core with the pure-Python engine on three Python versions, with the Levy/Holt pairs fetched at their pinned commit, and the PyMeTTa engine with its conformance check.
 name: tests
 on: [push, pull_request]
 jobs:
@@ -13,6 +13,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: pip install -e ".[conformance]" pytest
+      - run: python -m semrewrite.pairs fetch levyholt && python -m semrewrite.pairs build levyholt
       - run: pytest -q -rs
       - run: semrewrite conformance --engine python --examples 200
   pymetta:
