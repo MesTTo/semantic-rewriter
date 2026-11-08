@@ -22,10 +22,10 @@
     "true": 1414,
     "unrelated": 237
    },
-   "seconds_per_query": 0.075,
+   "seconds_per_query": 0.0874,
    "strategy": "depth-bounded",
    "tables_per_query": 0.0,
-   "work_per_query": 138123.3
+   "work_per_query": 131901.2
   },
   {
    "exact_rate": 0.6207,
@@ -49,10 +49,10 @@
     "true": 1414,
     "unrelated": 237
    },
-   "seconds_per_query": 0.0935,
+   "seconds_per_query": 0.1183,
    "strategy": "depth-tabled",
    "tables_per_query": 108.72,
-   "work_per_query": 14667.9
+   "work_per_query": 13641.8
   },
   {
    "exact_rate": 0.5862,
@@ -76,10 +76,10 @@
     "true": 1684,
     "unrelated": 269
    },
-   "seconds_per_query": 1.0177,
+   "seconds_per_query": 0.3062,
    "strategy": "eager-worklist",
-   "tables_per_query": 287.36,
-   "work_per_query": 131535.3
+   "tables_per_query": 162.47,
+   "work_per_query": 143276.9
   },
   {
    "exact_rate": 0.0862,
@@ -98,10 +98,10 @@
    "recall_finished": 0.018,
    "retrievals_per_query": 0.0,
    "rewrite_kinds": {},
-   "seconds_per_query": 0.0861,
+   "seconds_per_query": 0.1376,
    "strategy": "exact",
-   "tables_per_query": 0.33,
-   "work_per_query": 1115.8
+   "tables_per_query": 1.34,
+   "work_per_query": 1517.7
   },
   {
    "exact_rate": 0.5862,
@@ -125,10 +125,37 @@
     "true": 1684,
     "unrelated": 269
    },
-   "seconds_per_query": 0.1344,
+   "seconds_per_query": 0.1619,
    "strategy": "lazy-tabled",
-   "tables_per_query": 145.66,
-   "work_per_query": 147324.7
+   "tables_per_query": 153.38,
+   "work_per_query": 144872.2
+  },
+  {
+   "exact_rate": 0.6034,
+   "expansions_per_query": 8.95,
+   "f1": 0.7992,
+   "false_rewrite_rate": 0.2,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "ALL",
+   "mode": "cold",
+   "precision": 0.6895,
+   "precision_finished": 0.6895,
+   "proposals_per_query": 152.12,
+   "queries": 58,
+   "recall": 0.9505,
+   "recall_finished": 0.9505,
+   "retrievals_per_query": 8.95,
+   "rewrite_kinds": {
+    "reversed": 84,
+    "trap": 54,
+    "true": 1540,
+    "unrelated": 247
+   },
+   "seconds_per_query": 0.1222,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 285.16,
+   "work_per_query": 42115.6
   },
   {
    "exact_rate": 0.9412,
@@ -152,10 +179,10 @@
     "true": 388,
     "unrelated": 46
    },
-   "seconds_per_query": 0.0676,
+   "seconds_per_query": 0.053,
    "strategy": "depth-bounded",
    "tables_per_query": 0.0,
-   "work_per_query": 143328.1
+   "work_per_query": 138808.8
   },
   {
    "exact_rate": 0.9412,
@@ -179,10 +206,10 @@
     "true": 388,
     "unrelated": 46
    },
-   "seconds_per_query": 0.0852,
+   "seconds_per_query": 0.0873,
    "strategy": "depth-tabled",
    "tables_per_query": 102.18,
-   "work_per_query": 14004.1
+   "work_per_query": 12822.9
   },
   {
    "exact_rate": 1.0,
@@ -206,10 +233,10 @@
     "true": 404,
     "unrelated": 50
    },
-   "seconds_per_query": 0.1206,
+   "seconds_per_query": 0.1177,
    "strategy": "eager-worklist",
-   "tables_per_query": 67.71,
-   "work_per_query": 6639.1
+   "tables_per_query": 75.24,
+   "work_per_query": 17037.6
   },
   {
    "exact_rate": 0.1176,
@@ -228,10 +255,10 @@
    "recall_finished": 0.0308,
    "retrievals_per_query": 0.0,
    "rewrite_kinds": {},
-   "seconds_per_query": 0.0782,
+   "seconds_per_query": 0.1785,
    "strategy": "exact",
-   "tables_per_query": 0.41,
-   "work_per_query": 1124.6
+   "tables_per_query": 1.35,
+   "work_per_query": 1505.1
   },
   {
    "exact_rate": 1.0,
@@ -255,10 +282,37 @@
     "true": 404,
     "unrelated": 50
    },
-   "seconds_per_query": 0.0778,
+   "seconds_per_query": 0.0799,
    "strategy": "lazy-tabled",
    "tables_per_query": 75.24,
-   "work_per_query": 19693.6
+   "work_per_query": 17659.5
+  },
+  {
+   "exact_rate": 1.0,
+   "expansions_per_query": 8.88,
+   "f1": 1.0,
+   "false_rewrite_rate": 0.1368,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "family",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 151.0,
+   "queries": 17,
+   "recall": 1.0,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 8.88,
+   "rewrite_kinds": {
+    "reversed": 12,
+    "trap": 2,
+    "true": 404,
+    "unrelated": 50
+   },
+   "seconds_per_query": 0.0762,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 192.24,
+   "work_per_query": 30450.4
   },
   {
    "exact_rate": 0.6429,
@@ -281,10 +335,10 @@
     "true": 382,
     "unrelated": 22
    },
-   "seconds_per_query": 0.0857,
+   "seconds_per_query": 0.1411,
    "strategy": "depth-bounded",
    "tables_per_query": 0.0,
-   "work_per_query": 173224.4
+   "work_per_query": 166846.4
   },
   {
    "exact_rate": 0.7857,
@@ -307,10 +361,10 @@
     "true": 382,
     "unrelated": 22
    },
-   "seconds_per_query": 0.0959,
+   "seconds_per_query": 0.1632,
    "strategy": "depth-tabled",
    "tables_per_query": 121.71,
-   "work_per_query": 16059.9
+   "work_per_query": 15089.7
   },
   {
    "exact_rate": 0.8571,
@@ -333,10 +387,10 @@
     "true": 424,
     "unrelated": 22
    },
-   "seconds_per_query": 0.6773,
+   "seconds_per_query": 0.2807,
    "strategy": "eager-worklist",
    "tables_per_query": 180.86,
-   "work_per_query": 26283.4
+   "work_per_query": 50028.7
   },
   {
    "exact_rate": 0.1429,
@@ -355,10 +409,10 @@
    "recall_finished": 0.0308,
    "retrievals_per_query": 0.0,
    "rewrite_kinds": {},
-   "seconds_per_query": 0.133,
+   "seconds_per_query": 0.1484,
    "strategy": "exact",
-   "tables_per_query": 0.43,
-   "work_per_query": 1139.5
+   "tables_per_query": 1.43,
+   "work_per_query": 1530.9
   },
   {
    "exact_rate": 0.8571,
@@ -381,10 +435,36 @@
     "true": 424,
     "unrelated": 22
    },
-   "seconds_per_query": 0.1213,
+   "seconds_per_query": 0.153,
    "strategy": "lazy-tabled",
    "tables_per_query": 180.86,
-   "work_per_query": 60751.4
+   "work_per_query": 55543.6
+  },
+  {
+   "exact_rate": 0.8571,
+   "expansions_per_query": 7.57,
+   "f1": 0.9091,
+   "false_rewrite_rate": 0.0968,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "geography",
+   "mode": "cold",
+   "precision": 0.8333,
+   "precision_finished": 0.8333,
+   "proposals_per_query": 128.71,
+   "queries": 14,
+   "recall": 1.0,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 7.57,
+   "rewrite_kinds": {
+    "trap": 20,
+    "true": 392,
+    "unrelated": 22
+   },
+   "seconds_per_query": 0.1742,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 329.29,
+   "work_per_query": 51517.2
   },
   {
    "exact_rate": 0.6154,
@@ -407,10 +487,10 @@
     "true": 152,
     "unrelated": 99
    },
-   "seconds_per_query": 0.0667,
+   "seconds_per_query": 0.1137,
    "strategy": "depth-bounded",
    "tables_per_query": 0.0,
-   "work_per_query": 78122.9
+   "work_per_query": 71953.7
   },
   {
    "exact_rate": 0.6154,
@@ -433,10 +513,10 @@
     "true": 152,
     "unrelated": 99
    },
-   "seconds_per_query": 0.0876,
+   "seconds_per_query": 0.1566,
    "strategy": "depth-tabled",
    "tables_per_query": 44.0,
-   "work_per_query": 6640.8
+   "work_per_query": 6224.8
   },
   {
    "exact_rate": 0.3846,
@@ -459,10 +539,10 @@
     "true": 156,
     "unrelated": 99
    },
-   "seconds_per_query": 0.4961,
+   "seconds_per_query": 0.2829,
    "strategy": "eager-worklist",
    "tables_per_query": 98.54,
-   "work_per_query": 10393.2
+   "work_per_query": 23511.8
   },
   {
    "exact_rate": 0.0769,
@@ -481,10 +561,10 @@
    "recall_finished": 0.0,
    "retrievals_per_query": 0.0,
    "rewrite_kinds": {},
-   "seconds_per_query": 0.0709,
+   "seconds_per_query": 0.1527,
    "strategy": "exact",
-   "tables_per_query": 0.15,
-   "work_per_query": 1097.0
+   "tables_per_query": 1.15,
+   "work_per_query": 1511.2
   },
   {
    "exact_rate": 0.3846,
@@ -507,10 +587,36 @@
     "true": 156,
     "unrelated": 99
    },
-   "seconds_per_query": 0.0884,
+   "seconds_per_query": 0.1797,
    "strategy": "lazy-tabled",
    "tables_per_query": 98.54,
-   "work_per_query": 26435.7
+   "work_per_query": 23787.5
+  },
+  {
+   "exact_rate": 0.3846,
+   "expansions_per_query": 7.54,
+   "f1": 0.775,
+   "false_rewrite_rate": 0.4432,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "medicine",
+   "mode": "cold",
+   "precision": 0.6889,
+   "precision_finished": 0.6889,
+   "proposals_per_query": 128.15,
+   "queries": 13,
+   "recall": 0.8857,
+   "recall_finished": 0.8857,
+   "retrievals_per_query": 7.54,
+   "rewrite_kinds": {
+    "reversed": 22,
+    "true": 152,
+    "unrelated": 99
+   },
+   "seconds_per_query": 0.1568,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 140.46,
+   "work_per_query": 17065.5
   },
   {
    "exact_rate": 0.0714,
@@ -534,10 +640,10 @@
     "true": 492,
     "unrelated": 70
    },
-   "seconds_per_query": 0.0811,
+   "seconds_per_query": 0.0511,
    "strategy": "depth-bounded",
    "tables_per_query": 0.0,
-   "work_per_query": 152416.8
+   "work_per_query": 144233.6
   },
   {
    "exact_rate": 0.0714,
@@ -561,10 +667,10 @@
     "true": 492,
     "unrelated": 70
    },
-   "seconds_per_query": 0.1068,
+   "seconds_per_query": 0.0754,
    "strategy": "depth-tabled",
    "tables_per_query": 163.79,
-   "work_per_query": 21535.6
+   "work_per_query": 20075.6
   },
   {
    "exact_rate": 0.0,
@@ -588,10 +694,10 @@
     "true": 700,
     "unrelated": 98
    },
-   "seconds_per_query": 2.9319,
+   "seconds_per_query": 0.5823,
    "strategy": "eager-worklist",
-   "tables_per_query": 835.93,
-   "work_per_query": 500935.9
+   "tables_per_query": 309.36,
+   "work_per_query": 501026.3
   },
   {
    "exact_rate": 0.0,
@@ -610,10 +716,10 @@
    "recall_finished": 0.0,
    "retrievals_per_query": 0.0,
    "rewrite_kinds": {},
-   "seconds_per_query": 0.0629,
+   "seconds_per_query": 0.063,
    "strategy": "exact",
-   "tables_per_query": 0.29,
-   "work_per_query": 1098.7
+   "tables_per_query": 1.43,
+   "work_per_query": 1526.1
   },
   {
    "exact_rate": 0.0,
@@ -637,10 +743,37 @@
     "true": 700,
     "unrelated": 98
    },
-   "seconds_per_query": 0.2589,
+   "seconds_per_query": 0.2539,
    "strategy": "lazy-tabled",
-   "tables_per_query": 239.71,
-   "work_per_query": 501132.6
+   "tables_per_query": 271.71,
+   "work_per_query": 501109.2
+  },
+  {
+   "exact_rate": 0.0714,
+   "expansions_per_query": 11.71,
+   "f1": 0.5714,
+   "false_rewrite_rate": 0.2107,
+   "finished_rate": 1.0,
+   "judge": "jev",
+   "kb": "work",
+   "mode": "cold",
+   "precision": 0.4237,
+   "precision_finished": 0.4237,
+   "proposals_per_query": 199.14,
+   "queries": 14,
+   "recall": 0.8772,
+   "recall_finished": 0.8772,
+   "retrievals_per_query": 11.71,
+   "rewrite_kinds": {
+    "reversed": 50,
+    "trap": 32,
+    "true": 592,
+    "unrelated": 76
+   },
+   "seconds_per_query": 0.0941,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 488.21,
+   "work_per_query": 70139.6
   }
  ],
  "budget_work": 500000,
@@ -753,6 +886,7 @@
    }
   }
  ],
+ "engine": "pymetta",
  "judges": [
   "jev"
  ],
@@ -797,7 +931,7 @@
   }
  ],
  "retriever": "BAAI/bge-small-en-v1.5",
- "seconds": 393.3,
+ "seconds": 1355.1,
  "sweep": [
   {
    "curve": [
@@ -921,24 +1055,24 @@
   {
    "curve": [
     {
-     "f1": 0.3839,
-     "finished": 0.7241,
-     "precision": 0.299,
-     "recall": 0.536,
+     "f1": 0.3748,
+     "finished": 0.7759,
+     "precision": 0.2718,
+     "recall": 0.6036,
      "threshold": 0.02
     },
     {
-     "f1": 0.4297,
-     "finished": 0.8793,
-     "precision": 0.3022,
-     "recall": 0.7432,
+     "f1": 0.4332,
+     "finished": 0.8966,
+     "precision": 0.3042,
+     "recall": 0.7523,
      "threshold": 0.03
     },
     {
-     "f1": 0.6245,
-     "finished": 0.931,
-     "precision": 0.5316,
-     "recall": 0.7568,
+     "f1": 0.6339,
+     "finished": 0.9655,
+     "precision": 0.5321,
+     "recall": 0.7838,
      "threshold": 0.06
     },
     {
@@ -1155,6 +1289,125 @@
    "precision_held_out_pooled": 0.8194,
    "recall_held_out_pooled": 0.8378,
    "strategy": "depth-tabled"
+  },
+  {
+   "curve": [
+    {
+     "f1": 0.2684,
+     "finished": 0.5172,
+     "precision": 0.1881,
+     "recall": 0.4685,
+     "threshold": 0.02
+    },
+    {
+     "f1": 0.2742,
+     "finished": 0.7069,
+     "precision": 0.1732,
+     "recall": 0.6577,
+     "threshold": 0.03
+    },
+    {
+     "f1": 0.5733,
+     "finished": 1.0,
+     "precision": 0.4056,
+     "recall": 0.9775,
+     "threshold": 0.06
+    },
+    {
+     "f1": 0.7992,
+     "finished": 1.0,
+     "precision": 0.6895,
+     "recall": 0.9505,
+     "threshold": 0.165
+    },
+    {
+     "f1": 0.8323,
+     "finished": 1.0,
+     "precision": 0.7404,
+     "recall": 0.9505,
+     "threshold": 0.26
+    },
+    {
+     "f1": 0.9165,
+     "finished": 1.0,
+     "precision": 0.9186,
+     "recall": 0.9144,
+     "threshold": 0.65
+    },
+    {
+     "f1": 0.8731,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.7748,
+     "threshold": 0.9
+    },
+    {
+     "f1": 0.8128,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.6847,
+     "threshold": 0.95
+    },
+    {
+     "f1": 0.5994,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.4279,
+     "threshold": 0.97
+    },
+    {
+     "f1": 0.5101,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.3423,
+     "threshold": 0.98
+    },
+    {
+     "f1": 0.1577,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.0856,
+     "threshold": 0.99
+    }
+   ],
+   "default_threshold": 0.165,
+   "f1_default_pooled": 0.7992,
+   "f1_held_out_pooled": 0.9165,
+   "finished_held_out_pooled": 1.0,
+   "held_out": [
+    {
+     "f1_at_default": 1.0,
+     "f1_held_out": 1.0,
+     "finished_held_out": 17,
+     "kb": "family",
+     "threshold": 0.65
+    },
+    {
+     "f1_at_default": 0.5714,
+     "f1_held_out": 0.8333,
+     "finished_held_out": 14,
+     "kb": "work",
+     "threshold": 0.65
+    },
+    {
+     "f1_at_default": 0.9091,
+     "f1_held_out": 1.0,
+     "finished_held_out": 14,
+     "kb": "geography",
+     "threshold": 0.65
+    },
+    {
+     "f1_at_default": 0.775,
+     "f1_held_out": 0.7302,
+     "finished_held_out": 13,
+     "kb": "medicine",
+     "threshold": 0.65
+    }
+   ],
+   "judge": "jev",
+   "precision_held_out_pooled": 0.9186,
+   "recall_held_out_pooled": 0.9144,
+   "strategy": "rewrite-depth-tabled"
   }
  ]
 }

@@ -106,8 +106,8 @@
     "judge": "nli-deberta-base:directional",
     "judge_computed": 442,
     "judge_usage": {
-     "calls": 13,
-     "pairs": 15591
+     "calls": 35,
+     "pairs": 15309
     },
     "kb": "family",
     "kinds": {
@@ -128,8 +128,8 @@
     "judge": "nli-deberta-base:directional",
     "judge_computed": 323,
     "judge_usage": {
-     "calls": 14,
-     "pairs": 16237
+     "calls": 47,
+     "pairs": 15704
     },
     "kb": "work",
     "kinds": {
@@ -151,8 +151,8 @@
     "judge": "nli-deberta-base:directional",
     "judge_computed": 255,
     "judge_usage": {
-     "calls": 15,
-     "pairs": 16747
+     "calls": 57,
+     "pairs": 16035
     },
     "kb": "geography",
     "kinds": {
@@ -175,8 +175,8 @@
     "judge": "nli-deberta-base:directional",
     "judge_computed": 255,
     "judge_usage": {
-     "calls": 16,
-     "pairs": 17257
+     "calls": 70,
+     "pairs": 16354
     },
     "kb": "medicine",
     "kinds": {
@@ -250,7 +250,7 @@
     "mode": "cold",
     "precision": 0.473,
     "precision_finished": 0.473,
-    "proposals_per_query": 220.41,
+    "proposals_per_query": 440.83,
     "queries": 58,
     "recall": 0.5135,
     "recall_finished": 0.9194,
@@ -262,10 +262,10 @@
      "true": 1849,
      "unrelated": 817
     },
-    "seconds_per_query": 0.1423,
+    "seconds_per_query": 0.1949,
     "strategy": "lazy-tabled",
-    "tables_per_query": 251.9,
-    "work_per_query": 251865.7
+    "tables_per_query": 263.55,
+    "work_per_query": 247956.6
    },
    {
     "exact_rate": 0.1897,
@@ -290,10 +290,10 @@
      "true": 1886,
      "unrelated": 852
     },
-    "seconds_per_query": 0.1644,
+    "seconds_per_query": 0.1537,
     "strategy": "lazy-tabled",
-    "tables_per_query": 249.93,
-    "work_per_query": 250908.5
+    "tables_per_query": 262.05,
+    "work_per_query": 247200.8
    }
   ],
   "slack": 0.1,
@@ -404,8 +404,8 @@
     "judge": "nli-deberta-large:directional",
     "judge_computed": 442,
     "judge_usage": {
-     "calls": 13,
-     "pairs": 15591
+     "calls": 35,
+     "pairs": 15309
     },
     "kb": "family",
     "kinds": {
@@ -427,8 +427,8 @@
     "judge": "nli-deberta-large:directional",
     "judge_computed": 323,
     "judge_usage": {
-     "calls": 14,
-     "pairs": 16237
+     "calls": 47,
+     "pairs": 15704
     },
     "kb": "work",
     "kinds": {
@@ -449,8 +449,8 @@
     "judge": "nli-deberta-large:directional",
     "judge_computed": 255,
     "judge_usage": {
-     "calls": 15,
-     "pairs": 16747
+     "calls": 57,
+     "pairs": 16035
     },
     "kb": "geography",
     "kinds": {
@@ -471,8 +471,8 @@
     "judge": "nli-deberta-large:directional",
     "judge_computed": 255,
     "judge_usage": {
-     "calls": 16,
-     "pairs": 17257
+     "calls": 70,
+     "pairs": 16354
     },
     "kb": "medicine",
     "kinds": {
@@ -538,14 +538,14 @@
     "exact_rate": 0.4655,
     "expansions_per_query": 9.45,
     "f1": 0.6549,
-    "false_rewrite_rate": 0.2955,
+    "false_rewrite_rate": 0.2978,
     "finished_rate": 0.6379,
     "judge": "nli-deberta-large:directional",
     "kb": "ALL",
     "mode": "cold",
     "precision": 0.7429,
     "precision_finished": 0.7429,
-    "proposals_per_query": 160.62,
+    "proposals_per_query": 321.24,
     "queries": 58,
     "recall": 0.5856,
     "recall_finished": 0.9489,
@@ -554,19 +554,19 @@
      "reversed": 81,
      "swap": 14,
      "trap": 45,
-     "true": 1366,
-     "unrelated": 433
+     "true": 1370,
+     "unrelated": 441
     },
-    "seconds_per_query": 0.1413,
+    "seconds_per_query": 0.3109,
     "strategy": "lazy-tabled",
-    "tables_per_query": 323.16,
-    "work_per_query": 201310.8
+    "tables_per_query": 353.6,
+    "work_per_query": 199451.0
    },
    {
     "exact_rate": 0.431,
     "expansions_per_query": 10.03,
     "f1": 0.6484,
-    "false_rewrite_rate": 0.315,
+    "false_rewrite_rate": 0.3168,
     "finished_rate": 0.6379,
     "judge": "nli-deberta-large:plain",
     "kb": "ALL",
@@ -582,13 +582,13 @@
      "reversed": 153,
      "swap": 14,
      "trap": 45,
-     "true": 1618,
-     "unrelated": 532
+     "true": 1622,
+     "unrelated": 540
     },
-    "seconds_per_query": 0.1225,
+    "seconds_per_query": 0.1875,
     "strategy": "lazy-tabled",
-    "tables_per_query": 292.47,
-    "work_per_query": 202439.3
+    "tables_per_query": 318.02,
+    "work_per_query": 200651.4
    }
   ],
   "slack": 0.02,
@@ -700,8 +700,8 @@
     "judge": "nli-deberta-large-wanli:directional",
     "judge_computed": 442,
     "judge_usage": {
-     "calls": 13,
-     "pairs": 15591
+     "calls": 35,
+     "pairs": 15309
     },
     "kb": "family",
     "kinds": {
@@ -722,8 +722,8 @@
     "judge": "nli-deberta-large-wanli:directional",
     "judge_computed": 323,
     "judge_usage": {
-     "calls": 14,
-     "pairs": 16237
+     "calls": 47,
+     "pairs": 15704
     },
     "kb": "work",
     "kinds": {
@@ -744,8 +744,8 @@
     "judge": "nli-deberta-large-wanli:directional",
     "judge_computed": 255,
     "judge_usage": {
-     "calls": 15,
-     "pairs": 16747
+     "calls": 57,
+     "pairs": 16035
     },
     "kb": "geography",
     "kinds": {
@@ -767,8 +767,8 @@
     "judge": "nli-deberta-large-wanli:directional",
     "judge_computed": 255,
     "judge_usage": {
-     "calls": 16,
-     "pairs": 17257
+     "calls": 70,
+     "pairs": 16354
     },
     "kb": "medicine",
     "kinds": {
@@ -835,14 +835,14 @@
     "exact_rate": 0.2414,
     "expansions_per_query": 10.62,
     "f1": 0.4906,
-    "false_rewrite_rate": 0.2946,
+    "false_rewrite_rate": 0.2977,
     "finished_rate": 0.569,
     "judge": "nli-deberta-large-wanli:directional",
     "kb": "ALL",
     "mode": "cold",
     "precision": 0.4588,
     "precision_finished": 0.4588,
-    "proposals_per_query": 180.55,
+    "proposals_per_query": 361.1,
     "queries": 58,
     "recall": 0.527,
     "recall_finished": 0.9435,
@@ -851,19 +851,19 @@
      "reversed": 72,
      "swap": 254,
      "trap": 32,
-     "true": 1638,
-     "unrelated": 326
+     "true": 1642,
+     "unrelated": 338
     },
-    "seconds_per_query": 0.1734,
+    "seconds_per_query": 0.4387,
     "strategy": "lazy-tabled",
-    "tables_per_query": 356.5,
-    "work_per_query": 263128.5
+    "tables_per_query": 375.36,
+    "work_per_query": 258518.6
    },
    {
     "exact_rate": 0.2414,
     "expansions_per_query": 11.24,
     "f1": 0.4719,
-    "false_rewrite_rate": 0.3889,
+    "false_rewrite_rate": 0.3901,
     "finished_rate": 0.5345,
     "judge": "nli-deberta-large-wanli:plain",
     "kb": "ALL",
@@ -879,13 +879,13 @@
      "reversed": 196,
      "swap": 300,
      "trap": 110,
-     "true": 2054,
-     "unrelated": 701
+     "true": 2062,
+     "unrelated": 713
     },
-    "seconds_per_query": 0.1789,
+    "seconds_per_query": 0.3194,
     "strategy": "lazy-tabled",
-    "tables_per_query": 324.05,
-    "work_per_query": 267604.3
+    "tables_per_query": 348.41,
+    "work_per_query": 264977.3
    }
   ],
   "slack": 0.05,
@@ -999,8 +999,8 @@
     "judge": "reranker-qwen3:directional",
     "judge_computed": 442,
     "judge_usage": {
-     "calls": 13,
-     "pairs": 15591
+     "calls": 35,
+     "pairs": 15309
     },
     "kb": "family",
     "kinds": {
@@ -1022,8 +1022,8 @@
     "judge": "reranker-qwen3:directional",
     "judge_computed": 323,
     "judge_usage": {
-     "calls": 14,
-     "pairs": 16237
+     "calls": 47,
+     "pairs": 15704
     },
     "kb": "work",
     "kinds": {
@@ -1044,8 +1044,8 @@
     "judge": "reranker-qwen3:directional",
     "judge_computed": 255,
     "judge_usage": {
-     "calls": 15,
-     "pairs": 16747
+     "calls": 57,
+     "pairs": 16035
     },
     "kb": "geography",
     "kinds": {
@@ -1067,8 +1067,8 @@
     "judge": "reranker-qwen3:directional",
     "judge_computed": 255,
     "judge_usage": {
-     "calls": 16,
-     "pairs": 17257
+     "calls": 70,
+     "pairs": 16354
     },
     "kb": "medicine",
     "kinds": {
@@ -1143,7 +1143,7 @@
     "mode": "cold",
     "precision": 0.5143,
     "precision_finished": 0.5143,
-    "proposals_per_query": 179.38,
+    "proposals_per_query": 358.76,
     "queries": 58,
     "recall": 0.4865,
     "recall_finished": 0.7883,
@@ -1155,16 +1155,16 @@
      "true": 1128,
      "unrelated": 829
     },
-    "seconds_per_query": 0.1755,
+    "seconds_per_query": 0.4523,
     "strategy": "lazy-tabled",
-    "tables_per_query": 434.67,
-    "work_per_query": 193671.8
+    "tables_per_query": 472.34,
+    "work_per_query": 191035.1
    },
    {
     "exact_rate": 0.0862,
     "expansions_per_query": 13.52,
     "f1": 0.0944,
-    "false_rewrite_rate": 0.5991,
+    "false_rewrite_rate": 0.6005,
     "finished_rate": 0.1034,
     "judge": "reranker-qwen3:plain",
     "kb": "ALL",
@@ -1178,15 +1178,15 @@
     "retrievals_per_query": 13.52,
     "rewrite_kinds": {
      "reversed": 415,
-     "swap": 442,
-     "trap": 228,
-     "true": 1636,
-     "unrelated": 1360
+     "swap": 462,
+     "trap": 230,
+     "true": 1652,
+     "unrelated": 1376
     },
-    "seconds_per_query": 0.2315,
+    "seconds_per_query": 0.5413,
     "strategy": "lazy-tabled",
-    "tables_per_query": 229.67,
-    "work_per_query": 449514.1
+    "tables_per_query": 255.66,
+    "work_per_query": 449517.9
    }
   ],
   "slack": 0.01,

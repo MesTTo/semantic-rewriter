@@ -124,11 +124,11 @@
     "judge": "jev:directional",
     "judge_computed": 442,
     "judge_usage": {
-     "cached": 15591,
-     "calls": 13,
+     "cached": 15309,
+     "calls": 35,
      "input_tokens": 0,
      "output_tokens": 0,
-     "pairs": 15591,
+     "pairs": 15309,
      "questions": 0,
      "requests": 0
     },
@@ -150,11 +150,11 @@
     "judge": "jev:directional",
     "judge_computed": 323,
     "judge_usage": {
-     "cached": 16237,
-     "calls": 14,
+     "cached": 15704,
+     "calls": 47,
      "input_tokens": 0,
      "output_tokens": 0,
-     "pairs": 16237,
+     "pairs": 15704,
      "questions": 0,
      "requests": 0
     },
@@ -177,11 +177,11 @@
     "judge": "jev:directional",
     "judge_computed": 255,
     "judge_usage": {
-     "cached": 16747,
-     "calls": 15,
+     "cached": 16035,
+     "calls": 57,
      "input_tokens": 0,
      "output_tokens": 0,
-     "pairs": 16747,
+     "pairs": 16035,
      "questions": 0,
      "requests": 0
     },
@@ -203,11 +203,11 @@
     "judge": "jev:directional",
     "judge_computed": 255,
     "judge_usage": {
-     "cached": 17257,
-     "calls": 16,
+     "cached": 16354,
+     "calls": 70,
      "input_tokens": 0,
      "output_tokens": 0,
-     "pairs": 17257,
+     "pairs": 16354,
      "questions": 0,
      "requests": 0
     },
@@ -276,28 +276,28 @@
     "exact_rate": 0.5862,
     "expansions_per_query": 9.36,
     "f1": 0.7835,
-    "false_rewrite_rate": 0.1679,
+    "false_rewrite_rate": 0.1722,
     "finished_rate": 0.7586,
     "judge": "jev:directional",
     "kb": "ALL",
     "mode": "cold",
     "precision": 0.8519,
     "precision_finished": 0.8519,
-    "proposals_per_query": 159.16,
+    "proposals_per_query": 318.31,
     "queries": 58,
     "recall": 0.7252,
     "recall_finished": 0.9758,
     "retrievals_per_query": 9.36,
     "rewrite_kinds": {
-     "reversed": 22,
-     "trap": 36,
-     "true": 1393,
-     "unrelated": 223
+     "reversed": 26,
+     "trap": 40,
+     "true": 1409,
+     "unrelated": 227
     },
-    "seconds_per_query": 0.1125,
+    "seconds_per_query": 0.1269,
     "strategy": "lazy-tabled",
-    "tables_per_query": 133.69,
-    "work_per_query": 146122.8
+    "tables_per_query": 140.55,
+    "work_per_query": 143645.7
    },
    {
     "exact_rate": 0.5862,
@@ -321,10 +321,10 @@
      "true": 1684,
      "unrelated": 269
     },
-    "seconds_per_query": 0.1184,
+    "seconds_per_query": 0.1133,
     "strategy": "lazy-tabled",
-    "tables_per_query": 145.66,
-    "work_per_query": 147323.9
+    "tables_per_query": 153.38,
+    "work_per_query": 144869.2
    }
   ],
   "slack": 0.2,

@@ -19,10 +19,10 @@
    "rewrite_kinds": {
     "true": 1187
    },
-   "seconds_per_query": 2.2165,
+   "seconds_per_query": 0.1597,
    "strategy": "alias-canonical",
-   "tables_per_query": 28.09,
-   "work_per_query": 2999.6
+   "tables_per_query": 29.76,
+   "work_per_query": 6999.8
   },
   {
    "exact_rate": 0.9483,
@@ -43,10 +43,10 @@
    "rewrite_kinds": {
     "true": 1187
    },
-   "seconds_per_query": 2.1899,
+   "seconds_per_query": 0.167,
    "strategy": "alias-canonical",
-   "tables_per_query": 28.09,
-   "work_per_query": 2999.6
+   "tables_per_query": 29.76,
+   "work_per_query": 6999.8
   },
   {
    "exact_rate": 0.8793,
@@ -67,10 +67,10 @@
    "rewrite_kinds": {
     "true": 1163
    },
-   "seconds_per_query": 0.7431,
+   "seconds_per_query": 0.099,
    "strategy": "depth-bounded",
    "tables_per_query": 0.0,
-   "work_per_query": 134601.2
+   "work_per_query": 121310.5
   },
   {
    "exact_rate": 0.8793,
@@ -91,10 +91,10 @@
    "rewrite_kinds": {
     "true": 1163
    },
-   "seconds_per_query": 0.7541,
+   "seconds_per_query": 0.098,
    "strategy": "depth-bounded",
    "tables_per_query": 0.0,
-   "work_per_query": 134601.5
+   "work_per_query": 121310.7
   },
   {
    "exact_rate": 0.9138,
@@ -115,10 +115,10 @@
    "rewrite_kinds": {
     "true": 1163
    },
-   "seconds_per_query": 1.0737,
+   "seconds_per_query": 0.1329,
    "strategy": "depth-tabled",
    "tables_per_query": 77.19,
-   "work_per_query": 11019.6
+   "work_per_query": 10196.7
   },
   {
    "exact_rate": 0.9138,
@@ -139,10 +139,10 @@
    "rewrite_kinds": {
     "true": 1163
    },
-   "seconds_per_query": 1.1181,
+   "seconds_per_query": 0.1292,
    "strategy": "depth-tabled",
    "tables_per_query": 77.19,
-   "work_per_query": 11019.6
+   "work_per_query": 10196.7
   },
   {
    "exact_rate": 0.9483,
@@ -163,10 +163,10 @@
    "rewrite_kinds": {
     "true": 1187
    },
-   "seconds_per_query": 5.1006,
+   "seconds_per_query": 0.2029,
    "strategy": "eager-worklist",
-   "tables_per_query": 58.1,
-   "work_per_query": 7722.5
+   "tables_per_query": 59.78,
+   "work_per_query": 15704.2
   },
   {
    "exact_rate": 0.9483,
@@ -187,10 +187,10 @@
    "rewrite_kinds": {
     "true": 1187
    },
-   "seconds_per_query": 6.2757,
+   "seconds_per_query": 0.2133,
    "strategy": "eager-worklist",
-   "tables_per_query": 58.1,
-   "work_per_query": 7722.5
+   "tables_per_query": 59.78,
+   "work_per_query": 15704.2
   },
   {
    "exact_rate": 0.0862,
@@ -209,10 +209,10 @@
    "recall_finished": 0.018,
    "retrievals_per_query": 0.0,
    "rewrite_kinds": {},
-   "seconds_per_query": 1.0059,
+   "seconds_per_query": 0.1317,
    "strategy": "exact",
-   "tables_per_query": 0.33,
-   "work_per_query": 1115.8
+   "tables_per_query": 1.34,
+   "work_per_query": 1518.4
   },
   {
    "exact_rate": 0.0862,
@@ -231,10 +231,10 @@
    "recall_finished": 0.018,
    "retrievals_per_query": 0.0,
    "rewrite_kinds": {},
-   "seconds_per_query": 1.0062,
+   "seconds_per_query": 0.1161,
    "strategy": "exact",
-   "tables_per_query": 0.33,
-   "work_per_query": 1111.1
+   "tables_per_query": 1.34,
+   "work_per_query": 1517.8
   },
   {
    "exact_rate": 0.9483,
@@ -255,10 +255,10 @@
    "rewrite_kinds": {
     "true": 1187
    },
-   "seconds_per_query": 1.1729,
+   "seconds_per_query": 0.1314,
    "strategy": "lazy-tabled",
    "tables_per_query": 59.78,
-   "work_per_query": 18438.4
+   "work_per_query": 16805.1
   },
   {
    "exact_rate": 0.9483,
@@ -279,10 +279,10 @@
    "rewrite_kinds": {
     "true": 1187
    },
-   "seconds_per_query": 1.1799,
+   "seconds_per_query": 0.1237,
    "strategy": "lazy-tabled",
    "tables_per_query": 59.78,
-   "work_per_query": 18438.4
+   "work_per_query": 16805.1
   },
   {
    "exact_rate": 0.0517,
@@ -301,12 +301,12 @@
    "recall_finished": 1.0,
    "retrievals_per_query": 3.55,
    "rewrite_kinds": {
-    "true": 338
+    "true": 599
    },
-   "seconds_per_query": 2.9694,
+   "seconds_per_query": 0.3276,
    "strategy": "memo-untabled",
    "tables_per_query": 0.0,
-   "work_per_query": 655808.7
+   "work_per_query": 491863.4
   },
   {
    "exact_rate": 0.0517,
@@ -325,16 +325,16 @@
    "recall_finished": 1.0,
    "retrievals_per_query": 0.71,
    "rewrite_kinds": {
-    "true": 338
+    "true": 599
    },
-   "seconds_per_query": 2.9791,
+   "seconds_per_query": 0.3433,
    "strategy": "memo-untabled",
    "tables_per_query": 0.0,
-   "work_per_query": 645027.4
+   "work_per_query": 491808.0
   },
   {
    "exact_rate": 0.0517,
-   "expansions_per_query": 4311.95,
+   "expansions_per_query": 4247.47,
    "f1": 0.0179,
    "false_rewrite_rate": 0.0,
    "finished_rate": 0.0345,
@@ -343,18 +343,18 @@
    "mode": "cold",
    "precision": 1.0,
    "precision_finished": 1.0,
-   "proposals_per_query": 73303.12,
+   "proposals_per_query": 72206.91,
    "queries": 58,
    "recall": 0.009,
    "recall_finished": 1.0,
-   "retrievals_per_query": 4311.95,
+   "retrievals_per_query": 4247.47,
    "rewrite_kinds": {
-    "true": 338
+    "true": 599
    },
-   "seconds_per_query": 3.068,
+   "seconds_per_query": 0.6133,
    "strategy": "naive",
    "tables_per_query": 0.0,
-   "work_per_query": 648245.2
+   "work_per_query": 491811.5
   },
   {
    "exact_rate": 0.9483,
@@ -375,14 +375,14 @@
    "rewrite_kinds": {
     "true": 1187
    },
-   "seconds_per_query": 0.9658,
+   "seconds_per_query": 0.1228,
    "strategy": "nomemo-tabled",
    "tables_per_query": 59.78,
-   "work_per_query": 18438.6
+   "work_per_query": 16802.2
   },
   {
    "exact_rate": 0.9483,
-   "expansions_per_query": 6.83,
+   "expansions_per_query": 6.72,
    "f1": 0.984,
    "false_rewrite_rate": 0.0,
    "finished_rate": 1.0,
@@ -391,18 +391,18 @@
    "mode": "cold",
    "precision": 1.0,
    "precision_finished": 1.0,
-   "proposals_per_query": 116.07,
+   "proposals_per_query": 114.31,
    "queries": 58,
    "recall": 0.9685,
    "recall_finished": 0.9685,
-   "retrievals_per_query": 6.83,
+   "retrievals_per_query": 6.72,
    "rewrite_kinds": {
     "true": 1187
    },
-   "seconds_per_query": 6.3549,
-   "strategy": "rounds",
-   "tables_per_query": 59.4,
-   "work_per_query": 32073.3
+   "seconds_per_query": 0.1218,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 151.84,
+   "work_per_query": 24958.7
   },
   {
    "exact_rate": 0.9483,
@@ -423,10 +423,58 @@
    "rewrite_kinds": {
     "true": 1187
    },
-   "seconds_per_query": 7.9402,
+   "seconds_per_query": 0.1282,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 151.84,
+   "work_per_query": 24958.9
+  },
+  {
+   "exact_rate": 0.9483,
+   "expansions_per_query": 6.83,
+   "f1": 0.984,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "oracle",
+   "kb": "ALL",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 116.07,
+   "queries": 58,
+   "recall": 0.9685,
+   "recall_finished": 0.9685,
+   "retrievals_per_query": 6.83,
+   "rewrite_kinds": {
+    "true": 1187
+   },
+   "seconds_per_query": 0.5227,
    "strategy": "rounds",
-   "tables_per_query": 59.4,
-   "work_per_query": 32070.1
+   "tables_per_query": 59.78,
+   "work_per_query": 35489.4
+  },
+  {
+   "exact_rate": 0.9483,
+   "expansions_per_query": 0.98,
+   "f1": 0.984,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "oracle",
+   "kb": "ALL",
+   "mode": "warm",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 16.71,
+   "queries": 58,
+   "recall": 0.9685,
+   "recall_finished": 0.9685,
+   "retrievals_per_query": 0.98,
+   "rewrite_kinds": {
+    "true": 1187
+   },
+   "seconds_per_query": 0.5606,
+   "strategy": "rounds",
+   "tables_per_query": 59.78,
+   "work_per_query": 35489.4
   },
   {
    "exact_rate": 0.9483,
@@ -447,10 +495,10 @@
    "rewrite_kinds": {
     "true": 2946
    },
-   "seconds_per_query": 11.9718,
+   "seconds_per_query": 0.2649,
    "strategy": "saturate",
-   "tables_per_query": 58.1,
-   "work_per_query": 7722.5
+   "tables_per_query": 59.78,
+   "work_per_query": 15701.0
   },
   {
    "exact_rate": 0.9483,
@@ -471,10 +519,10 @@
    "rewrite_kinds": {
     "true": 2946
    },
-   "seconds_per_query": 13.8351,
+   "seconds_per_query": 0.3018,
    "strategy": "saturate",
-   "tables_per_query": 58.1,
-   "work_per_query": 7722.5
+   "tables_per_query": 59.78,
+   "work_per_query": 15701.0
   },
   {
    "exact_rate": 1.0,
@@ -495,10 +543,10 @@
    "rewrite_kinds": {
     "true": 404
    },
-   "seconds_per_query": 0.1404,
+   "seconds_per_query": 0.1181,
    "strategy": "alias-canonical",
-   "tables_per_query": 36.76,
-   "work_per_query": 2831.4
+   "tables_per_query": 42.47,
+   "work_per_query": 8648.1
   },
   {
    "exact_rate": 1.0,
@@ -519,10 +567,10 @@
    "rewrite_kinds": {
     "true": 404
    },
-   "seconds_per_query": 0.1273,
+   "seconds_per_query": 0.1256,
    "strategy": "alias-canonical",
-   "tables_per_query": 36.76,
-   "work_per_query": 2831.4
+   "tables_per_query": 42.47,
+   "work_per_query": 8648.1
   },
   {
    "exact_rate": 0.9412,
@@ -540,37 +588,37 @@
    "recall": 0.9692,
    "recall_finished": 0.9692,
    "retrievals_per_query": 8.12,
-   "rewrite_kinds": {
-    "true": 388
-   },
-   "seconds_per_query": 0.0444,
-   "strategy": "depth-bounded",
-   "tables_per_query": 0.0,
-   "work_per_query": 139870.0
-  },
-  {
-   "exact_rate": 0.9412,
-   "expansions_per_query": 1.24,
-   "f1": 0.9844,
-   "false_rewrite_rate": 0.0,
-   "finished_rate": 1.0,
-   "judge": "oracle",
-   "kb": "family",
-   "mode": "warm",
-   "precision": 1.0,
-   "precision_finished": 1.0,
-   "proposals_per_query": 21.0,
-   "queries": 17,
-   "recall": 0.9692,
-   "recall_finished": 0.9692,
-   "retrievals_per_query": 1.24,
    "rewrite_kinds": {
     "true": 388
    },
    "seconds_per_query": 0.0478,
    "strategy": "depth-bounded",
    "tables_per_query": 0.0,
-   "work_per_query": 139870.3
+   "work_per_query": 133840.5
+  },
+  {
+   "exact_rate": 0.9412,
+   "expansions_per_query": 1.24,
+   "f1": 0.9844,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "oracle",
+   "kb": "family",
+   "mode": "warm",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 21.0,
+   "queries": 17,
+   "recall": 0.9692,
+   "recall_finished": 0.9692,
+   "retrievals_per_query": 1.24,
+   "rewrite_kinds": {
+    "true": 388
+   },
+   "seconds_per_query": 0.0422,
+   "strategy": "depth-bounded",
+   "tables_per_query": 0.0,
+   "work_per_query": 133840.5
   },
   {
    "exact_rate": 0.9412,
@@ -591,10 +639,10 @@
    "rewrite_kinds": {
     "true": 388
    },
-   "seconds_per_query": 0.0541,
+   "seconds_per_query": 0.0822,
    "strategy": "depth-tabled",
    "tables_per_query": 99.35,
-   "work_per_query": 13230.9
+   "work_per_query": 12111.7
   },
   {
    "exact_rate": 0.9412,
@@ -615,10 +663,10 @@
    "rewrite_kinds": {
     "true": 388
    },
-   "seconds_per_query": 0.0599,
+   "seconds_per_query": 0.0767,
    "strategy": "depth-tabled",
    "tables_per_query": 99.35,
-   "work_per_query": 13230.9
+   "work_per_query": 12111.7
   },
   {
    "exact_rate": 1.0,
@@ -639,10 +687,10 @@
    "rewrite_kinds": {
     "true": 404
    },
-   "seconds_per_query": 0.2349,
+   "seconds_per_query": 0.1727,
    "strategy": "eager-worklist",
-   "tables_per_query": 66.41,
-   "work_per_query": 5978.3
+   "tables_per_query": 72.12,
+   "work_per_query": 15789.4
   },
   {
    "exact_rate": 1.0,
@@ -663,10 +711,10 @@
    "rewrite_kinds": {
     "true": 404
    },
-   "seconds_per_query": 0.2324,
+   "seconds_per_query": 0.1315,
    "strategy": "eager-worklist",
-   "tables_per_query": 66.41,
-   "work_per_query": 5978.3
+   "tables_per_query": 72.12,
+   "work_per_query": 15789.4
   },
   {
    "exact_rate": 0.1176,
@@ -685,10 +733,10 @@
    "recall_finished": 0.0308,
    "retrievals_per_query": 0.0,
    "rewrite_kinds": {},
-   "seconds_per_query": 0.0416,
+   "seconds_per_query": 0.1481,
    "strategy": "exact",
-   "tables_per_query": 0.41,
-   "work_per_query": 1124.6
+   "tables_per_query": 1.35,
+   "work_per_query": 1505.1
   },
   {
    "exact_rate": 0.1176,
@@ -707,10 +755,10 @@
    "recall_finished": 0.0308,
    "retrievals_per_query": 0.0,
    "rewrite_kinds": {},
-   "seconds_per_query": 0.0421,
+   "seconds_per_query": 0.0765,
    "strategy": "exact",
-   "tables_per_query": 0.41,
-   "work_per_query": 1116.6
+   "tables_per_query": 1.35,
+   "work_per_query": 1503.1
   },
   {
    "exact_rate": 1.0,
@@ -731,10 +779,10 @@
    "rewrite_kinds": {
     "true": 404
    },
-   "seconds_per_query": 0.0491,
+   "seconds_per_query": 0.0985,
    "strategy": "lazy-tabled",
    "tables_per_query": 72.12,
-   "work_per_query": 18365.8
+   "work_per_query": 16340.5
   },
   {
    "exact_rate": 1.0,
@@ -755,10 +803,10 @@
    "rewrite_kinds": {
     "true": 404
    },
-   "seconds_per_query": 0.0554,
+   "seconds_per_query": 0.0896,
    "strategy": "lazy-tabled",
    "tables_per_query": 72.12,
-   "work_per_query": 18365.8
+   "work_per_query": 16340.5
   },
   {
    "exact_rate": 0.0,
@@ -777,12 +825,12 @@
    "recall_finished": 1.0,
    "retrievals_per_query": 3.53,
    "rewrite_kinds": {
-    "true": 98
+    "true": 190
    },
-   "seconds_per_query": 0.2616,
+   "seconds_per_query": 0.2418,
    "strategy": "memo-untabled",
    "tables_per_query": 0.0,
-   "work_per_query": 506625.4
+   "work_per_query": 507036.4
   },
   {
    "exact_rate": 0.0,
@@ -801,16 +849,16 @@
    "recall_finished": 1.0,
    "retrievals_per_query": 0.94,
    "rewrite_kinds": {
-    "true": 98
+    "true": 190
    },
-   "seconds_per_query": 0.3131,
+   "seconds_per_query": 0.2263,
    "strategy": "memo-untabled",
    "tables_per_query": 0.0,
-   "work_per_query": 506625.3
+   "work_per_query": 507036.4
   },
   {
    "exact_rate": 0.0,
-   "expansions_per_query": 3508.0,
+   "expansions_per_query": 4527.35,
    "f1": 0.0,
    "false_rewrite_rate": 0.0,
    "finished_rate": 0.0,
@@ -819,18 +867,18 @@
    "mode": "cold",
    "precision": 1.0,
    "precision_finished": 1.0,
-   "proposals_per_query": 59636.0,
+   "proposals_per_query": 76965.0,
    "queries": 17,
    "recall": 0.0,
    "recall_finished": 1.0,
-   "retrievals_per_query": 3508.0,
+   "retrievals_per_query": 4527.35,
    "rewrite_kinds": {
-    "true": 98
+    "true": 190
    },
-   "seconds_per_query": 0.3898,
+   "seconds_per_query": 0.5726,
    "strategy": "naive",
    "tables_per_query": 0.0,
-   "work_per_query": 506167.6
+   "work_per_query": 507047.9
   },
   {
    "exact_rate": 1.0,
@@ -851,10 +899,10 @@
    "rewrite_kinds": {
     "true": 404
    },
-   "seconds_per_query": 0.0505,
+   "seconds_per_query": 0.0718,
    "strategy": "nomemo-tabled",
    "tables_per_query": 72.12,
-   "work_per_query": 18366.2
+   "work_per_query": 16335.5
   },
   {
    "exact_rate": 1.0,
@@ -875,10 +923,10 @@
    "rewrite_kinds": {
     "true": 404
    },
-   "seconds_per_query": 0.31,
-   "strategy": "rounds",
-   "tables_per_query": 71.29,
-   "work_per_query": 34571.5
+   "seconds_per_query": 0.0687,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 188.18,
+   "work_per_query": 28986.8
   },
   {
    "exact_rate": 1.0,
@@ -899,10 +947,58 @@
    "rewrite_kinds": {
     "true": 404
    },
-   "seconds_per_query": 0.4992,
+   "seconds_per_query": 0.0771,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 188.18,
+   "work_per_query": 28986.8
+  },
+  {
+   "exact_rate": 1.0,
+   "expansions_per_query": 8.59,
+   "f1": 1.0,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "oracle",
+   "kb": "family",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 146.0,
+   "queries": 17,
+   "recall": 1.0,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 8.59,
+   "rewrite_kinds": {
+    "true": 404
+   },
+   "seconds_per_query": 0.4038,
    "strategy": "rounds",
-   "tables_per_query": 71.29,
-   "work_per_query": 34565.9
+   "tables_per_query": 72.12,
+   "work_per_query": 42997.9
+  },
+  {
+   "exact_rate": 1.0,
+   "expansions_per_query": 1.24,
+   "f1": 1.0,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "oracle",
+   "kb": "family",
+   "mode": "warm",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 21.0,
+   "queries": 17,
+   "recall": 1.0,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 1.24,
+   "rewrite_kinds": {
+    "true": 404
+   },
+   "seconds_per_query": 0.4559,
+   "strategy": "rounds",
+   "tables_per_query": 72.12,
+   "work_per_query": 42997.9
   },
   {
    "exact_rate": 1.0,
@@ -923,10 +1019,10 @@
    "rewrite_kinds": {
     "true": 952
    },
-   "seconds_per_query": 0.3328,
+   "seconds_per_query": 0.1878,
    "strategy": "saturate",
-   "tables_per_query": 66.41,
-   "work_per_query": 5978.3
+   "tables_per_query": 72.12,
+   "work_per_query": 15785.8
   },
   {
    "exact_rate": 1.0,
@@ -947,10 +1043,10 @@
    "rewrite_kinds": {
     "true": 952
    },
-   "seconds_per_query": 0.359,
+   "seconds_per_query": 0.1933,
    "strategy": "saturate",
-   "tables_per_query": 66.41,
-   "work_per_query": 5978.3
+   "tables_per_query": 72.12,
+   "work_per_query": 15785.8
   },
   {
    "exact_rate": 1.0,
@@ -971,10 +1067,10 @@
    "rewrite_kinds": {
     "true": 366
    },
-   "seconds_per_query": 6.6437,
+   "seconds_per_query": 0.2215,
    "strategy": "alias-canonical",
    "tables_per_query": 49.64,
-   "work_per_query": 5497.4
+   "work_per_query": 12048.5
   },
   {
    "exact_rate": 1.0,
@@ -995,10 +1091,10 @@
    "rewrite_kinds": {
     "true": 366
    },
-   "seconds_per_query": 6.2762,
+   "seconds_per_query": 0.2226,
    "strategy": "alias-canonical",
    "tables_per_query": 49.64,
-   "work_per_query": 5497.4
+   "work_per_query": 12048.5
   },
   {
    "exact_rate": 0.7857,
@@ -1019,10 +1115,10 @@
    "rewrite_kinds": {
     "true": 366
    },
-   "seconds_per_query": 0.9165,
+   "seconds_per_query": 0.1593,
    "strategy": "depth-bounded",
    "tables_per_query": 0.0,
-   "work_per_query": 184803.1
+   "work_per_query": 166712.1
   },
   {
    "exact_rate": 0.7857,
@@ -1043,10 +1139,10 @@
    "rewrite_kinds": {
     "true": 366
    },
-   "seconds_per_query": 0.9787,
+   "seconds_per_query": 0.1428,
    "strategy": "depth-bounded",
    "tables_per_query": 0.0,
-   "work_per_query": 185033.0
+   "work_per_query": 166712.4
   },
   {
    "exact_rate": 0.9286,
@@ -1067,10 +1163,10 @@
    "rewrite_kinds": {
     "true": 366
    },
-   "seconds_per_query": 1.2826,
+   "seconds_per_query": 0.1786,
    "strategy": "depth-tabled",
    "tables_per_query": 113.93,
-   "work_per_query": 15251.8
+   "work_per_query": 14329.4
   },
   {
    "exact_rate": 0.9286,
@@ -1091,10 +1187,10 @@
    "rewrite_kinds": {
     "true": 366
    },
-   "seconds_per_query": 1.3747,
+   "seconds_per_query": 0.1805,
    "strategy": "depth-tabled",
    "tables_per_query": 113.93,
-   "work_per_query": 15251.8
+   "work_per_query": 14329.4
   },
   {
    "exact_rate": 1.0,
@@ -1115,10 +1211,10 @@
    "rewrite_kinds": {
     "true": 366
    },
-   "seconds_per_query": 18.1787,
+   "seconds_per_query": 0.3158,
    "strategy": "eager-worklist",
    "tables_per_query": 113.29,
-   "work_per_query": 18387.4
+   "work_per_query": 33291.0
   },
   {
    "exact_rate": 1.0,
@@ -1139,10 +1235,10 @@
    "rewrite_kinds": {
     "true": 366
    },
-   "seconds_per_query": 22.9202,
+   "seconds_per_query": 0.3602,
    "strategy": "eager-worklist",
    "tables_per_query": 113.29,
-   "work_per_query": 18387.4
+   "work_per_query": 33291.0
   },
   {
    "exact_rate": 0.1429,
@@ -1161,10 +1257,10 @@
    "recall_finished": 0.0308,
    "retrievals_per_query": 0.0,
    "rewrite_kinds": {},
-   "seconds_per_query": 2.1897,
+   "seconds_per_query": 0.0964,
    "strategy": "exact",
-   "tables_per_query": 0.43,
-   "work_per_query": 1139.5
+   "tables_per_query": 1.43,
+   "work_per_query": 1530.9
   },
   {
    "exact_rate": 0.1429,
@@ -1183,10 +1279,10 @@
    "recall_finished": 0.0308,
    "retrievals_per_query": 0.0,
    "rewrite_kinds": {},
-   "seconds_per_query": 2.2407,
+   "seconds_per_query": 0.1235,
    "strategy": "exact",
-   "tables_per_query": 0.43,
-   "work_per_query": 1136.4
+   "tables_per_query": 1.43,
+   "work_per_query": 1530.9
   },
   {
    "exact_rate": 1.0,
@@ -1207,10 +1303,10 @@
    "rewrite_kinds": {
     "true": 366
    },
-   "seconds_per_query": 1.5124,
+   "seconds_per_query": 0.1554,
    "strategy": "lazy-tabled",
    "tables_per_query": 113.29,
-   "work_per_query": 39928.4
+   "work_per_query": 36842.1
   },
   {
    "exact_rate": 1.0,
@@ -1231,10 +1327,10 @@
    "rewrite_kinds": {
     "true": 366
    },
-   "seconds_per_query": 1.5353,
+   "seconds_per_query": 0.148,
    "strategy": "lazy-tabled",
    "tables_per_query": 113.29,
-   "work_per_query": 39928.4
+   "work_per_query": 36842.1
   },
   {
    "exact_rate": 0.1429,
@@ -1253,12 +1349,12 @@
    "recall_finished": 1.0,
    "retrievals_per_query": 4.43,
    "rewrite_kinds": {
-    "true": 94
+    "true": 180
    },
-   "seconds_per_query": 1.1633,
+   "seconds_per_query": 0.1841,
    "strategy": "memo-untabled",
    "tables_per_query": 0.0,
-   "work_per_query": 444820.3
+   "work_per_query": 443218.9
   },
   {
    "exact_rate": 0.1429,
@@ -1277,16 +1373,16 @@
    "recall_finished": 1.0,
    "retrievals_per_query": 0.57,
    "rewrite_kinds": {
-    "true": 94
+    "true": 180
    },
-   "seconds_per_query": 1.1233,
+   "seconds_per_query": 0.2681,
    "strategy": "memo-untabled",
    "tables_per_query": 0.0,
-   "work_per_query": 444820.3
+   "work_per_query": 443218.9
   },
   {
    "exact_rate": 0.1429,
-   "expansions_per_query": 2634.29,
+   "expansions_per_query": 3537.07,
    "f1": 0.0597,
    "false_rewrite_rate": 0.0,
    "finished_rate": 0.1429,
@@ -1295,18 +1391,18 @@
    "mode": "cold",
    "precision": 1.0,
    "precision_finished": 1.0,
-   "proposals_per_query": 44782.86,
+   "proposals_per_query": 60130.21,
    "queries": 14,
    "recall": 0.0308,
    "recall_finished": 1.0,
-   "retrievals_per_query": 2634.29,
+   "retrievals_per_query": 3537.07,
    "rewrite_kinds": {
-    "true": 94
+    "true": 180
    },
-   "seconds_per_query": 1.1483,
+   "seconds_per_query": 0.3679,
    "strategy": "naive",
    "tables_per_query": 0.0,
-   "work_per_query": 444820.2
+   "work_per_query": 443219.1
   },
   {
    "exact_rate": 1.0,
@@ -1327,14 +1423,14 @@
    "rewrite_kinds": {
     "true": 366
    },
-   "seconds_per_query": 1.2852,
+   "seconds_per_query": 0.1622,
    "strategy": "nomemo-tabled",
    "tables_per_query": 113.29,
-   "work_per_query": 39928.4
+   "work_per_query": 36836.1
   },
   {
    "exact_rate": 1.0,
-   "expansions_per_query": 7.0,
+   "expansions_per_query": 6.57,
    "f1": 1.0,
    "false_rewrite_rate": 0.0,
    "finished_rate": 1.0,
@@ -1343,18 +1439,18 @@
    "mode": "cold",
    "precision": 1.0,
    "precision_finished": 1.0,
-   "proposals_per_query": 119.0,
+   "proposals_per_query": 111.71,
    "queries": 14,
    "recall": 1.0,
    "recall_finished": 1.0,
-   "retrievals_per_query": 7.0,
+   "retrievals_per_query": 6.57,
    "rewrite_kinds": {
     "true": 366
    },
-   "seconds_per_query": 15.6195,
-   "strategy": "rounds",
-   "tables_per_query": 112.86,
-   "work_per_query": 66186.8
+   "seconds_per_query": 0.1792,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 274.71,
+   "work_per_query": 47626.9
   },
   {
    "exact_rate": 1.0,
@@ -1375,10 +1471,58 @@
    "rewrite_kinds": {
     "true": 366
    },
-   "seconds_per_query": 17.5747,
+   "seconds_per_query": 0.1713,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 274.71,
+   "work_per_query": 47627.8
+  },
+  {
+   "exact_rate": 1.0,
+   "expansions_per_query": 7.0,
+   "f1": 1.0,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "oracle",
+   "kb": "geography",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 119.0,
+   "queries": 14,
+   "recall": 1.0,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 7.0,
+   "rewrite_kinds": {
+    "true": 366
+   },
+   "seconds_per_query": 0.7664,
    "strategy": "rounds",
-   "tables_per_query": 112.86,
-   "work_per_query": 66184.6
+   "tables_per_query": 113.29,
+   "work_per_query": 67674.8
+  },
+  {
+   "exact_rate": 1.0,
+   "expansions_per_query": 0.86,
+   "f1": 1.0,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "oracle",
+   "kb": "geography",
+   "mode": "warm",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 14.57,
+   "queries": 14,
+   "recall": 1.0,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 0.86,
+   "rewrite_kinds": {
+    "true": 366
+   },
+   "seconds_per_query": 0.7836,
+   "strategy": "rounds",
+   "tables_per_query": 113.29,
+   "work_per_query": 67674.8
   },
   {
    "exact_rate": 1.0,
@@ -1399,10 +1543,10 @@
    "rewrite_kinds": {
     "true": 742
    },
-   "seconds_per_query": 45.078,
+   "seconds_per_query": 0.51,
    "strategy": "saturate",
    "tables_per_query": 113.29,
-   "work_per_query": 18387.4
+   "work_per_query": 33286.6
   },
   {
    "exact_rate": 1.0,
@@ -1423,10 +1567,10 @@
    "rewrite_kinds": {
     "true": 742
    },
-   "seconds_per_query": 53.0284,
+   "seconds_per_query": 0.4925,
    "strategy": "saturate",
    "tables_per_query": 113.29,
-   "work_per_query": 18387.4
+   "work_per_query": 33286.6
   },
   {
    "exact_rate": 1.0,
@@ -1447,10 +1591,10 @@
    "rewrite_kinds": {
     "true": 145
    },
-   "seconds_per_query": 1.7861,
+   "seconds_per_query": 0.176,
    "strategy": "alias-canonical",
    "tables_per_query": 4.54,
-   "work_per_query": 1521.0
+   "work_per_query": 2181.1
   },
   {
    "exact_rate": 1.0,
@@ -1471,10 +1615,10 @@
    "rewrite_kinds": {
     "true": 145
    },
-   "seconds_per_query": 1.9974,
+   "seconds_per_query": 0.1882,
    "strategy": "alias-canonical",
    "tables_per_query": 4.54,
-   "work_per_query": 1521.0
+   "work_per_query": 2181.1
   },
   {
    "exact_rate": 1.0,
@@ -1495,10 +1639,10 @@
    "rewrite_kinds": {
     "true": 145
    },
-   "seconds_per_query": 1.6486,
+   "seconds_per_query": 0.1276,
    "strategy": "depth-bounded",
    "tables_per_query": 0.0,
-   "work_per_query": 85728.7
+   "work_per_query": 67903.2
   },
   {
    "exact_rate": 1.0,
@@ -1519,10 +1663,10 @@
    "rewrite_kinds": {
     "true": 145
    },
-   "seconds_per_query": 1.6918,
+   "seconds_per_query": 0.1369,
    "strategy": "depth-bounded",
    "tables_per_query": 0.0,
-   "work_per_query": 85481.8
+   "work_per_query": 67903.5
   },
   {
    "exact_rate": 1.0,
@@ -1543,10 +1687,10 @@
    "rewrite_kinds": {
     "true": 145
    },
-   "seconds_per_query": 2.5303,
+   "seconds_per_query": 0.177,
    "strategy": "depth-tabled",
    "tables_per_query": 18.15,
-   "work_per_query": 3918.5
+   "work_per_query": 3686.8
   },
   {
    "exact_rate": 1.0,
@@ -1567,10 +1711,10 @@
    "rewrite_kinds": {
     "true": 145
    },
-   "seconds_per_query": 2.5738,
+   "seconds_per_query": 0.157,
    "strategy": "depth-tabled",
    "tables_per_query": 18.15,
-   "work_per_query": 3918.5
+   "work_per_query": 3686.8
   },
   {
    "exact_rate": 1.0,
@@ -1591,10 +1735,10 @@
    "rewrite_kinds": {
     "true": 145
    },
-   "seconds_per_query": 1.7717,
+   "seconds_per_query": 0.1916,
    "strategy": "eager-worklist",
    "tables_per_query": 8.31,
-   "work_per_query": 1952.2
+   "work_per_query": 3110.4
   },
   {
    "exact_rate": 1.0,
@@ -1615,10 +1759,10 @@
    "rewrite_kinds": {
     "true": 145
    },
-   "seconds_per_query": 1.9466,
+   "seconds_per_query": 0.226,
    "strategy": "eager-worklist",
    "tables_per_query": 8.31,
-   "work_per_query": 1952.2
+   "work_per_query": 3110.4
   },
   {
    "exact_rate": 0.0769,
@@ -1637,10 +1781,10 @@
    "recall_finished": 0.0,
    "retrievals_per_query": 0.0,
    "rewrite_kinds": {},
-   "seconds_per_query": 1.8156,
+   "seconds_per_query": 0.1893,
    "strategy": "exact",
-   "tables_per_query": 0.15,
-   "work_per_query": 1097.0
+   "tables_per_query": 1.15,
+   "work_per_query": 1514.2
   },
   {
    "exact_rate": 0.0769,
@@ -1659,10 +1803,10 @@
    "recall_finished": 0.0,
    "retrievals_per_query": 0.0,
    "rewrite_kinds": {},
-   "seconds_per_query": 1.6974,
+   "seconds_per_query": 0.1779,
    "strategy": "exact",
-   "tables_per_query": 0.15,
-   "work_per_query": 1093.7
+   "tables_per_query": 1.15,
+   "work_per_query": 1514.2
   },
   {
    "exact_rate": 1.0,
@@ -1683,10 +1827,10 @@
    "rewrite_kinds": {
     "true": 145
    },
-   "seconds_per_query": 2.6722,
+   "seconds_per_query": 0.1727,
    "strategy": "lazy-tabled",
    "tables_per_query": 8.31,
-   "work_per_query": 3385.3
+   "work_per_query": 3188.5
   },
   {
    "exact_rate": 1.0,
@@ -1707,10 +1851,10 @@
    "rewrite_kinds": {
     "true": 145
    },
-   "seconds_per_query": 2.7119,
+   "seconds_per_query": 0.1559,
    "strategy": "lazy-tabled",
    "tables_per_query": 8.31,
-   "work_per_query": 3385.3
+   "work_per_query": 3188.5
   },
   {
    "exact_rate": 0.0769,
@@ -1729,12 +1873,12 @@
    "recall_finished": 1.0,
    "retrievals_per_query": 2.92,
    "rewrite_kinds": {
-    "true": 68
+    "true": 99
    },
-   "seconds_per_query": 1.7847,
+   "seconds_per_query": 0.5943,
    "strategy": "memo-untabled",
    "tables_per_query": 0.0,
-   "work_per_query": 506414.5
+   "work_per_query": 507781.1
   },
   {
    "exact_rate": 0.0769,
@@ -1753,16 +1897,16 @@
    "recall_finished": 1.0,
    "retrievals_per_query": 0.62,
    "rewrite_kinds": {
-    "true": 68
+    "true": 99
    },
-   "seconds_per_query": 1.7932,
+   "seconds_per_query": 0.6079,
    "strategy": "memo-untabled",
    "tables_per_query": 0.0,
-   "work_per_query": 506431.7
+   "work_per_query": 507533.8
   },
   {
    "exact_rate": 0.0769,
-   "expansions_per_query": 3535.23,
+   "expansions_per_query": 4706.54,
    "f1": 0.0,
    "false_rewrite_rate": 0.0,
    "finished_rate": 0.0,
@@ -1771,18 +1915,18 @@
    "mode": "cold",
    "precision": 1.0,
    "precision_finished": 1.0,
-   "proposals_per_query": 60098.92,
+   "proposals_per_query": 80011.15,
    "queries": 13,
    "recall": 0.0,
    "recall_finished": 1.0,
-   "retrievals_per_query": 3535.23,
+   "retrievals_per_query": 4706.54,
    "rewrite_kinds": {
-    "true": 68
+    "true": 99
    },
-   "seconds_per_query": 1.9492,
+   "seconds_per_query": 0.9333,
    "strategy": "naive",
    "tables_per_query": 0.0,
-   "work_per_query": 506430.8
+   "work_per_query": 507533.9
   },
   {
    "exact_rate": 1.0,
@@ -1803,10 +1947,10 @@
    "rewrite_kinds": {
     "true": 145
    },
-   "seconds_per_query": 2.1939,
+   "seconds_per_query": 0.1792,
    "strategy": "nomemo-tabled",
    "tables_per_query": 8.31,
-   "work_per_query": 3385.3
+   "work_per_query": 3188.5
   },
   {
    "exact_rate": 1.0,
@@ -1827,10 +1971,10 @@
    "rewrite_kinds": {
     "true": 145
    },
-   "seconds_per_query": 7.847,
-   "strategy": "rounds",
-   "tables_per_query": 8.31,
-   "work_per_query": 6685.1
+   "seconds_per_query": 0.1488,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 21.85,
+   "work_per_query": 4363.8
   },
   {
    "exact_rate": 1.0,
@@ -1851,10 +1995,58 @@
    "rewrite_kinds": {
     "true": 145
    },
-   "seconds_per_query": 9.8785,
+   "seconds_per_query": 0.1668,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 21.85,
+   "work_per_query": 4363.8
+  },
+  {
+   "exact_rate": 1.0,
+   "expansions_per_query": 5.54,
+   "f1": 1.0,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "oracle",
+   "kb": "medicine",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 94.15,
+   "queries": 13,
+   "recall": 1.0,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 5.54,
+   "rewrite_kinds": {
+    "true": 145
+   },
+   "seconds_per_query": 0.542,
    "strategy": "rounds",
    "tables_per_query": 8.31,
-   "work_per_query": 6682.7
+   "work_per_query": 6903.8
+  },
+  {
+   "exact_rate": 1.0,
+   "expansions_per_query": 0.85,
+   "f1": 1.0,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "oracle",
+   "kb": "medicine",
+   "mode": "warm",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 14.38,
+   "queries": 13,
+   "recall": 1.0,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 0.85,
+   "rewrite_kinds": {
+    "true": 145
+   },
+   "seconds_per_query": 0.5699,
+   "strategy": "rounds",
+   "tables_per_query": 8.31,
+   "work_per_query": 6903.8
   },
   {
    "exact_rate": 1.0,
@@ -1875,10 +2067,10 @@
    "rewrite_kinds": {
     "true": 468
    },
-   "seconds_per_query": 3.0524,
+   "seconds_per_query": 0.2025,
    "strategy": "saturate",
    "tables_per_query": 8.31,
-   "work_per_query": 1952.2
+   "work_per_query": 3110.4
   },
   {
    "exact_rate": 1.0,
@@ -1899,10 +2091,10 @@
    "rewrite_kinds": {
     "true": 468
    },
-   "seconds_per_query": 2.8153,
+   "seconds_per_query": 0.2118,
    "strategy": "saturate",
    "tables_per_query": 8.31,
-   "work_per_query": 1952.2
+   "work_per_query": 3110.4
   },
   {
    "exact_rate": 0.7857,
@@ -1923,10 +2115,10 @@
    "rewrite_kinds": {
     "true": 272
    },
-   "seconds_per_query": 0.71,
+   "seconds_per_query": 0.1335,
    "strategy": "alias-canonical",
    "tables_per_query": 17.86,
-   "work_per_query": 2079.1
+   "work_per_query": 4424.3
   },
   {
    "exact_rate": 0.7857,
@@ -1947,10 +2139,10 @@
    "rewrite_kinds": {
     "true": 272
    },
-   "seconds_per_query": 0.787,
+   "seconds_per_query": 0.1423,
    "strategy": "alias-canonical",
    "tables_per_query": 17.86,
-   "work_per_query": 2079.1
+   "work_per_query": 4424.3
   },
   {
    "exact_rate": 0.7857,
@@ -1971,10 +2163,10 @@
    "rewrite_kinds": {
     "true": 264
    },
-   "seconds_per_query": 0.5771,
+   "seconds_per_query": 0.0741,
    "strategy": "depth-bounded",
    "tables_per_query": 0.0,
-   "work_per_query": 123383.2
+   "work_per_query": 110286.2
   },
   {
    "exact_rate": 0.7857,
@@ -1995,10 +2187,10 @@
    "rewrite_kinds": {
     "true": 264
    },
-   "seconds_per_query": 0.5165,
+   "seconds_per_query": 0.0851,
    "strategy": "depth-bounded",
    "tables_per_query": 0.0,
-   "work_per_query": 123383.5
+   "work_per_query": 110286.5
   },
   {
    "exact_rate": 0.7857,
@@ -2019,10 +2211,10 @@
    "rewrite_kinds": {
     "true": 264
    },
-   "seconds_per_query": 0.7505,
+   "seconds_per_query": 0.1076,
    "strategy": "depth-tabled",
    "tables_per_query": 68.36,
-   "work_per_query": 10696.0
+   "work_per_query": 9783.7
   },
   {
    "exact_rate": 0.7857,
@@ -2043,10 +2235,10 @@
    "rewrite_kinds": {
     "true": 264
    },
-   "seconds_per_query": 0.7948,
+   "seconds_per_query": 0.1158,
    "strategy": "depth-tabled",
    "tables_per_query": 68.36,
-   "work_per_query": 10696.0
+   "work_per_query": 9783.7
   },
   {
    "exact_rate": 0.7857,
@@ -2067,10 +2259,10 @@
    "rewrite_kinds": {
     "true": 272
    },
-   "seconds_per_query": 1.0221,
+   "seconds_per_query": 0.137,
    "strategy": "eager-worklist",
    "tables_per_query": 39.07,
-   "work_per_query": 4533.9
+   "work_per_query": 9708.3
   },
   {
    "exact_rate": 0.7857,
@@ -2091,10 +2283,10 @@
    "rewrite_kinds": {
     "true": 272
    },
-   "seconds_per_query": 0.9894,
+   "seconds_per_query": 0.154,
    "strategy": "eager-worklist",
    "tables_per_query": 39.07,
-   "work_per_query": 4533.9
+   "work_per_query": 9708.3
   },
   {
    "exact_rate": 0.0,
@@ -2113,10 +2305,10 @@
    "recall_finished": 0.0,
    "retrievals_per_query": 0.0,
    "rewrite_kinds": {},
-   "seconds_per_query": 0.2411,
+   "seconds_per_query": 0.0937,
    "strategy": "exact",
-   "tables_per_query": 0.29,
-   "work_per_query": 1098.7
+   "tables_per_query": 1.43,
+   "work_per_query": 1526.1
   },
   {
    "exact_rate": 0.0,
@@ -2135,10 +2327,10 @@
    "recall_finished": 0.0,
    "retrievals_per_query": 0.0,
    "rewrite_kinds": {},
-   "seconds_per_query": 0.3004,
+   "seconds_per_query": 0.0992,
    "strategy": "exact",
-   "tables_per_query": 0.29,
-   "work_per_query": 1095.4
+   "tables_per_query": 1.43,
+   "work_per_query": 1526.1
   },
   {
    "exact_rate": 0.7857,
@@ -2159,10 +2351,10 @@
    "rewrite_kinds": {
     "true": 272
    },
-   "seconds_per_query": 0.8056,
+   "seconds_per_query": 0.109,
    "strategy": "lazy-tabled",
    "tables_per_query": 39.07,
-   "work_per_query": 11014.6
+   "work_per_query": 9976.4
   },
   {
    "exact_rate": 0.7857,
@@ -2183,10 +2375,10 @@
    "rewrite_kinds": {
     "true": 272
    },
-   "seconds_per_query": 0.7672,
+   "seconds_per_query": 0.1107,
    "strategy": "lazy-tabled",
    "tables_per_query": 39.07,
-   "work_per_query": 11014.6
+   "work_per_query": 9976.4
   },
   {
    "exact_rate": 0.0,
@@ -2205,12 +2397,12 @@
    "recall_finished": 1.0,
    "retrievals_per_query": 3.29,
    "rewrite_kinds": {
-    "true": 78
+    "true": 130
    },
-   "seconds_per_query": 9.1638,
+   "seconds_per_query": 0.3276,
    "strategy": "memo-untabled",
    "tables_per_query": 0.0,
-   "work_per_query": 1186671.3
+   "work_per_query": 507303.1
   },
   {
    "exact_rate": 0.0,
@@ -2229,16 +2421,16 @@
    "recall_finished": 1.0,
    "retrievals_per_query": 0.64,
    "rewrite_kinds": {
-    "true": 78
+    "true": 130
    },
-   "seconds_per_query": 9.1734,
+   "seconds_per_query": 0.3148,
    "strategy": "memo-untabled",
    "tables_per_query": 0.0,
-   "work_per_query": 1141990.3
+   "work_per_query": 507303.1
   },
   {
    "exact_rate": 0.0,
-   "expansions_per_query": 7687.07,
+   "expansions_per_query": 4191.71,
    "f1": 0.0,
    "false_rewrite_rate": 0.0,
    "finished_rate": 0.0,
@@ -2247,18 +2439,18 @@
    "mode": "cold",
    "precision": 1.0,
    "precision_finished": 1.0,
-   "proposals_per_query": 130680.21,
+   "proposals_per_query": 71259.14,
    "queries": 14,
    "recall": 0.0,
    "recall_finished": 1.0,
-   "retrievals_per_query": 7687.07,
+   "retrievals_per_query": 4191.71,
    "rewrite_kinds": {
-    "true": 78
+    "true": 130
    },
-   "seconds_per_query": 9.2786,
+   "seconds_per_query": 0.6109,
    "strategy": "naive",
    "tables_per_query": 0.0,
-   "work_per_query": 1155877.9
+   "work_per_query": 507303.1
   },
   {
    "exact_rate": 0.7857,
@@ -2279,10 +2471,10 @@
    "rewrite_kinds": {
     "true": 272
    },
-   "seconds_per_query": 0.6176,
+   "seconds_per_query": 0.0929,
    "strategy": "nomemo-tabled",
    "tables_per_query": 39.07,
-   "work_per_query": 11014.6
+   "work_per_query": 9976.4
   },
   {
    "exact_rate": 0.7857,
@@ -2303,10 +2495,10 @@
    "rewrite_kinds": {
     "true": 272
    },
-   "seconds_per_query": 3.0452,
-   "strategy": "rounds",
-   "tables_per_query": 38.93,
-   "work_per_query": 18501.1
+   "seconds_per_query": 0.1036,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 105.57,
+   "work_per_query": 16522.8
   },
   {
    "exact_rate": 0.7857,
@@ -2327,10 +2519,58 @@
    "rewrite_kinds": {
     "true": 272
    },
-   "seconds_per_query": 5.5413,
+   "seconds_per_query": 0.1114,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 105.57,
+   "work_per_query": 16522.8
+  },
+  {
+   "exact_rate": 0.7857,
+   "expansions_per_query": 5.71,
+   "f1": 0.9346,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "oracle",
+   "kb": "work",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 97.14,
+   "queries": 14,
+   "recall": 0.8772,
+   "recall_finished": 0.8772,
+   "retrievals_per_query": 5.71,
+   "rewrite_kinds": {
+    "true": 272
+   },
+   "seconds_per_query": 0.4054,
    "strategy": "rounds",
-   "tables_per_query": 38.93,
-   "work_per_query": 18498.9
+   "tables_per_query": 39.07,
+   "work_per_query": 20730.3
+  },
+  {
+   "exact_rate": 0.7857,
+   "expansions_per_query": 0.93,
+   "f1": 0.9346,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "oracle",
+   "kb": "work",
+   "mode": "warm",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 15.79,
+   "queries": 14,
+   "recall": 0.8772,
+   "recall_finished": 0.8772,
+   "retrievals_per_query": 0.93,
+   "rewrite_kinds": {
+    "true": 272
+   },
+   "seconds_per_query": 0.4562,
+   "strategy": "rounds",
+   "tables_per_query": 39.07,
+   "work_per_query": 20730.3
   },
   {
    "exact_rate": 0.7857,
@@ -2351,10 +2591,10 @@
    "rewrite_kinds": {
     "true": 784
    },
-   "seconds_per_query": 1.2811,
+   "seconds_per_query": 0.1714,
    "strategy": "saturate",
    "tables_per_query": 39.07,
-   "work_per_query": 4533.9
+   "work_per_query": 9703.9
   },
   {
    "exact_rate": 0.7857,
@@ -2375,10 +2615,10 @@
    "rewrite_kinds": {
     "true": 784
    },
-   "seconds_per_query": 1.2384,
+   "seconds_per_query": 0.3264,
    "strategy": "saturate",
    "tables_per_query": 39.07,
-   "work_per_query": 4533.9
+   "work_per_query": 9703.9
   }
  ],
  "budget_work": 500000,
@@ -2464,10 +2704,10 @@
    "kb": "family",
    "proposals": 0,
    "query": "mother(X, Y)",
-   "seconds": 1.888,
+   "seconds": 0.169,
    "status": "work_limit",
    "strategy": "naive",
-   "work": 100112
+   "work": 69470
   },
   {
    "answers": 0,
@@ -2476,10 +2716,10 @@
    "kb": "family",
    "proposals": 0,
    "query": "mother(X, Y)",
-   "seconds": 1.866,
+   "seconds": 0.177,
    "status": "work_limit",
    "strategy": "memo-untabled",
-   "work": 100116
+   "work": 69474
   },
   {
    "answers": 14,
@@ -2488,34 +2728,34 @@
    "kb": "family",
    "proposals": 255,
    "query": "mother(X, Y)",
-   "seconds": 2.63,
+   "seconds": 0.166,
    "status": "ok",
    "strategy": "lazy-tabled",
-   "work": 4172
+   "work": 4068
   },
   {
    "answers": 0,
    "budget": 100000,
-   "expansions": 0,
+   "expansions": 180,
    "kb": "family",
-   "proposals": 0,
+   "proposals": 9180,
    "query": "mother(X, Y)",
-   "seconds": 2.051,
+   "seconds": 0.144,
    "status": "work_limit",
    "strategy": "naive",
-   "work": 100786
+   "work": 100775
   },
   {
    "answers": 0,
    "budget": 100000,
-   "expansions": 0,
+   "expansions": 4,
    "kb": "family",
-   "proposals": 0,
+   "proposals": 204,
    "query": "mother(X, Y)",
-   "seconds": 2.411,
+   "seconds": 0.127,
    "status": "work_limit",
    "strategy": "memo-untabled",
-   "work": 100788
+   "work": 100769
   },
   {
    "answers": 14,
@@ -2524,22 +2764,22 @@
    "kb": "family",
    "proposals": 255,
    "query": "mother(X, Y)",
-   "seconds": 3.005,
+   "seconds": 0.185,
    "status": "ok",
    "strategy": "lazy-tabled",
-   "work": 4172
+   "work": 4068
   },
   {
    "answers": 0,
    "budget": 1000000,
-   "expansions": 4399,
+   "expansions": 5444,
    "kb": "family",
-   "proposals": 224349,
+   "proposals": 277644,
    "query": "mother(X, Y)",
-   "seconds": 2.942,
+   "seconds": 1.194,
    "status": "work_limit",
    "strategy": "naive",
-   "work": 1005366
+   "work": 1006232
   },
   {
    "answers": 0,
@@ -2548,10 +2788,10 @@
    "kb": "family",
    "proposals": 204,
    "query": "mother(X, Y)",
-   "seconds": 2.903,
+   "seconds": 0.897,
    "status": "work_limit",
    "strategy": "memo-untabled",
-   "work": 1005366
+   "work": 1006231
   },
   {
    "answers": 14,
@@ -2560,22 +2800,22 @@
    "kb": "family",
    "proposals": 255,
    "query": "mother(X, Y)",
-   "seconds": 2.744,
+   "seconds": 0.196,
    "status": "ok",
    "strategy": "lazy-tabled",
-   "work": 4172
+   "work": 4068
   },
   {
    "answers": 0,
    "budget": 3000000,
-   "expansions": 14227,
+   "expansions": 17140,
    "kb": "family",
-   "proposals": 725577,
+   "proposals": 874140,
    "query": "mother(X, Y)",
-   "seconds": 7.775,
+   "seconds": 8.805,
    "status": "work_limit",
    "strategy": "naive",
-   "work": 3014970
+   "work": 3017992
   },
   {
    "answers": 0,
@@ -2584,10 +2824,10 @@
    "kb": "family",
    "proposals": 204,
    "query": "mother(X, Y)",
-   "seconds": 7.299,
+   "seconds": 8.426,
    "status": "work_limit",
    "strategy": "memo-untabled",
-   "work": 3015191
+   "work": 3017920
   },
   {
    "answers": 14,
@@ -2596,14 +2836,15 @@
    "kb": "family",
    "proposals": 255,
    "query": "mother(X, Y)",
-   "seconds": 2.722,
+   "seconds": 0.149,
    "status": "ok",
    "strategy": "lazy-tabled",
-   "work": 4172
+   "work": 4068
   }
  ],
+ "engine": "pymetta",
  "isolation": {
-  "checked": 187,
+  "checked": 204,
   "kb": "family",
   "mismatches": []
  },
@@ -2652,5 +2893,5 @@
   }
  ],
  "retriever": "BAAI/bge-small-en-v1.5",
- "seconds": 4295.3
+ "seconds": 305.1
 }

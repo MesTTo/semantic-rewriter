@@ -1,0 +1,1484 @@
+{
+ "aggregates": [
+  {
+   "exact_rate": 0.1552,
+   "expansions_per_query": 4.79,
+   "f1": 0.4848,
+   "false_rewrite_rate": 0.73,
+   "finished_rate": 0.9655,
+   "judge": "cosine-bge",
+   "kb": "ALL",
+   "mode": "cold",
+   "precision": 0.5517,
+   "precision_finished": 0.5517,
+   "proposals_per_query": 81.48,
+   "queries": 58,
+   "recall": 0.4324,
+   "recall_finished": 0.4404,
+   "retrievals_per_query": 4.79,
+   "rewrite_kinds": {
+    "reversed": 165,
+    "swap": 597,
+    "trap": 52,
+    "true": 435,
+    "unrelated": 362
+   },
+   "seconds_per_query": 0.0625,
+   "strategy": "depth-bounded",
+   "tables_per_query": 0.0,
+   "work_per_query": 119310.2
+  },
+  {
+   "exact_rate": 0.1552,
+   "expansions_per_query": 4.79,
+   "f1": 0.4938,
+   "false_rewrite_rate": 0.73,
+   "finished_rate": 1.0,
+   "judge": "cosine-bge",
+   "kb": "ALL",
+   "mode": "cold",
+   "precision": 0.5464,
+   "precision_finished": 0.5464,
+   "proposals_per_query": 81.48,
+   "queries": 58,
+   "recall": 0.4505,
+   "recall_finished": 0.4505,
+   "retrievals_per_query": 4.79,
+   "rewrite_kinds": {
+    "reversed": 165,
+    "swap": 597,
+    "trap": 52,
+    "true": 435,
+    "unrelated": 362
+   },
+   "seconds_per_query": 0.0962,
+   "strategy": "depth-tabled",
+   "tables_per_query": 86.16,
+   "work_per_query": 11316.3
+  },
+  {
+   "exact_rate": 0.1552,
+   "expansions_per_query": 5.97,
+   "f1": 0.4041,
+   "false_rewrite_rate": 0.7412,
+   "finished_rate": 0.8966,
+   "judge": "cosine-bge",
+   "kb": "ALL",
+   "mode": "cold",
+   "precision": 0.4756,
+   "precision_finished": 0.4756,
+   "proposals_per_query": 101.41,
+   "queries": 58,
+   "recall": 0.3514,
+   "recall_finished": 0.4699,
+   "retrievals_per_query": 5.97,
+   "rewrite_kinds": {
+    "reversed": 196,
+    "swap": 679,
+    "trap": 108,
+    "true": 500,
+    "unrelated": 449
+   },
+   "seconds_per_query": 0.1429,
+   "strategy": "eager-worklist",
+   "tables_per_query": 145.0,
+   "work_per_query": 67184.7
+  },
+  {
+   "exact_rate": 0.0862,
+   "expansions_per_query": 0.0,
+   "f1": 0.0354,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "cosine-bge",
+   "kb": "ALL",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 0.0,
+   "queries": 58,
+   "recall": 0.018,
+   "recall_finished": 0.018,
+   "retrievals_per_query": 0.0,
+   "rewrite_kinds": {},
+   "seconds_per_query": 0.1116,
+   "strategy": "exact",
+   "tables_per_query": 1.34,
+   "work_per_query": 1517.7
+  },
+  {
+   "exact_rate": 0.1552,
+   "expansions_per_query": 5.97,
+   "f1": 0.4041,
+   "false_rewrite_rate": 0.7412,
+   "finished_rate": 0.8966,
+   "judge": "cosine-bge",
+   "kb": "ALL",
+   "mode": "cold",
+   "precision": 0.4756,
+   "precision_finished": 0.4756,
+   "proposals_per_query": 101.41,
+   "queries": 58,
+   "recall": 0.3514,
+   "recall_finished": 0.4699,
+   "retrievals_per_query": 5.97,
+   "rewrite_kinds": {
+    "reversed": 196,
+    "swap": 679,
+    "trap": 108,
+    "true": 500,
+    "unrelated": 449
+   },
+   "seconds_per_query": 0.1028,
+   "strategy": "lazy-tabled",
+   "tables_per_query": 138.6,
+   "work_per_query": 69963.8
+  },
+  {
+   "exact_rate": 0.1552,
+   "expansions_per_query": 5.07,
+   "f1": 0.4136,
+   "false_rewrite_rate": 0.7421,
+   "finished_rate": 0.9138,
+   "judge": "cosine-bge",
+   "kb": "ALL",
+   "mode": "cold",
+   "precision": 0.4938,
+   "precision_finished": 0.4938,
+   "proposals_per_query": 86.17,
+   "queries": 58,
+   "recall": 0.3559,
+   "recall_finished": 0.4675,
+   "retrievals_per_query": 5.07,
+   "rewrite_kinds": {
+    "reversed": 185,
+    "swap": 625,
+    "trap": 64,
+    "true": 435,
+    "unrelated": 378
+   },
+   "seconds_per_query": 0.0957,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 509.69,
+   "work_per_query": 61719.8
+  },
+  {
+   "exact_rate": 0.2353,
+   "expansions_per_query": 10.94,
+   "f1": 0.5907,
+   "false_rewrite_rate": 0.7377,
+   "finished_rate": 0.8824,
+   "judge": "cosine-bge",
+   "kb": "family",
+   "mode": "cold",
+   "precision": 0.4453,
+   "precision_finished": 0.4453,
+   "proposals_per_query": 186.0,
+   "queries": 17,
+   "recall": 0.8769,
+   "recall_finished": 0.9344,
+   "retrievals_per_query": 10.94,
+   "rewrite_kinds": {
+    "reversed": 165,
+    "swap": 423,
+    "trap": 34,
+    "true": 325,
+    "unrelated": 292
+   },
+   "seconds_per_query": 0.0546,
+   "strategy": "depth-bounded",
+   "tables_per_query": 0.0,
+   "work_per_query": 183194.5
+  },
+  {
+   "exact_rate": 0.2353,
+   "expansions_per_query": 10.94,
+   "f1": 0.604,
+   "false_rewrite_rate": 0.7377,
+   "finished_rate": 1.0,
+   "judge": "cosine-bge",
+   "kb": "family",
+   "mode": "cold",
+   "precision": 0.4453,
+   "precision_finished": 0.4453,
+   "proposals_per_query": 186.0,
+   "queries": 17,
+   "recall": 0.9385,
+   "recall_finished": 0.9385,
+   "retrievals_per_query": 10.94,
+   "rewrite_kinds": {
+    "reversed": 165,
+    "swap": 423,
+    "trap": 34,
+    "true": 325,
+    "unrelated": 292
+   },
+   "seconds_per_query": 0.0694,
+   "strategy": "depth-tabled",
+   "tables_per_query": 228.47,
+   "work_per_query": 27722.4
+  },
+  {
+   "exact_rate": 0.2353,
+   "expansions_per_query": 14.94,
+   "f1": 0.5248,
+   "false_rewrite_rate": 0.75,
+   "finished_rate": 0.8824,
+   "judge": "cosine-bge",
+   "kb": "family",
+   "mode": "cold",
+   "precision": 0.3869,
+   "precision_finished": 0.3869,
+   "proposals_per_query": 254.0,
+   "queries": 17,
+   "recall": 0.8154,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 14.94,
+   "rewrite_kinds": {
+    "reversed": 196,
+    "swap": 505,
+    "trap": 90,
+    "true": 390,
+    "unrelated": 379
+   },
+   "seconds_per_query": 0.178,
+   "strategy": "eager-worklist",
+   "tables_per_query": 324.59,
+   "work_per_query": 105488.9
+  },
+  {
+   "exact_rate": 0.1176,
+   "expansions_per_query": 0.0,
+   "f1": 0.0597,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "cosine-bge",
+   "kb": "family",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 0.0,
+   "queries": 17,
+   "recall": 0.0308,
+   "recall_finished": 0.0308,
+   "retrievals_per_query": 0.0,
+   "rewrite_kinds": {},
+   "seconds_per_query": 0.1629,
+   "strategy": "exact",
+   "tables_per_query": 1.35,
+   "work_per_query": 1505.1
+  },
+  {
+   "exact_rate": 0.2353,
+   "expansions_per_query": 14.94,
+   "f1": 0.5248,
+   "false_rewrite_rate": 0.75,
+   "finished_rate": 0.8824,
+   "judge": "cosine-bge",
+   "kb": "family",
+   "mode": "cold",
+   "precision": 0.3869,
+   "precision_finished": 0.3869,
+   "proposals_per_query": 254.0,
+   "queries": 17,
+   "recall": 0.8154,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 14.94,
+   "rewrite_kinds": {
+    "reversed": 196,
+    "swap": 505,
+    "trap": 90,
+    "true": 390,
+    "unrelated": 379
+   },
+   "seconds_per_query": 0.082,
+   "strategy": "lazy-tabled",
+   "tables_per_query": 288.82,
+   "work_per_query": 114554.4
+  },
+  {
+   "exact_rate": 0.2353,
+   "expansions_per_query": 11.88,
+   "f1": 0.5408,
+   "false_rewrite_rate": 0.7529,
+   "finished_rate": 0.8824,
+   "judge": "cosine-bge",
+   "kb": "family",
+   "mode": "cold",
+   "precision": 0.4046,
+   "precision_finished": 0.4046,
+   "proposals_per_query": 202.0,
+   "queries": 17,
+   "recall": 0.8154,
+   "recall_finished": 1.0,
+   "retrievals_per_query": 11.88,
+   "rewrite_kinds": {
+    "reversed": 185,
+    "swap": 451,
+    "trap": 46,
+    "true": 325,
+    "unrelated": 308
+   },
+   "seconds_per_query": 0.0832,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 867.71,
+   "work_per_query": 102314.5
+  },
+  {
+   "exact_rate": 0.0,
+   "expansions_per_query": 2.0,
+   "f1": 0.3636,
+   "false_rewrite_rate": 0.7941,
+   "finished_rate": 1.0,
+   "judge": "cosine-bge",
+   "kb": "geography",
+   "mode": "cold",
+   "precision": 0.6957,
+   "precision_finished": 0.6957,
+   "proposals_per_query": 34.0,
+   "queries": 14,
+   "recall": 0.2462,
+   "recall_finished": 0.2462,
+   "retrievals_per_query": 2.0,
+   "rewrite_kinds": {
+    "swap": 26,
+    "trap": 18,
+    "true": 14,
+    "unrelated": 10
+   },
+   "seconds_per_query": 0.0587,
+   "strategy": "depth-bounded",
+   "tables_per_query": 0.0,
+   "work_per_query": 102489.6
+  },
+  {
+   "exact_rate": 0.0,
+   "expansions_per_query": 2.0,
+   "f1": 0.3636,
+   "false_rewrite_rate": 0.7941,
+   "finished_rate": 1.0,
+   "judge": "cosine-bge",
+   "kb": "geography",
+   "mode": "cold",
+   "precision": 0.6957,
+   "precision_finished": 0.6957,
+   "proposals_per_query": 34.0,
+   "queries": 14,
+   "recall": 0.2462,
+   "recall_finished": 0.2462,
+   "retrievals_per_query": 2.0,
+   "rewrite_kinds": {
+    "swap": 26,
+    "trap": 18,
+    "true": 14,
+    "unrelated": 10
+   },
+   "seconds_per_query": 0.1146,
+   "strategy": "depth-tabled",
+   "tables_per_query": 51.43,
+   "work_per_query": 5616.5
+  },
+  {
+   "exact_rate": 0.0,
+   "expansions_per_query": 2.0,
+   "f1": 0.058,
+   "false_rewrite_rate": 0.7941,
+   "finished_rate": 0.7143,
+   "judge": "cosine-bge",
+   "kb": "geography",
+   "mode": "cold",
+   "precision": 0.5,
+   "precision_finished": 0.5,
+   "proposals_per_query": 34.0,
+   "queries": 14,
+   "recall": 0.0308,
+   "recall_finished": 0.0952,
+   "retrievals_per_query": 2.0,
+   "rewrite_kinds": {
+    "swap": 26,
+    "trap": 18,
+    "true": 14,
+    "unrelated": 10
+   },
+   "seconds_per_query": 0.1527,
+   "strategy": "eager-worklist",
+   "tables_per_query": 195.64,
+   "work_per_query": 144356.9
+  },
+  {
+   "exact_rate": 0.1429,
+   "expansions_per_query": 0.0,
+   "f1": 0.0597,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "cosine-bge",
+   "kb": "geography",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 0.0,
+   "queries": 14,
+   "recall": 0.0308,
+   "recall_finished": 0.0308,
+   "retrievals_per_query": 0.0,
+   "rewrite_kinds": {},
+   "seconds_per_query": 0.0804,
+   "strategy": "exact",
+   "tables_per_query": 1.43,
+   "work_per_query": 1530.9
+  },
+  {
+   "exact_rate": 0.0,
+   "expansions_per_query": 2.0,
+   "f1": 0.058,
+   "false_rewrite_rate": 0.7941,
+   "finished_rate": 0.7143,
+   "judge": "cosine-bge",
+   "kb": "geography",
+   "mode": "cold",
+   "precision": 0.5,
+   "precision_finished": 0.5,
+   "proposals_per_query": 34.0,
+   "queries": 14,
+   "recall": 0.0308,
+   "recall_finished": 0.0952,
+   "retrievals_per_query": 2.0,
+   "rewrite_kinds": {
+    "swap": 26,
+    "trap": 18,
+    "true": 14,
+    "unrelated": 10
+   },
+   "seconds_per_query": 0.133,
+   "strategy": "lazy-tabled",
+   "tables_per_query": 212.57,
+   "work_per_query": 144364.6
+  },
+  {
+   "exact_rate": 0.0,
+   "expansions_per_query": 2.0,
+   "f1": 0.0845,
+   "false_rewrite_rate": 0.7941,
+   "finished_rate": 0.7857,
+   "judge": "cosine-bge",
+   "kb": "geography",
+   "mode": "cold",
+   "precision": 0.5,
+   "precision_finished": 0.5,
+   "proposals_per_query": 34.0,
+   "queries": 14,
+   "recall": 0.0462,
+   "recall_finished": 0.125,
+   "retrievals_per_query": 2.0,
+   "rewrite_kinds": {
+    "swap": 26,
+    "trap": 18,
+    "true": 14,
+    "unrelated": 10
+   },
+   "seconds_per_query": 0.1172,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 1026.79,
+   "work_per_query": 123317.0
+  },
+  {
+   "exact_rate": 0.0769,
+   "expansions_per_query": 1.54,
+   "f1": 0.0,
+   "false_rewrite_rate": 1.0,
+   "finished_rate": 1.0,
+   "judge": "cosine-bge",
+   "kb": "medicine",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 26.15,
+   "queries": 13,
+   "recall": 0.0,
+   "recall_finished": 0.0,
+   "retrievals_per_query": 1.54,
+   "rewrite_kinds": {
+    "swap": 20,
+    "unrelated": 28
+   },
+   "seconds_per_query": 0.0787,
+   "strategy": "depth-bounded",
+   "tables_per_query": 0.0,
+   "work_per_query": 66751.8
+  },
+  {
+   "exact_rate": 0.0769,
+   "expansions_per_query": 1.54,
+   "f1": 0.0,
+   "false_rewrite_rate": 1.0,
+   "finished_rate": 1.0,
+   "judge": "cosine-bge",
+   "kb": "medicine",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 26.15,
+   "queries": 13,
+   "recall": 0.0,
+   "recall_finished": 0.0,
+   "retrievals_per_query": 1.54,
+   "rewrite_kinds": {
+    "swap": 20,
+    "unrelated": 28
+   },
+   "seconds_per_query": 0.1054,
+   "strategy": "depth-tabled",
+   "tables_per_query": 9.92,
+   "work_per_query": 2618.3
+  },
+  {
+   "exact_rate": 0.0769,
+   "expansions_per_query": 1.54,
+   "f1": 0.0,
+   "false_rewrite_rate": 1.0,
+   "finished_rate": 1.0,
+   "judge": "cosine-bge",
+   "kb": "medicine",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 26.15,
+   "queries": 13,
+   "recall": 0.0,
+   "recall_finished": 0.0,
+   "retrievals_per_query": 1.54,
+   "rewrite_kinds": {
+    "swap": 20,
+    "unrelated": 28
+   },
+   "seconds_per_query": 0.128,
+   "strategy": "eager-worklist",
+   "tables_per_query": 4.08,
+   "work_per_query": 2109.2
+  },
+  {
+   "exact_rate": 0.0769,
+   "expansions_per_query": 0.0,
+   "f1": 0.0,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "cosine-bge",
+   "kb": "medicine",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 0.0,
+   "queries": 13,
+   "recall": 0.0,
+   "recall_finished": 0.0,
+   "retrievals_per_query": 0.0,
+   "rewrite_kinds": {},
+   "seconds_per_query": 0.1103,
+   "strategy": "exact",
+   "tables_per_query": 1.15,
+   "work_per_query": 1511.2
+  },
+  {
+   "exact_rate": 0.0769,
+   "expansions_per_query": 1.54,
+   "f1": 0.0,
+   "false_rewrite_rate": 1.0,
+   "finished_rate": 1.0,
+   "judge": "cosine-bge",
+   "kb": "medicine",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 26.15,
+   "queries": 13,
+   "recall": 0.0,
+   "recall_finished": 0.0,
+   "retrievals_per_query": 1.54,
+   "rewrite_kinds": {
+    "swap": 20,
+    "unrelated": 28
+   },
+   "seconds_per_query": 0.119,
+   "strategy": "lazy-tabled",
+   "tables_per_query": 4.08,
+   "work_per_query": 2091.0
+  },
+  {
+   "exact_rate": 0.0769,
+   "expansions_per_query": 1.54,
+   "f1": 0.0,
+   "false_rewrite_rate": 1.0,
+   "finished_rate": 1.0,
+   "judge": "cosine-bge",
+   "kb": "medicine",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 26.15,
+   "queries": 13,
+   "recall": 0.0,
+   "recall_finished": 0.0,
+   "retrievals_per_query": 1.54,
+   "rewrite_kinds": {
+    "swap": 20,
+    "unrelated": 28
+   },
+   "seconds_per_query": 0.0994,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 11.54,
+   "work_per_query": 2901.8
+  },
+  {
+   "exact_rate": 0.2857,
+   "expansions_per_query": 3.14,
+   "f1": 0.575,
+   "false_rewrite_rate": 0.625,
+   "finished_rate": 1.0,
+   "judge": "cosine-bge",
+   "kb": "work",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 53.43,
+   "queries": 14,
+   "recall": 0.4035,
+   "recall_finished": 0.4035,
+   "retrievals_per_query": 3.14,
+   "rewrite_kinds": {
+    "swap": 128,
+    "true": 96,
+    "unrelated": 32
+   },
+   "seconds_per_query": 0.0608,
+   "strategy": "depth-bounded",
+   "tables_per_query": 0.0,
+   "work_per_query": 107361.4
+  },
+  {
+   "exact_rate": 0.2857,
+   "expansions_per_query": 3.14,
+   "f1": 0.575,
+   "false_rewrite_rate": 0.625,
+   "finished_rate": 1.0,
+   "judge": "cosine-bge",
+   "kb": "work",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 53.43,
+   "queries": 14,
+   "recall": 0.4035,
+   "recall_finished": 0.4035,
+   "retrievals_per_query": 3.14,
+   "rewrite_kinds": {
+    "swap": 128,
+    "true": 96,
+    "unrelated": 32
+   },
+   "seconds_per_query": 0.1017,
+   "strategy": "depth-tabled",
+   "tables_per_query": 18.86,
+   "work_per_query": 5171.0
+  },
+  {
+   "exact_rate": 0.2857,
+   "expansions_per_query": 3.14,
+   "f1": 0.575,
+   "false_rewrite_rate": 0.625,
+   "finished_rate": 1.0,
+   "judge": "cosine-bge",
+   "kb": "work",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 53.43,
+   "queries": 14,
+   "recall": 0.4035,
+   "recall_finished": 0.4035,
+   "retrievals_per_query": 3.14,
+   "rewrite_kinds": {
+    "swap": 128,
+    "true": 96,
+    "unrelated": 32
+   },
+   "seconds_per_query": 0.1043,
+   "strategy": "eager-worklist",
+   "tables_per_query": 7.14,
+   "work_per_query": 3927.6
+  },
+  {
+   "exact_rate": 0.0,
+   "expansions_per_query": 0.0,
+   "f1": 0.0,
+   "false_rewrite_rate": 0.0,
+   "finished_rate": 1.0,
+   "judge": "cosine-bge",
+   "kb": "work",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 0.0,
+   "queries": 14,
+   "recall": 0.0,
+   "recall_finished": 0.0,
+   "retrievals_per_query": 0.0,
+   "rewrite_kinds": {},
+   "seconds_per_query": 0.0816,
+   "strategy": "exact",
+   "tables_per_query": 1.43,
+   "work_per_query": 1526.1
+  },
+  {
+   "exact_rate": 0.2857,
+   "expansions_per_query": 3.14,
+   "f1": 0.575,
+   "false_rewrite_rate": 0.625,
+   "finished_rate": 1.0,
+   "judge": "cosine-bge",
+   "kb": "work",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 53.43,
+   "queries": 14,
+   "recall": 0.4035,
+   "recall_finished": 0.4035,
+   "retrievals_per_query": 3.14,
+   "rewrite_kinds": {
+    "swap": 128,
+    "true": 96,
+    "unrelated": 32
+   },
+   "seconds_per_query": 0.0828,
+   "strategy": "lazy-tabled",
+   "tables_per_query": 7.14,
+   "work_per_query": 4442.0
+  },
+  {
+   "exact_rate": 0.2857,
+   "expansions_per_query": 3.14,
+   "f1": 0.575,
+   "false_rewrite_rate": 0.625,
+   "finished_rate": 1.0,
+   "judge": "cosine-bge",
+   "kb": "work",
+   "mode": "cold",
+   "precision": 1.0,
+   "precision_finished": 1.0,
+   "proposals_per_query": 53.43,
+   "queries": 14,
+   "recall": 0.4035,
+   "recall_finished": 0.4035,
+   "retrievals_per_query": 3.14,
+   "rewrite_kinds": {
+    "swap": 128,
+    "true": 96,
+    "unrelated": 32
+   },
+   "seconds_per_query": 0.086,
+   "strategy": "rewrite-depth-tabled",
+   "tables_per_query": 20.43,
+   "work_per_query": 5445.6
+  }
+ ],
+ "budget_work": 500000,
+ "discovery": [
+  {
+   "admitted": 133,
+   "judge": "cosine-bge",
+   "judge_computed": 442,
+   "judge_usage": {
+    "calls": 1,
+    "encoded": 52,
+    "pairs": 442
+   },
+   "kb": "family",
+   "kinds": {
+    "reversed": 20,
+    "swap": 41,
+    "trap": 6,
+    "true": 39,
+    "unrelated": 27
+   },
+   "precision": 0.2932330827067669,
+   "recall": 0.5492957746478874,
+   "untabled_prediction": {
+    "loops": 17
+   }
+  },
+  {
+   "admitted": 71,
+   "judge": "cosine-bge",
+   "judge_computed": 323,
+   "judge_usage": {
+    "calls": 2,
+    "encoded": 90,
+    "pairs": 765
+   },
+   "kb": "work",
+   "kinds": {
+    "reversed": 1,
+    "swap": 39,
+    "true": 26,
+    "unrelated": 5
+   },
+   "precision": 0.36619718309859156,
+   "recall": 0.4126984126984127,
+   "untabled_prediction": {
+    "loops": 14
+   }
+  },
+  {
+   "admitted": 29,
+   "judge": "cosine-bge",
+   "judge_computed": 255,
+   "judge_usage": {
+    "calls": 3,
+    "encoded": 120,
+    "pairs": 1020
+   },
+   "kb": "geography",
+   "kinds": {
+    "swap": 11,
+    "trap": 5,
+    "true": 10,
+    "unrelated": 3
+   },
+   "precision": 0.3448275862068966,
+   "recall": 0.136986301369863,
+   "untabled_prediction": {
+    "loops": 14
+   }
+  },
+  {
+   "admitted": 21,
+   "judge": "cosine-bge",
+   "judge_computed": 255,
+   "judge_usage": {
+    "calls": 4,
+    "encoded": 150,
+    "pairs": 1275
+   },
+   "kb": "medicine",
+   "kinds": {
+    "reversed": 1,
+    "swap": 13,
+    "true": 3,
+    "unrelated": 4
+   },
+   "precision": 0.14285714285714285,
+   "recall": 0.058823529411764705,
+   "untabled_prediction": {
+    "loops": 13
+   }
+  }
+ ],
+ "engine": "pymetta",
+ "judges": [
+  "cosine-bge"
+ ],
+ "k": 8,
+ "kbs": [
+  "family",
+  "work",
+  "geography",
+  "medicine"
+ ],
+ "modes": [
+  "cold"
+ ],
+ "retrieval_recall": [
+  {
+   "closure_pairs": 68,
+   "k": 8,
+   "kb": "family",
+   "recall": 0.7794117647058824,
+   "retrieved": 53
+  },
+  {
+   "closure_pairs": 62,
+   "k": 8,
+   "kb": "work",
+   "recall": 0.8870967741935484,
+   "retrieved": 55
+  },
+  {
+   "closure_pairs": 68,
+   "k": 8,
+   "kb": "geography",
+   "recall": 0.7058823529411765,
+   "retrieved": 48
+  },
+  {
+   "closure_pairs": 49,
+   "k": 8,
+   "kb": "medicine",
+   "recall": 0.6938775510204082,
+   "retrieved": 34
+  }
+ ],
+ "retriever": "BAAI/bge-small-en-v1.5",
+ "seconds": 1579.1,
+ "sweep": [
+  {
+   "curve": [
+    {
+     "f1": 0.1818,
+     "finished": 0.069,
+     "precision": 0.7419,
+     "recall": 0.1036,
+     "threshold": 0.9301918745040894
+    },
+    {
+     "f1": 0.2725,
+     "finished": 0.4655,
+     "precision": 0.2963,
+     "recall": 0.2523,
+     "threshold": 0.9370138645172119
+    },
+    {
+     "f1": 0.2928,
+     "finished": 0.6379,
+     "precision": 0.3786,
+     "recall": 0.2387,
+     "threshold": 0.9471498429775238
+    },
+    {
+     "f1": 0.4041,
+     "finished": 0.8966,
+     "precision": 0.4756,
+     "recall": 0.3514,
+     "threshold": 0.9569966495037079
+    },
+    {
+     "f1": 0.4041,
+     "finished": 0.8966,
+     "precision": 0.4756,
+     "recall": 0.3514,
+     "threshold": 0.9571969956159592
+    },
+    {
+     "f1": 0.4,
+     "finished": 0.8966,
+     "precision": 0.6111,
+     "recall": 0.2973,
+     "threshold": 0.9653500914573669
+    },
+    {
+     "f1": 0.2372,
+     "finished": 0.931,
+     "precision": 0.9677,
+     "recall": 0.1351,
+     "threshold": 0.9713888168334961
+    },
+    {
+     "f1": 0.094,
+     "finished": 0.931,
+     "precision": 0.9167,
+     "recall": 0.0495,
+     "threshold": 0.9778902530670166
+    },
+    {
+     "f1": 0.0352,
+     "finished": 1.0,
+     "precision": 0.8,
+     "recall": 0.018,
+     "threshold": 0.9846446216106415
+    },
+    {
+     "f1": 0.0352,
+     "finished": 1.0,
+     "precision": 0.8,
+     "recall": 0.018,
+     "threshold": 0.9865418672561646
+    },
+    {
+     "f1": 0.0354,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.018,
+     "threshold": 0.9876309633255005
+    },
+    {
+     "f1": 0.0354,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.018,
+     "threshold": 0.9888157248497009
+    },
+    {
+     "f1": 0.0354,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.018,
+     "threshold": 0.9898239970207214
+    },
+    {
+     "f1": 0.0354,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.018,
+     "threshold": 0.9914029240608215
+    }
+   ],
+   "default_threshold": 0.9571969956159592,
+   "f1_default_pooled": 0.4041,
+   "f1_held_out_pooled": 0.2008,
+   "finished_held_out_pooled": 0.6379,
+   "held_out": [
+    {
+     "f1_at_default": 0.5248,
+     "f1_held_out": 0.0,
+     "finished_held_out": 0,
+     "kb": "family",
+     "threshold": 0.9471498429775238
+    },
+    {
+     "f1_at_default": 0.575,
+     "f1_held_out": 0.575,
+     "finished_held_out": 14,
+     "kb": "work",
+     "threshold": 0.9569966495037079
+    },
+    {
+     "f1_at_default": 0.058,
+     "f1_held_out": 0.058,
+     "finished_held_out": 10,
+     "kb": "geography",
+     "threshold": 0.9653500914573669
+    },
+    {
+     "f1_at_default": 0.0,
+     "f1_held_out": 0.0,
+     "finished_held_out": 13,
+     "kb": "medicine",
+     "threshold": 0.9653500914573669
+    }
+   ],
+   "judge": "cosine-bge",
+   "precision_held_out_pooled": 0.9259,
+   "recall_held_out_pooled": 0.1126,
+   "strategy": "lazy-tabled"
+  },
+  {
+   "curve": [
+    {
+     "f1": 0.3904,
+     "finished": 0.8793,
+     "precision": 0.35,
+     "recall": 0.4414,
+     "threshold": 0.9301918745040894
+    },
+    {
+     "f1": 0.4816,
+     "finished": 0.9138,
+     "precision": 0.4644,
+     "recall": 0.5,
+     "threshold": 0.9370138645172119
+    },
+    {
+     "f1": 0.4793,
+     "finished": 0.931,
+     "precision": 0.4427,
+     "recall": 0.5225,
+     "threshold": 0.9471498429775238
+    },
+    {
+     "f1": 0.4848,
+     "finished": 0.9655,
+     "precision": 0.5517,
+     "recall": 0.4324,
+     "threshold": 0.9569966495037079
+    },
+    {
+     "f1": 0.4848,
+     "finished": 0.9655,
+     "precision": 0.5517,
+     "recall": 0.4324,
+     "threshold": 0.9571969956159592
+    },
+    {
+     "f1": 0.4775,
+     "finished": 1.0,
+     "precision": 0.6343,
+     "recall": 0.3829,
+     "threshold": 0.9653500914573669
+    },
+    {
+     "f1": 0.3235,
+     "finished": 1.0,
+     "precision": 0.88,
+     "recall": 0.1982,
+     "threshold": 0.9713888168334961
+    },
+    {
+     "f1": 0.1796,
+     "finished": 1.0,
+     "precision": 0.9565,
+     "recall": 0.0991,
+     "threshold": 0.9778902530670166
+    },
+    {
+     "f1": 0.0352,
+     "finished": 1.0,
+     "precision": 0.8,
+     "recall": 0.018,
+     "threshold": 0.9846446216106415
+    },
+    {
+     "f1": 0.0352,
+     "finished": 1.0,
+     "precision": 0.8,
+     "recall": 0.018,
+     "threshold": 0.9865418672561646
+    },
+    {
+     "f1": 0.0354,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.018,
+     "threshold": 0.9876309633255005
+    },
+    {
+     "f1": 0.0354,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.018,
+     "threshold": 0.9888157248497009
+    },
+    {
+     "f1": 0.0354,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.018,
+     "threshold": 0.9898239970207214
+    },
+    {
+     "f1": 0.0354,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.018,
+     "threshold": 0.9914029240608215
+    }
+   ],
+   "default_threshold": 0.9571969956159592,
+   "f1_default_pooled": 0.4848,
+   "f1_held_out_pooled": 0.3494,
+   "finished_held_out_pooled": 0.9138,
+   "held_out": [
+    {
+     "f1_at_default": 0.5907,
+     "f1_held_out": 0.2946,
+     "finished_held_out": 12,
+     "kb": "family",
+     "threshold": 0.9370138645172119
+    },
+    {
+     "f1_at_default": 0.575,
+     "f1_held_out": 0.575,
+     "finished_held_out": 14,
+     "kb": "work",
+     "threshold": 0.9569966495037079
+    },
+    {
+     "f1_at_default": 0.3636,
+     "f1_held_out": 0.3636,
+     "finished_held_out": 14,
+     "kb": "geography",
+     "threshold": 0.9569966495037079
+    },
+    {
+     "f1_at_default": 0.0,
+     "f1_held_out": 0.0,
+     "finished_held_out": 13,
+     "kb": "medicine",
+     "threshold": 0.9569966495037079
+    }
+   ],
+   "judge": "cosine-bge",
+   "precision_held_out_pooled": 0.5273,
+   "recall_held_out_pooled": 0.2613,
+   "strategy": "depth-bounded"
+  },
+  {
+   "curve": [
+    {
+     "f1": 0.5104,
+     "finished": 1.0,
+     "precision": 0.3817,
+     "recall": 0.7703,
+     "threshold": 0.9301918745040894
+    },
+    {
+     "f1": 0.5176,
+     "finished": 1.0,
+     "precision": 0.4129,
+     "recall": 0.6937,
+     "threshold": 0.9370138645172119
+    },
+    {
+     "f1": 0.5,
+     "finished": 1.0,
+     "precision": 0.4388,
+     "recall": 0.5811,
+     "threshold": 0.9471498429775238
+    },
+    {
+     "f1": 0.4938,
+     "finished": 1.0,
+     "precision": 0.5464,
+     "recall": 0.4505,
+     "threshold": 0.9569966495037079
+    },
+    {
+     "f1": 0.4938,
+     "finished": 1.0,
+     "precision": 0.5464,
+     "recall": 0.4505,
+     "threshold": 0.9571969956159592
+    },
+    {
+     "f1": 0.4775,
+     "finished": 1.0,
+     "precision": 0.6343,
+     "recall": 0.3829,
+     "threshold": 0.9653500914573669
+    },
+    {
+     "f1": 0.3235,
+     "finished": 1.0,
+     "precision": 0.88,
+     "recall": 0.1982,
+     "threshold": 0.9713888168334961
+    },
+    {
+     "f1": 0.1796,
+     "finished": 1.0,
+     "precision": 0.9565,
+     "recall": 0.0991,
+     "threshold": 0.9778902530670166
+    },
+    {
+     "f1": 0.0352,
+     "finished": 1.0,
+     "precision": 0.8,
+     "recall": 0.018,
+     "threshold": 0.9846446216106415
+    },
+    {
+     "f1": 0.0352,
+     "finished": 1.0,
+     "precision": 0.8,
+     "recall": 0.018,
+     "threshold": 0.9865418672561646
+    },
+    {
+     "f1": 0.0354,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.018,
+     "threshold": 0.9876309633255005
+    },
+    {
+     "f1": 0.0354,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.018,
+     "threshold": 0.9888157248497009
+    },
+    {
+     "f1": 0.0354,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.018,
+     "threshold": 0.9898239970207214
+    },
+    {
+     "f1": 0.0354,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.018,
+     "threshold": 0.9914029240608215
+    }
+   ],
+   "default_threshold": 0.9571969956159592,
+   "f1_default_pooled": 0.4938,
+   "f1_held_out_pooled": 0.4469,
+   "finished_held_out_pooled": 1.0,
+   "held_out": [
+    {
+     "f1_at_default": 0.604,
+     "f1_held_out": 0.4715,
+     "finished_held_out": 17,
+     "kb": "family",
+     "threshold": 0.9370138645172119
+    },
+    {
+     "f1_at_default": 0.575,
+     "f1_held_out": 0.55,
+     "finished_held_out": 14,
+     "kb": "work",
+     "threshold": 0.9301918745040894
+    },
+    {
+     "f1_at_default": 0.3636,
+     "f1_held_out": 0.3636,
+     "finished_held_out": 14,
+     "kb": "geography",
+     "threshold": 0.9569966495037079
+    },
+    {
+     "f1_at_default": 0.0,
+     "f1_held_out": 0.0,
+     "finished_held_out": 13,
+     "kb": "medicine",
+     "threshold": 0.9569966495037079
+    }
+   ],
+   "judge": "cosine-bge",
+   "precision_held_out_pooled": 0.3765,
+   "recall_held_out_pooled": 0.5495,
+   "strategy": "depth-tabled"
+  },
+  {
+   "curve": [
+    {
+     "f1": 0.3111,
+     "finished": 0.6207,
+     "precision": 0.2318,
+     "recall": 0.473,
+     "threshold": 0.9301918745040894
+    },
+    {
+     "f1": 0.3165,
+     "finished": 0.7759,
+     "precision": 0.2326,
+     "recall": 0.4955,
+     "threshold": 0.9370138645172119
+    },
+    {
+     "f1": 0.3921,
+     "finished": 0.8276,
+     "precision": 0.3498,
+     "recall": 0.4459,
+     "threshold": 0.9471498429775238
+    },
+    {
+     "f1": 0.4136,
+     "finished": 0.9138,
+     "precision": 0.4938,
+     "recall": 0.3559,
+     "threshold": 0.9569966495037079
+    },
+    {
+     "f1": 0.4136,
+     "finished": 0.9138,
+     "precision": 0.4938,
+     "recall": 0.3559,
+     "threshold": 0.9571969956159592
+    },
+    {
+     "f1": 0.4036,
+     "finished": 0.9138,
+     "precision": 0.6091,
+     "recall": 0.3018,
+     "threshold": 0.9653500914573669
+    },
+    {
+     "f1": 0.2431,
+     "finished": 0.9483,
+     "precision": 0.9394,
+     "recall": 0.1396,
+     "threshold": 0.9713888168334961
+    },
+    {
+     "f1": 0.1796,
+     "finished": 1.0,
+     "precision": 0.9565,
+     "recall": 0.0991,
+     "threshold": 0.9778902530670166
+    },
+    {
+     "f1": 0.0352,
+     "finished": 1.0,
+     "precision": 0.8,
+     "recall": 0.018,
+     "threshold": 0.9846446216106415
+    },
+    {
+     "f1": 0.0352,
+     "finished": 1.0,
+     "precision": 0.8,
+     "recall": 0.018,
+     "threshold": 0.9865418672561646
+    },
+    {
+     "f1": 0.0354,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.018,
+     "threshold": 0.9876309633255005
+    },
+    {
+     "f1": 0.0354,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.018,
+     "threshold": 0.9888157248497009
+    },
+    {
+     "f1": 0.0354,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.018,
+     "threshold": 0.9898239970207214
+    },
+    {
+     "f1": 0.0354,
+     "finished": 1.0,
+     "precision": 1.0,
+     "recall": 0.018,
+     "threshold": 0.9914029240608215
+    }
+   ],
+   "default_threshold": 0.9571969956159592,
+   "f1_default_pooled": 0.4136,
+   "f1_held_out_pooled": 0.3547,
+   "finished_held_out_pooled": 0.8448,
+   "held_out": [
+    {
+     "f1_at_default": 0.5408,
+     "f1_held_out": 0.4182,
+     "finished_held_out": 11,
+     "kb": "family",
+     "threshold": 0.9471498429775238
+    },
+    {
+     "f1_at_default": 0.575,
+     "f1_held_out": 0.575,
+     "finished_held_out": 14,
+     "kb": "work",
+     "threshold": 0.9569966495037079
+    },
+    {
+     "f1_at_default": 0.0845,
+     "f1_held_out": 0.0845,
+     "finished_held_out": 11,
+     "kb": "geography",
+     "threshold": 0.9653500914573669
+    },
+    {
+     "f1_at_default": 0.0,
+     "f1_held_out": 0.0,
+     "finished_held_out": 13,
+     "kb": "medicine",
+     "threshold": 0.9569966495037079
+    }
+   ],
+   "judge": "cosine-bge",
+   "precision_held_out_pooled": 0.3913,
+   "recall_held_out_pooled": 0.3243,
+   "strategy": "rewrite-depth-tabled"
+  }
+ ]
+}

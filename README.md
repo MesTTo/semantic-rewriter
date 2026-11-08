@@ -135,14 +135,14 @@ The Jev judge's cached answers are not included either, so rerunning it needs a 
 
 ## What the experiment found
 
-The experiment ran eleven strategies with a perfect judge, and five of them with each of seven model judges, over four generated knowledge bases (75 predicates, 58 queries) on PyMeTTa:
+The experiment ran twelve strategies with a perfect judge, and six of them with each of seven model judges, over four generated knowledge bases (75 predicates, 58 queries) on PyMeTTa:
 
 - With tables and a per-predicate memo, every query terminated, on the benchmarks and on 400 generated catalogues per property; without tables, rewriting looped exactly when the query reached a cycle of rewrites.
 - Jev and the NLI cross-encoders tell which way an implication runs (direction accuracy 0.77 to 0.89 on two external pair sets); embedding similarity sits at chance.
 - Admission precision decides answer quality, so the judge's threshold has to be calibrated for answer F1, not for pair accuracy.
-- With an imperfect judge, a depth bound of 3 limits how far a false rule spreads. At calibrated thresholds, tabled evaluation with the bound (`depth-tabled`) raised answer F1 for six of the seven judges, nli-deberta-large's from 0.68 to 0.91, and cost the perfect judge three answers that need more than three steps.
+- With an imperfect judge, a depth bound of 3 limits how far a false rule spreads. At calibrated thresholds, tabled evaluation bounded at three steps (`depth-tabled`) raised answer F1 for six of the seven judges, nli-deberta-large's from 0.68 to 0.91, and cost the perfect judge three answers that need more than three steps. Bounding three rewrites alone (`rewrite-depth-tabled`) keeps those answers and gave Jev its best F1, 0.92, but scored below the step bound with every other judge.
 
-RESULTS.md has every number, the method and the eight PyMeTTa defects found on the way, five of them with a script under `repros/` that reproduces them.
+RESULTS.md has every number, the method and the eleven PyMeTTa defects found on the way, nine of them with a script under `repros/` that reproduces them.
 
 ## Guarantees and limits
 
