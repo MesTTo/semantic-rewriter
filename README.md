@@ -46,7 +46,7 @@ rewrites admitted (14):
 ok: 3 answers, 63 work, 78 judge questions, 0.65 s
 ```
 
-Every answer comes with its derivation, and each step names the rule or the admitted rewrite it used. The third answer is wrong: a legal guardian need not be a parent, and at this threshold the judge admits `guardian ⇒ parent` along with other false rewrites such as `child_of(y, x) ⇒ mother(x, y)`. Raising the threshold to 0.995, the value that maximised answer F1 when calibrated on held-out knowledge bases in the experiment, leaves six rewrites, all true, and the answers alice and bob:
+Every answer comes with its derivation, and each step names the rule or the admitted rewrite it used. The third answer is wrong: a legal guardian need not be a parent, and at this threshold the judge admits `guardian ⇒ parent` along with other false rewrites such as `child_of(y, x) ⇒ mother(x, y)`. Raising the threshold to 0.995, which calibration for answer F1 chose for lazy-tabled evaluation on three of the experiment's four held-out benchmarks, leaves six rewrites, all true, and the answers alice and bob:
 
 ```
 $ semrewrite ask examples/parent_of_tom.kb "parent(X, tom)" --judge nli-deberta-large --retriever all --threshold 0.995
