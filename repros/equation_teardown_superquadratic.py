@@ -4,9 +4,9 @@ one function when a context closes, against near nothing for the same facts held
 Run: .venv/bin/python repros/equation_teardown_superquadratic.py
 For n = 1,250, 2,500 and 5,000, a fresh context loads n random ground equations (= (fact p a b) True) of one function
 and is closed, the close timed; then the same n facts are loaded as atoms (fact p a b) and the context closed.
-Expected: closing takes time linear in n either way. Observed on a Ryzen 9 9950X under load, over two runs: the
-equations took 0.49 s to drop at n = 1,250, 2.1 to 2.7 s at 2,500, 10.9 to 18.8 s at 5,000 and, in the first run,
-105.9 s at 10,000, so doubling n multiplied the time by 4 to 9; Space.clear() on 5,000 of them took 23.3 s, so
+Expected: closing takes time linear in n either way. Observed on a Ryzen 9 9950X under load, over three runs: the
+equations took 0.49 to 0.58 s to drop at n = 1,250, 1.9 to 2.7 s at 2,500, 10.9 to 18.8 s at 5,000 and, in the first
+run, 105.9 s at 10,000, so doubling n multiplied the time by 3 to 9; Space.clear() on 5,000 of them took 23.3 s, so
 emptying the space first does not avoid it. The atoms took 0.00 to 0.06 s.
 """
 import random
