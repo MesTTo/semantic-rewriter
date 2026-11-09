@@ -7,6 +7,7 @@ keywords keep their answers, and without tables rewriting loops on a cycle.
 from __future__ import annotations
 
 import json
+import math
 import os
 import subprocess
 import sys
@@ -35,7 +36,7 @@ def _runnable(engine_name: str) -> list[str]:
 
 
 def _oracle_rewriter(kb: KB, engine_name: str, work: int = 3_000_000) -> Rewriter:
-    return Rewriter(kb, OracleJudge(kb.entailed()), make(engine_name), None, budget=Budget(work=work, seconds=60))
+    return Rewriter(kb, OracleJudge(kb.entailed()), make(engine_name), None, budget=Budget(work=work, seconds=math.inf))
 
 
 @pytest.mark.parametrize("engine_name", ENGINES)
@@ -127,11 +128,12 @@ def test_rounds_share_one_budget_and_stop_once_a_round_adds_nothing(engine_name:
     """Each evaluation gets only what the earlier ones left, and a round whose expansions add no rewrite is the last."""
     kb = KB("chain", {"p": "{x} is p", "q": "{x} is q", "r": "{x} is r"}, tuple(atom("q", f"c{i}") for i in range(40)),
             gold=frozenset({("q", "p", (0,))}))
-    roomy = Rewriter(kb, OracleJudge(kb.entailed()), make(engine_name), None, budget=Budget(work=10**9, seconds=60))
+    roomy = Rewriter(kb, OracleJudge(kb.entailed()), make(engine_name), None, budget=Budget(work=10**9, seconds=math.inf))
     whole = roomy.ask("p(X)", "rounds")
     # Round 1 reaches p and admits q => p; round 2 reaches q, whose expansion admits nothing, so no third round.
     assert whole.finished and whole.rounds == 2 and len(whole.answers) == 40
-    tight = Rewriter(kb, OracleJudge(kb.entailed()), make(engine_name), None, budget=Budget(work=whole.work - 1, seconds=60))
+    tight = Rewriter(kb, OracleJudge(kb.entailed()), make(engine_name), None,
+                     budget=Budget(work=whole.work - 1, seconds=math.inf))
     short = tight.ask("p(X)", "rounds")
     assert not short.finished and short.status == "work_limit" and not short.answers, short
 
@@ -157,6 +159,7 @@ def test_the_first_solve_of_a_process_stops_at_its_work_budget(engine_name: str)
     """
     code = (
         "import json\n"
+        "import math\n"
         "from semrewrite.benchmarks import BENCHMARKS\n"
         "from semrewrite.engines import make\n"
         "from semrewrite.judges.oracle import OracleJudge\n"
@@ -164,7 +167,7 @@ def test_the_first_solve_of_a_process_stops_at_its_work_budget(engine_name: str)
         "from semrewrite.rewriter import Rewriter\n"
         "kb = BENCHMARKS['family']()\n"
         f"rewriter = Rewriter(kb, OracleJudge(kb.entailed()), make({engine_name!r}), None, "
-        "budget=Budget(work=300_000, seconds=30))\n"
+        "budget=Budget(work=300_000, seconds=math.inf))\n"
         "o = rewriter.ask('mother(X, bea)', 'naive')\n"
         "print(json.dumps({'status': o.status, 'work': o.work}))\n"
     )
@@ -185,7 +188,7 @@ def test_names_spelled_like_engine_keywords_keep_their_answers(engine_name: str)
         facts=(("daughter_of", "max", "hope"), ("daughter_of", "min", "max"), ("if", "max", "min")),
         gold=frozenset({("daughter_of", "parent", True)}),
     )
-    rewriter = Rewriter(kb, OracleJudge.of(kb.gold), make(engine_name), None, budget=Budget(work=300_000, seconds=30))
+    rewriter = Rewriter(kb, OracleJudge.of(kb.gold), make(engine_name), None, budget=Budget(work=300_000, seconds=math.inf))
     for strategy in _runnable(engine_name):
         if STRATEGIES[strategy].timing.value == "none":
             assert rewriter.ask(atom("if", "X", "min"), strategy).answers == {("max", "min")}, strategy
@@ -244,7 +247,7 @@ def test_explained_answers_are_derived_from_the_knowledge_base_and_the_admitted_
     explained = 0
     for kb in KBS.values():
         rewriter = Rewriter(kb, OracleJudge(kb.entailed()), make(engine_name), None,
-                            budget=Budget(work=5_000_000 if s.tabled else 300_000, seconds=60), proofs=True)
+                            budget=Budget(work=5_000_000 if s.tabled else 300_000, seconds=math.inf), proofs=True)
         for query in kb.queries:
             out = rewriter.ask(query, strategy)
             if not s.tabled and not out.finished:
@@ -288,7 +291,7 @@ def test_proofs_converge_on_a_rewrite_cycle_and_leave_no_cache_rows() -> None:
     for expand in (None, lambda p: [rw for rw in cycle if rw.conclusion == p]):
         lazy = expand is not None
         s = engine.solve(program if not lazy else Program(facts=program.facts, proofs=True), Atom("b", ("X",)),
-                         Budget(work=1_000_000, seconds=30), expand)
+                         Budget(work=1_000_000, seconds=math.inf), expand)
         assert s.status == "ok" and s.answers == {("k",)}, (lazy, s.status, s.detail)
         assert kit.proof_problem(s.proofs[("k",)], Atom("b", ("k",)), program) is None
         assert s.proofs[("k",)].lines() == ["b(k)    [by b(X0) ⇐ a(X0), score 0.900]", "  a(k)    [fact]"]

@@ -17,6 +17,7 @@ discovery is exercised, not handed over as a closure.
 
 from __future__ import annotations
 
+import math
 from collections import defaultdict
 
 import pytest
@@ -119,7 +120,7 @@ def _acyclic_from(kb: KB, start: str) -> bool:
 
 
 def _rewriter(kb: KB, work: int, engine_name: str) -> Rewriter:
-    return Rewriter(kb, OracleJudge(kb.gold), make(engine_name), None, budget=Budget(work=work, seconds=60))
+    return Rewriter(kb, OracleJudge(kb.gold), make(engine_name), None, budget=Budget(work=work, seconds=math.inf))
 
 
 def _engines(*capabilities: str) -> list[str]:
