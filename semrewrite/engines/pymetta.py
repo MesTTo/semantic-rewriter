@@ -17,14 +17,18 @@ and tables on; otherwise the meta one.
 
 With Program.proofs, every equation of either encoding answers a proof term
 where it answered True, and the engine reads each answer's term back as a Proof:
-a fact answers proof-fact, a rewrite step (proof-rewrite premise mapping proof)
-and a user rule step (proof-rule j v1 ... vk proof1 ... proofn), where j is the
-rule's index in the program and v1 ... vk bind the variables its body has and its
-head lacks. A rewrite cycle gives an answer infinitely many proof terms, so plain
-tables never complete there; each table is instead declared by a (cache name
-(plain private (lattice keep))) row whose join keeps the first proof it found,
-one per answer, and the cycle converges. A first proof is well founded: it was
-built from answers already in the tables. The proof-free source is unchanged.
+every proof is (pf n node), n its number of rule and rewrite steps, and its node
+is proof-fact for a fact, (proof-rewrite premise mapping proof) for a rewrite
+step, or (proof-rule j v1 ... vk proof1 ... proofn) for a step by the program's
+rule j, where v1 ... vk bind the variables its body has and its head lacks. A
+rewrite cycle gives an answer infinitely many proof terms, so plain tables never
+complete there; each table is instead declared by a (cache name (plain private
+(lattice keep))) row whose join keeps the proof with fewer steps, one per answer.
+Steps are counted in naturals, so the join stops improving and the cycle
+converges, at each answer's shortest derivation (Knuth's superior-function
+argument: a proof's size is 1 plus its premises' sizes); a proof that went round
+a cycle is never the shortest. An untabled run returns every derivation, and the
+shortest is kept. The proof-free source is unchanged.
 
 Names are data: every predicate is written as p<k>__<name> and every constant as
 c__<name> inside the engine and read back in the answers, so no knowledge-base
@@ -67,7 +71,33 @@ from semrewrite.protocols import Budget, Capabilities, Expander, Program, Proof,
 _SOLVES = itertools.count()
 
 # The heads of a proof term (module docstring).
-_FACT, _REWRITE, _RULE = "proof-fact", "proof-rewrite", "proof-rule"
+_PROOF, _FACT, _REWRITE, _RULE = "pf", "proof-fact", "proof-rewrite", "proof-rule"
+
+
+class _ProofTerms:
+    """How one solve that asks for proofs writes them: (pf n node) terms, its size and join functions named after
+    the solve's tag, and the let chains that bind a step's premises' proofs and count its steps."""
+
+    leaf = f"({_PROOF} 0 {_FACT})"
+
+    def __init__(self, tag: int) -> None:
+        self.keep, self.size = f"keep{tag}", f"size{tag}"
+
+    def definitions(self) -> list[str]:
+        """The size of a proof term, and the join a proof table keeps the proof with fewer steps by."""
+        return [f"(= ({self.size} ({_PROOF} $n $node)) $n)",
+                f"(= ({self.keep} $old $new) (if (< ({self.size} $new) ({self.size} $old)) $new $old))"]
+
+    def body(self, calls: list[str], node: str) -> str:
+        """The premises' calls as a left-to-right let chain binding each one's proof to $pf<i>, ending in the
+        step's proof: `node` over those proofs, with one step more than they have together."""
+        total = f"({self.size} $pf0)"
+        for i in range(1, len(calls)):
+            total = f"(+ {total} ({self.size} $pf{i}))"
+        text = f"(let $n (+ 1 {total}) ({_PROOF} $n {node}))"
+        for i in reversed(range(len(calls))):
+            text = f"(let $pf{i} {calls[i]} {text})"
+        return text
 
 
 def _mapping_symbol(m: tuple[int, ...]) -> str:
@@ -124,24 +154,24 @@ class PyMeTTaEngine:
         native = expand is None and program.depth == 0 and program.tabled
         # Evaluation always calls the query's predicate, even when a fact answers it before any fallback runs.
         reached: set[str] = {query.pred}
-        # With proofs, the join a table keeps its first proof by, and every rewrite a proof step can name, by key:
-        # the program's, then each one discovery yields.
-        keep = f"keep{tag}" if program.proofs else None
+        # With proofs, how this solve writes them, and every rewrite a proof step can name, by key: the program's,
+        # then each one discovery yields.
+        terms = _ProofTerms(tag) if program.proofs else None
         known: dict[Key, Rewrite] = {}
         for rw in program.rewrites:
             known.setdefault(rw.key, rw)
         if native:
-            source, tables = _native_source(program, query, known.values(), preds, consts, keep)
+            source, tables = _native_source(program, query, known.values(), preds, consts, terms)
             ops = {"reach": _reach(reached, preds)}
         else:
-            source, tables = _meta_source(program, query, preds, consts, tag, keep)
-            ops = {"impliers": _impliers(program, expand, reached, preds, known if keep else None)}
-        term = _query_term(query, preds, consts, meta=not native, depth=program.depth, tag=tag, proofs=keep is not None)
-        solution, result = self._run(source, program.tabled, _declarations(tables, keep), ops, term, budget, reached)
+            source, tables = _meta_source(program, query, preds, consts, tag, terms)
+            ops = {"impliers": _impliers(program, expand, reached, preds, known if terms else None)}
+        term = _query_term(query, preds, consts, meta=not native, depth=program.depth, tag=tag, proofs=terms is not None)
+        solution, result = self._run(source, program.tabled, _declarations(tables, terms), ops, term, budget, reached)
         if program.proofs:
             solution.proofs = {}
         if solution.status == "ok":
-            reader = _ProofReader(program, known, preds, consts) if keep else None
+            reader = _ProofReader(program, known, preds, consts) if terms else None
             _read_answers(solution, result, query, consts, reader)
         return solution
 
@@ -203,10 +233,10 @@ class PyMeTTaEngine:
 
 def _read_answers(solution: Solution, result: list, query: Atom, consts: _Names, reader: _ProofReader | None) -> None:
     """Fill the solution's answers from the evaluation's (ans a1 ... an) terms, each with its proof term last when
-    proofs were asked for, the first proof of each answer kept; anything else makes the run an error."""
+    proofs were asked for, the shortest proof of each answer kept; anything else makes the run an error."""
     width = query.arity + 1 + (reader is not None)
     answers: set[tuple[str, ...]] = set()
-    proofs: dict[tuple[str, ...], Proof] = {}
+    shortest: dict[tuple[str, ...], tuple[int, object]] = {}
     for atom in result:
         children: list[object] = list(atom.children) if isinstance(atom, Expression) else []
         if len(children) != width or str(children[0]) != "ans":
@@ -214,12 +244,20 @@ def _read_answers(solution: Solution, result: list, query: Atom, consts: _Names,
             return
         row = tuple(consts.undo(str(c)) for c in children[1:query.arity + 1])
         answers.add(row)
-        if reader is not None and row not in proofs:
-            try:
-                proofs[row] = reader.read(children[-1], Atom(query.pred, row))
-            except ValueError as e:
-                solution.status, solution.detail = "error", f"answer {atom}: {e}"
+        if reader is not None:
+            size = reader.size(children[-1])
+            if size is None:
+                solution.status, solution.detail = "error", f"answer {atom} has no proof term"
                 return
+            if row not in shortest or size < shortest[row][0]:
+                shortest[row] = (size, children[-1])
+    proofs: dict[tuple[str, ...], Proof] = {}
+    for row, (_, term) in shortest.items():
+        try:
+            proofs[row] = reader.read(term, Atom(query.pred, row)) if reader is not None else Proof(Atom(query.pred, row))
+        except ValueError as e:
+            solution.status, solution.detail = "error", f"the proof of {Atom(query.pred, row)}: {e}"
+            return
     solution.answers = answers
     if reader is not None:
         solution.proofs = proofs
@@ -233,6 +271,14 @@ class _ProofReader:
         self.free = [_free(rule) for rule in program.rules]
         self.known = known
         self.preds, self.consts = preds, consts
+
+    @staticmethod
+    def size(term: object) -> int | None:
+        """The step count a (pf n node) term carries, or None when the term is not one."""
+        parts = term.children if isinstance(term, Expression) else ()
+        if len(parts) == 3 and str(parts[0]) == _PROOF and str(parts[1]).isdigit():
+            return int(str(parts[1]))
+        return None
 
     # Time: O(n) for a term of n nodes, built bottom-up from an explicit stack, so no recursion limit bounds a proof.
     def read(self, term: object, atom: Atom) -> Proof:
@@ -255,9 +301,13 @@ class _ProofReader:
 
     def _step(self, term: object, atom: Atom) -> tuple[Rule | Rewrite | None, list[tuple[object, Atom]]]:
         """What derived `atom` at this node, and each premise's proof term with the atom it proves."""
-        if isinstance(term, Symbol) and str(term) == _FACT:
+        if not isinstance(term, Expression) or self.size(term) is None:
+            msg = f"unexpected proof term {term}"
+            raise ValueError(msg)
+        node = term.children[2]
+        if isinstance(node, Symbol) and str(node) == _FACT:
             return None, []
-        parts = term.children if isinstance(term, Expression) else ()
+        parts = node.children if isinstance(node, Expression) else ()
         head = str(parts[0]) if parts else ""
         if head == _REWRITE and len(parts) == 4:
             key = (self.preds.undo(str(parts[1])), atom.pred, _mapping_of(str(parts[2])))
@@ -276,7 +326,7 @@ class _ProofReader:
             binding.update((t, v) for t, v in zip(rule.head.args, atom.args, strict=True) if is_variable(t))
             body = [Atom(a.pred, tuple(binding[t] if is_variable(t) else t for t in a.args)) for a in rule.body]
             return rule, list(zip(parts[2 + len(free):], body, strict=True))
-        msg = f"unexpected proof term {term}"
+        msg = f"unexpected proof step {node}"
         raise ValueError(msg)
 
 
@@ -303,35 +353,27 @@ def _body(body: tuple[Atom, ...], call: Callable[[Atom], str]) -> str:
     return text
 
 
-def _proof_body(body: tuple[Atom, ...], call: Callable[[Atom], str], step: str) -> str:
-    """A body as a left-to-right let chain binding each call's proof to $pf<i>, ending in `step`, the head's proof."""
-    text = step
-    for i in reversed(range(len(body))):
-        text = f"(let $pf{i} {call(body[i])} {text})"
-    return text
-
-
 def _rule_step(j: int, rule: Rule) -> str:
-    """The proof term of a step by the program's rule j, over its free variables and its premises' proofs."""
+    """The node of a step by the program's rule j, over its free variables and its premises' proofs."""
     parts = [_RULE, str(j), *(f"${v}" for v in _free(rule)), *(f"$pf{i}" for i in range(len(rule.body)))]
     return f"({' '.join(parts)})"
 
 
-def _declarations(tables: list[tuple[str, int]], keep: str | None) -> tuple[list[str], list[str]]:
+def _declarations(tables: list[tuple[str, int]], terms: _ProofTerms | None) -> tuple[list[str], list[str]]:
     """The forms that table each (name, arity) once the source is loaded, and those that undo them after evaluation.
 
     Without proofs each is a plain tabled declaration, gone with its context. With proofs each name gets a cache
-    row in &metta whose lattice join keeps a table's first proof; &metta outlives the context, which would keep
+    row in &metta whose lattice join keeps a table's shortest proof; &metta outlives the context, which would keep
     every solve's rows, so each row is removed again.
     """
-    if keep is None:
+    if terms is None:
         return [f"!(tabled ({name} {' '.join(f'$X{i}' for i in range(n))}))" for name, n in tables], []
-    rows = [f"(cache {name} (plain private (lattice {keep})))" for name in dict.fromkeys(name for name, _ in tables)]
+    rows = [f"(cache {name} (plain private (lattice {terms.keep})))" for name in dict.fromkeys(n for n, _ in tables)]
     return [f"!(add-atom &metta {row})" for row in rows], [f"!(remove-atom &metta {row})" for row in rows]
 
 
 def _native_source(program: Program, query: Atom, rewrites: Iterable[Rewrite], preds: _Names, consts: _Names,
-                   keep: str | None) -> tuple[str, list[tuple[str, int]]]:
+                   terms: _ProofTerms | None) -> tuple[str, list[tuple[str, int]]]:
     """Facts, rewrite equations and rules as native equations, a reach fallback per predicate, and the tables.
 
     `rewrites` holds each of the program's rewrites once. Rewrites come before
@@ -343,23 +385,21 @@ def _native_source(program: Program, query: Atom, rewrites: Iterable[Rewrite], p
     without a clause calling an op, declaring 240 tabled functions that call
     each other took 2.6 s against 0.7 s with one, and a geography solve three
     times as long. Its calls are about half of a native solve's inferences.
-    With `keep`, the join proof tables keep their first proof by, every equation
-    answers its proof term instead of True.
+    With proof `terms`, every equation answers its proof term instead of True.
     """
-    proofs = keep is not None
-
     def call(a: Atom) -> str:
         return _call(a, preds, consts)
 
-    lines = [f"(= {call(f)} {_FACT if proofs else 'True'})" for f in program.facts]
+    lines = [f"(= {call(f)} {terms.leaf if terms else 'True'})" for f in program.facts]
     arity: dict[str, int] = {f.pred: f.arity for f in program.facts}
     for rw in rewrites:
         rule = rw.rule()
-        step = f"({_REWRITE} {preds(rw.premise)} {_mapping_symbol(rw.mapping)} $pf0)"
-        lines.append(f"(= {call(rule.head)} {_proof_body(rule.body, call, step) if proofs else _body(rule.body, call)})")
+        node = f"({_REWRITE} {preds(rw.premise)} {_mapping_symbol(rw.mapping)} $pf0)"
+        body = terms.body([call(a) for a in rule.body], node) if terms else _body(rule.body, call)
+        lines.append(f"(= {call(rule.head)} {body})")
         arity[rw.conclusion] = arity[rw.premise] = rw.arity
     for j, rule in enumerate(program.rules):
-        body = _proof_body(rule.body, call, _rule_step(j, rule)) if proofs else _body(rule.body, call)
+        body = terms.body([call(a) for a in rule.body], _rule_step(j, rule)) if terms else _body(rule.body, call)
         lines.append(f"(= {call(rule.head)} {body})")
         for a in (rule.head, *rule.body):
             arity[a.pred] = a.arity
@@ -367,13 +407,13 @@ def _native_source(program: Program, query: Atom, rewrites: Iterable[Rewrite], p
     for p, n in sorted(arity.items()):
         args = " ".join(f"$X{i}" for i in range(n))
         lines.append(f'(= ({preds(p)} {args}) (reach "{preds(p)}"))')
-    if proofs:
-        lines.append(f"(= ({keep} $old $new) $old)")
+    if terms:
+        lines += terms.definitions()
     return "\n".join(lines), [(preds(p), n) for p, n in sorted(arity.items())]
 
 
 def _meta_source(program: Program, query: Atom, preds: _Names, consts: _Names, tag: int,
-                 keep: str | None) -> tuple[str, list[tuple[str, int]]]:
+                 terms: _ProofTerms | None) -> tuple[str, list[tuple[str, int]]]:
     """The program as data under holds, with the discovery clause, a via clause per mapping, and tabling when asked.
 
     For each arity n present, holds takes the predicate and n arguments, plus
@@ -382,11 +422,10 @@ def _meta_source(program: Program, query: Atom, preds: _Names, consts: _Names, t
     alone, when a rule passes the depth left to its body unchanged; facts hold at
     any depth, and tabling then keys each table on the depth left too. holds, via
     and fact carry the solve's tag. Without proofs the tabling declarations are
-    in the source; with `keep`, holds answers proof terms and the table to
+    in the source; with proof `terms`, holds answers proof terms and the table to
     declare through a lattice row comes back beside the source.
     """
     holds_, via_, fact_ = f"holds{tag}", f"via{tag}", f"fact{tag}"
-    proofs = keep is not None
     depth = program.depth > 0
     d, dm = (" $d", " (- $d 1)") if depth else ("", "")
     # The depth left that a user rule's body goals get, and whether a rule needs depth left to fire.
@@ -400,15 +439,16 @@ def _meta_source(program: Program, query: Atom, preds: _Names, consts: _Names, t
         # A sentinel fact under the bare prefix defines fact for every arity holds calls, so an arity with
         # no facts answers nothing instead of raising an unknown-procedure error.
         lines.append(f"(= ({fact_} {preds('')} {' '.join(consts('') for _ in range(n))}) True)")
-        found = f"(let True ({fact_} $p {xs}) {_FACT})" if proofs else f"({fact_} $p {xs})"
+        found = f"(let True ({fact_} $p {xs}) {terms.leaf})" if terms else f"({fact_} $p {xs})"
         lines.append(f"(= ({holds_} $p {xs}{d}) {found})")
-        follow = f"(let $pf ({via_} $q $m {xs}{dm}) ({_REWRITE} $q $m $pf))" if proofs else f"({via_} $q $m {xs}{dm})"
+        via = f"({via_} $q $m {xs}{dm})"
+        follow = terms.body([via], f"({_REWRITE} $q $m $pf0)") if terms else via
         discover = f"(let (rw $q $m) (impliers $p) {follow})"
         lines.append(f"(= ({holds_} $p {xs}{d}) {f'(if (> $d 0) {discover} (empty))' if depth else discover})")
         for m in mappings(n):
             permuted = " ".join(f"$x{i}" for i in m)
             lines.append(f"(= ({via_} $q {_mapping_symbol(m)} {xs}{d}) ({holds_} $q {permuted}{d}))")
-        if program.tabled and not proofs:
+        if program.tabled and not terms:
             lines.append(f"!(tabled ({holds_} $p {xs}{d}))")
 
     def holds(a: Atom) -> str:
@@ -416,11 +456,11 @@ def _meta_source(program: Program, query: Atom, preds: _Names, consts: _Names, t
 
     for j, rule in enumerate(program.rules):
         head = f"({holds_} {preds(rule.head.pred)} {' '.join(_term(t, consts) for t in rule.head.args)}{d})"
-        body = _proof_body(rule.body, holds, _rule_step(j, rule)) if proofs else _body(rule.body, holds)
+        body = terms.body([holds(a) for a in rule.body], _rule_step(j, rule)) if terms else _body(rule.body, holds)
         lines.append(f"(= {head} {f'(if (> $d 0) {body} (empty))' if rule_counts else body})")
-    if proofs:
-        lines.append(f"(= ({keep} $old $new) $old)")
-    return "\n".join(lines), [(holds_, 0)] if proofs and program.tabled else []
+    if terms:
+        lines += terms.definitions()
+    return "\n".join(lines), [(holds_, 0)] if terms and program.tabled else []
 
 
 def _query_term(query: Atom, preds: _Names, consts: _Names, *, meta: bool, depth: int, tag: int, proofs: bool) -> str:
