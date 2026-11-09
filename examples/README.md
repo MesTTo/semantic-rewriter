@@ -202,7 +202,7 @@ ok: 0 answers, 25,390 work, 114 judge questions, 0.53 s
 ```
 <!-- END GENERATED: swanson-similarity -->
 
-Tables are what make the rewrites safe to chain. Jev admits "reduces" and "lowers" in both directions, so the rewrites form a cycle, and plain top-down evaluation without tables or a memo goes round it, asking the judge again at every turn, until the work budget stops it with no answer:
+Tables make the rewrites safe to chain. Jev admits "reduces" and "lowers" in both directions, so the rewrites form a cycle, and plain top-down evaluation without tables or a memo goes round it, asking the judge again at every turn, until the work budget stops it with no answer:
 
 <!-- BEGIN GENERATED: swanson-naive -->
 ```text
@@ -340,7 +340,7 @@ ok: 4 answers, 17,542 work, 168 judge questions, 0.04 s
 ```
 <!-- END GENERATED: family-ancestors -->
 
-Direction matters as much as meaning. Pam gave birth to Bob, so she is his mother. Jim is Pat's son, so Pat is his parent, but nothing says whether Pat is his mother or his father, and the second query rightly finds no answer:
+The rewriter also has to keep direction. Pam gave birth to Bob, so she is his mother. Jim is Pat's son, so Pat is his parent, but nothing says whether Pat is his mother or his father, and the second query rightly finds no answer:
 
 <!-- BEGIN GENERATED: family-mothers -->
 ```text
