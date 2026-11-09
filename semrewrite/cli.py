@@ -16,7 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from dataclasses import fields
+from dataclasses import fields, replace
 
 from semrewrite import formats
 from semrewrite.admission import Directional, Threshold
@@ -74,7 +74,8 @@ def cmd_ask(args: argparse.Namespace) -> int:
     kb = formats.load(args.kb)
     query = parse_atom(args.query)
     rw = _rewriter(args, kb)
-    out = rw.ask(query, args.strategy)
+    strategy = STRATEGIES[args.strategy]
+    out = rw.ask(query, strategy if args.depth is None else replace(strategy, depth=args.depth))
     if args.json:
         print(json.dumps({
             "query": str(query), "status": out.status, "detail": out.detail,
@@ -171,6 +172,8 @@ def parser() -> argparse.ArgumentParser:
     rewriting(ask)
     ask.add_argument("query", help='such as "parent(X, tom)"')
     ask.add_argument("--strategy", default="lazy-tabled", choices=sorted(STRATEGIES))
+    ask.add_argument("--depth", type=int, help="the most counted steps on any path, counted as the strategy counts "
+                     "them, in place of its own bound; 0 removes the bound")
     ask.add_argument("--explain", action="store_true", help="print each answer's derivation and the rewrites admitted")
     ask.add_argument("--json", action="store_true")
     ask.set_defaults(run=cmd_ask)

@@ -93,6 +93,20 @@ def test_command_line_honours_the_oracle_threshold_and_names_a_strategy_the_engi
     assert run.stderr.strip() == "semrewrite: engine python cannot run naive: it lacks untabled"
 
 
+def test_depth_replaces_the_strategy_s_bound_and_a_strategy_without_one_refuses_it() -> None:
+    """Under depth-tabled's own bound of 3 steps, grandparent's rule step and a rewrite under each parent call fit;
+    a bound of 1 leaves no answer, 0 removes the bound, and exact discovery takes no bound."""
+    base = ["ask", EXAMPLE, "grandparent(X, tom)", "--judge", "oracle", "--retriever", "all", "--engine", "python"]
+    answers = ["grandparent(carol, tom)", "grandparent(dave, tom)"]
+    assert cli([*base, "--strategy", "depth-tabled"]).stdout.splitlines() == answers
+    assert cli([*base, "--strategy", "depth-tabled", "--depth", "1"]).stdout.splitlines() == []
+    assert cli([*base, "--strategy", "depth-tabled", "--depth", "0"]).stdout.splitlines() == answers
+    run = cli([*base, "--strategy", "exact", "--depth", "1"])
+    assert run.returncode == 1 and "Traceback" not in run.stderr
+    assert run.stderr.strip() == ("semrewrite: strategy exact: only lazy discovery runs without a memo, without tables "
+                                  "or under a depth bound")
+
+
 @pytest.mark.parametrize("engine", ["python", "pymetta"])
 def test_explain_prints_each_answer_with_its_derivation(engine: str) -> None:
     """Under --explain each answer line is followed by its derivation, the rule step first, rewrite steps scored."""
