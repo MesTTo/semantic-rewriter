@@ -7,13 +7,19 @@ Two encodings carry the protocol. The native encoding compiles facts, user
 rules and every rewrite into ordinary equations, (= (mother alice tom) True)
 and (= (parent $X0 $X1) (child_of $X1 $X0)), and tables every defined
 predicate. The meta encoding keeps predicates as data, (holds parent $x0 $x1),
-and one clause asks the `impliers` op for rewrites of a goal's predicate while
+its facts are atoms in the space, (fact parent alice tom), read with match, and
+one clause asks the `impliers` op for rewrites of a goal's predicate while
 evaluation runs and follows each through a `via` clause per argument mapping;
 tabling `holds` makes that SLG resolution with semantic goal expansion, and an
 extra argument holding the depth left makes it depth-bounded: every rewrite step
 spends one, and so does every user rule step unless the bound counts rewrites
 alone. The native encoding runs when the program has no callback, no depth bound
-and tables on; otherwise the meta one.
+and tables on; otherwise the meta one. pymetta 0.9.4 takes time growing faster
+than quadratically in a function's equations to drop them when a context closes:
+10,000 ground equations of one function took 106 s against 0.06 s for the same
+facts as atoms (repros/equation_teardown_superquadratic.py), so the meta encoding,
+which would hold every fact in one function, holds them as atoms; the native one
+spreads them over a function per predicate.
 
 With Program.proofs, every equation of either encoding answers a proof term
 where it answered True, and the engine reads each answer's term back as a Proof:
@@ -35,7 +41,7 @@ c__<name> inside the engine and read back in the answers, so no knowledge-base
 name can collide with a pymetta builtin (pymetta 0.9.4 silently loses answers
 when a query binds a constant spelled like one, repros/builtin_named_constant_untabled.py),
 a Prolog core predicate such as is, or the encodings' own symbols. k counts the
-engine's solves, and the meta encoding's own functions are holds<k>, via<k> and
+engine's solves, and the meta encoding's own names are holds<k>, via<k> and
 fact<k>, so no solve defines a function name an earlier one used: pymetta 0.9.4
 makes every call of a name that earlier contexts tabled cost more, by a few
 inferences per such context (repros/tabled_contexts_raise_inference_cost.py),
@@ -45,11 +51,12 @@ pymetta 0.9.4 charges an op's calls differently by its parameter's
 annotation, so each op's annotation is the one measured cheapest where it is
 called. The discovery op takes a Symbol: annotated object, an inference limit
 reached in it arrives as an EngineError from the second context of a process
-on (repros/op_object_parameter_wraps_limit.py), and the first naive solve of a
-process ran to 16 to 23 million inferences against a budget of 300,000; with the
-oracle on family, lazy-tabled cost 17,761 inferences a query with Symbol,
-19,254 unannotated and 19,810 with object. The reach op takes object, which
-cost 174 inferences a table on a tabled path closure against 287 unannotated.
+on (repros/op_object_parameter_wraps_limit.py), and while the meta encoding held
+its facts as equations, the first naive solve of a process ran to 16 to 23
+million inferences against a budget of 300,000. With the oracle on family,
+lazy-tabled costs 19,253 inferences a query with Symbol, 20,746 unannotated and
+21,301 with object. The reach op takes object, which cost 174 inferences a table
+on a tabled path closure against 287 unannotated.
 """
 
 from __future__ import annotations
@@ -421,9 +428,10 @@ def _meta_source(program: Program, query: Atom, preds: _Names, consts: _Names, t
     one unit, and every user rule step too unless the bound counts rewrites
     alone, when a rule passes the depth left to its body unchanged; facts hold at
     any depth, and tabling then keys each table on the depth left too. holds, via
-    and fact carry the solve's tag. Without proofs the tabling declarations are
-    in the source; with proof `terms`, holds answers proof terms and the table to
-    declare through a lattice row comes back beside the source.
+    and fact carry the solve's tag; facts are fact atoms in the space, which a
+    match over an arity with none finds empty. Without proofs the tabling
+    declarations are in the source; with proof `terms`, holds answers proof terms
+    and the table to declare through a lattice row comes back beside the source.
     """
     holds_, via_, fact_ = f"holds{tag}", f"via{tag}", f"fact{tag}"
     depth = program.depth > 0
@@ -433,13 +441,10 @@ def _meta_source(program: Program, query: Atom, preds: _Names, consts: _Names, t
     body_left = dm if rule_counts else d
     arities = {query.arity} | {f.arity for f in program.facts} | {a.arity for r in program.rules for a in (r.head, *r.body)}
     arities |= {rw.arity for rw in program.rewrites}
-    lines = [f"(= ({fact_} {preds(f.pred)} {' '.join(consts(t) for t in f.args)}) True)" for f in program.facts]
+    lines = [f"({fact_} {preds(f.pred)} {' '.join(consts(t) for t in f.args)})" for f in program.facts]
     for n in sorted(arities):
         xs = " ".join(f"$x{i}" for i in range(n))
-        # A sentinel fact under the bare prefix defines fact for every arity holds calls, so an arity with
-        # no facts answers nothing instead of raising an unknown-procedure error.
-        lines.append(f"(= ({fact_} {preds('')} {' '.join(consts('') for _ in range(n))}) True)")
-        found = f"(let True ({fact_} $p {xs}) {terms.leaf})" if terms else f"({fact_} $p {xs})"
+        found = f"(match &self ({fact_} $p {xs}) {terms.leaf if terms else 'True'})"
         lines.append(f"(= ({holds_} $p {xs}{d}) {found})")
         via = f"({via_} $q $m {xs}{dm})"
         follow = terms.body([via], f"({_REWRITE} $q $m $pf0)") if terms else via
