@@ -85,7 +85,7 @@ semrewrite conformance --engine NAME                     # check an engine again
 semrewrite convert family.metta family.kb                # between the text, JSON and MeTTa formats
 ```
 
-`--judge oracle` uses the `gold` lines of the knowledge base instead of a model, which is how tests and the experiment separate engine behaviour from judge error. `--retriever all` judges every predicate of the right arity instead of the 8 nearest by gloss embedding, which suits small catalogues and loads no embedding model. The exit status is 0 when the query finished, 2 when a budget stopped it and 1 on an error.
+`--judge oracle` uses the `gold` lines of the knowledge base instead of a model, which is how tests and the experiment separate engine behaviour from judge error. `--retriever all` judges every predicate of the right arity instead of the 8 nearest by gloss embedding, which suits small catalogues and loads no embedding model. `--retriever judge` ranks every predicate with the `--prefilter` judge, the cross-encoder nli-deberta-large by default, and the admitting judge sees only the `--k` it ranks highest, which suits a catalogue too large to judge whole, such as the 1,790 Wikidata properties in [examples/README.md](examples/README.md). The exit status is 0 when the query finished, 2 when a budget stopped it and 1 on an error.
 
 ## Python
 

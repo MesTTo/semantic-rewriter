@@ -103,7 +103,7 @@ class Retriever(Protocol):
 
 It returns at most k candidate premise names from `among`, which never contains the goal itself, most similar first, with their similarity. It must be deterministic for the same inputs and must only return names of the goal's arity.
 
-Reference implementations: `EmbeddingRetriever` embeds each gloss with its placeholders filled by fixed letters and ranks by cosine similarity (BAAI/bge-small-en-v1.5 by default); `AllCandidates` returns every predicate of the same arity, which is right for small catalogues.
+Reference implementations: `EmbeddingRetriever` embeds each gloss with its placeholders filled by fixed letters and ranks by cosine similarity (BAAI/bge-small-en-v1.5 by default); `AllCandidates` returns every predicate of the same arity, which is right for small catalogues; `JudgeRetriever` scores every predicate of the same arity as a premise of the goal with a judge, under every argument mapping, and keeps the k best. With a local cross-encoder as its judge, `JudgeRetriever` is the first stage of a cascade for a large catalogue: it reads every predicate, and the admitting judge, which may be slower or paid for per question, sees only k of them. Embedding similarity is symmetric and lexical, which a large catalogue punishes. Among Wikidata's 1,790 entity-valued properties, bge-small ranked `author` 327th and `notable work` 794th as premises of "{x} created {y}", and ranked `child organization or unit` 916th for "{x} owns {y}"; nli-deberta-large ranked the first two 26th and 2nd.
 
 ### Judge
 

@@ -1,7 +1,8 @@
 """Purpose: tests of candidate retrieval with a stub embedding model: the k nearest
 predicates of the goal's arity come back nearest first, ties by name, each gloss is
 embedded once, a closed retriever serves only what it embedded, and AllCandidates
-proposes every predicate of the goal's arity.
+proposes every predicate of the goal's arity; and of JudgeRetriever with a stub judge,
+which ranks each candidate by its best score over the argument mappings.
 """
 
 from __future__ import annotations
@@ -12,7 +13,7 @@ import types
 import pytest
 
 from semrewrite.model import Predicate
-from semrewrite.retrieve import AllCandidates, EmbeddingRetriever
+from semrewrite.retrieve import AllCandidates, EmbeddingRetriever, JudgeRetriever
 
 
 class _Vector(tuple):
@@ -87,3 +88,30 @@ def test_a_closed_retriever_serves_only_what_it_embedded(retriever: EmbeddingRet
 def test_all_candidates_proposes_every_predicate_of_the_goal_arity() -> None:
     got = AllCandidates().top_k(CATALOGUE["mother"], CATALOGUE, 2)
     assert got == [(n, 1.0) for n in ("boss_of", "mum", "near", "parent")]
+
+
+# The stub judge's score for a premise under a mapping; any other proposal scores 0.
+_JUDGED = {("mum", (0, 1)): 0.9, ("parent", (1, 0)): 0.95, ("parent", (0, 1)): 0.1, ("near", (0, 1)): 0.3}
+
+
+class _StubJudge:
+    """Scores a proposal by its premise's name and mapping, and records how many it scored."""
+
+    name, threshold = "stub", 0.5
+
+    def __init__(self) -> None:
+        self.scored = 0
+
+    def score(self, proposals) -> list[float]:
+        self.scored += len(proposals)
+        return [_JUDGED.get((p.premise.name, p.mapping), 0.0) for p in proposals]
+
+
+def test_the_judge_retriever_ranks_by_the_best_mapping_and_scores_each_candidate_once() -> None:
+    judge = _StubJudge()
+    retriever = JudgeRetriever(judge)
+    got = retriever.top_k(CATALOGUE["mother"], CATALOGUE, 3)
+    # parent's swapped reading scores 0.95, so it outranks mum; tall has another arity and mother is the goal.
+    assert got == [("parent", 0.95), ("mum", 0.9), ("near", 0.3)]
+    assert judge.scored == 4 * 2
+    assert retriever.top_k(CATALOGUE["mother"], CATALOGUE, 1) == [("parent", 0.95)] and judge.scored == 8

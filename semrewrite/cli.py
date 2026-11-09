@@ -54,8 +54,12 @@ def _judge(args: argparse.Namespace, kb: KB):
 
 
 def _retriever(args: argparse.Namespace):
-    from semrewrite.retrieve import AllCandidates, EmbeddingRetriever
+    from semrewrite.retrieve import AllCandidates, EmbeddingRetriever, JudgeRetriever
 
+    if args.retriever == "judge":
+        from semrewrite.judges import make
+
+        return JudgeRetriever(make(args.prefilter))
     return AllCandidates() if args.retriever == "all" else EmbeddingRetriever()
 
 
@@ -154,7 +158,10 @@ def parser() -> argparse.ArgumentParser:
         p.add_argument("--judge", default="nli-deberta-large", help="judge name, or oracle to use the file's gold lines")
         p.add_argument("--threshold", type=float, help="override the judge's calibrated threshold")
         p.add_argument("--directional", type=float, metavar="SLACK", help="direction-aware admission with this slack")
-        p.add_argument("--retriever", choices=("embedding", "all"), default="embedding")
+        p.add_argument("--retriever", choices=("embedding", "all", "judge"), default="embedding",
+                       help="candidates by gloss embedding, every predicate, or ranked by the --prefilter judge")
+        p.add_argument("--prefilter", default="nli-deberta-large", metavar="JUDGE",
+                       help="the judge that ranks candidates for --retriever judge")
         p.add_argument("--k", type=int, default=8, help="candidates retrieved per expansion")
         p.add_argument("--engine", default="python", choices=sorted(ENGINES))
         p.add_argument("--work", type=int, default=2_000_000, help="work budget in the engine's unit")
