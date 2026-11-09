@@ -507,12 +507,12 @@ class PythonEngine:
             run.relevance()
             run.evaluate()
             answers = run.answers()
-            proofs = run.proofs(answers)
+            proofs = run.proofs(answers) if program.proofs else None
             run.clock("before returning")
         except _Limit as limit:
             return Solution(answers=set(), status=limit.status, work=run.work, seconds=run.elapsed(),
-                            tables=len(run.distance), reached=frozenset(run.distance), proofs={},
-                            detail=limit.detail)
+                            tables=len(run.distance), reached=frozenset(run.distance),
+                            proofs={} if program.proofs else None, detail=limit.detail)
         detail = (f"{run.rounds} rounds in {run.levels} levels derived {len(run.derived_by)} facts "
                   f"over {len(run.distance)} relevant predicates")
         return Solution(answers=answers, status="ok", work=run.work, seconds=run.elapsed(),

@@ -30,7 +30,8 @@ GENEROUS = Budget()
 
 
 def solve(program: Program, query: Atom, budget: Budget = GENEROUS, expand=None):
-    return ENGINE.solve(program, query, budget, expand)
+    """The engine's solve with proofs asked for, which every test reading them needs."""
+    return ENGINE.solve(replace(program, proofs=True), query, budget, expand)
 
 
 def height(proof: Proof) -> int:
@@ -130,9 +131,16 @@ def test_the_design_example() -> None:
     assert s.derivations == 3
     assert s.reached == {"parent", "mother", "dad", "child_of"} and s.tables == 4
     assert s.proofs[("erin", "tom")].lines() == [
-        "parent(erin, tom)    [by parent(X0, X1) ⇐ child_of(X1, X0)]",
+        "parent(erin, tom)    [by parent(X0, X1) ⇐ child_of(X1, X0), score 1.000]",
         "  child_of(tom, erin)    [fact]",
     ]
+
+
+def test_proofs_come_only_when_asked_for() -> None:
+    asked = ENGINE.solve(replace(FAMILY, proofs=True), Atom("parent", ("X", "tom")), GENEROUS)
+    unasked = ENGINE.solve(FAMILY, Atom("parent", ("X", "tom")), GENEROUS)
+    assert set(asked.proofs) == unasked.answers == asked.answers and unasked.proofs is None
+    assert unasked.work == asked.work
 
 
 @settings(max_examples=300, deadline=None)
@@ -392,7 +400,8 @@ def test_runs_repeat_exactly_across_hash_seeds() -> None:
         "facts = tuple(Atom(rng.choice(P), (rng.choice('abcde'), rng.choice('abcde'))) for _ in range(30))\n"
         "rws = tuple(Rewrite(c, p, rng.choice([(0, 1), (1, 0)])) for c in P for p in rng.sample(P, 4) if p != c)\n"
         "join = (Rule(Atom('q0', ('X', 'Z')), (Atom('q1', ('X', 'Y')), Atom('q2', ('Y', 'Z')))),)\n"
-        "s = PythonEngine().solve(Program(facts=facts, rules=join, rewrites=rws), Atom('q0', ('X', 'Y')), Budget())\n"
+        "s = PythonEngine().solve(Program(facts=facts, rules=join, rewrites=rws, proofs=True), Atom('q0', ('X', 'Y')),\n"
+        "                         Budget())\n"
         "print(s.work, len(s.answers))\n"
         "for answer in sorted(s.proofs):\n"
         "    print('\\n'.join(s.proofs[answer].lines()))\n"

@@ -1,6 +1,7 @@
 """Purpose: the PyMeTTa engine: evaluates semantic-rewriting programs on upstream
 pymetta (MeTTa on SWI-Prolog), with SLG tabling from lib_tabling, inference and
-time budgets, and the lazy discovery callback as a pymetta op.
+time budgets, the lazy discovery callback as a pymetta op, and a derivation of
+every answer when the program asks for proofs.
 
 Two encodings carry the protocol. The native encoding compiles facts, user
 rules and every rewrite into ordinary equations, (= (mother alice tom) True)
@@ -13,6 +14,17 @@ extra argument holding the depth left makes it depth-bounded: every rewrite step
 spends one, and so does every user rule step unless the bound counts rewrites
 alone. The native encoding runs when the program has no callback, no depth bound
 and tables on; otherwise the meta one.
+
+With Program.proofs, every equation of either encoding answers a proof term
+where it answered True, and the engine reads each answer's term back as a Proof:
+a fact answers proof-fact, a rewrite step (proof-rewrite premise mapping proof)
+and a user rule step (proof-rule j v1 ... vk proof1 ... proofn), where j is the
+rule's index in the program and v1 ... vk bind the variables its body has and its
+head lacks. A rewrite cycle gives an answer infinitely many proof terms, so plain
+tables never complete there; each table is instead declared by a (cache name
+(plain private (lattice keep))) row whose join keeps the first proof it found,
+one per answer, and the cycle converges. A first proof is well founded: it was
+built from answers already in the tables. The proof-free source is unchanged.
 
 Names are data: every predicate is written as p<k>__<name> and every constant as
 c__<name> inside the engine and read back in the answers, so no knowledge-base
@@ -42,17 +54,20 @@ import itertools
 import math
 import time
 from collections import defaultdict
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 
 from metta import Expression, MeTTa, S, Symbol, parse
 from metta.errors import EngineError, InferenceLimitError, TimeLimitError
 from metta.vocabularies import EffectClass
 
-from semrewrite.model import Atom, Rewrite, is_variable, mappings
-from semrewrite.protocols import Budget, Capabilities, Expander, Program, Solution
+from semrewrite.model import Atom, Key, Rewrite, Rule, is_variable, mappings
+from semrewrite.protocols import Budget, Capabilities, Expander, Program, Proof, Solution
 
 # The solves this process has run, which tag every function name a solve defines.
 _SOLVES = itertools.count()
+
+# The heads of a proof term (module docstring).
+_FACT, _REWRITE, _RULE = "proof-fact", "proof-rewrite", "proof-rule"
 
 
 def _mapping_symbol(m: tuple[int, ...]) -> str:
@@ -62,6 +77,11 @@ def _mapping_symbol(m: tuple[int, ...]) -> str:
     n! of them for arity n, the same growth as discovery's k·n! proposals.
     """
     return "m" + "_".join(map(str, m))
+
+
+def _mapping_of(symbol: str) -> tuple[int, ...]:
+    """The argument mapping _mapping_symbol named."""
+    return tuple(int(i) for i in symbol[1:].split("_")) if len(symbol) > 1 else ()
 
 
 class _Names:
@@ -89,7 +109,7 @@ class PyMeTTaEngine:
 
     name = "pymetta"
     capabilities = Capabilities(tabling=True, depth=True, rewrite_depth=True, lazy=True, untabled=True, reached=True,
-                                proofs=False)
+                                proofs=True)
 
     # -- the protocol ----------------------------------------------------------
 
@@ -97,58 +117,78 @@ class PyMeTTaEngine:
         if budget.work <= 0 or budget.seconds <= 0:
             # pymetta refuses non-positive limits, and a run with nothing to spend is already out of budget.
             status = "work_limit" if budget.work <= 0 else "time_limit"
-            return Solution(status=status, detail=f"budget {budget} leaves nothing to spend", reached=frozenset())
+            return Solution(status=status, detail=f"budget {budget} leaves nothing to spend", reached=frozenset(),
+                            proofs={} if program.proofs else None)
         tag = next(_SOLVES)
         preds, consts = _Names(f"p{tag}__"), _Names("c__")
         native = expand is None and program.depth == 0 and program.tabled
         # Evaluation always calls the query's predicate, even when a fact answers it before any fallback runs.
         reached: set[str] = {query.pred}
+        # With proofs, the join a table keeps its first proof by, and every rewrite a proof step can name, by key:
+        # the program's, then each one discovery yields.
+        keep = f"keep{tag}" if program.proofs else None
+        known: dict[Key, Rewrite] = {}
+        for rw in program.rewrites:
+            known.setdefault(rw.key, rw)
         if native:
-            source, tabled = _native_source(program, query, preds, consts)
-            term = _query_term(query, preds, consts, meta=False, depth=0, tag=tag)
+            source, tables = _native_source(program, query, known.values(), preds, consts, keep)
             ops = {"reach": _reach(reached, preds)}
         else:
-            source, tabled = _meta_source(program, query, preds, consts, tag), []
-            term = _query_term(query, preds, consts, meta=True, depth=program.depth, tag=tag)
-            ops = {"impliers": _impliers(program, expand, reached, preds)}
-        return self._run(source, tabled, ops, term, budget, query, consts, reached)
+            source, tables = _meta_source(program, query, preds, consts, tag, keep)
+            ops = {"impliers": _impliers(program, expand, reached, preds, known if keep else None)}
+        term = _query_term(query, preds, consts, meta=not native, depth=program.depth, tag=tag, proofs=keep is not None)
+        solution, result = self._run(source, program.tabled, _declarations(tables, keep), ops, term, budget, reached)
+        if program.proofs:
+            solution.proofs = {}
+        if solution.status == "ok":
+            reader = _ProofReader(program, known, preds, consts) if keep else None
+            _read_answers(solution, result, query, consts, reader)
+        return solution
 
     # -- evaluation ----------------------------------------------------------------
 
-    def _run(self, source: str, tabled: list[str], ops: dict[str, Callable[..., Iterator[Expression]]], term: str,
-             budget: Budget, query: Atom, consts: _Names, reached: set[str]) -> Solution:
+    def _run(self, source: str, tabling: bool, declarations: tuple[list[str], list[str]],
+             ops: dict[str, Callable[..., Iterator[Expression]]], term: str, budget: Budget,
+             reached: set[str]) -> tuple[Solution, list]:
+        """Load the source, declare its tables, evaluate the term within the budget, then undo the declarations
+        that outlive the context; the raw results come back beside the solution for the caller to read."""
         solution = Solution()
         result: list = []
+        declare, undo = declarations
         started = time.perf_counter()
         with MeTTa() as m:
             for name, fn in ops.items():
                 m.op(fn, name=name, effect=EffectClass.nondeterministicReadOnly)
-            if tabled or "!(tabled" in source:
+            if tabling:
                 m.self.run("!(import! (context-space) (library lib_tabling))")
             m.self.run(source)
-            for decl in tabled:
-                if m.self.run(decl) != [[True]]:
-                    msg = f"pymetta refused the tabling declaration {decl}"
-                    raise RuntimeError(msg)
-            with m.stats() as stats:
-                try:
-                    # pymetta takes None for no time limit; SWI overflows on an infinite timeout.
-                    timeout = None if math.isinf(budget.seconds) else budget.seconds
-                    result = m.eval(parse(term), inferences=budget.work, timeout=timeout)
-                except InferenceLimitError as e:
-                    solution.status, solution.detail = "work_limit", str(e)
-                except TimeLimitError as e:
-                    solution.status, solution.detail = "time_limit", str(e)
-                except EngineError as e:
-                    solution.status, solution.detail = "error", str(e)
-            # A limit reached inside a Python op can surface as a plain EngineError, so an engine error
-            # is read as a limit when the engine's own inference count or the elapsed time reached the budget.
-            if solution.status == "error" and stats.inferences >= budget.work:
-                solution.status = "work_limit"
-            elif solution.status == "error" and time.perf_counter() - started >= budget.seconds:
-                solution.status = "time_limit"
-            solution.work = stats.inferences
-            solution.tables = _table_count(m)
+            try:
+                for decl in declare:
+                    if m.self.run(decl) != [[True]]:
+                        msg = f"pymetta refused the tabling declaration {decl}"
+                        raise RuntimeError(msg)
+                with m.stats() as stats:
+                    try:
+                        # pymetta takes None for no time limit; SWI overflows on an infinite timeout.
+                        timeout = None if math.isinf(budget.seconds) else budget.seconds
+                        result = m.eval(parse(term), inferences=budget.work, timeout=timeout)
+                    except InferenceLimitError as e:
+                        solution.status, solution.detail = "work_limit", str(e)
+                    except TimeLimitError as e:
+                        solution.status, solution.detail = "time_limit", str(e)
+                    except EngineError as e:
+                        solution.status, solution.detail = "error", str(e)
+                # A limit reached inside a Python op can surface as a plain EngineError, so an engine error
+                # is read as a limit when the engine's own inference count or the elapsed time reached the budget.
+                if solution.status == "error" and stats.inferences >= budget.work:
+                    solution.status = "work_limit"
+                elif solution.status == "error" and time.perf_counter() - started >= budget.seconds:
+                    solution.status = "time_limit"
+                solution.work = stats.inferences
+                solution.tables = _table_count(m)
+            finally:
+                for form in undo:
+                    m.self.run(form)
         solution.seconds = time.perf_counter() - started
         # Budgets are hard: SWI checks its limits only now and then, so a run that finished past either
         # bound counts as stopped by it rather than answering for work its caller did not allow.
@@ -158,17 +198,93 @@ class PyMeTTaEngine:
             solution.status, solution.detail = "time_limit", f"finished after {solution.seconds:.3f} s, over {budget.seconds} s"
         solution.derivations = len(result)
         solution.reached = frozenset(reached)
-        if solution.status != "ok":
-            return solution
-        for atom in result:
-            children = atom.children if isinstance(atom, Expression) else ()
-            if len(children) == query.arity + 1 and str(children[0]) == "ans":
-                solution.answers.add(tuple(consts.undo(str(c)) for c in children[1:]))
-            else:
-                solution.status, solution.detail = "error", f"unexpected answer {atom}"
-                solution.answers = set()
-                break
-        return solution
+        return solution, result
+
+
+def _read_answers(solution: Solution, result: list, query: Atom, consts: _Names, reader: _ProofReader | None) -> None:
+    """Fill the solution's answers from the evaluation's (ans a1 ... an) terms, each with its proof term last when
+    proofs were asked for, the first proof of each answer kept; anything else makes the run an error."""
+    width = query.arity + 1 + (reader is not None)
+    answers: set[tuple[str, ...]] = set()
+    proofs: dict[tuple[str, ...], Proof] = {}
+    for atom in result:
+        children: list[object] = list(atom.children) if isinstance(atom, Expression) else []
+        if len(children) != width or str(children[0]) != "ans":
+            solution.status, solution.detail = "error", f"unexpected answer {atom}"
+            return
+        row = tuple(consts.undo(str(c)) for c in children[1:query.arity + 1])
+        answers.add(row)
+        if reader is not None and row not in proofs:
+            try:
+                proofs[row] = reader.read(children[-1], Atom(query.pred, row))
+            except ValueError as e:
+                solution.status, solution.detail = "error", f"answer {atom}: {e}"
+                return
+    solution.answers = answers
+    if reader is not None:
+        solution.proofs = proofs
+
+
+class _ProofReader:
+    """Reads the proof terms of either encoding back as Proof trees over the program's own rules and rewrites."""
+
+    def __init__(self, program: Program, known: dict[Key, Rewrite], preds: _Names, consts: _Names) -> None:
+        self.rules = program.rules
+        self.free = [_free(rule) for rule in program.rules]
+        self.known = known
+        self.preds, self.consts = preds, consts
+
+    # Time: O(n) for a term of n nodes, built bottom-up from an explicit stack, so no recursion limit bounds a proof.
+    def read(self, term: object, atom: Atom) -> Proof:
+        """The Proof that `term` gives of `atom`; ValueError when the term is no derivation of it."""
+        built: list[Proof] = []
+        # A pending node is (term, atom); a node whose premises are pending is (None, atom, step, premise count).
+        todo: list[tuple] = [(term, atom)]
+        while todo:
+            item = todo.pop()
+            if item[0] is None:
+                _, done, by, n = item
+                children = tuple(built[len(built) - n:])
+                del built[len(built) - n:]
+                built.append(Proof(done, by, children))
+                continue
+            by, premises = self._step(*item)
+            todo.append((None, item[1], by, len(premises)))
+            todo.extend(reversed(premises))
+        return built[0]
+
+    def _step(self, term: object, atom: Atom) -> tuple[Rule | Rewrite | None, list[tuple[object, Atom]]]:
+        """What derived `atom` at this node, and each premise's proof term with the atom it proves."""
+        if isinstance(term, Symbol) and str(term) == _FACT:
+            return None, []
+        parts = term.children if isinstance(term, Expression) else ()
+        head = str(parts[0]) if parts else ""
+        if head == _REWRITE and len(parts) == 4:
+            key = (self.preds.undo(str(parts[1])), atom.pred, _mapping_of(str(parts[2])))
+            rw = self.known.get(key)
+            if rw is None:
+                msg = f"a step names the rewrite {key}, which the solve never had"
+                raise ValueError(msg)
+            return rw, [(parts[3], Atom(rw.premise, tuple(atom.args[i] for i in rw.mapping)))]
+        if head == _RULE and len(parts) >= 2 and str(parts[1]).isdigit() and int(str(parts[1])) < len(self.rules):
+            j = int(str(parts[1]))
+            rule, free = self.rules[j], self.free[j]
+            if len(parts) != 2 + len(free) + len(rule.body):
+                msg = f"the step {term} doesn't fit rule {j}, {rule}"
+                raise ValueError(msg)
+            binding = dict(zip(free, (self.consts.undo(str(v)) for v in parts[2:2 + len(free)]), strict=True))
+            binding.update((t, v) for t, v in zip(rule.head.args, atom.args, strict=True) if is_variable(t))
+            body = [Atom(a.pred, tuple(binding[t] if is_variable(t) else t for t in a.args)) for a in rule.body]
+            return rule, list(zip(parts[2 + len(free):], body, strict=True))
+        msg = f"unexpected proof term {term}"
+        raise ValueError(msg)
+
+
+def _free(rule: Rule) -> tuple[str, ...]:
+    """The variables a rule's body binds and its head lacks, in order of first occurrence: what a proof-rule step
+    carries beside its premises' proofs, so each premise's atom can be rebuilt."""
+    head = rule.head.variables()
+    return tuple(dict.fromkeys(t for a in rule.body for t in a.args if is_variable(t) and t not in head))
 
 
 def _term(t: str, consts: _Names) -> str:
@@ -187,42 +303,77 @@ def _body(body: tuple[Atom, ...], call: Callable[[Atom], str]) -> str:
     return text
 
 
-def _native_source(program: Program, query: Atom, preds: _Names, consts: _Names) -> tuple[str, list[str]]:
-    """Facts, rewrite equations and rules as native equations, a reach fallback per predicate, and the tabling declarations.
+def _proof_body(body: tuple[Atom, ...], call: Callable[[Atom], str], step: str) -> str:
+    """A body as a left-to-right let chain binding each call's proof to $pf<i>, ending in `step`, the head's proof."""
+    text = step
+    for i in reversed(range(len(body))):
+        text = f"(let $pf{i} {call(body[i])} {text})"
+    return text
 
-    Rewrites come before user rules, so a rule body's call to a predicate only
-    rewrites define is compiled after that predicate exists. Every predicate
-    gets a fallback equation calling the reach op, which yields nothing but
-    records that evaluation called the predicate, for the rounds strategy. The
-    op call also keeps pymetta's tabling declarations linear in the number of
-    predicates: without a clause calling an op, declaring 240 tabled functions
-    that call each other took 2.6 s against 0.7 s with one, and a geography
-    solve three times as long. Its calls are about half of a native solve's
-    inferences.
+
+def _rule_step(j: int, rule: Rule) -> str:
+    """The proof term of a step by the program's rule j, over its free variables and its premises' proofs."""
+    parts = [_RULE, str(j), *(f"${v}" for v in _free(rule)), *(f"$pf{i}" for i in range(len(rule.body)))]
+    return f"({' '.join(parts)})"
+
+
+def _declarations(tables: list[tuple[str, int]], keep: str | None) -> tuple[list[str], list[str]]:
+    """The forms that table each (name, arity) once the source is loaded, and those that undo them after evaluation.
+
+    Without proofs each is a plain tabled declaration, gone with its context. With proofs each name gets a cache
+    row in &metta whose lattice join keeps a table's first proof; &metta outlives the context, which would keep
+    every solve's rows, so each row is removed again.
     """
-    lines = [f"(= {_call(f, preds, consts)} True)" for f in program.facts]
+    if keep is None:
+        return [f"!(tabled ({name} {' '.join(f'$X{i}' for i in range(n))}))" for name, n in tables], []
+    rows = [f"(cache {name} (plain private (lattice {keep})))" for name in dict.fromkeys(name for name, _ in tables)]
+    return [f"!(add-atom &metta {row})" for row in rows], [f"!(remove-atom &metta {row})" for row in rows]
+
+
+def _native_source(program: Program, query: Atom, rewrites: Iterable[Rewrite], preds: _Names, consts: _Names,
+                   keep: str | None) -> tuple[str, list[tuple[str, int]]]:
+    """Facts, rewrite equations and rules as native equations, a reach fallback per predicate, and the tables.
+
+    `rewrites` holds each of the program's rewrites once. Rewrites come before
+    user rules, so a rule body's call to a predicate only rewrites define is
+    compiled after that predicate exists. Every predicate gets a fallback
+    equation calling the reach op, which yields nothing but records that
+    evaluation called the predicate, for the rounds strategy. The op call also
+    keeps pymetta's tabling declarations linear in the number of predicates:
+    without a clause calling an op, declaring 240 tabled functions that call
+    each other took 2.6 s against 0.7 s with one, and a geography solve three
+    times as long. Its calls are about half of a native solve's inferences.
+    With `keep`, the join proof tables keep their first proof by, every equation
+    answers its proof term instead of True.
+    """
+    proofs = keep is not None
+
+    def call(a: Atom) -> str:
+        return _call(a, preds, consts)
+
+    lines = [f"(= {call(f)} {_FACT if proofs else 'True'})" for f in program.facts]
     arity: dict[str, int] = {f.pred: f.arity for f in program.facts}
-    seen = set()
-    for rw in program.rewrites:
-        if rw.key in seen:
-            continue
-        seen.add(rw.key)
+    for rw in rewrites:
         rule = rw.rule()
-        lines.append(f"(= {_call(rule.head, preds, consts)} {_body(rule.body, lambda a: _call(a, preds, consts))})")
+        step = f"({_REWRITE} {preds(rw.premise)} {_mapping_symbol(rw.mapping)} $pf0)"
+        lines.append(f"(= {call(rule.head)} {_proof_body(rule.body, call, step) if proofs else _body(rule.body, call)})")
         arity[rw.conclusion] = arity[rw.premise] = rw.arity
-    for rule in program.rules:
-        lines.append(f"(= {_call(rule.head, preds, consts)} {_body(rule.body, lambda a: _call(a, preds, consts))})")
+    for j, rule in enumerate(program.rules):
+        body = _proof_body(rule.body, call, _rule_step(j, rule)) if proofs else _body(rule.body, call)
+        lines.append(f"(= {call(rule.head)} {body})")
         for a in (rule.head, *rule.body):
             arity[a.pred] = a.arity
     arity[query.pred] = query.arity
     for p, n in sorted(arity.items()):
         args = " ".join(f"$X{i}" for i in range(n))
         lines.append(f'(= ({preds(p)} {args}) (reach "{preds(p)}"))')
-    tabled = [f"!(tabled ({preds(p)} {' '.join(f'$X{i}' for i in range(n))}))" for p, n in sorted(arity.items())]
-    return "\n".join(lines), tabled
+    if proofs:
+        lines.append(f"(= ({keep} $old $new) $old)")
+    return "\n".join(lines), [(preds(p), n) for p, n in sorted(arity.items())]
 
 
-def _meta_source(program: Program, query: Atom, preds: _Names, consts: _Names, tag: int) -> str:
+def _meta_source(program: Program, query: Atom, preds: _Names, consts: _Names, tag: int,
+                 keep: str | None) -> tuple[str, list[tuple[str, int]]]:
     """The program as data under holds, with the discovery clause, a via clause per mapping, and tabling when asked.
 
     For each arity n present, holds takes the predicate and n arguments, plus
@@ -230,9 +381,12 @@ def _meta_source(program: Program, query: Atom, preds: _Names, consts: _Names, t
     one unit, and every user rule step too unless the bound counts rewrites
     alone, when a rule passes the depth left to its body unchanged; facts hold at
     any depth, and tabling then keys each table on the depth left too. holds, via
-    and fact carry the solve's tag.
+    and fact carry the solve's tag. Without proofs the tabling declarations are
+    in the source; with `keep`, holds answers proof terms and the table to
+    declare through a lattice row comes back beside the source.
     """
     holds_, via_, fact_ = f"holds{tag}", f"via{tag}", f"fact{tag}"
+    proofs = keep is not None
     depth = program.depth > 0
     d, dm = (" $d", " (- $d 1)") if depth else ("", "")
     # The depth left that a user rule's body goals get, and whether a rule needs depth left to fire.
@@ -246,37 +400,43 @@ def _meta_source(program: Program, query: Atom, preds: _Names, consts: _Names, t
         # A sentinel fact under the bare prefix defines fact for every arity holds calls, so an arity with
         # no facts answers nothing instead of raising an unknown-procedure error.
         lines.append(f"(= ({fact_} {preds('')} {' '.join(consts('') for _ in range(n))}) True)")
-        lines.append(f"(= ({holds_} $p {xs}{d}) ({fact_} $p {xs}))")
-        discover = f"(let (rw $q $m) (impliers $p) ({via_} $q $m {xs}{dm}))"
+        found = f"(let True ({fact_} $p {xs}) {_FACT})" if proofs else f"({fact_} $p {xs})"
+        lines.append(f"(= ({holds_} $p {xs}{d}) {found})")
+        follow = f"(let $pf ({via_} $q $m {xs}{dm}) ({_REWRITE} $q $m $pf))" if proofs else f"({via_} $q $m {xs}{dm})"
+        discover = f"(let (rw $q $m) (impliers $p) {follow})"
         lines.append(f"(= ({holds_} $p {xs}{d}) {f'(if (> $d 0) {discover} (empty))' if depth else discover})")
         for m in mappings(n):
             permuted = " ".join(f"$x{i}" for i in m)
             lines.append(f"(= ({via_} $q {_mapping_symbol(m)} {xs}{d}) ({holds_} $q {permuted}{d}))")
-        if program.tabled:
+        if program.tabled and not proofs:
             lines.append(f"!(tabled ({holds_} $p {xs}{d}))")
 
     def holds(a: Atom) -> str:
         return f"({holds_} {preds(a.pred)} {' '.join(_term(t, consts) for t in a.args)}{body_left})"
 
-    for rule in program.rules:
+    for j, rule in enumerate(program.rules):
         head = f"({holds_} {preds(rule.head.pred)} {' '.join(_term(t, consts) for t in rule.head.args)}{d})"
-        body = _body(rule.body, holds)
+        body = _proof_body(rule.body, holds, _rule_step(j, rule)) if proofs else _body(rule.body, holds)
         lines.append(f"(= {head} {f'(if (> $d 0) {body} (empty))' if rule_counts else body})")
-    return "\n".join(lines)
+    if proofs:
+        lines.append(f"(= ({keep} $old $new) $old)")
+    return "\n".join(lines), [(holds_, 0)] if proofs and program.tabled else []
 
 
-def _query_term(query: Atom, preds: _Names, consts: _Names, *, meta: bool, depth: int, tag: int) -> str:
+def _query_term(query: Atom, preds: _Names, consts: _Names, *, meta: bool, depth: int, tag: int, proofs: bool) -> str:
     args = " ".join(_term(t, consts) for t in query.args)
     call = f"(holds{tag} {preds(query.pred)} {args}{f' {depth}' if depth else ''})" if meta else f"({preds(query.pred)} {args})"
-    return f"(let True {call} (ans {args}))"
+    return f"(let $pf {call} (ans {args} $pf))" if proofs else f"(let True {call} (ans {args}))"
 
 
-def _impliers(program: Program, expand: Expander | None, reached: set[str], preds: _Names) -> Callable[[Symbol], Iterator[Expression]]:
+def _impliers(program: Program, expand: Expander | None, reached: set[str], preds: _Names,
+              known: dict[Key, Rewrite] | None) -> Callable[[Symbol], Iterator[Expression]]:
     """The discovery op: the program's rewrites for a predicate, then whatever the callback returns for it, each once.
 
     It calls the callback on every call, as evaluation reaches the predicate,
     so a discoverer without a memo is asked again each time; a memoised one
-    answers from its memo.
+    answers from its memo. With proofs it files each rewrite it yields in
+    `known`, where the proof reader finds the rewrite a step names.
     """
     static: dict[str, list[Rewrite]] = defaultdict(list)
     for rw in program.rewrites:
@@ -291,6 +451,8 @@ def _impliers(program: Program, expand: Expander | None, reached: set[str], pred
             if rw.key in seen:
                 continue
             seen.add(rw.key)
+            if known is not None:
+                known.setdefault(rw.key, rw)
             yield Expression((S.rw, S[preds(rw.premise)], S[_mapping_symbol(rw.mapping)]))
 
     return impliers

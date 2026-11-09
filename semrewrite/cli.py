@@ -62,7 +62,8 @@ def _retriever(args: argparse.Namespace):
 def _rewriter(args: argparse.Namespace, kb: KB) -> Rewriter:
     admission = Directional(args.directional) if args.directional is not None else Threshold()
     return Rewriter(kb, _judge(args, kb), make_engine(args.engine), _retriever(args), k=args.k,
-                    budget=Budget(work=args.work, seconds=args.seconds), admission=admission)
+                    budget=Budget(work=args.work, seconds=args.seconds), admission=admission,
+                    proofs=getattr(args, "explain", False))
 
 
 def cmd_ask(args: argparse.Namespace) -> int:

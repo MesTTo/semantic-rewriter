@@ -161,6 +161,7 @@ class Program:
     tabled: bool = True            # resolve cyclic programs to their fixpoint
     depth: int = 0                 # 0: no bound; n: at most n rule or rewrite steps below the query
     depth_counts: str = "steps"    # "steps": every rule and rewrite step counts; "rewrites": only rewrite steps
+    proofs: bool = False           # return one derivation per answer
 
 class Engine(Protocol):
     @property
@@ -181,9 +182,9 @@ class Engine(Protocol):
 | `lazy` | calls `expand` during evaluation instead of needing every rewrite up front |
 | `untabled` | can run `tabled=False` as plain top-down resolution (only useful for experiments) |
 | `reached` | with no depth bound, reports every predicate evaluation called, and possibly more of the program's; the rounds strategy expands what it reports, so a predicate left out loses the answers its rewrites give, while an extra one only costs an expansion. Under a depth bound it may report fewer |
-| `proofs` | returns a derivation for each answer |
+| `proofs` | with `proofs=True`, returns a derivation for each answer |
 
-`Budget` gives the most a run may spend: work in the engine's own unit (inferences for a Prolog engine, candidate rows examined for the Python engine) and wall-clock seconds, which may be infinite. `Solution` carries the answers (one tuple of constants per answer, the query's arguments with its variables filled), a status (`ok`, `work_limit`, `time_limit` or `error`), the work spent, the predicates reached when the engine reports them, and proofs when it provides them.
+`Budget` gives the most a run may spend: work in the engine's own unit (inferences for a Prolog engine, candidate rows examined for the Python engine) and wall-clock seconds, which may be infinite. `Solution` carries the answers (one tuple of constants per answer, the query's arguments with its variables filled), a status (`ok`, `work_limit`, `time_limit` or `error`), the work spent, the predicates reached when the engine reports them, and proofs when the program asked for them. Proofs are asked for because they can cost an engine work: on PyMeTTa they cost 4 to 5 percent more inferences and 10 to 25 percent more time over the four benchmarks' queries.
 
 An engine must keep this contract:
 
@@ -199,6 +200,8 @@ Two patterns implement the lazy capability, and either is enough:
 - Demand-driven bottom-up evaluation. The engine computes which predicates the query depends on, calls `expand` for each new one, adds the returned rewrites as rules and extends the dependency set, then runs a semi-naive fixpoint over the relevant predicates. Round k of the fixpoint derives exactly the facts of derivation height k, so a depth bound is a round limit. A bound on rewrites alone runs the fixpoint in levels: each level first closes under the user rules, then one round of rewrites starts the next level, so level k holds the facts that need at most k rewrites on any path, a generalisation of Dijkstra's algorithm to such costs (Knuth, 1977). This is how the pure-Python backend works, and it carries over to Datalog engines and to SQL with recursive common table expressions.
 
 An engine without the lazy capability still runs every strategy except the lazy ones: the rewriter computes the rewrites first and passes them in `program.rewrites`.
+
+A top-down engine gives proofs by making every clause answer a proof term instead of true: a fact answers a leaf, a rewrite step names the rewrite and wraps its premise's proof, and a rule step names the rule and wraps its premises' proofs with the values of the variables only its body has. Tables then need one change. A rewrite cycle such as `mother ⇔ mum` gives each answer infinitely many proof terms, one per trip round the cycle, so a table of terms never completes. Answer subsumption fixes this: SWI-Prolog's moded tabling (`lattice`) joins every new answer for the same arguments with the old one, and a join that keeps the old proof leaves one proof per answer and a finite table. The proof kept was built from answers already in the tables, so it is well founded. PyMeTTa declares its proof tables this way, through `(cache name (plain private (lattice keep)))` rows; a plain table of proof terms ran out of table space on a two-predicate cycle. A bottom-up engine records, for each fact, the step that first derived it; round order then makes every recorded proof well founded.
 
 ### Strategies
 

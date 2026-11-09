@@ -29,13 +29,13 @@ Each predicate has a gloss, a sentence with a placeholder per argument, which is
 ```
 $ semrewrite ask examples/parent_of_tom.kb "parent(X, tom)" --judge nli-deberta-large --retriever all --explain
 parent(alice, tom)
-    parent(alice, tom)    [by parent(X0, X1) ⇐ mum(X0, X1)]
+    parent(alice, tom)    [by parent(X0, X1) ⇐ mum(X0, X1), score 0.998]
       mum(alice, tom)    [fact]
 parent(bob, tom)
-    parent(bob, tom)    [by parent(X0, X1) ⇐ dad(X0, X1)]
+    parent(bob, tom)    [by parent(X0, X1) ⇐ dad(X0, X1), score 0.997]
       dad(bob, tom)    [fact]
 parent(erin, tom)
-    parent(erin, tom)    [by parent(X0, X1) ⇐ guardian(X0, X1)]
+    parent(erin, tom)    [by parent(X0, X1) ⇐ guardian(X0, X1), score 0.823]
       guardian(erin, tom)    [fact]
 
 rewrites admitted (14):
@@ -46,7 +46,7 @@ rewrites admitted (14):
 ok: 3 answers, 63 work, 78 judge questions, 0.65 s
 ```
 
-Every answer comes with its derivation, and each step names the rule or the admitted rewrite it used. The third answer is wrong: a legal guardian need not be a parent, and at this threshold the judge admits `guardian ⇒ parent` along with other false rewrites such as `child_of(y, x) ⇒ mother(x, y)`. Raising the threshold to 0.995, which calibration for answer F1 chose for lazy-tabled evaluation on three of the experiment's four held-out benchmarks, leaves six rewrites, all true, and the answers alice and bob:
+Every answer comes with its derivation, and each step names the rule or the admitted rewrite it used, with the judge's score for a rewrite. The third answer is wrong: a legal guardian need not be a parent, and at this threshold the judge admits `guardian ⇒ parent` along with other false rewrites such as `child_of(y, x) ⇒ mother(x, y)`. Raising the threshold to 0.995, which calibration for answer F1 chose for lazy-tabled evaluation on three of the experiment's four held-out benchmarks, leaves six rewrites, all true, and the answers alice and bob:
 
 ```
 $ semrewrite ask examples/parent_of_tom.kb "parent(X, tom)" --judge nli-deberta-large --retriever all --threshold 0.995
@@ -106,7 +106,7 @@ A knowledge base can also be built in code with `KB`, `atom` and `Rule`, and pre
 | engine | needs | tables | depth bound | bound on rewrites | lazy discovery | untabled | proofs |
 |---|---|---|---|---|---|---|---|
 | `python` | nothing | yes | yes | yes | yes | no | yes |
-| `pymetta` | `pymetta` | yes | yes | yes | yes | yes | no |
+| `pymetta` | `pymetta` | yes | yes | yes | yes | yes | yes |
 
 An engine is anything with a `solve(program, query, budget, expand)` method and a `capabilities` record; DESIGN.md gives the five rules it must keep. `semrewrite conformance --engine NAME` checks them with property tests against a reference evaluator: exact answers with tables, one meaning of depth, lazy expansion equal to eager, hard budgets, and engine keywords accepted as ordinary names. A Prolog through janus, a Datalog engine or SQL with recursive queries can implement the same protocol; add it to `semrewrite/engines/__init__.py` and run the kit.
 

@@ -642,7 +642,7 @@ def check_proofs(engine: Engine, case: Case) -> None:
     _require(engine, PROOFS.needs)
     c = engine.capabilities
     for depth, counts in _exact_bounds(c):
-        program = replace(case.program, tabled=_tabled(c, depth), depth=depth, depth_counts=counts)
+        program = replace(case.program, tabled=_tabled(c, depth), depth=depth, depth_counts=counts, proofs=True)
         budget = _budget(engine, program, case.query)
         solution = engine.solve(program, case.query, budget)
         if not _bounded(engine, program, budget, solution, expected(case, depth, counts), _bound(program)):

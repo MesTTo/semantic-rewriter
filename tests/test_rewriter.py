@@ -15,11 +15,14 @@ from pathlib import Path
 import pytest
 
 import semrewrite
+from semrewrite import conformance as kit
 from semrewrite.benchmarks import BENCHMARKS
 from semrewrite.engines import available, make
+from semrewrite.engines.python import PythonEngine
 from semrewrite.judges.oracle import OracleJudge
 from semrewrite.kb import KB, atom
-from semrewrite.protocols import Budget, Capabilities
+from semrewrite.model import Atom, Rewrite
+from semrewrite.protocols import Budget, Capabilities, Program
 from semrewrite.rewriter import STRATEGIES, CapabilityError, Rewriter, Strategy, Timing
 
 KBS = {name: make_kb() for name, make_kb in BENCHMARKS.items()}
@@ -226,3 +229,68 @@ def test_depth_tabled_answers_what_depth_bounded_answers_on_the_benchmarks(engin
                 bounded = rewriter.ask(query, "depth-bounded")
                 if bounded.finished:
                     assert bounded.answers == tabled.answers, (kb.name, str(query))
+
+
+@pytest.mark.parametrize("engine_name", [e for e in ENGINES if make(e).capabilities.proofs])
+@pytest.mark.parametrize("strategy", [name for name, s in STRATEGIES.items() if not s.canonical])
+def test_explained_answers_are_derived_from_the_knowledge_base_and_the_admitted_rewrites(
+        engine_name: str, strategy: str) -> None:
+    """Asked for proofs, each answer comes with a derivation from the knowledge base's facts and rules and the
+    rewrites the run admitted, within the strategy's depth bound, whichever encoding the engine picked. Without
+    tables a run may stop at its budget, so an untabled strategy is checked on the runs that finish."""
+    if strategy not in _runnable(engine_name):
+        pytest.skip(f"{engine_name} cannot run {strategy}")
+    s = STRATEGIES[strategy]
+    explained = 0
+    for kb in KBS.values():
+        rewriter = Rewriter(kb, OracleJudge(kb.entailed()), make(engine_name), None,
+                            budget=Budget(work=5_000_000 if s.tabled else 300_000, seconds=60), proofs=True)
+        for query in kb.queries:
+            out = rewriter.ask(query, strategy)
+            if not s.tabled and not out.finished:
+                continue
+            assert out.finished, (kb.name, str(query), out.status, out.detail)
+            admitted = tuple(Rewrite(c, p, m) for p, c, m in sorted(out.admitted))
+            program = Program(facts=kb.facts, rules=kb.rules, rewrites=admitted, depth=s.depth,
+                              depth_counts=s.depth_counts)
+            assert out.proofs is not None and set(out.proofs) == out.answers, (kb.name, str(query))
+            for row, proof in out.proofs.items():
+                problem = kit.proof_problem(proof, Atom(query.pred, row), program)
+                assert problem is None, (kb.name, str(query), problem, proof.lines())
+            explained += 1
+    assert explained, f"no {strategy} run finished"
+
+
+def test_proofs_are_refused_where_none_can_come() -> None:
+    """An engine without the capability, or a strategy answering over merged predicates, can't explain its answers."""
+
+    class NoProofs(PythonEngine):
+        capabilities = Capabilities(tabling=True, depth=True, rewrite_depth=True, lazy=True, reached=True)
+
+    kb = KBS["family"]
+    with pytest.raises(CapabilityError, match="lacks proofs"):
+        Rewriter(kb, OracleJudge(kb.entailed()), NoProofs(), None, proofs=True).ask(kb.queries[0], "lazy-tabled")
+    with pytest.raises(CapabilityError, match="no derivations"):
+        Rewriter(kb, OracleJudge(kb.entailed()), make("python"), None, proofs=True).ask(kb.queries[0],
+                                                                                         "alias-canonical")
+    assert Rewriter(kb, OracleJudge(kb.entailed()), NoProofs(), None).ask(kb.queries[0], "lazy-tabled").finished
+
+
+@pytest.mark.skipif("pymetta" not in ENGINES, reason="pymetta does not import here")
+def test_proofs_converge_on_a_rewrite_cycle_and_leave_no_cache_rows() -> None:
+    """a and b rewrite into each other, so a plain table of proof terms never completes; each answer still gets
+    one valid proof, and the lattice rows each solve declared in &metta, which outlives it, are gone after."""
+    from metta import MeTTa
+
+    engine = make("pymetta")
+    cycle = (Rewrite("b", "a", (0,), 0.9), Rewrite("a", "b", (0,), 0.8))
+    program = Program(facts=(Atom("a", ("k",)), Atom("c", ("j",))), rewrites=cycle, proofs=True)
+    for expand in (None, lambda p: [rw for rw in cycle if rw.conclusion == p]):
+        lazy = expand is not None
+        s = engine.solve(program if not lazy else Program(facts=program.facts, proofs=True), Atom("b", ("X",)),
+                         Budget(work=1_000_000, seconds=30), expand)
+        assert s.status == "ok" and s.answers == {("k",)}, (lazy, s.status, s.detail)
+        assert kit.proof_problem(s.proofs[("k",)], Atom("b", ("k",)), program) is None
+        assert s.proofs[("k",)].lines() == ["b(k)    [by b(X0) ⇐ a(X0), score 0.900]", "  a(k)    [fact]"]
+    with MeTTa() as m:
+        assert m.self.run("!(size-atom (collapse (match &metta (cache $name $policy) $name)))") == [[0]]

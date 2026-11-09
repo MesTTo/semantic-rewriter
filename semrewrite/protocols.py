@@ -47,7 +47,7 @@ class Capabilities:
     untabled: can run Program.tabled=False as plain top-down resolution.
     reached: with no depth bound, reports every predicate evaluation called, and possibly more of the program's,
         which the rounds strategy expands; under a depth bound it may report fewer.
-    proofs: returns one derivation per answer.
+    proofs: with Program.proofs, returns one derivation per answer.
     """
 
     tabling: bool = False
@@ -69,6 +69,9 @@ class Program:
     step counts; with "rewrites" only rewrite steps do, so the user's own rules
     recurse as deep as their facts allow while a false rewrite still spreads
     through at most n rewrites.
+
+    proofs asks the engine for one derivation of each answer in Solution.proofs,
+    which an engine may spend more work on.
     """
 
     facts: tuple[Atom, ...]
@@ -77,6 +80,7 @@ class Program:
     tabled: bool = True
     depth: int = 0
     depth_counts: DepthCounts = "steps"
+    proofs: bool = False
 
     def __post_init__(self) -> None:
         for fact in self.facts:
@@ -108,8 +112,13 @@ class Proof:
         return own + max((c.steps(counts) for c in self.children), default=0)
 
     def lines(self, indent: int = 0) -> list[str]:
-        """The proof as indented text, the atom first and each premise below it."""
-        reason = "fact" if self.by is None else f"by {self.by}"
+        """The proof as indented text, the atom first and each premise below it; a rewrite step shows its score."""
+        if self.by is None:
+            reason = "fact"
+        elif isinstance(self.by, Rewrite):
+            reason = f"by {self.by}, score {self.by.score:.3f}"
+        else:
+            reason = f"by {self.by}"
         out = [f"{'  ' * indent}{self.atom}    [{reason}]"]
         for c in self.children:
             out += c.lines(indent + 1)
@@ -122,7 +131,8 @@ class Solution:
 
     answers holds one tuple per answer, the query's arguments with its
     variables filled; derivations counts answers with repeats where the engine
-    can tell; reached and proofs are None when the engine lacks the capability.
+    can tell; reached is None when the engine lacks the capability, and proofs
+    is None unless the program asked for them.
     """
 
     answers: set[tuple[str, ...]] = field(default_factory=set)

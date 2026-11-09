@@ -35,7 +35,7 @@ def main() -> None:
 
         judge = make(args.judge)
     engine = make_engine(args.engine)
-    rewriter = Rewriter(kb, judge, engine, AllCandidates(), budget=Budget(work=500_000, seconds=30))
+    rewriter = Rewriter(kb, judge, engine, AllCandidates(), budget=Budget(work=500_000, seconds=30), proofs=True)
     caps = engine.capabilities
     for query in kb.queries:
         print(f"\n{query}")

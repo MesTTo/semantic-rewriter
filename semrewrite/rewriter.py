@@ -159,6 +159,7 @@ class Rewriter:
         k: int = 8,
         budget: Budget = DEFAULT_BUDGET,
         admission: Admission | None = None,
+        proofs: bool = False,
     ) -> None:
         self.kb = kb
         self.catalogue = kb.catalogue()
@@ -168,6 +169,8 @@ class Rewriter:
         self.k = k
         self.budget = budget
         self.admission = admission
+        # Ask the engine for a derivation of every answer, which Outcome.proofs then holds.
+        self.proofs = proofs
         self._rules_by_head: dict[str, list[Rule]] = defaultdict(list)
         for rule in kb.rules:
             self._rules_by_head[rule.head.pred].append(rule)
@@ -177,11 +180,17 @@ class Rewriter:
         return Discoverer(self.catalogue, self.retriever, self.scorer, k=self.k, memo=memo, admission=self.admission)
 
     def check(self, strategy: Strategy) -> None:
-        """Raise CapabilityError naming every capability `strategy` needs that the engine lacks."""
+        """Raise CapabilityError naming every capability `strategy`, and proofs when asked for, needs that the
+        engine lacks, or when proofs are asked of a strategy that answers over merged predicates."""
         caps = self.engine.capabilities
         missing = [cap for cap, needed in strategy.needs().items() if needed and not getattr(caps, cap)]
+        if self.proofs and not caps.proofs:
+            missing.append("proofs")
         if missing:
             msg = f"engine {self.engine.name} cannot run {strategy.name}: it lacks {', '.join(missing)}"
+            raise CapabilityError(msg)
+        if self.proofs and strategy.canonical:
+            msg = f"{strategy.name} answers over predicates merged into one per alias class, so it has no derivations"
             raise CapabilityError(msg)
 
     def ask(self, query: Atom | str, strategy: Strategy | str = "lazy-tabled", discoverer: Discoverer | None = None) -> Outcome:
@@ -222,7 +231,7 @@ class Rewriter:
                  depth_counts: DepthCounts = "steps") -> Program:
         kb = kb if kb is not None else self.kb
         return Program(facts=kb.facts, rules=kb.rules, rewrites=tuple(rewrites), tabled=tabled, depth=depth,
-                       depth_counts=depth_counts)
+                       depth_counts=depth_counts, proofs=self.proofs)
 
     def _solve(self, program: Program, query: Atom, out: Outcome, expand=None, *, accumulate: bool = False,
                budget: Budget | None = None) -> Solution:

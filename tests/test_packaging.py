@@ -93,6 +93,25 @@ def test_command_line_honours_the_oracle_threshold_and_names_a_strategy_the_engi
     assert run.stderr.strip() == "semrewrite: engine python cannot run naive: it lacks untabled"
 
 
+@pytest.mark.parametrize("engine", ["python", "pymetta"])
+def test_explain_prints_each_answer_with_its_derivation(engine: str) -> None:
+    """Under --explain each answer line is followed by its derivation, the rule step first, rewrite steps scored."""
+    if engine == "pymetta":
+        pytest.importorskip("metta")
+    argv = ["ask", EXAMPLE, "grandparent(X, tom)", "--judge", "oracle", "--retriever", "all", "--engine", engine,
+            "--explain"]
+    run = subprocess.run([sys.executable, "-c", f"from semrewrite.cli import main\nraise SystemExit(main({argv!r}))"],
+                         cwd=ROOT, capture_output=True, text=True, check=False)
+    assert run.returncode == 0, run.stderr
+    lines = run.stdout.splitlines()
+    answers = [line for line in lines if not line.startswith(" ")]
+    assert answers == ["grandparent(carol, tom)", "grandparent(dave, tom)"]
+    for answer in answers:
+        after = lines[lines.index(answer) + 1]
+        assert after == f"    {answer}    [by grandparent(X, Z) :- parent(X, Y), parent(Y, Z)]"
+    assert any("score 1.000]" in line for line in lines) and all(line.strip() for line in lines)
+
+
 def test_a_judge_closes_without_torch() -> None:
     """Jev's extra installs no torch, so closing a judge, by hand or by leaving its with block, must not import it."""
     run = blocked("from semrewrite.judges.jev import JevJudge\n"
