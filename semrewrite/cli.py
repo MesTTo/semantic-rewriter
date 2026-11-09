@@ -88,7 +88,7 @@ def cmd_ask(args: argparse.Namespace) -> int:
             print(f"\nrewrites admitted ({len(out.admitted)}):", file=sys.stderr)
             for p, c, m in sorted(out.admitted, key=lambda k: (k[1], k[0], k[2])):
                 print(f"  {Rewrite(c, p, m)}", file=sys.stderr)
-        print(f"{out.status}: {len(out.answers)} answers, {out.work:,} work, {out.proposals} judge questions, "
+        print(f"{out.status}: {len(out.answers)} answers, {out.work:,} work, {out.proposals:,} judge questions, "
               f"{out.seconds:.2f} s", file=sys.stderr)
     return 0 if out.finished else (2 if out.status in ("work_limit", "time_limit") else 1)
 
@@ -108,7 +108,7 @@ def cmd_rewrites(args: argparse.Namespace) -> int:
     for p, s in sorted(zip(proposals, scores, strict=True), key=lambda ps: -ps[1]):
         if p.key not in admitted:
             print(f"reject  {s:.3f}  {p.rewrite(s)}")
-    print(f"{disc.stats.proposals} judge questions at threshold {rw.scorer.threshold:.3f}", file=sys.stderr)
+    print(f"{disc.stats.proposals:,} judge questions at threshold {rw.scorer.threshold:.3f}", file=sys.stderr)
     return 0
 
 
