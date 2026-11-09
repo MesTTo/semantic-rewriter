@@ -57,7 +57,7 @@ ok: 2 answers, 14 work, 65 judge questions, 0.88 s
 
 The grandparent query composes rewrites with the knowledge base's own rule, `grandparent(carol, tom)` through `mother(carol, alice)` and `mum(alice, tom)`, and `grandparent(dave, tom)` through `child_of(bob, dave)` read backwards and `dad(bob, tom)`. That trade-off between admitting enough and admitting only what is true, and how to calibrate a judge for it, is most of what [RESULTS.md](RESULTS.md) measures.
 
-[examples/README.md](examples/README.md) runs two knowledge bases written in MeTTa on the PyMeTTa engine with Jev as the judge: Swanson's discovery that fish oil might help Raynaud's syndrome, from papers that each phrase their findings in their own words, and the family tree of the MeTTa examples' chapter 2, recorded by five hands. Each answer comes with its shortest derivation, and an embedding judge run on the same files shows what goes wrong without a sense of direction.
+[examples/README.md](examples/README.md) runs knowledge bases written in MeTTa on the PyMeTTa engine with Jev as the judge. The first asks Wikidata, in plain words, who descends from Queen Victoria, what Leonardo da Vinci created and what Alphabet owns. None of the questions names one of the 1,790 properties Wikidata states them in, and Jev's rewrites returned exactly the 1,164 descendants Wikidata records. The other two are Swanson's discovery that fish oil might help Raynaud's syndrome, from papers that each phrase their findings in their own words, and the family tree of the MeTTa examples' chapter 2, recorded by five hands. Each answer comes with its shortest derivation, and an embedding judge run on the same files shows what goes wrong without a sense of direction.
 
 ## Install
 
