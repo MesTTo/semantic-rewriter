@@ -4,7 +4,7 @@ This file answers the four questions behind the experiment. The tables between `
 
 ## Short answers
 
-Does semantic reduction loop? No, as long as goals are tabled and each predicate is expanded once. Every tabled strategy terminated with exactly the right answers on all 400 generated catalogues, each containing an alias cycle. Untabled rewriting loops exactly when the goal sits on a cycle of rewrites. Tables stop loops, not blow-ups, though: with a permissive judge, the finite closure cost up to 1,563 times the engine work.
+Does semantic reduction loop? No, as long as goals are tabled and each predicate is expanded once. Every tabled strategy terminated with exactly the right answers on all 400 generated catalogues, each containing an alias cycle. Untabled rewriting loops exactly when the goal sits on a cycle of rewrites. Tables stop loops, not blow-ups, though: with a permissive judge, the finite closure cost up to 1,556 times the engine work.
 
 Which implementation? Twelve were built, as settings of five knobs. The one to use is goal-directed discovery with tables and a per-predicate memo. Discovering inside SLG evaluation (`lazy-tabled`) is the natural fit; compiling rewrites to native equations (`eager-worklist`) and merging aliases with a union-find (`alias-canonical`) are cheaper in engine work. Each of the three costs about 116 judge questions per query on its own, or 17 once a benchmark's queries share the memo. With an imperfect judge, also bound the depth, and calibrate what the bound counts as you calibrate the threshold. Tabled evaluation bounded at three steps (`depth-tabled`) raised answer F1 at calibrated thresholds for six of the seven judges. Bounding three rewrites alone (`rewrite-depth-tabled`), so that the knowledge base's own rules recurse freely, gave Jev its best F1 and the perfect judge every answer, but scored below the step bound with every other judge.
 
@@ -58,7 +58,7 @@ It stops when no new (goal, rewrite) pair and no new answer can appear. With tab
 `tests/test_termination.py` generated 400 random catalogues per property and engine (2 to 6 predicates, random gold implications always including an alias cycle, random facts, an optional join rule, a random query) and compared every answer with a Python fixpoint (`results/termination.txt`):
 
 - Every tabled strategy (lazy-tabled, nomemo-tabled, rounds, eager-worklist, alias-canonical, saturate) terminated with exactly the fixpoint's answers on all 400, on both engines.
-- Untabled rewriting, which only the PyMeTTa engine runs, never terminated on the 329 of the 400 catalogues where the query predicate sat on a rewrite cycle. On the 46 where nothing reachable was cyclic, it terminated with the right answers. The other 25, with cycles reachable only through a join rule, are left undecided. Hypothesis reports these as 77.05%, 10.77% and 5.85% of 427 draws, 27 of which were invalid.
+- Untabled rewriting, which only the PyMeTTa engine runs, never terminated on the 250 of the 400 catalogues where the query predicate sat on a rewrite cycle. On the 98 where nothing reachable was cyclic, it terminated with the right answers. The other 52, with cycles reachable only through a join rule, are left undecided. Hypothesis reports these as 58.00%, 22.74% and 12.06% of 431 draws, 31 of which were invalid.
 - Every depth-bounded strategy (depth-bounded, depth-tabled and rewrite-depth-tabled) always terminated on both engines, every answer it gave was true, and tables left the answers under each bound unchanged.
 
 The same tests found a real bug on the way. Alias canonicalisation dropped a swapped rewrite inside one alias class, which made that class lose its symmetry. It is fixed and pinned as a regression test.
@@ -86,54 +86,54 @@ None of these happen in the design built here.
 <!-- BEGIN GENERATED: divergence -->
 | strategy | budget (inferences) | status | inferences | expansions | proposals | answers | seconds |
 |---|---|---|---|---|---|---|---|
-| naive | 10,000 | work_limit | 69,470 | 0 | 0 | 0 | 0.169 |
-| memo-untabled | 10,000 | work_limit | 69,474 | 0 | 0 | 0 | 0.177 |
-| lazy-tabled | 10,000 | ok | 4,068 | 5 | 255 | 14 | 0.166 |
-| naive | 100,000 | work_limit | 100,775 | 180 | 9,180 | 0 | 0.144 |
-| memo-untabled | 100,000 | work_limit | 100,769 | 4 | 204 | 0 | 0.127 |
-| lazy-tabled | 100,000 | ok | 4,068 | 5 | 255 | 14 | 0.185 |
-| naive | 1,000,000 | work_limit | 1,006,232 | 5,444 | 277,644 | 0 | 1.194 |
-| memo-untabled | 1,000,000 | work_limit | 1,006,231 | 4 | 204 | 0 | 0.897 |
-| lazy-tabled | 1,000,000 | ok | 4,068 | 5 | 255 | 14 | 0.196 |
-| naive | 3,000,000 | work_limit | 3,017,992 | 17,140 | 874,140 | 0 | 8.805 |
-| memo-untabled | 3,000,000 | work_limit | 3,017,920 | 4 | 204 | 0 | 8.426 |
-| lazy-tabled | 3,000,000 | ok | 4,068 | 5 | 255 | 14 | 0.149 |
+| naive | 10,000 | work_limit | 10,824 | 47 | 2,397 | 0 | 0.113 |
+| memo-untabled | 10,000 | work_limit | 10,840 | 4 | 204 | 0 | 0.150 |
+| lazy-tabled | 10,000 | ok | 4,187 | 5 | 255 | 14 | 0.197 |
+| naive | 100,000 | work_limit | 101,298 | 512 | 26,112 | 0 | 0.264 |
+| memo-untabled | 100,000 | work_limit | 101,295 | 4 | 204 | 0 | 0.201 |
+| lazy-tabled | 100,000 | ok | 4,187 | 5 | 255 | 14 | 0.181 |
+| naive | 1,000,000 | work_limit | 1,000,773 | 5,163 | 263,313 | 0 | 1.369 |
+| memo-untabled | 1,000,000 | work_limit | 1,000,778 | 4 | 204 | 0 | 0.986 |
+| lazy-tabled | 1,000,000 | ok | 4,187 | 5 | 255 | 14 | 0.217 |
+| naive | 3,000,000 | work_limit | 3,016,283 | 15,499 | 790,449 | 0 | 7.255 |
+| memo-untabled | 3,000,000 | work_limit | 3,016,283 | 4 | 204 | 0 | 4.536 |
+| lazy-tabled | 3,000,000 | ok | 4,187 | 5 | 255 | 14 | 0.181 |
 <!-- END GENERATED: divergence -->
 
 The query is mother(X, Y) on the family benchmark, where mother, mum and mom are aliases of each other, with a perfect judge.
 
-- Tabled rewriting answers all 14 pairs with 5 expansions and 4,068 inferences, whatever the budget.
+- Tabled rewriting answers all 14 pairs with 5 expansions and 4,187 inferences, whatever the budget.
 - Untabled rewriting spends whatever budget it gets and answers nothing.
-- Naive rewriting has no memo, so it also keeps asking the judge, and its judge proposals grow with the budget, to 874,140 at 3M inferences.
+- Naive rewriting has no memo, so it also keeps asking the judge, and its judge proposals grow with the budget, to 790,449 at 3M inferences.
 
-At the 10k budget, both untabled runs stopped after about 69,500 counted inferences, before their first discovery call, so the inference limit overshoots budgets this small.
+Even at the 10k budget, both untabled runs stopped within 840 counted inferences of it, the naive one after 47 expansions.
 
 ### Tables stop loops, not blow-ups
 
-Termination is guaranteed, but the guarantee says nothing about cost. When a judge admits rewrites between most pairs of predicates, nearly every predicate reaches nearly every other, and the fixpoint becomes very large. With the budget lifted, every hard query below still terminated. Compared with the perfect judge on the same query and strategy, nli-deberta-base at its default threshold needed 1.6 to 1,563 times the engine work and up to 1,437 times as many tables. Both largest ratios are on brings_about(X, numbness): 4,441,168 inferences against 2,841, and 8,620 tables against 6. The largest closure, for inside(X, palir), took 16.8 million inferences against the perfect judge's 110,703. Most of what the permissive judge returned was false: 3 of its 23 answers to brings_about(X, numbness) were true, and 30 of its 80 answers to parent(X, Y). It found every true answer except one of the three for superior_of(X, finn).
+Termination is guaranteed, but the guarantee says nothing about cost. When a judge admits rewrites between most pairs of predicates, nearly every predicate reaches nearly every other, and the fixpoint becomes very large. With the budget lifted, every hard query below still terminated. Compared with the perfect judge on the same query and strategy, nli-deberta-base at its default threshold needed 1.6 to 1,556 times the engine work and up to 1,437 times as many tables. Both largest ratios are on brings_about(X, numbness): 4,622,356 inferences against 2,970, and 8,620 tables against 6. The largest closure, for inside(X, palir), took 17.3 million inferences against the perfect judge's 117,926. Most of what the permissive judge returned was false: 3 of its 23 answers to brings_about(X, numbness) were true, and 30 of its 80 answers to parent(X, Y). It found every true answer except one of the three for superior_of(X, finn).
 
 <!-- BEGIN GENERATED: blowup -->
 | query | judge | strategy | status | inferences | tables | rewrites | true/answers | gold |
 |---|---|---|---|---|---|---|---|---|
-| parent(X, Y) | nli-deberta-base | lazy-tabled | ok | 23,793 | 20 | 69 | 30/80 | 30 |
+| parent(X, Y) | nli-deberta-base | lazy-tabled | ok | 24,261 | 20 | 69 | 30/80 | 30 |
 | parent(X, Y) | nli-deberta-base | eager-worklist | ok | 21,364 | 20 | 69 | 30/80 | 30 |
-| parent(X, Y) | oracle | lazy-tabled | ok | 6,712 | 11 | 32 | 30/30 | 30 |
+| parent(X, Y) | oracle | lazy-tabled | ok | 6,973 | 11 | 32 | 30/30 | 30 |
 | parent(X, Y) | oracle | eager-worklist | ok | 6,294 | 11 | 32 | 30/30 | 30 |
-| ancestor(X, leo) | nli-deberta-base | lazy-tabled | ok | 375,677 | 1,712 | 77 | 6/17 | 6 |
+| ancestor(X, leo) | nli-deberta-base | lazy-tabled | ok | 411,754 | 1,712 | 77 | 6/17 | 6 |
 | ancestor(X, leo) | nli-deberta-base | eager-worklist | ok | 365,848 | 1,712 | 77 | 6/17 | 6 |
-| ancestor(X, leo) | oracle | lazy-tabled | ok | 77,989 | 380 | 37 | 6/6 | 6 |
+| ancestor(X, leo) | oracle | lazy-tabled | ok | 86,009 | 380 | 37 | 6/6 | 6 |
 | ancestor(X, leo) | oracle | eager-worklist | ok | 76,111 | 380 | 37 | 6/6 | 6 |
-| superior_of(X, finn) | nli-deberta-base | lazy-tabled | ok | 61,680 | 258 | 42 | 2/3 | 3 |
+| superior_of(X, finn) | nli-deberta-base | lazy-tabled | ok | 67,119 | 258 | 42 | 2/3 | 3 |
 | superior_of(X, finn) | nli-deberta-base | eager-worklist | ok | 56,980 | 258 | 42 | 2/3 | 3 |
-| superior_of(X, finn) | oracle | lazy-tabled | ok | 36,768 | 172 | 20 | 3/3 | 3 |
+| superior_of(X, finn) | oracle | lazy-tabled | ok | 40,404 | 172 | 20 | 3/3 | 3 |
 | superior_of(X, finn) | oracle | eager-worklist | ok | 35,939 | 172 | 20 | 3/3 | 3 |
-| inside(X, palir) | nli-deberta-base | lazy-tabled | ok | 16,821,474 | 24,999 | 76 | 17/40 | 17 |
-| inside(X, palir) | nli-deberta-base | eager-worklist | ok | 15,273,613 | 24,999 | 76 | 17/40 | 17 |
-| inside(X, palir) | oracle | lazy-tabled | ok | 110,703 | 336 | 34 | 17/17 | 17 |
-| inside(X, palir) | oracle | eager-worklist | ok | 99,104 | 336 | 34 | 17/17 | 17 |
-| brings_about(X, numbness) | nli-deberta-base | lazy-tabled | ok | 4,441,168 | 8,620 | 91 | 3/23 | 3 |
+| inside(X, palir) | nli-deberta-base | lazy-tabled | ok | 17,346,375 | 24,999 | 76 | 17/40 | 17 |
+| inside(X, palir) | nli-deberta-base | eager-worklist | ok | 15,273,283 | 24,999 | 76 | 17/40 | 17 |
+| inside(X, palir) | oracle | lazy-tabled | ok | 117,926 | 336 | 34 | 17/17 | 17 |
+| inside(X, palir) | oracle | eager-worklist | ok | 99,204 | 336 | 34 | 17/17 | 17 |
+| brings_about(X, numbness) | nli-deberta-base | lazy-tabled | ok | 4,622,356 | 8,620 | 91 | 3/23 | 3 |
 | brings_about(X, numbness) | nli-deberta-base | eager-worklist | ok | 3,861,543 | 8,620 | 91 | 3/23 | 3 |
-| brings_about(X, numbness) | oracle | lazy-tabled | ok | 2,841 | 6 | 13 | 3/3 | 3 |
+| brings_about(X, numbness) | oracle | lazy-tabled | ok | 2,970 | 6 | 13 | 3/3 | 3 |
 | brings_about(X, numbness) | oracle | eager-worklist | ok | 2,728 | 6 | 13 | 3/3 | 3 |
 <!-- END GENERATED: blowup -->
 
@@ -143,9 +143,9 @@ With a perfect judge, every tabled strategy gives the same answers. They differ 
 
 - The memo decides how often the model is asked. Each expansion asks the judge 2k + 1 = 17 questions: 8 candidates in two argument orders, plus whether the goal is symmetric. So model calls per query are 17 times the number of predicates expanded. Discovering lazily during evaluation asked 116 questions per query. Without a memo, tables repeat discovery for every goal variant and the count rose to 1,013. Saturating the whole catalogue up front asked 326. Sharing one memo across a benchmark's queries (the warm column) brought goal-directed discovery down to 17 per query.
 - Tables decide termination. With tables, all 58 queries finished. Without tables, only 2 finished, capital_of(X, mimun) and capital_of(X, finer) on geography, the two queries whose reachable rewrites are acyclic. Naive rewriting also re-asks the judge on every call, so it posed 72,207 questions per query before its 500k-inference budget ran out.
-- A bound on every step stops the search but loses answers. Untabled at 3 steps (depth-bounded), recall fell to 0.784, and two geography containment queries, inside(X, palir) and inside(X, suner), still ran out of the 500k budget within three steps. It cost 7.2 times the engine work of lazy tabling, and it derived its 174 answers 1,868 times, since nothing stops it proving the same answer along different paths. Keying each table on the depth left as well (depth-tabled) finished all 58 queries at recall 0.955, derived each of its 212 answers once and cost 10,196 inferences per query, 0.6 times lazy tabling's. The answers it loses need more than three steps: two ancestor(X, mia) answers through the family benchmark's own ancestor rule, and one encloses(X, rarir) answer through geography's transitive containment.
-- A bound on rewrites alone keeps those answers. At 3 rewrites (rewrite-depth-tabled), the knowledge base's own rules recurse freely, and every query got exactly lazy tabling's answers. Keying each table on the rewrites left made it the costlier bound, 24,958 inferences and 152 tables per query, 1.5 times lazy tabling's work.
-- The encoding sets the engine cost. Compiling rewrites into native equations (eager-worklist, 15,704 inferences per query) was cheaper than calling discovery through `holds/3` (lazy-tabled, 16,805), although about half of the native count is the reach fallback, one call of a Python op per table, which keeps pymetta's tabling declarations close to linear (see the pymetta section). Merging alias classes with a union-find (alias-canonical) cut the work to 6,999 and the tables from 60 to 30 per query. Rounds, the loop of reducing, discovering and reducing again that the experiment started from, reached the same fixpoint at 35,489 inferences, because every round re-evaluates the query.
+- A bound on every step stops the search but loses answers. Untabled at 3 steps (depth-bounded), recall fell to 0.784, and two geography containment queries, inside(X, palir) and inside(X, suner), still ran out of the 500k budget within three steps. It cost 2.5 times the engine work of lazy tabling, and it derived its 174 answers 1,868 times, since nothing stops it proving the same answer along different paths. Keying each table on the depth left as well (depth-tabled) finished all 58 queries at recall 0.955, derived each of its 212 answers once and cost 10,196 inferences per query, 0.6 times lazy tabling's. The answers it loses need more than three steps: two ancestor(X, mia) answers through the family benchmark's own ancestor rule, and one encloses(X, rarir) answer through geography's transitive containment.
+- A bound on rewrites alone keeps those answers. At 3 rewrites (rewrite-depth-tabled), the knowledge base's own rules recurse freely, and every query got exactly lazy tabling's answers. Keying each table on the rewrites left made it the costlier bound, 28,178 inferences and 152 tables per query, 1.6 times lazy tabling's work.
+- The encoding sets the engine cost. Compiling rewrites into native equations (eager-worklist, 15,705 inferences per query) was cheaper than calling discovery through `holds/3` (lazy-tabled, 18,073), although about half of the native count is the reach fallback, one call of a Python op per table, which keeps pymetta's tabling declarations close to linear (see the pymetta section). Merging alias classes with a union-find (alias-canonical) cut the work to 7,000 and the tables from 60 to 30 per query. Rounds, the loop of reducing, discovering and reducing again that the experiment started from, reached the same fixpoint at 35,491 inferences, because every round re-evaluates the query.
 
 Recall is 0.969 rather than 1.0 because of retrieval, not the judge. All the missing answers are on the work benchmark, where recall is 0.877. There, the 8 nearest glosses never include "A reports to B" for boss_of, manager_of, supervises, subordinate_of or superior_of, so the rewrite from reports_to is never proposed, and facts stated with reports_to can't be reached. Retrieval recall per benchmark is in the table below; chains through other predicates recover most of what a single retrieval misses.
 
@@ -155,17 +155,17 @@ All runs in these two tables use the oracle judge, which admits exactly the rewr
 | strategy | precision | recall | finished | proposals/query cold | proposals/query warm | expansions/query | inferences/query | tables/query |
 |---|---|---|---|---|---|---|---|---|
 | exact | 1.000 | 0.018 | 1.000 | 0.000 | 0.000 | 0.000 | 1,518 | 1.340 |
-| naive | 1.000 | 0.009 | 0.035 | 72,207 | n/a | 4,247 | 491,811 | 0.000 |
-| memo-untabled | 1.000 | 0.009 | 0.035 | 60 | 12 | 3.550 | 491,863 | 0.000 |
-| nomemo-tabled | 1.000 | 0.969 | 1.000 | 1,013 | n/a | 60 | 16,802 | 60 |
-| depth-bounded | 1.000 | 0.784 | 0.966 | 110 | 17 | 6.480 | 121,310 | 0.000 |
-| depth-tabled | 1.000 | 0.955 | 1.000 | 110 | 17 | 6.480 | 10,196 | 77 |
-| rewrite-depth-tabled | 1.000 | 0.969 | 1.000 | 114 | 17 | 6.720 | 24,958 | 152 |
-| lazy-tabled | 1.000 | 0.969 | 1.000 | 116 | 17 | 6.830 | 16,805 | 60 |
-| rounds | 1.000 | 0.969 | 1.000 | 116 | 17 | 6.830 | 35,489 | 60 |
-| eager-worklist | 1.000 | 0.969 | 1.000 | 116 | 17 | 6.830 | 15,704 | 60 |
-| alias-canonical | 1.000 | 0.969 | 1.000 | 116 | 17 | 6.830 | 6,999 | 30 |
-| saturate | 1.000 | 0.969 | 1.000 | 326 | 22 | 19 | 15,701 | 60 |
+| naive | 1.000 | 0.009 | 0.035 | 67,262 | n/a | 3,957 | 489,091 | 0.000 |
+| memo-untabled | 1.000 | 0.009 | 0.035 | 60 | 12 | 3.550 | 489,087 | 0.000 |
+| nomemo-tabled | 1.000 | 0.969 | 1.000 | 1,013 | n/a | 60 | 18,069 | 60 |
+| depth-bounded | 1.000 | 0.784 | 0.966 | 110 | 17 | 6.480 | 44,923 | 0.000 |
+| depth-tabled | 1.000 | 0.955 | 1.000 | 110 | 17 | 6.480 | 11,838 | 77 |
+| rewrite-depth-tabled | 1.000 | 0.969 | 1.000 | 114 | 17 | 6.720 | 28,178 | 152 |
+| lazy-tabled | 1.000 | 0.969 | 1.000 | 116 | 17 | 6.830 | 18,072 | 60 |
+| rounds | 1.000 | 0.969 | 1.000 | 116 | 17 | 6.830 | 35,490 | 60 |
+| eager-worklist | 1.000 | 0.969 | 1.000 | 116 | 17 | 6.830 | 15,705 | 60 |
+| alias-canonical | 1.000 | 0.969 | 1.000 | 116 | 17 | 6.830 | 7,000 | 30 |
+| saturate | 1.000 | 0.969 | 1.000 | 326 | 22 | 19 | 15,702 | 60 |
 <!-- END GENERATED: strategies -->
 
 <!-- BEGIN GENERATED: retrieval -->
@@ -300,7 +300,7 @@ Bounding the rewrites alone splits the judges. With Jev, rewrite-depth-tabled re
 | nli-deberta-large | depth-tabled | 0.659 | 0.882 | family 0.981, work 0.981, geography 0.981, medicine 0.981 | 0.910 | 0.906 | 0.914 | 1.000 | 0.981 | 0.910 |
 | nli-deberta-large | rewrite-depth-tabled | 0.659 | 0.757 | family 0.995, work 0.995, geography 0.981, medicine 0.995 | 0.814 | 0.831 | 0.797 | 1.000 | 0.995 | 0.862 |
 | nli-deberta-large-wanli | lazy-tabled | 0.054 | 0.472 | family 0.991, work 0.991, geography 0.932, medicine 0.991 | 0.539 | 1.000 | 0.369 | 0.828 | 0.991 | 0.753 |
-| nli-deberta-large-wanli | depth-bounded | 0.054 | 0.576 | family 0.932, work 0.932, geography 0.932, medicine 0.932 | 0.877 | 0.904 | 0.851 | 1.000 | 0.932 | 0.877 |
+| nli-deberta-large-wanli | depth-bounded | 0.054 | 0.548 | family 0.981, work 0.981, geography 0.932, medicine 0.981 | 0.727 | 0.970 | 0.581 | 0.966 | 0.981 | 0.806 |
 | nli-deberta-large-wanli | depth-tabled | 0.054 | 0.658 | family 0.932, work 0.541, geography 0.932, medicine 0.932 | 0.858 | 0.857 | 0.860 | 1.000 | 0.932 | 0.877 |
 | nli-deberta-large-wanli | rewrite-depth-tabled | 0.054 | 0.400 | family 0.991, work 0.991, geography 0.932, medicine 0.991 | 0.462 | 0.485 | 0.441 | 0.931 | 0.991 | 0.753 |
 | reranker-qwen3 | lazy-tabled | 0.808 | 0.094 | family 0.985, work 0.985, geography 0.994, medicine 0.985 | 0.585 | 0.630 | 0.545 | 1.000 | 0.985 | 0.734 |
@@ -351,15 +351,15 @@ Bounding the rewrites alone splits the judges. With Jev, rewrite-depth-tabled re
 | nli-deberta-large | lazy-tabled | 0.638 | 0.726 | 0.586 | 0.648 | 0.726 | 0.949 | 171 |
 | nli-deberta-large | eager-worklist | 0.638 | 0.726 | 0.586 | 0.648 | 0.726 | 0.949 | 171 |
 | nli-deberta-large-wanli | exact | 1.000 | 1.000 | 0.018 | 0.035 | 1.000 | 0.018 | 0.000 |
-| nli-deberta-large-wanli | depth-bounded | 0.966 | 0.456 | 0.784 | 0.576 | 0.456 | 0.946 | 151 |
+| nli-deberta-large-wanli | depth-bounded | 0.897 | 0.442 | 0.721 | 0.548 | 0.442 | 0.952 | 151 |
 | nli-deberta-large-wanli | depth-tabled | 1.000 | 0.502 | 0.955 | 0.658 | 0.502 | 0.955 | 151 |
-| nli-deberta-large-wanli | rewrite-depth-tabled | 0.862 | 0.280 | 0.698 | 0.400 | 0.280 | 0.957 | 153 |
+| nli-deberta-large-wanli | rewrite-depth-tabled | 0.862 | 0.280 | 0.698 | 0.400 | 0.280 | 0.957 | 152 |
 | nli-deberta-large-wanli | lazy-tabled | 0.534 | 0.471 | 0.473 | 0.472 | 0.471 | 0.938 | 191 |
 | nli-deberta-large-wanli | eager-worklist | 0.534 | 0.471 | 0.473 | 0.472 | 0.471 | 0.938 | 191 |
 | reranker-qwen3 | exact | 1.000 | 1.000 | 0.018 | 0.035 | 1.000 | 0.018 | 0.000 |
 | reranker-qwen3 | depth-bounded | 0.897 | 0.439 | 0.685 | 0.535 | 0.439 | 0.905 | 179 |
 | reranker-qwen3 | depth-tabled | 1.000 | 0.494 | 0.919 | 0.642 | 0.494 | 0.919 | 179 |
-| reranker-qwen3 | rewrite-depth-tabled | 0.793 | 0.248 | 0.635 | 0.356 | 0.248 | 0.922 | 179 |
+| reranker-qwen3 | rewrite-depth-tabled | 0.793 | 0.248 | 0.635 | 0.356 | 0.248 | 0.922 | 178 |
 | reranker-qwen3 | lazy-tabled | 0.103 | 1.000 | 0.050 | 0.094 | 1.000 | 0.733 | 230 |
 | reranker-qwen3 | eager-worklist | 0.103 | 1.000 | 0.050 | 0.094 | 1.000 | 0.733 | 230 |
 <!-- END GENERATED: judges-strategies -->
@@ -401,18 +401,18 @@ It also has eleven defects worth reporting upstream. Seven of them involve state
 |---|---|
 | A constant spelled like a builtin, such as `max` or `min`, loses its answers in untabled evaluation when the query binds it, while tabled evaluation and a direct lookup find them. The depth-bounded strategy lost parent(hope, max) under every judge until the engine renamed such constants. | `repros/builtin_named_constant_untabled.py`, filed as [PyMeTTa#1](https://github.com/MesTTo/PyMeTTa/issues/1) |
 | An op whose parameter is annotated `object` changes how its inference limit arrives: from the second context of a process on, a limit reached in a loop through the op comes back as a plain `EngineError` whose cause is a janus `PrologError`, `EngineError("Python InferenceLimitError in (next n)")`, so `except InferenceLimitError` misses it. The annotation also more than doubles what a call costs, 77 inferences against 33 unannotated, and with the rewriter's discovery op it let the first naive solve of a process run mother(X, bea) to 16 to 23 million inferences in 20 seconds against a 300,000 budget, stopping only at the time limit; that is why the isolation check's fresh processes once disagreed with the shared one. The experiment's engine annotated its ops that way and hit the wrapped error on its naive runs once another context had run. This release's engine annotates the discovery op's parameter `Symbol`, which stops at the budget and was the cheapest of the annotations measured, and still reads a wrapped limit as a work limit by its own inference count. | `repros/op_object_parameter_wraps_limit.py` |
-| A budget can be lost inside tabled evaluation. SWI sometimes prints `Unknown message: tabling(unexpected_result(..., external_exception(inference_limit_exceeded)))` to stderr, a case the bundled SWI's `boot/tabling.pl` does not handle in `finished_leader/4`, and evaluation goes on. In the experiment, the reranker's lazy-tabled `within(parin, Y)` ran to 18,507,105 inferences against its 500,000 budget in both of its runs. In this release's runs SWI printed the message 24 times, and every run but one stopped within 15,000 inferences of its budget; the one, nli-deberta-base's eager-worklist `remedy_for(X, Y)`, reached 3,828,885 with no message, while the same program in a fresh process stops at 501,187. In this release's earlier rerun, whose engine differed only in the discovery op, nli-deberta-large's eager-worklist `inside(X, suner)` had reached 6,599,433 instead, and this time it stopped at 500,922, so which run overshoots depends on what ran before it in the process. The engine still reports `work_limit`. | the overshooting run's row is in `results/implementations.judges-2.jsonl`; no script here reproduces it alone |
+| A budget can be lost inside tabled evaluation. SWI sometimes prints `Unknown message: tabling(unexpected_result(..., external_exception(inference_limit_exceeded)))` to stderr, a case the bundled SWI's `boot/tabling.pl` does not handle in `finished_leader/4`, and evaluation goes on. In the experiment, the reranker's lazy-tabled `within(parin, Y)` ran to 18,507,105 inferences against its 500,000 budget in both of its runs. In this release's runs SWI printed the message 10 times, and every run but two stopped within 15,000 inferences of its budget. Both are eager-worklist runs that printed no message: nli-deberta-base's `remedy_for(X, Y)` reached 3,828,885, while the same program in a fresh process stops at 501,187, and nli-deberta-large's `inside(X, suner)` reached 6,599,433, as it had two reruns before, while the rerun between them stopped it at 500,922. Which runs overshoot depends on what ran before them in the process. The engine still reports `work_limit`. | the overshooting runs' rows are in `results/implementations.judges-2.jsonl` and `results/implementations.judges-3.jsonl`; no script here reproduces either alone |
 | In the experiment's 70-minute oracle run, three untabled runs of `superior_of(X, finn)` (naive, and memo-untabled cold and warm) ran to 9.4 to 10.0 million inferences against their 500,000 budget and stopped only at the 120-second time limit, in both of its runs; replaying the run's history reproduced it at an earlier commit but not at the final one. That engine annotated its discovery op's parameter `object`, under which a limit can be missed (two rows up). In this release's oracle run, which took 12 minutes, the same three stopped at the inference budget, at 505,830, within 2 seconds, and no run of the 1,276 reached its time limit. | not reproduced with this release's engine; the experiment's rows are in this repository's history |
 | `MeTTa.eval(timeout=float("inf"))` raises an `EngineError` from SWI's arithmetic (`float_overflow`), although `timeout=None` means no limit and `timeout=0` is refused with a `ValueError`. The engine passes `None` for an unlimited budget. | `repros/infinite_timeout_overflows.py`, filed as [PyMeTTa#2](https://github.com/MesTTo/PyMeTTa/issues/2) |
 | Symbol-use state crosses contexts. Evaluating a call to an undefined predicate in one context makes a fresh context warn that the predicate "is defined after already being used". Answers stay correct: the isolation check below ran all 204 family-benchmark oracle runs both in one shared process and in a fresh process each, and found no difference in answers or status. | `repros/symbol_use_leaks_across_contexts.py`, filed as [PyMeTTa#3](https://github.com/MesTTo/PyMeTTa/issues/3) |
-| Every call of a function name costs more inferences, in every later context of the process, for each earlier context that tabled a function of that name: an untabled ten-call chain costs 7,264 inferences fresh and 13,979 after 300 such contexts, and abolishing all tables does not undo it. It explains the drift in counts between runs: when the same 51 family runs were repeated with three strategies interleaved, all 17 untabled counts grew, by 5,092 to 11,076 inferences (up to 1.9%); the other two changes, of 2 and 6 inferences, were tabled runs of parent(X, max), which it does not explain. It also starved untabled runs of their budget after the conformance tests until the engine gave each solve's function names a tag of their own. The experiment's engine tabled one function name in every context, and its runs fit this cost: with the three permissive judges in one process, untabled depth-bounded runs stopped at the budget 6, 4 and 45 times in the order the judges ran, and the third judge's 17 family runs all stopped there, while a fresh process of the same engine stopped 4 of them. Budgets below about 100,000 inferences also overshoot: at 10,000, both untabled divergence runs stopped after about 69,500. | `repros/tabled_contexts_raise_inference_cost.py`, filed as [PyMeTTa#4](https://github.com/MesTTo/PyMeTTa/issues/4) |
+| Every call of a function name costs more inferences, in every later context of the process, for each earlier context that tabled a function of that name: an untabled ten-call chain costs 7,264 inferences fresh and 13,979 after 300 such contexts, and abolishing all tables does not undo it. It explains the drift in counts between runs: when the same 51 family runs were repeated with three strategies interleaved, all 17 untabled counts grew, by 5,092 to 11,076 inferences (up to 1.9%); the other two changes, of 2 and 6 inferences, were tabled runs of parent(X, max), which it does not explain. It also starved untabled runs of their budget after the conformance tests until the engine gave each solve's function names a tag of their own. The experiment's engine tabled one function name in every context, and its runs fit this cost: with the three permissive judges in one process, untabled depth-bounded runs stopped at the budget 6, 4 and 45 times in the order the judges ran, and the third judge's 17 family runs all stopped there, while a fresh process of the same engine stopped 4 of them. | `repros/tabled_contexts_raise_inference_cost.py`, filed as [PyMeTTa#4](https://github.com/MesTTo/PyMeTTa/issues/4) |
 | `run()` takes 3 to 63 times longer than `eval()` to exhaust the same inference budget (budgets of 10,000 to 100,000 inferences, over several runs and machine loads), and the gap in seconds grows faster than the budget. | `repros/run_budget_slower_than_eval.py`, filed as [PyMeTTa#5](https://github.com/MesTTo/PyMeTTa/issues/5) |
 | Every `MeTTa()` context that imports `lib_tabling` keeps about 25 KB after it closes, whether or not it tables anything and whatever its names, and `abolish_all_tables` does not free it; contexts without the import stay flat. The three permissive judges in one process outgrew a 4 GiB memory cap through it, so each judge run now takes a process of its own. | `repros/tabling_import_leaks_memory.py` |
 | Declaring n tabled functions that call each other takes time quadratic in n, 2.5 s for 240, and close to linear, 0.6 s, when each function also has a clause calling a Python op. The native encoding keeps such a clause, its reach fallback, on every predicate; without it, a solve on the geography benchmark took three times as long. | `repros/tabled_declarations_quadratic.py` |
 | Declaring a function tabled before its equations are loaded makes its query raise an internal type error (``Type error: `metta_function_call' expected``), and every later context that tables a function of that name raises the same error, even with its equations loaded first. The engine declares each table once its function has equations. | `repros/tabled_before_equations_breaks_eval.py` |
 | Closing a `MeTTa()` context takes time growing faster than quadratically in the ground equations one function has: 0.5 to 0.6 s for 1,250, 11 to 19 s for 5,000 and 106 s for 10,000, against under 0.1 s for the same facts as atoms, and `Space.clear()` first takes as long. The meta encoding held every fact as an equation of one function, so a solve over 10,000 facts spent 75 of its 77 s closing its context; it holds them as atoms now, and a solve over the 23,116 statements of the Victoria example in examples/README.md takes about 3 s. | `repros/equation_teardown_superquadratic.py` |
 
-Apart from one tabled overshoot, every inference-limited run in the final results stopped within 15,000 inferences of its 500,000 budget (570 of 571 runs).
+Apart from two tabled overshoots, every inference-limited run in the final results stopped within 15,000 inferences of its 500,000 budget (573 of 575 runs).
 
 Three things caught me out, but they're MeTTa semantics rather than defects:
 

@@ -2,59 +2,59 @@
 ============================ Hypothesis Statistics =============================
 tests/test_termination.py::test_tabled_strategies_reach_exactly_the_fixpoint[python]:
 
-  - during generate phase (1.58 seconds):
-    - Typical runtimes: ~ 1-6 ms, of which ~ 0-1 ms in data generation
-    - 400 passing, 0 failing, and 18 invalid test cases
+  - during generate phase (1.12 seconds):
+    - Typical runtimes: ~ 0-4 ms, of which ~ 0-1 ms in data generation
+    - 400 passing, 0 failing, and 14 invalid test cases
     - Events:
-      * 68.90%, query on a rewrite cycle
-      * 22.49%, query reaches no cycle
-      * 4.31%, query reaches a cycle off itself
+      * 69.57%, query on a rewrite cycle
+      * 22.46%, query reaches no cycle
+      * 4.59%, query reaches a cycle off itself
 
   - Stopped because settings.max_examples=400
 
 
 tests/test_termination.py::test_tabled_strategies_reach_exactly_the_fixpoint[pymetta]:
 
-  - during generate phase (152.09 seconds):
-    - Typical runtimes: ~ 182-572 ms, of which ~ 0-1 ms in data generation
-    - 400 passing, 0 failing, and 18 invalid test cases
+  - during generate phase (166.87 seconds):
+    - Typical runtimes: ~ 111-769 ms, of which ~ 0-1 ms in data generation
+    - 400 passing, 0 failing, and 21 invalid test cases
     - Events:
-      * 63.40%, query on a rewrite cycle
-      * 26.32%, query reaches no cycle
-      * 5.98%, query reaches a cycle off itself
+      * 71.50%, query on a rewrite cycle
+      * 16.86%, query reaches no cycle
+      * 6.65%, query reaches a cycle off itself
 
   - Stopped because settings.max_examples=400
 
 
 tests/test_termination.py::test_untabled_rewriting_loops_exactly_when_a_cycle_is_in_reach[pymetta]:
 
-  - during generate phase (79.11 seconds):
-    - Typical runtimes: ~ 1-344 ms, of which ~ 0-1 ms in data generation
-    - 400 passing, 0 failing, and 27 invalid test cases
+  - during generate phase (70.47 seconds):
+    - Typical runtimes: ~ 1-329 ms, of which ~ 0-1 ms in data generation
+    - 400 passing, 0 failing, and 31 invalid test cases
     - Events:
-      * 77.05%, looping case
-      * 10.77%, acyclic case
-      * 5.85%, no claim
+      * 58.00%, looping case
+      * 22.74%, acyclic case
+      * 12.06%, no claim
 
   - Stopped because settings.max_examples=400
 
 
 tests/test_termination.py::test_depth_bounded_rewriting_stops_and_is_sound[python]:
 
-  - during generate phase (1.38 seconds):
-    - Typical runtimes: ~ 1-6 ms, of which ~ 0-1 ms in data generation
-    - 400 passing, 0 failing, and 22 invalid test cases
+  - during generate phase (1.42 seconds):
+    - Typical runtimes: ~ 1-5 ms, of which ~ 0-1 ms in data generation
+    - 400 passing, 0 failing, and 24 invalid test cases
 
   - Stopped because settings.max_examples=400
 
 
 tests/test_termination.py::test_depth_bounded_rewriting_stops_and_is_sound[pymetta]:
 
-  - during generate phase (87.74 seconds):
-    - Typical runtimes: ~ 2-302 ms, of which ~ 0-1 ms in data generation
-    - 400 passing, 0 failing, and 22 invalid test cases
+  - during generate phase (124.62 seconds):
+    - Typical runtimes: ~ 2-426 ms, of which ~ 0-1 ms in data generation
+    - 400 passing, 0 failing, and 26 invalid test cases
 
   - Stopped because settings.max_examples=400
 
 
-5 passed in 322.03s (0:05:22)
+5 passed in 364.63s (0:06:04)

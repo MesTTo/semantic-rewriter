@@ -262,10 +262,10 @@
      "true": 1849,
      "unrelated": 817
     },
-    "seconds_per_query": 0.1949,
+    "seconds_per_query": 0.1532,
     "strategy": "lazy-tabled",
-    "tables_per_query": 263.55,
-    "work_per_query": 247956.6
+    "tables_per_query": 254.47,
+    "work_per_query": 250855.2
    },
    {
     "exact_rate": 0.1897,
@@ -290,10 +290,10 @@
      "true": 1886,
      "unrelated": 852
     },
-    "seconds_per_query": 0.1537,
+    "seconds_per_query": 0.1095,
     "strategy": "lazy-tabled",
-    "tables_per_query": 262.05,
-    "work_per_query": 247200.8
+    "tables_per_query": 252.22,
+    "work_per_query": 250052.1
    }
   ],
   "slack": 0.1,
@@ -557,10 +557,10 @@
      "true": 1370,
      "unrelated": 441
     },
-    "seconds_per_query": 0.3109,
+    "seconds_per_query": 0.2137,
     "strategy": "lazy-tabled",
-    "tables_per_query": 353.6,
-    "work_per_query": 199451.0
+    "tables_per_query": 328.29,
+    "work_per_query": 200921.8
    },
    {
     "exact_rate": 0.431,
@@ -585,10 +585,10 @@
      "true": 1622,
      "unrelated": 540
     },
-    "seconds_per_query": 0.1875,
+    "seconds_per_query": 0.1444,
     "strategy": "lazy-tabled",
-    "tables_per_query": 318.02,
-    "work_per_query": 200651.4
+    "tables_per_query": 297.02,
+    "work_per_query": 202162.7
    }
   ],
   "slack": 0.02,
@@ -854,10 +854,10 @@
      "true": 1642,
      "unrelated": 338
     },
-    "seconds_per_query": 0.4387,
+    "seconds_per_query": 0.2709,
     "strategy": "lazy-tabled",
-    "tables_per_query": 375.36,
-    "work_per_query": 258518.6
+    "tables_per_query": 361.22,
+    "work_per_query": 262182.0
    },
    {
     "exact_rate": 0.2414,
@@ -882,10 +882,10 @@
      "true": 2062,
      "unrelated": 713
     },
-    "seconds_per_query": 0.3194,
+    "seconds_per_query": 0.2362,
     "strategy": "lazy-tabled",
-    "tables_per_query": 348.41,
-    "work_per_query": 264977.3
+    "tables_per_query": 329.5,
+    "work_per_query": 267208.7
    }
   ],
   "slack": 0.05,
@@ -1155,10 +1155,10 @@
      "true": 1128,
      "unrelated": 829
     },
-    "seconds_per_query": 0.4523,
+    "seconds_per_query": 0.4897,
     "strategy": "lazy-tabled",
-    "tables_per_query": 472.34,
-    "work_per_query": 191035.1
+    "tables_per_query": 443.28,
+    "work_per_query": 193389.0
    },
    {
     "exact_rate": 0.0862,
@@ -1183,10 +1183,10 @@
      "true": 1652,
      "unrelated": 1376
     },
-    "seconds_per_query": 0.5413,
+    "seconds_per_query": 0.4955,
     "strategy": "lazy-tabled",
-    "tables_per_query": 255.66,
-    "work_per_query": 449517.9
+    "tables_per_query": 234.0,
+    "work_per_query": 449516.5
    }
   ],
   "slack": 0.01,

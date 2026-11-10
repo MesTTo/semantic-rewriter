@@ -5,13 +5,13 @@
   "judge": "nli-deberta-base",
   "strategy": "lazy-tabled",
   "status": "ok",
-  "work": 23793,
+  "work": 24261,
   "tables": 20,
   "rewrites": 69,
   "answers": 80,
   "true": 30,
   "gold": 30,
-  "seconds": 3.57
+  "seconds": 3.98
  },
  {
   "kb": "family",
@@ -25,7 +25,7 @@
   "answers": 80,
   "true": 30,
   "gold": 30,
-  "seconds": 0.18
+  "seconds": 0.16
  },
  {
   "kb": "family",
@@ -33,13 +33,13 @@
   "judge": "oracle",
   "strategy": "lazy-tabled",
   "status": "ok",
-  "work": 6712,
+  "work": 6973,
   "tables": 11,
   "rewrites": 32,
   "answers": 30,
   "true": 30,
   "gold": 30,
-  "seconds": 0.06
+  "seconds": 0.05
  },
  {
   "kb": "family",
@@ -61,13 +61,13 @@
   "judge": "nli-deberta-base",
   "strategy": "lazy-tabled",
   "status": "ok",
-  "work": 375677,
+  "work": 411754,
   "tables": 1712,
   "rewrites": 77,
   "answers": 17,
   "true": 6,
   "gold": 6,
-  "seconds": 0.62
+  "seconds": 1.11
  },
  {
   "kb": "family",
@@ -89,13 +89,13 @@
   "judge": "oracle",
   "strategy": "lazy-tabled",
   "status": "ok",
-  "work": 77989,
+  "work": 86009,
   "tables": 380,
   "rewrites": 37,
   "answers": 6,
   "true": 6,
   "gold": 6,
-  "seconds": 0.11
+  "seconds": 0.05
  },
  {
   "kb": "family",
@@ -109,7 +109,7 @@
   "answers": 6,
   "true": 6,
   "gold": 6,
-  "seconds": 0.14
+  "seconds": 0.11
  },
  {
   "kb": "work",
@@ -117,13 +117,13 @@
   "judge": "nli-deberta-base",
   "strategy": "lazy-tabled",
   "status": "ok",
-  "work": 61680,
+  "work": 67119,
   "tables": 258,
   "rewrites": 42,
   "answers": 3,
   "true": 2,
   "gold": 3,
-  "seconds": 0.31
+  "seconds": 0.43
  },
  {
   "kb": "work",
@@ -137,7 +137,7 @@
   "answers": 3,
   "true": 2,
   "gold": 3,
-  "seconds": 0.2
+  "seconds": 0.14
  },
  {
   "kb": "work",
@@ -145,13 +145,13 @@
   "judge": "oracle",
   "strategy": "lazy-tabled",
   "status": "ok",
-  "work": 36768,
+  "work": 40404,
   "tables": 172,
   "rewrites": 20,
   "answers": 3,
   "true": 3,
   "gold": 3,
-  "seconds": 0.1
+  "seconds": 0.05
  },
  {
   "kb": "work",
@@ -165,7 +165,7 @@
   "answers": 3,
   "true": 3,
   "gold": 3,
-  "seconds": 0.1
+  "seconds": 0.07
  },
  {
   "kb": "geography",
@@ -173,13 +173,13 @@
   "judge": "nli-deberta-base",
   "strategy": "lazy-tabled",
   "status": "ok",
-  "work": 16821474,
+  "work": 17346375,
   "tables": 24999,
   "rewrites": 76,
   "answers": 40,
   "true": 17,
   "gold": 17,
-  "seconds": 3.17
+  "seconds": 3.56
  },
  {
   "kb": "geography",
@@ -187,13 +187,13 @@
   "judge": "nli-deberta-base",
   "strategy": "eager-worklist",
   "status": "ok",
-  "work": 15273613,
+  "work": 15273283,
   "tables": 24999,
   "rewrites": 76,
   "answers": 40,
   "true": 17,
   "gold": 17,
-  "seconds": 2.01
+  "seconds": 2.04
  },
  {
   "kb": "geography",
@@ -201,13 +201,13 @@
   "judge": "oracle",
   "strategy": "lazy-tabled",
   "status": "ok",
-  "work": 110703,
+  "work": 117926,
   "tables": 336,
   "rewrites": 34,
   "answers": 17,
   "true": 17,
   "gold": 17,
-  "seconds": 0.11
+  "seconds": 0.12
  },
  {
   "kb": "geography",
@@ -215,13 +215,13 @@
   "judge": "oracle",
   "strategy": "eager-worklist",
   "status": "ok",
-  "work": 99104,
+  "work": 99204,
   "tables": 336,
   "rewrites": 34,
   "answers": 17,
   "true": 17,
   "gold": 17,
-  "seconds": 0.23
+  "seconds": 0.28
  },
  {
   "kb": "medicine",
@@ -229,13 +229,13 @@
   "judge": "nli-deberta-base",
   "strategy": "lazy-tabled",
   "status": "ok",
-  "work": 4441168,
+  "work": 4622356,
   "tables": 8620,
   "rewrites": 91,
   "answers": 23,
   "true": 3,
   "gold": 3,
-  "seconds": 1.3
+  "seconds": 1.45
  },
  {
   "kb": "medicine",
@@ -249,7 +249,7 @@
   "answers": 23,
   "true": 3,
   "gold": 3,
-  "seconds": 1.05
+  "seconds": 0.82
  },
  {
   "kb": "medicine",
@@ -257,13 +257,13 @@
   "judge": "oracle",
   "strategy": "lazy-tabled",
   "status": "ok",
-  "work": 2841,
+  "work": 2970,
   "tables": 6,
   "rewrites": 13,
   "answers": 3,
   "true": 3,
   "gold": 3,
-  "seconds": 0.1
+  "seconds": 0.08
  },
  {
   "kb": "medicine",
@@ -277,6 +277,6 @@
   "answers": 3,
   "true": 3,
   "gold": 3,
-  "seconds": 0.15
+  "seconds": 0.12
  }
 ]

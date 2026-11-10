@@ -294,10 +294,10 @@
      "true": 1409,
      "unrelated": 227
     },
-    "seconds_per_query": 0.1269,
+    "seconds_per_query": 0.1284,
     "strategy": "lazy-tabled",
-    "tables_per_query": 140.55,
-    "work_per_query": 143645.7
+    "tables_per_query": 134.76,
+    "work_per_query": 145500.9
    },
    {
     "exact_rate": 0.5862,
@@ -321,10 +321,10 @@
      "true": 1684,
      "unrelated": 269
     },
-    "seconds_per_query": 0.1133,
+    "seconds_per_query": 0.1346,
     "strategy": "lazy-tabled",
-    "tables_per_query": 153.38,
-    "work_per_query": 144869.2
+    "tables_per_query": 147.02,
+    "work_per_query": 146731.5
    }
   ],
   "slack": 0.2,
