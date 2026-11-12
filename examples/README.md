@@ -190,7 +190,7 @@ With chains of up to three rewrites on Victoria's question, Jev returned the sam
 
 Each answer comes with its derivation, the statements and rewrites it rests on, each rewrite with Jev's score:
 
-<!-- BEGIN GENERATED: wikidata-derivations -->
+<!-- BEGIN GENERATED: wikidata-descent -->
 ```text
 $ semrewrite ask examples/wikidata/victoria.metta 'descendant_of(frederik_x_of_denmark, queen_victoria)' --judge jev --threshold 0.65 --strategy rewrite-depth-tabled --depth 1 --retriever judge --k 50 --engine pymetta --work 50000000 --seconds inf --explain
 descendant_of(frederik_x_of_denmark, queen_victoria)
@@ -229,8 +229,12 @@ rewrites admitted (18):
   parent_of(X0, X1) ⇐ parent_p8810(X1, X0)
   parent_of(X0, X1) ⇐ parent_peak_p3137(X1, X0)
   parent_of(X0, X1) ⇐ subdivision_of_this_unit_p9059(X0, X1)
-ok: 1 answers, 35,182 work, 202 judge questions, 30.34 s
+ok: 1 answer, 35,172 work, 202 judge questions, 42.17 s
+```
+<!-- END GENERATED: wikidata-descent -->
 
+<!-- BEGIN GENERATED: wikidata-work -->
+```text
 $ semrewrite ask examples/wikidata/leonardo.metta 'created(leonardo_da_vinci, mona_lisa)' --judge jev --threshold 0.65 --strategy rewrite-depth-tabled --depth 1 --retriever judge --k 50 --engine pymetta --work 50000000 --seconds inf --explain
 created(leonardo_da_vinci, mona_lisa)
     created(leonardo_da_vinci, mona_lisa)    [by created(X0, X1) ⇐ creator_p170(X1, X0), score 0.920]
@@ -253,8 +257,12 @@ rewrites admitted (16):
   created(X0, X1) ⇐ notable_work_p800(X0, X1)
   created(X0, X1) ⇐ produced_by_p2849(X1, X0)
   created(X0, X1) ⇐ producer_p162(X1, X0)
-ok: 1 answers, 3,175 work, 101 judge questions, 15.80 s
+ok: 1 answer, 3,169 work, 101 judge questions, 26.76 s
+```
+<!-- END GENERATED: wikidata-work -->
 
+<!-- BEGIN GENERATED: wikidata-holding -->
+```text
 $ semrewrite ask examples/wikidata/alphabet.metta 'owns(alphabet_inc, youtube_q866)' --judge jev --threshold 0.65 --strategy rewrite-depth-tabled --depth 1 --retriever judge --k 50 --engine pymetta --work 50000000 --seconds inf --explain
 owns(alphabet_inc, youtube_q866)
     owns(alphabet_inc, youtube_q866)    [by owns(X, Z) :- owns(X, Y), owns(Y, Z)]
@@ -270,9 +278,9 @@ rewrites admitted (3):
   owns(X0, X1) ⇐ afterward_owned_by_p11812(X1, X0)
   owns(X0, X1) ⇐ owned_by_p127(X1, X0)
   owns(X0, X1) ⇐ owner_of_p1830(X0, X1)
-ok: 1 answers, 2,294,041 work, 101 judge questions, 16.59 s
+ok: 1 answer, 2,294,032 work, 101 judge questions, 37.30 s
 ```
-<!-- END GENERATED: wikidata-derivations -->
+<!-- END GENERATED: wikidata-holding -->
 
 King Frederik X of Denmark descends from Victoria through his mother Margrethe II, her mother Ingrid of Sweden, Ingrid's mother Princess Margaret of Connaught, and Margaret's father Prince Arthur, Victoria's son. The Mona Lisa names Leonardo as its creator. Alphabet owns YouTube through XXVI Holdings and Google. Wikidata states the first and last links on what is owned, as owned by, and the middle one on the owner, as owner of.
 
@@ -293,20 +301,20 @@ descendant_of(army_air_corps, queen_victoria)
         parent_of(charles_iii_q43274, prince_harry_duke_of_sussex)    [by parent_of(X0, X1) ⇐ father_p22(X1, X0), score 0.980]
           father_p22(prince_harry_duke_of_sussex, charles_iii_q43274)    [fact]
         descendant_of(charles_iii_q43274, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-          parent_of(elizabeth_ii, charles_iii_q43274)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
-            mother_p25(charles_iii_q43274, elizabeth_ii)    [fact]
-          descendant_of(elizabeth_ii, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-            parent_of(george_vi, elizabeth_ii)    [by parent_of(X0, X1) ⇐ father_p22(X1, X0), score 0.980]
-              father_p22(elizabeth_ii, george_vi)    [fact]
-            descendant_of(george_vi, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-              parent_of(george_v, george_vi)    [by parent_of(X0, X1) ⇐ father_p22(X1, X0), score 0.980]
-                father_p22(george_vi, george_v)    [fact]
-              descendant_of(george_v, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-                parent_of(edward_vii, george_v)    [by parent_of(X0, X1) ⇐ father_p22(X1, X0), score 0.980]
-                  father_p22(george_v, edward_vii)    [fact]
-                descendant_of(edward_vii, queen_victoria)    [by descendant_of(X, Y) :- parent_of(Y, X)]
-                  parent_of(queen_victoria, edward_vii)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
-                    mother_p25(edward_vii, queen_victoria)    [fact]
+          parent_of(prince_philip_duke_of_edinburgh, charles_iii_q43274)    [by parent_of(X0, X1) ⇐ father_p22(X1, X0), score 0.980]
+            father_p22(charles_iii_q43274, prince_philip_duke_of_edinburgh)    [fact]
+          descendant_of(prince_philip_duke_of_edinburgh, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
+            parent_of(princess_alice_of_battenberg, prince_philip_duke_of_edinburgh)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
+              mother_p25(prince_philip_duke_of_edinburgh, princess_alice_of_battenberg)    [fact]
+            descendant_of(princess_alice_of_battenberg, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
+              parent_of(princess_victoria_of_hesse_and_by_rhine, princess_alice_of_battenberg)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
+                mother_p25(princess_alice_of_battenberg, princess_victoria_of_hesse_and_by_rhine)    [fact]
+              descendant_of(princess_victoria_of_hesse_and_by_rhine, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
+                parent_of(princess_alice_of_the_united_kingdom, princess_victoria_of_hesse_and_by_rhine)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
+                  mother_p25(princess_victoria_of_hesse_and_by_rhine, princess_alice_of_the_united_kingdom)    [fact]
+                descendant_of(princess_alice_of_the_united_kingdom, queen_victoria)    [by descendant_of(X, Y) :- parent_of(Y, X)]
+                  parent_of(queen_victoria, princess_alice_of_the_united_kingdom)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
+                    mother_p25(princess_alice_of_the_united_kingdom, queen_victoria)    [fact]
 
 rewrites admitted (184):
   by_product_of_p2822(X0, X1) ⇐ by_product_p2821(X1, X0)
@@ -493,7 +501,7 @@ rewrites admitted (184):
   this_taxon_is_source_of_p1672(X0, X1) ⇐ protonym_of_p12765(X0, X1)
   twinning_p537(X0, X1) ⇐ permanent_duplicated_item_p2959(X0, X1)
   twinning_p537(X0, X1) ⇐ twinning_p537(X1, X0)
-ok: 1 answers, 794,410 work, 5,454 judge questions, 861.08 s
+ok: 1 answer, 794,410 work, 5,454 judge questions, 1333.21 s
 ```
 <!-- END GENERATED: wikidata-chained -->
 
@@ -844,13 +852,13 @@ mother_of(pam, bob)
 
 rewrites admitted (1):
   mother_of(X0, X1) ⇐ gave_birth_to(X0, X1)
-ok: 1 answers, 1,916 work, 42 judge questions, 0.04 s
+ok: 1 answer, 1,993 work, 42 judge questions, 1.28 s
 
 $ semrewrite ask examples/family_tree.metta 'mother_of(X, jim)' --judge jev --threshold 0.65 --strategy rewrite-depth-tabled --retriever all --engine pymetta --explain
 
 rewrites admitted (1):
   mother_of(X0, X1) ⇐ gave_birth_to(X0, X1)
-ok: 0 answers, 1,826 work, 42 judge questions, 0.04 s
+ok: 0 answers, 1,868 work, 42 judge questions, 0.17 s
 ```
 <!-- END GENERATED: family-mothers -->
 
@@ -929,7 +937,7 @@ rewrites admitted (21):
   son_of(X0, X1) ⇐ father_of(X0, X1)
   son_of(X0, X1) ⇐ parent_of(X0, X1)
   son_of(X0, X1) ⇐ son_of(X1, X0)
-ok: 3 answers, 60,984 work, 126 judge questions, 0.18 s
+ok: 3 answers, 70,332 work, 126 judge questions, 0.49 s
 
 $ semrewrite ask examples/family_tree.metta 'mother_of(X, jim)' --judge cosine-bge --strategy rewrite-depth-tabled --retriever all --engine pymetta --explain
 mother_of(pat, jim)
@@ -958,7 +966,7 @@ rewrites admitted (20):
   son_of(X0, X1) ⇐ father_of(X0, X1)
   son_of(X0, X1) ⇐ parent_of(X0, X1)
   son_of(X0, X1) ⇐ son_of(X1, X0)
-ok: 1 answers, 5,005 work, 105 judge questions, 0.12 s
+ok: 1 answer, 5,526 work, 105 judge questions, 0.85 s
 ```
 <!-- END GENERATED: family-similarity -->
 

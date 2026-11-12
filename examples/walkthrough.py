@@ -1,6 +1,7 @@
-"""Purpose: run every command examples/README.md shows and write what each printed into the README, between
-`<!-- BEGIN GENERATED: name -->` and `<!-- END GENERATED: name -->`, so its transcripts are the code's output; a
-block naming a knowledge base gets that file's text, and a block naming a function gets the markdown it returns.
+"""Purpose: run every command README.md and examples/README.md show and write what each printed into them, between
+`<!-- BEGIN GENERATED: name -->` and `<!-- END GENERATED: name -->`, so their transcripts are the code's output; a
+block naming a knowledge base gets that file's text, and a block naming a function gets the markdown it returns. A
+block may appear in both documents, and is rendered once.
 
 Run from the repository root:
 
@@ -23,7 +24,8 @@ import re
 import shlex
 import sys
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from functools import cache
 from pathlib import Path
 
 # Progress bars from model loading would land in the transcripts.
@@ -35,49 +37,73 @@ sys.path.insert(0, str(ROOT))
 
 from semrewrite.cli import main
 
-README = ROOT / "examples" / "README.md"
+# The documents whose generated blocks the walkthrough fills.
+DOCUMENTS = (ROOT / "README.md", ROOT / "examples" / "README.md")
+TOM = "examples/parent_of_tom.kb"
 SWANSON = "examples/swanson.metta"
 FAMILY = "examples/family_tree.metta"
+VICTORIA = "examples/wikidata/victoria.metta"
 WORTH = "worth_testing_against(X, raynauds)"
+# The NLI cross-encoder judging every predicate of the small example, at its calibrated threshold.
+NLI = ["--judge", "nli-deberta-large", "--retriever", "all"]
 # The settings RESULTS.md found best for Jev: the threshold calibrated for answer F1, and a bound of three rewrites.
 JEV = ["--judge", "jev", "--threshold", "0.65", "--strategy", "rewrite-depth-tabled", "--retriever", "all",
        "--engine", "pymetta"]
 SIMILARITY = ["--judge", "cosine-bge", "--strategy", "rewrite-depth-tabled", "--retriever", "all", "--engine", "pymetta"]
 
 
-def wikidata(depth: int) -> list[str]:
-    """Jev's settings on Wikidata's catalogue, as in examples/wikidata/evaluate.py: the cross-encoder ranks every
-    property, Jev judges the 50 it ranks highest, a path takes at most `depth` rewrites, and the work budget is the
-    evaluation's, with no time limit."""
-    return [*JEV[:6], "--depth", str(depth), "--retriever", "judge", "--k", "50", "--engine", "pymetta",
-            "--work", "50000000", "--seconds", "inf"]
+def wikidata(depth: int, judge: Sequence[str] = JEV[:4]) -> list[str]:
+    """A judge's settings on Wikidata's catalogue, Jev's unless `judge` names another, as in
+    examples/wikidata/evaluate.py: the cross-encoder ranks every property, the judge decides on the 50 it ranks highest,
+    a path takes at most `depth` rewrites, and the work budget is the evaluation's, with no time limit."""
+    return [*judge, "--strategy", "rewrite-depth-tabled", "--depth", str(depth), "--retriever", "judge", "--k", "50",
+            "--engine", "pymetta", "--work", "50000000", "--seconds", "inf"]
 
 
-def wikidata_evaluation() -> str:
-    """examples/wikidata/evaluate.py's report on every question."""
+@cache
+def _evaluation():
+    """examples/wikidata/evaluate.py as a module, loaded once, so the blocks it writes share its runs."""
     spec = importlib.util.spec_from_file_location("wikidata_evaluate", ROOT / "examples" / "wikidata" / "evaluate.py")
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
-    return module.report([])
+    return module
+
+
+def wikidata_evaluation() -> str:
+    """examples/wikidata/evaluate.py's report on every question."""
+    return _evaluation().report([])
+
+
+def wikidata_summary() -> str:
+    """examples/wikidata/evaluate.py's table of every question, each judge allowed one rewrite on a path."""
+    return _evaluation().summary([])
 
 
 # Each generated block: the paths of the knowledge bases it shows, space separated, the commands whose transcripts it
 # holds, or a function writing it.
 BLOCKS: dict[str, str | list[list[str]] | Callable[[], str]] = {
+    "tom-source": TOM,
+    "tom-explain": [["ask", TOM, "parent(X, tom)", *NLI, "--explain"]],
+    "tom-strict": [["ask", TOM, "parent(X, tom)", *NLI, "--threshold", "0.995"]],
+    "tom-grandparent": [["ask", TOM, "grandparent(X, tom)", *NLI, "--threshold", "0.995", "--explain"]],
     "wikidata-questions": "examples/wikidata/victoria.question.metta examples/wikidata/leonardo.question.metta "
                           "examples/wikidata/alphabet.question.metta",
+    "wikidata-trace": [["ask", "examples/wikidata/alphabet.metta", "owns(alphabet_inc, youtube_q866)", *wikidata(1),
+                        "--trace", "--explain"]],
+    "wikidata-summary": wikidata_summary,
     "wikidata-evaluation": wikidata_evaluation,
-    "wikidata-derivations": [
-        ["ask", "examples/wikidata/victoria.metta", "descendant_of(frederik_x_of_denmark, queen_victoria)", *wikidata(1),
-         "--explain"],
-        ["ask", "examples/wikidata/leonardo.metta", "created(leonardo_da_vinci, mona_lisa)", *wikidata(1), "--explain"],
-        ["ask", "examples/wikidata/alphabet.metta", "owns(alphabet_inc, youtube_q866)", *wikidata(1), "--explain"],
-    ],
+    "wikidata-descent": [["ask", VICTORIA, "descendant_of(frederik_x_of_denmark, queen_victoria)", *wikidata(1),
+                          "--explain"]],
+    "wikidata-work": [["ask", "examples/wikidata/leonardo.metta", "created(leonardo_da_vinci, mona_lisa)", *wikidata(1),
+                       "--explain"]],
+    "wikidata-holding": [["ask", "examples/wikidata/alphabet.metta", "owns(alphabet_inc, youtube_q866)", *wikidata(1),
+                          "--explain"]],
+    "wikidata-similarity": [["ask", VICTORIA, "descendant_of(queen_victoria, queen_victoria)",
+                             *wikidata(1, SIMILARITY[:2]), "--explain"]],
     "wikidata-chained": [
-        ["ask", "examples/wikidata/victoria.metta", "descendant_of(army_air_corps, queen_victoria)", *wikidata(3),
-         "--explain"],
+        ["ask", VICTORIA, "descendant_of(army_air_corps, queen_victoria)", *wikidata(3), "--explain"],
     ],
     "swanson-source": SWANSON,
     "swanson-exact": [["ask", SWANSON, WORTH, "--strategy", "exact", "--engine", "pymetta"]],
@@ -101,22 +127,25 @@ BLOCKS: dict[str, str | list[list[str]] | Callable[[], str]] = {
 
 
 def transcript(argv: list[str]) -> str:
-    """The command line and everything it printed, its answers first, then what it wrote to stderr."""
-    out, err = io.StringIO(), io.StringIO()
-    with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+    """The command line and everything it printed, standard output and standard error in the order written, as a
+    terminal shows them."""
+    printed = io.StringIO()
+    with contextlib.redirect_stdout(printed), contextlib.redirect_stderr(printed):
         status = main(argv)
     if status == 1:
-        msg = f"semrewrite {shlex.join(argv)} failed: {err.getvalue()}"
+        msg = f"semrewrite {shlex.join(argv)} failed: {printed.getvalue()}"
         raise SystemExit(msg)
-    return f"$ semrewrite {shlex.join(argv)}\n{out.getvalue()}{err.getvalue()}".rstrip("\n")
+    return f"$ semrewrite {shlex.join(argv)}\n{printed.getvalue()}".rstrip("\n")
 
 
 def render(name: str) -> str:
-    """The block's new body: a function's markdown, the knowledge bases in a MeTTa fence, or the commands'
-    transcripts in a text fence."""
+    """The block's new body: a function's markdown, the knowledge bases in a fence, MeTTa's when every one is a MeTTa
+    file, or the commands' transcripts in a text fence."""
     spec = BLOCKS[name]
     if isinstance(spec, str):
-        return "```metta\n" + "\n\n".join((ROOT / path).read_text().rstrip() for path in spec.split()) + "\n```"
+        paths = spec.split()
+        fence = "metta" if all(path.endswith(".metta") for path in paths) else "text"
+        return f"```{fence}\n" + "\n\n".join((ROOT / path).read_text().rstrip() for path in paths) + "\n```"
     if isinstance(spec, list):
         return "```text\n" + "\n\n".join(transcript(argv) for argv in spec) + "\n```"
     return spec()
@@ -128,28 +157,29 @@ def _block(name: str) -> re.Pattern[str]:
                       rf"{re.escape(name)} -->)", re.DOTALL)
 
 
-# Rendering can take an hour, so the README is read again only after every block is rendered, and an edit made to
-# it meanwhile survives.
+# Rendering can take an hour, so each document is read again only after every block is rendered, and an edit made to
+# one meanwhile survives.
 def main_walkthrough(names: list[str]) -> None:
     unknown = sorted(set(names) - set(BLOCKS))
     if unknown:
         msg = f"no generated block is named {', '.join(unknown)}; the blocks are {', '.join(BLOCKS)}"
         raise SystemExit(msg)
     chosen = list(names or BLOCKS)
-    before = README.read_text()
-    missing = [name for name in chosen if not _block(name).search(before)]
+    before = [document.read_text() for document in DOCUMENTS]
+    missing = [name for name in chosen if not any(_block(name).search(text) for text in before)]
     if missing:
-        msg = f"{README} has no generated block named {', '.join(missing)}"
+        msg = f"no document has a generated block named {', '.join(missing)}"
         raise SystemExit(msg)
     bodies = {}
     for name in chosen:
         started = time.perf_counter()
         bodies[name] = render(name)
         print(f"rendered {name} in {time.perf_counter() - started:.1f} s", file=sys.stderr)
-    text = README.read_text()
-    for name, body in bodies.items():
-        text = _block(name).sub(lambda m, body=body: m.group(1) + body + "\n" + m.group(2), text)
-    README.write_text(text)
+    for document in DOCUMENTS:
+        text = document.read_text()
+        for name, body in bodies.items():
+            text = _block(name).sub(lambda m, body=body: m.group(1) + body + "\n" + m.group(2), text)
+        document.write_text(text)
 
 
 if __name__ == "__main__":

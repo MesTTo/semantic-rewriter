@@ -2,8 +2,8 @@
 every engine answers each query examples/README.md asks with the answers it describes, each with a valid derivation;
 on each Wikidata knowledge base, Wikidata's own answer is the one the README describes, and with exactly the rewrites
 Wikidata's subproperty hierarchy names every engine returns it; and the walkthrough script fills exactly the README's
-generated blocks. Jev's own transcripts need a key, so the walkthrough regenerates them and these tests guard the
-knowledge bases.
+generated blocks in README.md and examples/README.md. Jev's own transcripts need a key, so the walkthrough regenerates
+them and these tests guard the knowledge bases.
 """
 
 from __future__ import annotations
@@ -111,10 +111,14 @@ def test_the_walkthrough_fills_exactly_the_readmes_generated_blocks() -> None:
     assert spec is not None and spec.loader is not None
     walkthrough = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(walkthrough)
-    readme = (EXAMPLES / "README.md").read_text()
-    begun = re.findall(r"<!-- BEGIN GENERATED: (\S+) -->", readme)
-    ended = re.findall(r"<!-- END GENERATED: (\S+) -->", readme)
-    assert begun == ended and len(set(begun)) == len(begun)
-    assert set(begun) == set(walkthrough.BLOCKS)
+    assert walkthrough.DOCUMENTS == (ROOT / "README.md", EXAMPLES / "README.md")
+    texts = [document.read_text() for document in walkthrough.DOCUMENTS]
+    blocks: set[str] = set()
+    for text in texts:
+        begun = re.findall(r"<!-- BEGIN GENERATED: (\S+) -->", text)
+        ended = re.findall(r"<!-- END GENERATED: (\S+) -->", text)
+        assert begun == ended and len(set(begun)) == len(begun)
+        blocks |= set(begun)
+    assert blocks == set(walkthrough.BLOCKS)
     for argv in (a for spec in walkthrough.BLOCKS.values() if isinstance(spec, list) for a in spec):
-        assert f"$ semrewrite {walkthrough.shlex.join(argv)}\n" in readme, argv
+        assert any(f"$ semrewrite {walkthrough.shlex.join(argv)}\n" in text for text in texts), argv
