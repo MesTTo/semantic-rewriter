@@ -90,6 +90,8 @@ An expansion of a binary predicate with k candidates asks the judge 2k + 1 quest
 
 The rewriter owns the strategy: when discovery runs, whether its results are memoised, whether the engine tables, the depth bound, and whether alias classes are merged. The engine owns evaluation. The discoverer owns the rewrite memo. Retriever, judge and admission policy are replaceable parts with small contracts.
 
+Both the rewriter and the discoverer report what they do to an optional tracer (`semrewrite.trace`): the rewriter as the engine starts and stops a solve, the discoverer once per expansion, with the candidates the retriever kept, every proposal the judge scored and the rewrites admitted, and once per ask its memo answers. With lazy timing the expansions arrive between a solve's start and stop, because the engine calls expand inside evaluation. `semrewrite ask --trace` prints them as they arrive; the engine needs nothing for it.
+
 ## Protocols
 
 Each protocol below gives its operations, the contract an implementation must keep, and the reference implementations. The signatures are Python, but nothing in them depends on Python: a Prolog, Rust or SQL implementation keeps the same contract. A member that callers only read is declared as a read-only property, so a class attribute, a frozen dataclass field or a property implements it.
@@ -98,10 +100,13 @@ Each protocol below gives its operations, the contract an implementation must ke
 
 ```python
 class Retriever(Protocol):
+    @property
+    def name(self) -> str: ...
+
     def top_k(self, goal: Predicate, among: Mapping[str, Predicate], k: int) -> list[tuple[str, float]]: ...
 ```
 
-It returns at most k candidate premise names from `among`, which never contains the goal itself, most similar first, with their similarity. It must be deterministic for the same inputs and must only return names of the goal's arity.
+It returns at most k candidate premise names from `among`, which never contains the goal itself, most similar first, with their similarity. It must be deterministic for the same inputs and must only return names of the goal's arity. `name` says what ranks them, as a trace prints it.
 
 Reference implementations: `EmbeddingRetriever` embeds each gloss with its placeholders filled by fixed letters and ranks by cosine similarity (BAAI/bge-small-en-v1.5 by default); `AllCandidates` returns every predicate of the same arity, which is right for small catalogues; `JudgeRetriever` scores every predicate of the same arity as a premise of the goal with a judge, under every argument mapping, and keeps the k best. With a local cross-encoder as its judge, `JudgeRetriever` is the first stage of a cascade for a large catalogue: it reads every predicate, and the admitting judge, which may be slower or paid for per question, sees only k of them. Embedding similarity is symmetric and lexical, which a large catalogue punishes. Among Wikidata's 1,790 entity-valued properties, bge-small ranked `author` 327th and `notable work` 794th as premises of "{x} created {y}", and ranked `child organization or unit` 916th for "{x} owns {y}"; nli-deberta-large ranked the first two 26th and 2nd.
 

@@ -27,6 +27,7 @@ from semrewrite.kb import KB
 from semrewrite.model import Rewrite, parse_atom
 from semrewrite.protocols import Budget
 from semrewrite.rewriter import STRATEGIES, CapabilityError, Rewriter
+from semrewrite.trace import TextTrace, plural
 
 # The pyproject.toml extra that installs each optional library, by import name;
 # tests/test_packaging.py checks it against the extras.
@@ -67,7 +68,7 @@ def _rewriter(args: argparse.Namespace, kb: KB) -> Rewriter:
     admission = Directional(args.directional) if args.directional is not None else Threshold()
     return Rewriter(kb, _judge(args, kb), make_engine(args.engine), _retriever(args), k=args.k,
                     budget=Budget(work=args.work, seconds=args.seconds), admission=admission,
-                    proofs=getattr(args, "explain", False))
+                    proofs=getattr(args, "explain", False), trace=TextTrace() if getattr(args, "trace", False) else None)
 
 
 def cmd_ask(args: argparse.Namespace) -> int:
@@ -93,7 +94,7 @@ def cmd_ask(args: argparse.Namespace) -> int:
             print(f"\nrewrites admitted ({len(out.admitted)}):", file=sys.stderr)
             for p, c, m in sorted(out.admitted, key=lambda k: (k[1], k[0], k[2])):
                 print(f"  {Rewrite(c, p, m)}", file=sys.stderr)
-        print(f"{out.status}: {len(out.answers)} answers, {out.work:,} work, {out.proposals:,} judge questions, "
+        print(f"{out.status}: {plural(len(out.answers), 'answer')}, {out.work:,} work, {out.proposals:,} judge questions, "
               f"{out.seconds:.2f} s", file=sys.stderr)
     return 0 if out.finished else (2 if out.status in ("work_limit", "time_limit") else 1)
 
@@ -175,6 +176,10 @@ def parser() -> argparse.ArgumentParser:
     ask.add_argument("--depth", type=int, help="the most counted steps on any path, counted as the strategy counts "
                      "them, in place of its own bound; 0 removes the bound")
     ask.add_argument("--explain", action="store_true", help="print each answer's derivation and the rewrites admitted")
+    ask.add_argument("--trace", action="store_true",
+                     help="print each step on standard error as it happens: the engine starting and stopping, "
+                          "evaluation reaching a predicate, the candidates retrieved, the judge's verdicts and the "
+                          "rewrites admitted")
     ask.add_argument("--json", action="store_true")
     ask.set_defaults(run=cmd_ask)
 

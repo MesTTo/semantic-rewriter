@@ -172,7 +172,13 @@ class Engine(Protocol):
 
 @runtime_checkable
 class Retriever(Protocol):
-    """Proposes candidate premises for a goal predicate: at most k names of the goal's arity, most similar first."""
+    """Proposes candidate premises for a goal predicate: at most k names of the goal's arity, most similar first.
+
+    `name` says what ranks them, as a trace prints it.
+    """
+
+    @property
+    def name(self) -> str: ...
 
     def top_k(self, goal: Predicate, among: Mapping[str, Predicate], k: int) -> list[tuple[str, float]]: ...
 

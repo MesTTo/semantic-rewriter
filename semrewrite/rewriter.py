@@ -29,6 +29,7 @@ from semrewrite.discovery import Discoverer, ScoreCache
 from semrewrite.kb import KB
 from semrewrite.model import Atom, Key, Mapping, Rewrite, Rule, compose, identity, inverse, parse_atom
 from semrewrite.protocols import Admission, Budget, DepthCounts, Engine, Judge, Program, Proof, Retriever, Solution
+from semrewrite.trace import Solved, Solving, Tracer
 
 # The protocol's default budget; a Budget is frozen, so one instance serves every rewriter.
 DEFAULT_BUDGET = Budget()
@@ -160,6 +161,7 @@ class Rewriter:
         budget: Budget = DEFAULT_BUDGET,
         admission: Admission | None = None,
         proofs: bool = False,
+        trace: Tracer | None = None,
     ) -> None:
         self.kb = kb
         self.catalogue = kb.catalogue()
@@ -171,13 +173,16 @@ class Rewriter:
         self.admission = admission
         # Ask the engine for a derivation of every answer, which Outcome.proofs then holds.
         self.proofs = proofs
+        # Receives each solve's start and stop, and is given to every discoverer this rewriter makes.
+        self.trace = trace
         self._rules_by_head: dict[str, list[Rule]] = defaultdict(list)
         for rule in kb.rules:
             self._rules_by_head[rule.head.pred].append(rule)
 
     def discoverer(self, memo: bool = True) -> Discoverer:
         """A fresh discoverer over this knowledge base's catalogue; share one across asks to share its memo."""
-        return Discoverer(self.catalogue, self.retriever, self.scorer, k=self.k, memo=memo, admission=self.admission)
+        return Discoverer(self.catalogue, self.retriever, self.scorer, k=self.k, memo=memo, admission=self.admission,
+                          trace=self.trace)
 
     def check(self, strategy: Strategy) -> None:
         """Raise CapabilityError naming every capability `strategy`, and proofs when asked for, needs that the
@@ -235,7 +240,11 @@ class Rewriter:
 
     def _solve(self, program: Program, query: Atom, out: Outcome, expand=None, *, accumulate: bool = False,
                budget: Budget | None = None) -> Solution:
+        if self.trace is not None:
+            self.trace(Solving(self.engine.name, query, program))
         solution = self.engine.solve(program, query, budget if budget is not None else self.budget, expand)
+        if self.trace is not None:
+            self.trace(Solved(self.engine.name, solution))
         out.status, out.detail = solution.status, solution.detail
         out.answers = set(solution.answers) if solution.finished else set()
         out.derivations = solution.derivations

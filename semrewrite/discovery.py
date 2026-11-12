@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 from semrewrite.admission import Threshold
 from semrewrite.model import Key, Predicate, Proposal, Rewrite, identity, mappings
 from semrewrite.protocols import Admission, Judge, Retriever
+from semrewrite.trace import Expanded, Remembered, Tracer
 
 
 class ScoreCache:
@@ -96,6 +97,7 @@ class Discoverer:
         k: int = 8,
         memo: bool = True,
         admission: Admission | None = None,
+        trace: Tracer | None = None,
     ) -> None:
         self.catalogue = dict(catalogue)
         self.retriever = retriever
@@ -103,27 +105,37 @@ class Discoverer:
         self.k = k
         self.memo = memo
         self.admission: Admission = admission if admission is not None else Threshold()
+        # Receives an Expanded event per expansion and a Remembered event per ask the memo answers.
+        self.trace = trace
         self.stats = DiscoveryStats()
         self._memo: dict[tuple[str, float], tuple[Rewrite, ...]] = {}
 
-    def candidates(self, goal: str) -> list[str]:
-        """The k retrieved neighbours of `goal` of its arity, or every predicate of its arity without a retriever."""
-        self.stats.retrievals += 1
+    def _among(self, goal: str) -> dict[str, Predicate]:
+        """Every other predicate of the goal's arity, which retrieval ranks."""
         target = self.catalogue[goal]
-        among = {n: p for n, p in self.catalogue.items() if n != goal and p.arity == target.arity}
+        return {n: p for n, p in self.catalogue.items() if n != goal and p.arity == target.arity}
+
+    def candidates(self, goal: str, among: Mapping[str, Predicate] | None = None) -> list[tuple[str, float]]:
+        """The k retrieved neighbours of `goal` of its arity with their retrieval scores, best first; without a
+        retriever, every predicate of its arity by name, each scored 1.0. `among` is the goal's same-arity
+        predicates when the caller has them."""
+        self.stats.retrievals += 1
+        among = self._among(goal) if among is None else among
         if self.retriever is None:
-            return sorted(among)
-        found = [name for name, _ in self.retriever.top_k(target, among, self.k)]
-        stray = [n for n in found if n not in among]
+            return [(name, 1.0) for name in sorted(among)]
+        found = self.retriever.top_k(self.catalogue[goal], among, self.k)
+        stray = [n for n, _ in found if n not in among]
         if stray:
             msg = f"retriever proposed {stray} for {goal}, outside the same-arity catalogue"
             raise ValueError(msg)
         return found
 
-    def proposals(self, goal: str) -> list[Proposal]:
-        """Every proposal one expansion of `goal` asks: each candidate under each mapping, and the goal's own symmetries."""
+    def proposals(self, goal: str, candidates: Sequence[str] | None = None) -> list[Proposal]:
+        """Every proposal one expansion of `goal` asks: each candidate, retrieved unless given, under each mapping,
+        and the goal's own symmetries."""
         target = self.catalogue[goal]
-        out = [Proposal(self.catalogue[q], target, m) for q in self.candidates(goal) for m in mappings(target.arity)]
+        names = [name for name, _ in self.candidates(goal)] if candidates is None else candidates
+        out = [Proposal(self.catalogue[q], target, m) for q in names for m in mappings(target.arity)]
         out += [Proposal(target, target, m) for m in mappings(target.arity) if m != identity(target.arity)]
         return out
 
@@ -133,13 +145,17 @@ class Discoverer:
         """Admitted rewrites concluding `goal`, strongest first."""
         key = (goal, self.scorer.threshold)
         if self.memo and key in self._memo:
+            if self.trace is not None:
+                self.trace(Remembered(goal))
             return self._memo[key]
         if goal not in self.catalogue:
             msg = f"goal predicate {goal!r} has no gloss in the catalogue"
             raise KeyError(msg)
         self.stats.expansions += 1
         self.stats.expanded.add(goal)
-        proposals = self.proposals(goal)
+        among = self._among(goal)
+        kept = self.candidates(goal, among)
+        proposals = self.proposals(goal, [name for name, _ in kept])
         scores = self.scorer.score(proposals)
         converse = self.scorer.score([p.converse() for p in proposals]) if self.admission.needs_converse else None
         self.stats.proposals += len(proposals) * (2 if converse is not None else 1)
@@ -151,6 +167,10 @@ class Discoverer:
         found = tuple(admitted)
         if self.memo:
             self._memo[key] = found
+        if self.trace is not None:
+            self.trace(Expanded(self.catalogue[goal], self.retriever.name if self.retriever is not None else None,
+                                len(among), tuple(kept), self.scorer.judge.name, self.scorer.threshold,
+                                tuple(proposals), tuple(scores), found))
         return found
 
     def keys(self) -> set[Key]:

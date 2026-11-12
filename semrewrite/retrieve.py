@@ -44,6 +44,7 @@ class EmbeddingRetriever:
         from sentence_transformers import SentenceTransformer
 
         self.model_name = model
+        self.name = f"{model} embedding"
         self.fillers = fillers
         self._model = SentenceTransformer(model)
         self._vectors: dict[str, np.ndarray] = {}
@@ -97,6 +98,8 @@ class EmbeddingRetriever:
 class AllCandidates:
     """Every predicate of the goal's arity, by name; right when the catalogue is small enough to judge whole."""
 
+    name = "all"
+
     def top_k(self, goal: Predicate, among: Mapping[str, Predicate], k: int) -> list[tuple[str, float]]:
         return [(n, 1.0) for n in sorted(among) if n != goal.name and among[n].arity == goal.arity]
 
@@ -118,6 +121,7 @@ class JudgeRetriever:
         from semrewrite.discovery import ScoreCache
 
         self.scorer = judge if isinstance(judge, ScoreCache) else ScoreCache(judge)
+        self.name = self.scorer.judge.name
 
     # Time: |among|·n! judge scores the first time a goal is ranked, n its arity, then |among| maxima and a sort.
     def top_k(self, goal: Predicate, among: Mapping[str, Predicate], k: int) -> list[tuple[str, float]]:
