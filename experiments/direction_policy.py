@@ -1,6 +1,7 @@
 """Purpose: measure direction-aware admission against plain admission: calibrate
-each judge's slack on Wikidata dev pairs, compare the two policies on every test
-pair set, and compare them inside the rewriter (lazy-tabled, cold) on all four
+each judge's slack on Wikidata dev pairs, compare the two policies on the test
+rows of every pair set that has a direction to read (Levy/Holt, Wikidata and
+the hard set), and compare them inside the rewriter (lazy-tabled, cold) on all four
 benchmarks, writing results/direction_policy.<tag>.json (one file per run).
 
 Run: .venv/bin/python experiments/direction_policy.py --tag nli [--judges nli-deberta-base,...]
@@ -26,6 +27,9 @@ from semrewrite.retrieve import EmbeddingRetriever
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
 DEFAULT_JUDGES = "nli-deberta-base,nli-deberta-large,nli-deberta-large-wanli,reranker-qwen3,jev"
+# The pair sets whose rows have a direction to read, which the policies are compared on; the typical-implication sets
+# label no reverse, so there is no direction for a converse check to protect.
+DIRECTION_SETS = ("levyholt", "wikidata", "hard")
 
 
 def policy_metrics(admitted: list[bool], labels: list[bool]) -> dict:
@@ -49,7 +53,7 @@ def main() -> None:
     parser.add_argument("--tag", required=True, help="names the output file, so runs over different judges sit side by side")
     parser.add_argument("--engine", default="pymetta")
     args = parser.parse_args()
-    rows = pairs.load()
+    rows = pairs.load(DIRECTION_SETS)
     kbs = [make_kb() for make_kb in BENCHMARKS.values()]
     retriever = EmbeddingRetriever()
     engine = make_engine(args.engine)
@@ -62,7 +66,7 @@ def main() -> None:
         forward, backward = beliefs(base, props), beliefs(base, [p.converse() for p in props])
         slack, curve = calibrate_slack(forward, backward, [r.label for r in dev], base.threshold)
         sets = {}
-        for set_name in ("levyholt", "wikidata", "hard"):
+        for set_name in DIRECTION_SETS:
             test = [r for r in rows if r.set == set_name and r.split == "test"]
             props = [r.proposal for r in test]
             f, b = beliefs(base, props), beliefs(base, [p.converse() for p in props])

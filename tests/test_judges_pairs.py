@@ -1,13 +1,17 @@
 """Purpose: tests of the labelled predicate pairs: each set rebuilds from its
-source unchanged, rows pair with their reverse inside one split, the Levy/Holt
-rows keep the published sizes and balance, the Levy/Holt fetch writes only
-files whose digest matches its pin, the hard set follows its relations, and
-the Wikidata labelling rule decides a small hand-built hierarchy the way its
-definition says. The Levy/Holt cases skip until that set is fetched and built.
+source unchanged, rows pair with their reverse inside one split, rows of any
+arity keep their arguments consistent, the Levy/Holt, delta-ATOMIC and Balanced
+COPA rows keep the published sizes and balance, a pinned fetch writes only
+files whose digest matches its pin, the hard set follows its relations, the
+typical-implication builders read their sources' labels the way their
+definitions say, and the Wikidata labelling rule decides a small hand-built
+hierarchy the way its definition says. A downloaded set's cases skip until
+that set is fetched and built.
 """
 
 from __future__ import annotations
 
+import csv
 import hashlib
 import io
 import json
@@ -39,6 +43,8 @@ def test_committed_set_rebuilds_from_its_source(name: str) -> None:
 
 @pytest.mark.parametrize("name", pairs.SETS)
 def test_rows_round_trip_and_pair_with_their_reverse(name: str) -> None:
+    """Rows survive JSON; a pair keeps one split; and a set either pairs every row with its reverse, but for a
+    predicate that is its own reverse, or, where its source labels no reverse, leaves every row alone."""
     rows = rows_of(name)
     pairs.check(rows)
     assert all(pairs.PairRow.from_json(r.to_json()) == r for r in rows)
@@ -47,6 +53,9 @@ def test_rows_round_trip_and_pair_with_their_reverse(name: str) -> None:
         groups[r.pair].append(r)
     for members in groups.values():
         assert len({m.split for m in members}) == 1
+    if all(len(members) == 1 for members in groups.values()):
+        return
+    for members in groups.values():
         if len(members) == 1:
             only = members[0]
             assert only.premise == only.conclusion and only.swapped
@@ -74,50 +83,148 @@ def test_levyholt_reads_argument_order_from_the_surface() -> None:
     assert reverse.instances == (row.instances[1], row.instances[0]) and reverse.types == (row.types[1], row.types[0])
 
 
-def test_levyholt_pins_are_the_files_the_builder_read() -> None:
-    """Each pinned digest is the digest of the local file levyholt_rows reads, when that file is present."""
+@pytest.mark.parametrize("name", sorted(pairs.PINS))
+def test_pins_are_the_files_the_builder_read(name: str) -> None:
+    """Each pinned digest is the digest of the local file the set's builder reads, when that file is present."""
     present = 0
-    for path, digest in pairs.LEVYHOLT_FILES.items():
-        local = pairs.RAW / "levyholt" / pathlib.PurePosixPath(path).name
-        if local.exists():
+    for local, pin in pairs.PINS[name].items():
+        path = pairs.RAW / name / local
+        if path.exists():
             present += 1
-            assert hashlib.sha256(local.read_bytes()).hexdigest() == digest, local
+            assert hashlib.sha256(path.read_bytes()).hexdigest() == pin.sha256, path
     if not present:
-        pytest.skip("data/raw/levyholt is not fetched: run python -m semrewrite.pairs fetch levyholt")
+        pytest.skip(f"data/raw/{name} is not fetched: run python -m semrewrite.pairs fetch {name}")
 
 
-def test_levyholt_fetch_writes_only_files_matching_their_pin(tmp_path: pathlib.Path,
-                                                            monkeypatch: pytest.MonkeyPatch) -> None:
+def test_fetch_writes_only_files_matching_their_pin(tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """A download whose digest matches is written under its own name; one that differs raises and writes nothing."""
-    served = {"LevyHoltDS/dev_dir/dev_dir_s.txt": b"good\n", "LevyHoltDS/test_dir/test_dir_s.txt": b"altered\n"}
-    monkeypatch.setattr("urllib.request.urlopen", lambda url: io.BytesIO(served[url.split(pairs.LEVYHOLT_COMMIT + "/")[1]]))
-    good = {"LevyHoltDS/dev_dir/dev_dir_s.txt": hashlib.sha256(b"good\n").hexdigest()}
-    monkeypatch.setattr(pairs, "LEVYHOLT_FILES", good)
-    pairs.fetch_levyholt(tmp_path)
-    assert sorted(p.name for p in tmp_path.iterdir()) == ["dev_dir_s.txt"]
-    assert (tmp_path / "dev_dir_s.txt").read_bytes() == b"good\n"
-    bad = {"LevyHoltDS/test_dir/test_dir_s.txt": hashlib.sha256(b"original\n").hexdigest()}
-    monkeypatch.setattr(pairs, "LEVYHOLT_FILES", bad)
+    served = {"https://example.org/a": b"good\n", "https://example.org/b": b"altered\n"}
+    monkeypatch.setattr("urllib.request.urlopen", lambda url: io.BytesIO(served[url]))
+    good = pairs.Pin("https://example.org/a", hashlib.sha256(b"good\n").hexdigest())
+    monkeypatch.setitem(pairs.PINS, "fixture", {"a.txt": good})
+    pairs.fetch("fixture", tmp_path)
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["a.txt"]
+    assert (tmp_path / "a.txt").read_bytes() == b"good\n"
+    bad = pairs.Pin("https://example.org/b", hashlib.sha256(b"original\n").hexdigest())
+    monkeypatch.setitem(pairs.PINS, "fixture", {"b.txt": bad})
     with pytest.raises(ValueError, match="not the pinned"):
-        pairs.fetch_levyholt(tmp_path)
-    assert sorted(p.name for p in tmp_path.iterdir()) == ["dev_dir_s.txt"]
+        pairs.fetch("fixture", tmp_path)
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["a.txt"]
 
 
-def test_missing_levyholt_names_the_command_that_fetches_it(tmp_path: pathlib.Path) -> None:
-    with pytest.raises(FileNotFoundError, match="fetch levyholt"):
-        pairs.levyholt_rows(tmp_path)
-    with pytest.raises(FileNotFoundError, match="fetch levyholt, then python -m semrewrite.pairs build levyholt"):
-        pairs.load(["levyholt"], tmp_path)
+@pytest.mark.parametrize("name", sorted(pairs.PINS))
+def test_a_missing_download_names_the_command_that_fetches_it(name: str, tmp_path: pathlib.Path) -> None:
+    with pytest.raises(FileNotFoundError, match=f"fetch {name}"):
+        pairs.BUILDERS[name](tmp_path)
+    with pytest.raises(FileNotFoundError, match=f"fetch {name}, then python -m semrewrite.pairs build {name}"):
+        pairs.load([name], tmp_path)
 
 
 def test_typed_nouns_tell_same_typed_arguments_apart() -> None:
     assert pairs.typed_nouns(("medicine", "disease")) == ("the medicine", "the disease")
     assert pairs.typed_nouns(("person", "person")) == ("the first person", "the second person")
+    assert pairs.typed_nouns(("person",)) == ("the person",)
+    assert pairs.typed_nouns(()) == ()
+    assert pairs.typed_nouns(("person",) * 11)[-2:] == ("the tenth person", "the person number 11")
     row = rows_of("hard")[0]
     assert pairs.fillers_for(row, "letters") == ("A", "B")
     assert pairs.fillers_for(row, "instances") is None
     with pytest.raises(ValueError):
         pairs.fillers_for(row, "names")
+
+
+def test_a_row_of_any_arity_keeps_its_arguments_consistent() -> None:
+    """A row about one person reads its argument in order under each variant; mixed arities, a unary swap, or types
+    of the wrong number are refused."""
+    runs, tired = Predicate("runs", "{x} goes for a run"), Predicate("tired", "{x} is tired")
+    row = pairs.PairRow(id="r", set="fixture", split="dev", pair="r", kind="k", premise=runs, conclusion=tired,
+                        swapped=False, label=True, types=("person",))
+    assert row.proposal.mapping == (0,)
+    assert row.proposal.sentences(pairs.fillers_for(row, "letters")) == ("A goes for a run", "A is tired")
+    assert row.proposal.sentences(pairs.fillers_for(row, "typed")) == ("the person goes for a run", "the person is tired")
+    for change in ({"conclusion": Predicate("parent", "{x} is a parent of {y}")}, {"swapped": True},
+                   {"types": ("person", "person")}, {"instances": ("ana", "joe")}):
+        with pytest.raises(ValueError):
+            pairs.PairRow(**{"id": "r", "set": "fixture", "split": "dev", "pair": "r", "kind": "k", "premise": runs,
+                             "conclusion": tired, "swapped": False, "label": True, "types": ("person",), **change})
+
+
+def test_defeasible_rows_follow_their_updates(tmp_path: pathlib.Path) -> None:
+    """A strengthener's row holds and a weakener's does not; the premise is the event and then the update, closed by
+    full stops; a line marked impossible is left out; braces in the source read literally."""
+    lines = [
+        {"Premise": "PersonX yells for PersonY", "Hypothesis": "Because PersonX wanted to be nice",
+         "Update": "PersonX yells a curse at them", "UpdateType": "weakener", "UpdateTypeImpossible": False,
+         "AtomicRelationType": "xIntent"},
+        {"Premise": "PersonX yells for PersonY", "Hypothesis": "Because PersonX wanted to be nice",
+         "Update": "PersonY is about to miss the bus.", "UpdateType": "strengthener", "UpdateTypeImpossible": False,
+         "AtomicRelationType": "xIntent"},
+        {"Premise": "PersonX pays", "Hypothesis": "PersonX is generous", "Update": "",
+         "UpdateType": "strengthener", "UpdateTypeImpossible": True, "AtomicRelationType": "xAttr"},
+    ]
+    for split in ("dev", "test"):
+        (tmp_path / f"{split}.jsonl").write_text("".join(json.dumps(line) + "\n" for line in lines))
+    (tmp_path / "LICENSE").write_text("MIT\n")
+    rows = pairs.defeasible_rows(tmp_path)
+    assert [(r.id, r.label) for r in rows] == [("defeasible:dev:00001", False), ("defeasible:dev:00002", True),
+                                               ("defeasible:test:00001", False), ("defeasible:test:00002", True)]
+    weakened = rows[0]
+    assert weakened.proposal.sentences(pairs.fillers_for(weakened, "letters")) == (
+        "PersonX yells for PersonY. PersonX yells a curse at them.", "Because PersonX wanted to be nice")
+    assert rows[1].premise.sentence() == "PersonX yells for PersonY. PersonY is about to miss the bus."
+    assert weakened.kind == "xIntent" and weakened.types == () and pairs.fillers_for(weakened, "instances") is None
+    pairs.check(rows)
+    lines[0]["Hypothesis"] = "PersonX wanted {nothing}"
+    (tmp_path / "dev.jsonl").write_text(json.dumps(lines[0]) + "\n")
+    assert pairs.defeasible_rows(tmp_path)[0].conclusion.sentence() == "PersonX wanted {nothing}"
+
+
+def test_copa_rows_read_cause_to_effect(tmp_path: pathlib.Path) -> None:
+    """An effect question reads premise => alternative and a cause question alternative => premise; the labelled
+    alternative holds and the other does not; train is dev and test is test."""
+    header = ["label", "id", "premise", "question", "choice1", "choice2", "mirrored"]
+    files = {
+        "train.csv": [["1", "1", "My body cast a shadow over the grass.", "cause", "The grass was cut.",
+                       "The sun was rising.", "False"],
+                      ["0", "1001", "The garden looked well-groomed.", "cause", "The grass was cut.",
+                       "The sun was rising.", "True"]],
+        "test.csv": [["0", "502", "The man turned on the faucet.", "effect", "Water flowed from the spout.",
+                      "The toilet filled with water.", "False"]],
+    }
+    for name, items in files.items():
+        with (tmp_path / name).open("w", newline="") as handle:
+            csv.writer(handle).writerows([header, *items])
+    (tmp_path / "README.md").write_text("license: cc-by-4.0\n")
+    rows = {r.id: r for r in pairs.copa_rows(tmp_path)}
+    holds = {key: (r.split, r.premise.sentence(), r.conclusion.sentence(), r.label) for key, r in rows.items()}
+    assert holds == {
+        "copa:1:1": ("dev", "The grass was cut.", "My body cast a shadow over the grass.", False),
+        "copa:1:2": ("dev", "The sun was rising.", "My body cast a shadow over the grass.", True),
+        "copa:1001:1": ("dev", "The grass was cut.", "The garden looked well-groomed.", True),
+        "copa:1001:2": ("dev", "The sun was rising.", "The garden looked well-groomed.", False),
+        "copa:502:1": ("test", "The man turned on the faucet.", "Water flowed from the spout.", True),
+        "copa:502:2": ("test", "The man turned on the faucet.", "The toilet filled with water.", False),
+    }
+    assert rows["copa:1001:1"].kind == "cause-mirrored" and rows["copa:502:1"].kind == "effect"
+
+
+def test_typical_sets_keep_the_published_sizes_and_balance() -> None:
+    """delta-ATOMIC keeps 3,840 dev and 4,138 test updates, about half strengtheners (Rudinger et al. 2020, Table 2);
+    Balanced COPA's 1,000 dev and 500 test questions give two rows each, one holding, and every alternative of a
+    mirrored question holds under one premise and fails under the other (Kavumba et al. 2019)."""
+    defeasible = rows_of("defeasible")
+    assert Counter(r.split for r in defeasible) == {"dev": 3840, "test": 4138}
+    assert Counter((r.split, r.label) for r in defeasible) == {("dev", True): 1937, ("dev", False): 1903,
+                                                               ("test", True): 2091, ("test", False): 2047}
+    copa = rows_of("copa")
+    assert Counter((r.split, r.label) for r in copa) == {("dev", True): 1000, ("dev", False): 1000,
+                                                         ("test", True): 500, ("test", False): 500}
+    mirrored = defaultdict(set)
+    for r in copa:
+        if r.split == "dev":
+            alternative = r.premise if r.kind.startswith("cause") else r.conclusion
+            mirrored[alternative.gloss].add(r.label)
+    assert len(mirrored) == 999 and all(labels == {True, False} for labels in mirrored.values())
 
 
 def test_hard_rows_follow_their_relations() -> None:

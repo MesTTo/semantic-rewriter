@@ -1,23 +1,30 @@
 """Purpose: labelled predicate pairs for measuring direction judges: the row
 schema, its JSON-lines storage under data/pairs/, the fillers each row offers,
-and the builders that derive every set from its source under data/raw/ or the
-hand-written data/pairs/hard.toml.
+the downloads of sources pinned by revision and SHA-256, and the builders that
+derive every set from its source under data/raw/ or the hand-written
+data/pairs/hard.toml: implications that hold by meaning (Levy/Holt, Wikidata's
+property hierarchy, the hard set) and implications that typically hold
+(delta-ATOMIC's defeasible inferences, Balanced COPA's causes and effects).
 
 A row says whether its premise predicate entails its conclusion predicate over
-shared arguments, swapped or not, as a Proposal does. Rows that are each other's
-reverse, (P, Q, s) and (Q, P, s), share a `pair` id, so direction accuracy can
-compare a pair's two directions.
+shared arguments, as a Proposal does: a binary row reads them in order or
+swapped, and a row of any other arity, one argument or none, in order. Rows
+that are each other's reverse, (P, Q, s) and (Q, P, s), share a `pair` id, so
+direction accuracy can compare a pair's two directions.
 
-    python -m semrewrite.pairs fetch levyholt   # download the Levy/Holt files at the pinned commit
-    python -m semrewrite.pairs fetch wikidata   # rerun the Wikidata queries, overwriting their results
-    python -m semrewrite.pairs build [SET ...]  # rebuild data/pairs/<set>.jsonl from the sources, every set by default
+    python -m semrewrite.pairs fetch levyholt    # download a set's source files at their pinned revision: levyholt,
+                                                 # defeasible or copa
+    python -m semrewrite.pairs fetch wikidata    # rerun the Wikidata queries, overwriting their results
+    python -m semrewrite.pairs build [SET ...]   # rebuild data/pairs/<set>.jsonl from the sources, every set by default
 
 Building the Wikidata set needs the `models` extra, for the embedding model
-that picks its near-miss pairs; the other two sets need nothing.
+that picks its near-miss pairs; the other sets need nothing.
 """
 
 from __future__ import annotations
 
+import csv
+import functools
 import hashlib
 import json
 import pathlib
@@ -28,15 +35,17 @@ from collections import Counter, defaultdict, deque
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, replace
 
-from semrewrite.model import Predicate, Proposal
+from semrewrite.model import LETTERS, Predicate, Proposal, identity
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 RAW = ROOT / "data" / "raw"
 PAIRS = ROOT / "data" / "pairs"
-SETS = ("levyholt", "wikidata", "hard")
+SETS = ("levyholt", "wikidata", "hard", "defeasible", "copa")
 FILLER_VARIANTS = ("letters", "typed", "instances")
 
-Fillers = tuple[str, str]
+Fillers = tuple[str, ...]
+"""One text per argument of a row's predicates, in the conclusion's order: ("person", "place") for a binary row,
+("person",) for a row about one person, () for a row of whole sentences."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,9 +53,10 @@ class PairRow:
     """One labelled implication proposal.
 
     `label` is gold for "premise entails conclusion" under the swap flag.
-    `types` names the kinds of the conclusion's first and second argument
-    ("person", "place"), which the premise shares; `instances` are example
-    arguments, present only where the source gives them.
+    `types` names the kind of each of the conclusion's arguments ("person",
+    "place"), which the premise shares; `instances` are example arguments,
+    present only where the source gives them. Premise and conclusion take the
+    same number of arguments, and only a binary row can swap them.
     """
 
     id: str
@@ -67,10 +77,20 @@ class PairRow:
         if self.split not in ("dev", "test"):
             msg = f"{self.id}: split must be dev or test, not {self.split!r}"
             raise ValueError(msg)
+        arity = self.conclusion.arity
+        if self.premise.arity != arity:
+            msg = f"{self.id}: the premise takes {self.premise.arity} arguments and the conclusion {arity}"
+            raise ValueError(msg)
+        if self.swapped and arity != 2:
+            msg = f"{self.id}: only a binary row can swap its arguments, and this one has {arity}"
+            raise ValueError(msg)
+        if len(self.types) != arity or (self.instances is not None and len(self.instances) != arity):
+            msg = f"{self.id}: {arity} arguments need as many types and instances, not {self.types} and {self.instances}"
+            raise ValueError(msg)
 
     @property
     def proposal(self) -> Proposal:
-        return Proposal(self.premise, self.conclusion, (1, 0) if self.swapped else (0, 1))
+        return Proposal(self.premise, self.conclusion, (1, 0) if self.swapped else identity(self.conclusion.arity))
 
     def to_json(self) -> dict[str, object]:
         return {
@@ -105,31 +125,45 @@ class PairRow:
             conclusion=Predicate(conclusion["name"], conclusion["gloss"]),
             swapped=bool(row["swapped"]),
             label=bool(row["label"]),
-            types=(types[0], types[1]),
-            instances=(instances[0], instances[1]) if instances else None,
+            types=tuple(types),
+            instances=tuple(instances) if instances else None,
             source=str(row.get("source", "")),
             reason=str(row.get("reason", "")),
         )
 
 
+# Ordinal words for telling apart up to ten arguments of one type, as many as the letter fillers name.
+_ORDINALS = ("first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth")
+
+
 def typed_nouns(types: Fillers) -> Fillers:
-    """Definite noun phrases for two typed arguments, told apart when their types match.
+    """Definite noun phrases for typed arguments, told apart by ordinals where a type repeats.
 
     >>> typed_nouns(("medicine", "disease"))
     ('the medicine', 'the disease')
     >>> typed_nouns(("person", "person"))
     ('the first person', 'the second person')
+    >>> typed_nouns(("person",))
+    ('the person',)
     """
-    x, y = types
-    if x == y:
-        return f"the first {x}", f"the second {y}"
-    return f"the {x}", f"the {y}"
+    repeats = Counter(types)
+    seen: Counter[str] = Counter()
+    nouns = []
+    for kind in types:
+        seen[kind] += 1
+        if repeats[kind] == 1:
+            nouns.append(f"the {kind}")
+        elif seen[kind] <= len(_ORDINALS):
+            nouns.append(f"the {_ORDINALS[seen[kind] - 1]} {kind}")
+        else:
+            nouns.append(f"the {kind} number {seen[kind]}")
+    return tuple(nouns)
 
 
 def fillers_for(row: PairRow, variant: str) -> Fillers | None:
     """The argument texts a variant fills the row's sentences with; None when the row has no instances."""
     if variant == "letters":
-        return ("A", "B")
+        return LETTERS[: row.conclusion.arity]
     if variant == "typed":
         return typed_nouns(row.types)
     if variant == "instances":
@@ -153,8 +187,8 @@ def load(sets: Iterable[str] = SETS, directory: pathlib.Path = PAIRS) -> list[Pa
     for name in sets:
         path = directory / f"{name}.jsonl"
         if not path.exists():
-            fetch = f"python -m semrewrite.pairs fetch {name}, then " if name == "levyholt" else ""
-            msg = f"{path} is missing: run {fetch}python -m semrewrite.pairs build {name}"
+            download = f"python -m semrewrite.pairs fetch {name}, then " if name in PINS else ""
+            msg = f"{path} is missing: run {download}python -m semrewrite.pairs build {name}"
             raise FileNotFoundError(msg)
         rows.extend(PairRow.from_json(json.loads(line)) for line in path.read_text().splitlines() if line)
     return rows
@@ -179,6 +213,93 @@ def check(rows: Sequence[PairRow]) -> None:
             if (a.premise, a.conclusion, a.swapped) != (b.conclusion, b.premise, b.swapped) or a.split != b.split:
                 msg = f"pair {pair}: {a.id} and {b.id} are not each other's reverse in one split"
                 raise ValueError(msg)
+
+
+# ---------------------------------------------------------------- downloads at a pinned revision
+
+
+@dataclass(frozen=True, slots=True)
+class Pin:
+    """A file a builder reads, as a pinned revision of its source holds it: the URL serving it and its SHA-256."""
+
+    url: str
+    sha256: str
+
+
+def _github(repository: str, commit: str, path: str) -> str:
+    return f"https://raw.githubusercontent.com/{repository}/{commit}/{path}"
+
+
+LEVYHOLT_COMMIT = "e5652b3faab2a41b1abfb4bff441b69e31925756"
+DEFEASIBLE_COMMIT = "c675ffc1b0eec5fa56287f08490da8ed43c1ecc5"
+COPA_REVISION = "813bd03cd6e07d9bd8d7333896ad5d40abb95ea9"
+
+# Each downloaded set's files under data/raw/<set>/, by the name its builder reads, where a pinned revision of the
+# source serves them, and their SHA-256: Levy/Holt as Hosseini's entgraph_eval holds it at the commit the experiment
+# used; delta-ATOMIC with the MIT licence of Rudinger's defeasible-nli repository; Balanced COPA with its author's
+# Hugging Face card, which gives its CC BY 4.0 licence.
+PINS: dict[str, dict[str, Pin]] = {
+    "levyholt": {
+        f"{stem}_{part}.txt": Pin(_github("mjhosseini/entgraph_eval", LEVYHOLT_COMMIT,
+                                          f"LevyHoltDS/{stem}/{stem}_{part}.txt"), digest)
+        for (stem, part), digest in {
+            ("dev_dir", "s"): "c36ceb6aba81d73da8ab43d6136bb4b3d22ed19bb05d220b851d9c325f288d60",
+            ("dev_dir", "rels"): "7049ea89031ce2ff777f9fe398a1bf43dd03953140efa6d3060eb802c3d4ad3a",
+            ("test_dir", "s"): "216161651ced8003a81eb37f769964384bba2d34226d86c0d1e4ad67356cf3e3",
+            ("test_dir", "rels"): "de6164136ce4e23d6ed330d4370c05482b69d5e55601f8c32da8f6f8efc72300",
+        }.items()
+    },
+    "defeasible": {
+        "dev.jsonl": Pin(_github("rudinger/defeasible-nli", DEFEASIBLE_COMMIT,
+                                 "data/defeasible-nli/defeasible-atomic/dev.jsonl"),
+                         "eabae7870c588d070ac7e4177ec9062dcf74da25a21afd063cdd2e8d046b1bfc"),
+        "test.jsonl": Pin(_github("rudinger/defeasible-nli", DEFEASIBLE_COMMIT,
+                                  "data/defeasible-nli/defeasible-atomic/test.jsonl"),
+                          "8315f9e4864c3e191635e96d00d07786dcd0a15aded9a8cdea742bdb53daeca8"),
+        "LICENSE": Pin(_github("rudinger/defeasible-nli", DEFEASIBLE_COMMIT, "LICENSE"),
+                       "4f3cbbc5e111fe600a5d515c5dbd5f437545d19b3ae3ba36acb9785cc9d88246"),
+    },
+    "copa": {
+        name: Pin(f"https://huggingface.co/datasets/pkavumba/balanced-copa/resolve/{COPA_REVISION}/{name}", digest)
+        for name, digest in {
+            "train.csv": "650ec76d0b0b46511bcf68702f9e371cc3d9ad3074f947659d98155cc19d56ef",
+            "test.csv": "b57415ab077856be06f083fd39f72a3341e393630d6af1ce4b46a8be2a095972",
+            "README.md": "5efa64639027d1f81d7eafca02883701cabfae0823d51b29071fbbedee5198c4",
+        }.items()
+    },
+}
+
+
+def fetch(name: str, directory: pathlib.Path | None = None) -> None:
+    """Download set `name`'s pinned files into directory, data/raw/<name> by default.
+
+    Each file is checked against its SHA-256 before it is written, and written
+    whole through a temporary name, so a failed or altered download leaves no
+    file that the set's builder would read.
+    """
+    import urllib.request
+
+    directory = RAW / name if directory is None else directory
+    directory.mkdir(parents=True, exist_ok=True)
+    for local, pin in PINS[name].items():
+        with urllib.request.urlopen(pin.url) as response:
+            data = response.read()
+        got = hashlib.sha256(data).hexdigest()
+        if got != pin.sha256:
+            msg = f"{pin.url} has SHA-256 {got}, not the pinned {pin.sha256}"
+            raise ValueError(msg)
+        target = directory / local
+        partial = target.with_name(target.name + ".part")
+        partial.write_bytes(data)
+        partial.replace(target)
+
+
+def _require(name: str, raw: pathlib.Path) -> None:
+    """Raise FileNotFoundError, naming the command that fetches them, unless raw holds every pinned file of `name`."""
+    missing = [local for local in PINS[name] if not (raw / local).exists()]
+    if missing:
+        msg = f"{raw} lacks {', '.join(missing)}: run python -m semrewrite.pairs fetch {name}"
+        raise FileNotFoundError(msg)
 
 
 # ---------------------------------------------------------------- Levy/Holt
@@ -211,42 +332,6 @@ _TYPE_NOUNS = {
 }
 
 _RELS_CELL = re.compile(r"^\((?P<pred>[^)]*)\) (?P<a1>\S+)::(?P<t1>\S+) (?P<a2>\S+)::(?P<t2>\S+)$")
-
-# The four Levy/Holt files levyholt_rows reads, as Hosseini's entgraph_eval
-# holds them at the commit the experiment used, each with its SHA-256.
-LEVYHOLT_REPOSITORY = "mjhosseini/entgraph_eval"
-LEVYHOLT_COMMIT = "e5652b3faab2a41b1abfb4bff441b69e31925756"
-LEVYHOLT_FILES = {
-    "LevyHoltDS/dev_dir/dev_dir_s.txt": "c36ceb6aba81d73da8ab43d6136bb4b3d22ed19bb05d220b851d9c325f288d60",
-    "LevyHoltDS/dev_dir/dev_dir_rels.txt": "7049ea89031ce2ff777f9fe398a1bf43dd03953140efa6d3060eb802c3d4ad3a",
-    "LevyHoltDS/test_dir/test_dir_s.txt": "216161651ced8003a81eb37f769964384bba2d34226d86c0d1e4ad67356cf3e3",
-    "LevyHoltDS/test_dir/test_dir_rels.txt": "de6164136ce4e23d6ed330d4370c05482b69d5e55601f8c32da8f6f8efc72300",
-}
-
-
-def fetch_levyholt(directory: pathlib.Path = RAW / "levyholt") -> None:
-    """Download the Levy/Holt files from entgraph_eval at LEVYHOLT_COMMIT into directory.
-
-    Each file is checked against its SHA-256 before it is written, and written
-    whole through a temporary name, so a failed or altered download leaves no
-    file that levyholt_rows would read.
-    """
-    import urllib.request
-
-    directory.mkdir(parents=True, exist_ok=True)
-    for path, digest in LEVYHOLT_FILES.items():
-        url = f"https://raw.githubusercontent.com/{LEVYHOLT_REPOSITORY}/{LEVYHOLT_COMMIT}/{path}"
-        with urllib.request.urlopen(url) as response:
-            data = response.read()
-        got = hashlib.sha256(data).hexdigest()
-        if got != digest:
-            msg = f"{url} has SHA-256 {got}, not the pinned {digest}"
-            raise ValueError(msg)
-        target = directory / pathlib.PurePosixPath(path).name
-        partial = target.with_name(target.name + ".part")
-        partial.write_bytes(data)
-        partial.replace(target)
-
 
 def _normal(argument: str) -> str:
     return _DETERMINERS.sub("", argument.strip().lower().replace("_", " "))
@@ -328,10 +413,7 @@ def levyholt_rows(raw: pathlib.Path = RAW / "levyholt") -> list[PairRow]:
     row 2k and are exchanged for row 2k+1 when its arguments are swapped.
     """
     rows: list[PairRow] = []
-    missing = [name for name in (pathlib.PurePosixPath(p).name for p in LEVYHOLT_FILES) if not (raw / name).exists()]
-    if missing:
-        msg = f"{raw} lacks {', '.join(missing)}: run python -m semrewrite.pairs fetch levyholt"
-        raise FileNotFoundError(msg)
+    _require("levyholt", raw)
     for split, stem in (("dev", "dev_dir"), ("test", "test_dir")):
         sentences = (raw / f"{stem}_s.txt").read_text().splitlines()
         rels = (raw / f"{stem}_rels.txt").read_text().splitlines()
@@ -406,6 +488,99 @@ def hard_rows(source: pathlib.Path = PAIRS / "hard.toml") -> list[PairRow]:
             reverse_types = (types[1], types[0]) if swapped else types
             rows.append(replace(row, id=pair + ":reverse", premise=conclusion, conclusion=premise, label=backward,
                                 types=reverse_types))
+    return rows
+
+
+# ---------------------------------------------------------------- typical implications
+
+
+def _statement(name: str, text: str) -> Predicate:
+    """A predicate of no arguments stating `text` on one line, its braces doubled so its gloss reads them literally.
+
+    >>> _statement("s", "The man turned  on the {faucet}").sentence()
+    'The man turned on the {faucet}'
+    """
+    return Predicate(name, " ".join(text.split()).replace("{", "{{").replace("}", "}}"))
+
+
+def _joined(*sentences: str) -> str:
+    """Sentences as one text, each closed by a full stop unless it ends in other punctuation.
+
+    >>> _joined("PersonX yells for PersonY", "PersonX yells a curse at them.")
+    'PersonX yells for PersonY. PersonX yells a curse at them.'
+    """
+    return " ".join(s if s[-1:] in ".!?" else f"{s}." for s in (s.strip() for s in sentences))
+
+
+def defeasible_rows(raw: pathlib.Path = RAW / "defeasible") -> list[PairRow]:
+    """delta-ATOMIC's dev and test updates as typical implications, one row each, labelled by the update.
+
+    Each line of Rudinger et al.'s files (Findings of EMNLP 2020) gives an
+    ATOMIC event about PersonX (Premise), an inference that typically follows
+    it (Hypothesis), and an update written to make that inference more likely,
+    a strengthener, or less likely, a weakener. A row's premise states the
+    event and then the update, its conclusion the inference, and it holds
+    exactly for a strengthener: a weakener is a context that defeats the
+    typical inference. Lines whose writers found no such update
+    (UpdateTypeImpossible) are left out, as the paper leaves them out. The
+    sentences are the source's own, so they have no arguments to fill, and
+    each row is its own pair, since the source labels no reverse.
+    """
+    _require("defeasible", raw)
+    rows: list[PairRow] = []
+    for split in ("dev", "test"):
+        for n, line in enumerate((raw / f"{split}.jsonl").read_text().splitlines(), 1):
+            if not line.strip():
+                continue
+            item = json.loads(line)
+            where = f"{split}.jsonl:{n}"
+            if item["UpdateType"] not in ("strengthener", "weakener"):
+                msg = f"{where}: update type {item['UpdateType']!r}"
+                raise ValueError(msg)
+            if item["UpdateTypeImpossible"]:
+                continue
+            row = f"defeasible:{split}:{n:05d}"
+            rows.append(PairRow(
+                id=row, set="defeasible", split=split, pair=row, kind=str(item["AtomicRelationType"]),
+                premise=_statement(f"{row}:premise", _joined(item["Premise"], item["Update"])),
+                conclusion=_statement(f"{row}:conclusion", item["Hypothesis"]), swapped=False,
+                label=item["UpdateType"] == "strengthener", types=(),
+                source=f"defeasible-nli@c675ffc1 data/defeasible-nli/defeasible-atomic/{where}"))
+    return rows
+
+
+def copa_rows(raw: pathlib.Path = RAW / "copa") -> list[PairRow]:
+    """Balanced COPA's questions as typical cause => effect implications, two rows each.
+
+    A COPA question gives a premise and asks which of two alternatives is its
+    more plausible cause or effect (Roemmele, Bejan and Gordon 2011). Each
+    alternative makes one row reading cause => effect, premise => alternative
+    for an effect question and alternative => premise for a cause question,
+    which holds exactly for the more plausible alternative. Balanced COPA's
+    train file is the dev split: COPA's 500 development questions and 500
+    mirrored ones whose new premise makes the other alternative right
+    (Kavumba et al. 2019), so every alternative of those holds once and fails
+    once. Its test file, COPA's 500 test questions, is the test split.
+    """
+    _require("copa", raw)
+    rows: list[PairRow] = []
+    for split, name in (("dev", "train.csv"), ("test", "test.csv")):
+        with (raw / name).open(newline="") as handle:
+            for item in csv.DictReader(handle):
+                where = f"{name} id {item['id']}"
+                if item["question"] not in ("cause", "effect") or item["label"] not in ("0", "1") or item[
+                        "mirrored"] not in ("True", "False"):
+                    msg = f"{where}: question {item['question']!r}, label {item['label']!r}, mirrored {item['mirrored']!r}"
+                    raise ValueError(msg)
+                kind = item["question"] + ("-mirrored" if item["mirrored"] == "True" else "")
+                for k, choice in enumerate((item["choice1"], item["choice2"])):
+                    row = f"copa:{item['id']}:{k + 1}"
+                    cause, effect = (item["premise"], choice) if item["question"] == "effect" else (choice, item["premise"])
+                    rows.append(PairRow(
+                        id=row, set="copa", split=split, pair=row, kind=kind,
+                        premise=_statement(f"{row}:cause", cause), conclusion=_statement(f"{row}:effect", effect),
+                        swapped=False, label=k == int(item["label"]), types=(),
+                        source=f"balanced-copa@813bd03c {where}"))
     return rows
 
 
@@ -738,8 +913,9 @@ def build(names: Iterable[str] = SETS, directory: pathlib.Path = PAIRS) -> dict[
     return counts
 
 
-BUILDERS = {"levyholt": levyholt_rows, "wikidata": wikidata_rows, "hard": hard_rows}
-FETCH = {"levyholt": fetch_levyholt, "wikidata": fetch_wikidata}
+BUILDERS = {"levyholt": levyholt_rows, "wikidata": wikidata_rows, "hard": hard_rows, "defeasible": defeasible_rows,
+            "copa": copa_rows}
+FETCH = {**{name: functools.partial(fetch, name) for name in PINS}, "wikidata": fetch_wikidata}
 
 if __name__ == "__main__":
     if sys.argv[1:2] == ["build"] and set(sys.argv[2:]) <= set(BUILDERS):
