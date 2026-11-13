@@ -446,9 +446,26 @@ The knowledge base gives evidence on a rewrite only where it states the rewrite'
 | alphabet | 3 | 2,894 of 2,903 | 2,602 | 1.000 | 1.000 | 0.028 | 0.100 to 0.998 | 0.631 to 0.961 | google_earth_vr: 2,894 and 2,827 |
 <!-- END GENERATED: snars-ranking -->
 
-The two agree exactly where no derivation uses a rewrite twice. Every answer to Leonardo's question comes through one rewrite, and the two rankings order every pair of answers alike: SNARS's P is a monotone function of the rewriter's, its five answers outside Wikidata's at the same five ranks.
+The two agree exactly where every derivation has the same shape. Every answer to Leonardo's question comes through one rewrite in one step, and the two rankings order every pair of answers alike: SNARS's P is a monotone function of the rewriter's, its five answers outside Wikidata's at the same five ranks.
 
-They part where a derivation chains rewrites. Alphabet's question owns what Alphabet's holdings own, through its transitive rule, so most answers need the same rewrite at several steps. The rewriter counts a rewrite once however often a derivation uses it, so an answer's P depends on which rewrites it needs and not on how long its chain is. SNARS applies the rewrite, and its structural prior, at every step: the median P of answers whose shortest proof takes 1, 3, 5 and 7 rule applications falls from 0.928 to 0.867, 0.833 and 0.801, and the rankings barely agree. The rewriter ranks Alphabet's one answer outside Wikidata's last; SNARS puts 67 of Wikidata's answers below it.
+They part where derivations differ in length. Alphabet's question owns what Alphabet's holdings own, through its transitive rule, so its answers' shortest proofs take from 1 to 7 rule applications. The rewriter takes the question's own rules as certain and counts a rewrite once however often a derivation uses it, so an answer's P depends on which rewrites it needs and not on how long its chain is. SNARS's P falls with the chain: the median P of answers whose shortest proof takes 1, 3, 5 and 7 rule applications falls from 0.928 to 0.867, 0.833 and 0.801, and the rankings barely agree. The rewriter ranks Alphabet's one answer outside Wikidata's last; SNARS puts 67 of Wikidata's answers below it.
+
+A chain of four ownership links, each through one rewrite and joined by the transitive rule, separates the causes (`python experiments/snars_ranking.py chain`). Each row is one setting of the rule rows' truth and the rewrite's validity, and gives SNARS's P for the answers one to four links away:
+
+<!-- BEGIN GENERATED: snars-chain -->
+| rule rows | rewrite's validity | P at 1 rule application | P at 3 rule applications | P at 5 rule applications | P at 7 rule applications |
+|---|---|---|---|---|---|
+| SNARS's structural truth | certain | 0.949 | 0.891 | 0.857 | 0.826 |
+| SNARS's structural truth | P 0.95 | 0.926 | 0.865 | 0.830 | 0.798 |
+| SNARS's structural truth | P 0.24 | 0.568 | 0.544 | 0.535 | 0.527 |
+| certain | certain | 0.999 | 0.999 | 0.999 | 0.999 |
+| certain | P 0.95 | 0.973 | 0.965 | 0.960 | 0.954 |
+| certain | P 0.24 | 0.576 | 0.554 | 0.546 | 0.538 |
+<!-- END GENERATED: snars-chain -->
+
+- Most of the fall comes from the one truth SNARS's backward chainer gives every rule row, belief 0.9 (`sn struct-tv` in mettabase's `sbc.metta`), which discounts each rule application, the transitive rule's included. With the rewrite certain, P still falls from 0.949 at one rule application to 0.826 at seven.
+- With the rule rows certain, using the rewrite's validity again at each link takes a rewrite at P 0.95 down by 0.02 over seven applications. The rewriter keeps such an answer at the rewrite's P.
+- SNARS's modus ponens gives a conclusion whose premises fail the probability that keeps the conclusion's marginal at the rule row's base rate, one half, so a rewrite at P 0.24 still gives its conclusion 0.57. The chain's one-link answers match the ends of SNARS's range on Leonardo's question: Leonardo's lowest answer, at 0.239 by the rewriter, gets 0.566 from SNARS, and its highest, at 0.978, gets 0.923, below the 0.949 the structural truth leaves a certain rewrite.
 
 ## Is pymetta stable enough?
 

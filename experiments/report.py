@@ -288,6 +288,18 @@ def snars_table() -> str:
                    "P, SNARS", "answers outside Wikidata's: rank by each"], rows)
 
 
+def snars_chain_table() -> str:
+    """SNARS's P along experiments/snars_ranking.py's chain, by its rule rows' truth and the rewrite's validity, one
+    column per number of rule applications an answer's proofs take."""
+    m = _load("snars_chain.json")
+    steps = sorted({x["applications"] for arm in m["arms"] for x in arm["answers"].values()})
+    rows = [[arm["rules"], arm["validity"],
+             *(next(x["P"] for x in arm["answers"].values() if x["applications"] == s) for s in steps)]
+            for arm in m["arms"]]
+    return _table(["rule rows", "rewrite's validity", *(f"P at {s} rule application{'s' * (s > 1)}" for s in steps)],
+                  rows)
+
+
 GENERATORS: dict[str, Callable[[], str]] = {
     "named-cases": named_cases_table,
     "direction-policy": direction_policy_table,
@@ -303,6 +315,7 @@ GENERATORS: dict[str, Callable[[], str]] = {
     "trust": trust_table,
     "wikidata-beliefs": beliefs_table,
     "snars-ranking": snars_table,
+    "snars-chain": snars_chain_table,
 }
 
 

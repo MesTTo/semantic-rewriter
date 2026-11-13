@@ -1,0 +1,158 @@
+{
+ "links": 4,
+ "depth": 3,
+ "validities": {
+  "certain": [
+   1.0,
+   0.0,
+   0.0,
+   0.5
+  ],
+  "P 0.95": [
+   0.94,
+   0.0,
+   0.06,
+   0.214
+  ],
+  "P 0.24": [
+   0.2,
+   0.6,
+   0.2,
+   0.214
+  ]
+ },
+ "arms": [
+  {
+   "rules": "SNARS's structural truth",
+   "validity": "certain",
+   "answers": {
+    "b1": {
+     "applications": 1,
+     "P": 0.9494
+    },
+    "b2": {
+     "applications": 3,
+     "P": 0.8908
+    },
+    "b3": {
+     "applications": 5,
+     "P": 0.8574
+    },
+    "b4": {
+     "applications": 7,
+     "P": 0.8261
+    }
+   }
+  },
+  {
+   "rules": "SNARS's structural truth",
+   "validity": "P 0.95",
+   "answers": {
+    "b1": {
+     "applications": 1,
+     "P": 0.926
+    },
+    "b2": {
+     "applications": 3,
+     "P": 0.8645
+    },
+    "b3": {
+     "applications": 5,
+     "P": 0.8303
+    },
+    "b4": {
+     "applications": 7,
+     "P": 0.7984
+    }
+   }
+  },
+  {
+   "rules": "SNARS's structural truth",
+   "validity": "P 0.24",
+   "answers": {
+    "b1": {
+     "applications": 1,
+     "P": 0.5684
+    },
+    "b2": {
+     "applications": 3,
+     "P": 0.5438
+    },
+    "b3": {
+     "applications": 5,
+     "P": 0.5355
+    },
+    "b4": {
+     "applications": 7,
+     "P": 0.5274
+    }
+   }
+  },
+  {
+   "rules": "certain",
+   "validity": "certain",
+   "answers": {
+    "b1": {
+     "applications": 1,
+     "P": 0.9993
+    },
+    "b2": {
+     "applications": 3,
+     "P": 0.9991
+    },
+    "b3": {
+     "applications": 5,
+     "P": 0.999
+    },
+    "b4": {
+     "applications": 7,
+     "P": 0.9988
+    }
+   }
+  },
+  {
+   "rules": "certain",
+   "validity": "P 0.95",
+   "answers": {
+    "b1": {
+     "applications": 1,
+     "P": 0.9733
+    },
+    "b2": {
+     "applications": 3,
+     "P": 0.9649
+    },
+    "b3": {
+     "applications": 5,
+     "P": 0.9595
+    },
+    "b4": {
+     "applications": 7,
+     "P": 0.954
+    }
+   }
+  },
+  {
+   "rules": "certain",
+   "validity": "P 0.24",
+   "answers": {
+    "b1": {
+     "applications": 1,
+     "P": 0.576
+    },
+    "b2": {
+     "applications": 3,
+     "P": 0.5545
+    },
+    "b3": {
+     "applications": 5,
+     "P": 0.5462
+    },
+    "b4": {
+     "applications": 7,
+     "P": 0.5383
+    }
+   }
+  }
+ ]
+}

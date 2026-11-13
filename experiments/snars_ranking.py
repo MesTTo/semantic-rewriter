@@ -1,21 +1,24 @@
-"""Purpose: compare how SNARS ranks a Wikidata question's answers with how the rewriter ranks them. The rewriter
-weighs each answer by its exact lineage, a rewrite used twice in a derivation counting once. SNARS, given the
-knowledge base's statements, the question's own rules and the admitted rewrites as semrewrite.snars writes them,
-proves every answer by modus ponens at each step and fuses each answer's evidence-disjoint proofs (mettabase's
-sn prove and sn fuse-proofs). SNARS does all of its own proving and fusing; this script only routes its proofs to
-the answers they conclude.
+"""Purpose: compare how SNARS ranks a Wikidata question's answers with how the rewriter ranks them, and find on a
+constructed chain what makes the two part. The rewriter weighs each answer by its exact lineage, the question's own
+rules certain and a rewrite used twice in a derivation counting once. SNARS, given the knowledge base's statements,
+the question's own rules and the admitted rewrites as semrewrite.snars writes them, proves every answer by modus
+ponens at each step and fuses each answer's evidence-disjoint proofs (mettabase's sn prove and sn fuse-proofs).
+SNARS does all of its own proving and fusing; this script only routes its proofs to the answers they conclude.
 
 Run from the repository root with PETTA_PATH and METTABASE_PATH set, as tests/test_snars.py needs them:
 
-    python experiments/snars_ranking.py leonardo alphabet
+    python experiments/snars_ranking.py leonardo alphabet chain
 
-It writes results/snars_ranking.json and prints a table: each ranking's average precision against Wikidata's own
-answer, and how far the two rankings agree.
+The questions write results/snars_ranking.json and print each ranking's average precision against Wikidata's own
+answer and how far the two rankings agree. `chain` writes results/snars_chain.json: SNARS's P along a chain that uses
+one rewrite at every link, with SNARS's rule rows at their structural truth or certain, and the rewrite's validity
+at several opinions.
 """
 
 from __future__ import annotations
 
 import importlib.util
+import itertools
 import json
 import math
 import os
@@ -26,24 +29,34 @@ import sys
 import time
 from dataclasses import replace
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from semrewrite.judges import default_data_trust
 from semrewrite.judges import make as make_judge
-from semrewrite.model import Rewrite, Rule, is_variable
+from semrewrite.model import Atom, Rewrite, Rule, is_variable
 from semrewrite.opinion import Opinion
 from semrewrite.protocols import Budget
 from semrewrite.rewriter import Rewriter
 from semrewrite.snars import believed, rule_rows, statement
 
 RESULTS = ROOT / "results" / "snars_ranking.json"
+CHAIN = ROOT / "results" / "snars_chain.json"
 # Each question's judge, rewrite threshold and SNARS proof depth: Jev at the low threshold whose answers RESULTS.md
 # ranks, one rewrite on a path as there. Leonardo's answers each need one rewrite, so depth 1 reaches them all;
 # Alphabet's chain ownership through its transitive rule, and depth 3 reaches 2,894 of its 2,903 in about three
 # minutes, where depth 2 reached 376.
 RUNS = {"leonardo": ("jev", 0.1, 1), "alphabet": ("jev", 0.1, 3)}
+# The chain's arms. SNARS's backward chainer applies every rule row at one structural truth, (sn struct-tv), belief
+# 0.9; these two lines, run once SNARS is loaded, make it certain instead. The rewrite's validity is certain, or an
+# opinion at Wikidata's base rate whose P, 0.95 or 0.24, lies near the top or the bottom of the rewriter's P on
+# Leonardo's question.
+CERTAIN_RULES = ("!(match &self (= (sn struct-tv) $o) (remove-atom &self (= (sn struct-tv) $o)))",
+                 "!(add-atom &self (= (sn struct-tv) (Opinion 1.0 0.0 0.0 0.5)))")
+VALIDITIES = {"certain": Opinion(1.0, 0.0, 0.0), "P 0.95": Opinion(0.94, 0.0, 0.06, 0.214),
+              "P 0.24": Opinion(0.2, 0.6, 0.2, 0.214)}
 
 
 def _evaluate():
@@ -171,7 +184,31 @@ def _kendall(a: dict[str, float], b: dict[str, float]) -> tuple[float, int, int]
     return ((concordant - discordant) / denominator if denominator else 1.0), concordant, discordant
 
 
-# Time: the rewriter's run, one PeTTa run proving every answer at once, and one fusing each answer's proofs.
+# Time: one PeTTa run proving every answer at once, and one fusing each answer's proofs.
+def _prove(world: list[str], query: Atom, depth: int) -> tuple[dict[str, list[list]], dict[str, float], dict]:
+    """SNARS's proofs of `query` to `depth` in the world the lines `world` write, by the answer filling the query's
+    variable; each answer's P once SNARS fuses its proofs; and the seconds each run took."""
+    role = "o" if is_variable(query.args[1]) else "s"
+    program = ["!(import! &self lib/mettabase/snars)", *world, f"!(sn prove {statement(query.pred, query.args)} {depth})"]
+    started = time.perf_counter()
+    by_answer: dict[str, list[list]] = {}
+    for proof in _proofs(_parse(_petta("\n".join(program) + "\n"))):
+        by_answer.setdefault(_filler(proof[3], role), []).append(proof)
+    proving = time.perf_counter() - started
+
+    fusing = ["!(import! &self lib/mettabase/snars)"]
+    fusing += [f'!(Fused {json.dumps(a)} (sn fuse-proofs ({" ".join(_show(p) for p in ps)})))'
+               for a, ps in sorted(by_answer.items())]
+    started = time.perf_counter()
+    fused = {}
+    for e in _parse(_petta("\n".join(fusing) + "\n")):
+        if isinstance(e, list) and e[:1] == ["Fused"]:
+            b, _, u, a = (float(x) for x in e[2][1:])
+            fused[json.loads(e[1])] = b + a * u
+    return by_answer, fused, {"prove": round(proving, 1), "fuse": round(time.perf_counter() - started, 1)}
+
+
+# Time: the rewriter's run, and _prove's two PeTTa runs.
 def compare(name: str, judge_name: str, threshold: float, depth: int) -> dict[str, object]:
     """The question answered by the rewriter and by SNARS from the same rewrites, both rankings scored against
     Wikidata's answer, and how far they agree."""
@@ -192,30 +229,10 @@ def compare(name: str, judge_name: str, threshold: float, depth: int) -> dict[st
     # SNARS's world: the statements the rewrites and rules read, certain; the rules; the rewrites.
     used = {r.premise for r in rewrites} | {b.pred for rule in kb.rules for b in rule.body}
     facts = [f for f in kb.facts if f.pred in used]
-    query = kb.queries[0]
-    role = "o" if is_variable(query.args[1]) else "s"
-    lines = ["!(import! &self lib/mettabase/snars)"]
-    lines += [believed(f, Opinion(1.0, 0.0, 0.0), "kb") for f in facts]
-    lines += [line for i, rule in enumerate(kb.rules) for line in _rule_lines(i, rule)]
-    lines += [line for r in rewrites for line in rule_rows(r, opinion[r.key], f"semrewrite {judge_name}")]
-    lines.append(f"!(sn prove {statement(query.pred, query.args)} {depth})")
-    started = time.perf_counter()
-    proofs = _proofs(_parse(_petta("\n".join(lines) + "\n")))
-    proving = time.perf_counter() - started
-    by_answer: dict[str, list[list]] = {}
-    for proof in proofs:
-        by_answer.setdefault(_filler(proof[3], role), []).append(proof)
-
-    fusing = ["!(import! &self lib/mettabase/snars)"]
-    fusing += [f'!(Fused {json.dumps(a)} (sn fuse-proofs ({" ".join(_show(p) for p in ps)})))'
-               for a, ps in sorted(by_answer.items())]
-    started = time.perf_counter()
-    snars = {}
-    for e in _parse(_petta("\n".join(fusing) + "\n")):
-        if isinstance(e, list) and e[:1] == ["Fused"]:
-            b, _, u, a = (float(x) for x in e[2][1:])
-            snars[json.loads(e[1])] = b + a * u
-    fusing_seconds = time.perf_counter() - started
+    world = [believed(f, Opinion(1.0, 0.0, 0.0), "kb") for f in facts]
+    world += [line for i, rule in enumerate(kb.rules) for line in _rule_lines(i, rule)]
+    world += [line for r in rewrites for line in rule_rows(r, opinion[r.key], f"semrewrite {judge_name}")]
+    by_answer, snars, seconds = _prove(world, kb.queries[0], depth)
 
     both = set(lineage) & set(snars)
     # An answer's shortest proof, counted in rule applications, and where each ranking puts the answers outside
@@ -228,7 +245,7 @@ def compare(name: str, judge_name: str, threshold: float, depth: int) -> dict[st
     multi = sum(1 for a in both if len(by_answer[a]) > 1)
     return {
         "question": name, "judge": judge_name, "threshold": threshold, "depth": depth,
-        "rewrites": len(rewrites), "facts": len(facts), "proofs": len(proofs),
+        "rewrites": len(rewrites), "facts": len(facts), "proofs": sum(len(ps) for ps in by_answer.values()),
         "answers": {"rewriter": len(lineage), "snars": len(snars), "both": len(both),
                     "rewriter_only": sorted(set(lineage) - set(snars))[:20],
                     "snars_only": sorted(set(snars) - set(lineage))[:20], "with_several_proofs": multi},
@@ -237,17 +254,48 @@ def compare(name: str, judge_name: str, threshold: float, depth: int) -> dict[st
         "kendall_tau_b": tau, "pairs_concordant": concordant, "pairs_discordant": discordant,
         "p_range": {"rewriter": [min(lineage[a] for a in both), max(lineage[a] for a in both)],
                     "snars": [min(snars[a] for a in both), max(snars[a] for a in both)]},
-        "seconds": {"prove": round(proving, 1), "fuse": round(fusing_seconds, 1)},
+        "seconds": seconds,
         "outside": {a: {"rewriter": rank["rewriter"][a], "snars": rank["snars"][a]} for a in sorted(both - truth)},
         "per_answer": {a: [round(lineage[a], 6), round(snars[a], 6), len(by_answer[a]), steps[a]] for a in sorted(both)},
     }
 
 
+# Time: 2 x 3 arms, each _prove's two PeTTa runs over 2 x links statements and rules.
+def chain(links: int = 4, depth: int = 3) -> dict[str, Any]:
+    """SNARS's P for each answer along a chain a -> b1 -> ... -> b<links> of owned_by statements, which a owns through
+    the rewrite owns(X,Y) <= owned_by(Y,X) at every link and the transitive rule between links, in each arm: the rule
+    rows at SNARS's structural truth or certain, and the rewrite's validity at each of VALIDITIES."""
+    nodes = ["a", *(f"b{i}" for i in range(1, links + 1))]
+    facts = [believed(Atom("owned_by", (child, parent)), Opinion(1.0, 0.0, 0.0), "kb")
+             for parent, child in itertools.pairwise(nodes)]
+    transitive = _rule_lines(0, Rule(Atom("owns", ("X", "Z")), (Atom("owns", ("X", "Y")), Atom("owns", ("Y", "Z")))))
+    rewrite = Rewrite("owns", "owned_by", (1, 0))
+    arms = []
+    for rules, swap in (("SNARS's structural truth", ()), ("certain", CERTAIN_RULES)):
+        for validity, opinion in VALIDITIES.items():
+            world = [*swap, *facts, *transitive, *rule_rows(rewrite, opinion, "chain")]
+            by_answer, fused, _ = _prove(world, Atom("owns", ("a", "X")), depth)
+            arms.append({"rules": rules, "validity": validity,
+                         "answers": {a: {"applications": min(_applications(p[2]) for p in ps), "P": round(fused[a], 4)}
+                                     for a, ps in sorted(by_answer.items())}})
+    return {"links": links, "depth": depth,
+            "validities": {v: [o.belief, o.disbelief, o.uncertainty, o.base_rate] for v, o in VALIDITIES.items()},
+            "arms": arms}
+
+
 if __name__ == "__main__":
-    # Each argument names a question, optionally with its proof depth after a colon: alphabet:4.
-    runs = [(a.split(":")[0], int(a.split(":")[1]) if ":" in a else None) for a in sys.argv[1:]] or [(n, None) for n in RUNS]
-    measured = [compare(n, *RUNS[n][:2], RUNS[n][2] if depth is None else depth) for n, depth in runs]
-    RESULTS.write_text(json.dumps(measured, indent=1) + "\n")
-    for m in measured:
-        print(json.dumps({k: m[k] for k in ("question", "depth", "average_precision", "kendall_tau_b",
-                                             "pairs_discordant", "p_range", "seconds", "outside")}))
+    # Each argument names a question, optionally with its proof depth after a colon (alphabet:4), or the chain.
+    args = sys.argv[1:] or [*RUNS, "chain"]
+    if "chain" in args:
+        result = chain()
+        CHAIN.write_text(json.dumps(result, indent=1) + "\n")
+        for arm in result["arms"]:
+            print(json.dumps({"rules": arm["rules"], "validity": arm["validity"],
+                              "P": {a: [x["applications"], x["P"]] for a, x in arm["answers"].items()}}))
+    runs = [(a.split(":")[0], int(a.split(":")[1]) if ":" in a else None) for a in args if a != "chain"]
+    if runs:
+        measured = [compare(n, *RUNS[n][:2], RUNS[n][2] if depth is None else depth) for n, depth in runs]
+        RESULTS.write_text(json.dumps(measured, indent=1) + "\n")
+        for m in measured:
+            print(json.dumps({k: m[k] for k in ("question", "depth", "average_precision", "kendall_tau_b",
+                                                 "pairs_discordant", "p_range", "seconds", "outside")}))
