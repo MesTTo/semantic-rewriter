@@ -25,7 +25,7 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
-from semrewrite.opinion import Opinion, W
+from semrewrite.opinion import Opinion, W, average
 
 UNIT = st.floats(min_value=0.0, max_value=1.0)
 # Evidence from none to a million units, which leaves u between 2e-6 and 1.
@@ -540,3 +540,39 @@ def test_operators_agree_with_snars_truth_metta() -> None:
     for name, (count, off, largest) in sorted(worst.items()):
         print(f"  {name:20} {count:4} calls, {off:3} beyond 1e-9, largest difference {largest:.3g}")
     assert not disagreements, disagreements[:5]
+
+
+# ---- averaging fusion ----
+
+
+@given(st.lists(st.tuples(AMOUNTS, AMOUNTS), min_size=1, max_size=6), UNIT)
+def test_averaging_fusion_is_the_opinion_of_the_mean_evidence(evidence: list[tuple[float, float]], rate: float) -> None:
+    """Averaging fusion maps each opinion to its evidence, averages it and maps back (Jøsang, Wang and Zhang, FUSION
+    2017, section III-D), so sources that saw the same evidence count as one."""
+    n = len(evidence)
+    mean = (math.fsum(r for r, _ in evidence) / n, math.fsum(s for _, s in evidence) / n)
+    assert_close(average([Opinion.from_evidence(r, s, rate) for r, s in evidence]), Opinion.from_evidence(*mean, rate),
+                 1e-9)
+
+
+@given(opinions())
+def test_averaging_an_opinion_with_itself_returns_it(o: Opinion) -> None:
+    assert_close(average([o, o, o]), o)
+
+
+@given(evidence_opinions(), evidence_opinions())
+def test_two_sources_average_by_the_book_s_formula(x: Opinion, y: Opinion) -> None:
+    """J's averaging fusion of two: b = (b1 u2 + b2 u1)/(u1 + u2), u = 2 u1 u2/(u1 + u2), the base rates' mean."""
+    k = x.uncertainty + y.uncertainty
+    want = Opinion((x.belief * y.uncertainty + y.belief * x.uncertainty) / k,
+                   (x.disbelief * y.uncertainty + y.disbelief * x.uncertainty) / k,
+                   2 * x.uncertainty * y.uncertainty / k, (x.base_rate + y.base_rate) / 2)
+    assert_close(average([x, y]), want, 1e-9)
+
+
+def test_dogmatic_opinions_alone_average_as_infinite_evidence() -> None:
+    """A dogmatic opinion is infinite evidence, so beside finite evidence the dogmatic opinions alone average."""
+    got = average([Opinion(1.0, 0.0, 0.0, 0.5), Opinion(0.5, 0.5, 0.0, 0.5), Opinion.from_evidence(0.0, 9.0)])
+    assert_close(got, Opinion(0.75, 0.25, 0.0, 0.5))
+    with pytest.raises(ValueError, match="at least one"):
+        average([])

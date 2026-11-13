@@ -23,8 +23,9 @@ from collections import defaultdict
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import get_args
+from typing import TYPE_CHECKING, get_args
 
+from semrewrite.claims import weigh
 from semrewrite.discovery import Discoverer, ScoreCache
 from semrewrite.evidence import rewrite_evidence, statements
 from semrewrite.kb import KB
@@ -33,6 +34,9 @@ from semrewrite.model import Atom, Key, Mapping, Proposal, Rewrite, Rule, compos
 from semrewrite.opinion import Opinion
 from semrewrite.protocols import Admission, Budget, DepthCounts, Engine, Judge, Program, Proof, Retriever, Solution
 from semrewrite.trace import Solved, Solving, Tracer
+
+if TYPE_CHECKING:
+    from semrewrite.claims import ClaimCheck, Reading
 
 # The protocol's default budget; a Budget is frozen, so one instance serves every rewriter.
 DEFAULT_BUDGET = Budget()
@@ -123,7 +127,9 @@ class Outcome:
     `admitted` holds the keys of the rewrites the judge admitted while
     answering, as discovery saw them (before any alias renaming); `proofs`
     holds a derivation per answer when the engine provides them; `beliefs`, when the rewriter was asked for them,
-    holds each answer's opinion that some derivation's rewrites are all valid.
+    holds each answer's opinion that some derivation's rewrites are all valid, and `rewrite_beliefs` each admitted
+    rewrite's opinion that it is valid, which those answers' opinions are computed from; `readings`, when the
+    rewriter has a claim check, holds the statements read against each admitted rewrite (semrewrite.claims).
     """
 
     kb: str
@@ -145,6 +151,8 @@ class Outcome:
     seconds: float = 0.0
     proofs: dict[tuple[str, ...], Proof] | None = None
     beliefs: dict[tuple[str, ...], Opinion] | None = None
+    rewrite_beliefs: dict[Key, Opinion] | None = None
+    readings: dict[Key, tuple[Reading, ...]] | None = None
 
     @property
     def finished(self) -> bool:
@@ -169,6 +177,7 @@ class Rewriter:
         trace: Tracer | None = None,
         beliefs: int = 0,
         data_trust: float = 0.0,
+        claims: ClaimCheck | None = None,
     ) -> None:
         self.kb = kb
         self.catalogue = kb.catalogue()
@@ -191,6 +200,9 @@ class Rewriter:
             msg = f"data trust is a probability, not {data_trust}"
             raise ValueError(msg)
         self.data_trust = data_trust
+        # Reads each admitted rewrite against the knowledge base's statements by meaning (semrewrite.claims); its
+        # readings fuse into the rewrite's opinion after the knowledge base's evidence does.
+        self.claims = claims
         self._rules_by_head: dict[str, list[Rule]] = defaultdict(list)
         for rule in kb.rules:
             self._rules_by_head[rule.head.pred].append(rule)
@@ -254,9 +266,11 @@ class Rewriter:
     def rewrite_opinions(self, keys: Iterable[Key]) -> tuple[tuple[Rewrite, ...], dict[Key, Opinion]]:
         """The rewrites with these (premise, conclusion, mapping) keys, each at its score, and the opinion that each is
         valid: its judge's opinion discounted by the judge's trust, fused by cumulative fusion (Jøsang 2016,
-        Def. 12.5) with the knowledge base's evidence on it (semrewrite.evidence) discounted by the data trust. The
-        evidence on each rewrite reads only the knowledge base's statements, so it does not depend on which other
-        rewrites the keys hold. The score cache holds every proposal discovery asked, so no judge is asked again."""
+        Def. 12.5) with the knowledge base's evidence on it (semrewrite.evidence) discounted by the data trust, and,
+        with a claim check, with the readings of the statements that bear on its claim (semrewrite.claims.weigh).
+        Both read only the knowledge base, so a rewrite's opinion does not depend on which other rewrites the keys
+        hold. The score cache holds every proposal discovery asked, so no judge is asked again about a proposal, and
+        the check reads each claim once."""
         cat = self.catalogue
         ordered = sorted(keys)
         proposals = [Proposal(cat[p], cat[c], m) for p, c, m in ordered]
@@ -267,6 +281,9 @@ class Rewriter:
             # Both sources are of one proposition, the rewrite, so the evidence takes the judge's base rate (SLN 3.1).
             opinion = {key: o.fuse(Opinion.from_evidence(*evidence[key], o.base_rate).discount(self.data_trust))
                        for key, o in opinion.items()}
+        if self.claims is not None:
+            readings = self.claims.readings(rewrites)
+            opinion = {key: weigh(o, readings[key]) for key, o in opinion.items()}
         return rewrites, opinion
 
     # -- timings -------------------------------------------------------------
@@ -284,6 +301,8 @@ class Rewriter:
         the knowledge base derives with no rewrite is certain. A lineage the work budget stops leaves the run at
         work_limit with no answers, as an engine's would."""
         rewrites, opinion = self.rewrite_opinions(out.admitted)
+        out.rewrite_beliefs = opinion
+        out.readings = self.claims.readings(rewrites) if self.claims is not None else None
         mean = {key: o.projection for key, o in opinion.items()}
         square = {key: o.projection**2 + o.variance for key, o in opinion.items()}
         base = {key: o.base_rate for key, o in opinion.items()}

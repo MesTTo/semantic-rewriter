@@ -86,6 +86,15 @@ def test_a_closed_retriever_serves_only_what_it_embedded(retriever: EmbeddingRet
         retriever.top_k(Predicate("aunt", "{x} is the aunt of {y}"), CATALOGUE, 1)
 
 
+def test_cosines_give_each_anchor_its_row_embedding_each_sentence_once(retriever: EmbeddingRetriever) -> None:
+    """The claim check's cosines: a row per anchor over the sentences, in order, each sentence embedded once."""
+    rows = retriever.cosines(["A is the mother of B", "A is near B"], ["A is the mum of B", "A is near B"])
+    assert rows == pytest.approx([[0.99, 0.6], [0.6 * 0.99 + 0.8 * 0.141, 1.0]])
+    assert retriever.cosines(["A is near B"], []) == [[]]
+    assert retriever.cosines([], ["A is near B"]) == []
+    assert retriever.usage["encoded"] == 3
+
+
 def test_all_candidates_proposes_every_predicate_of_the_goal_arity() -> None:
     got = AllCandidates().top_k(CATALOGUE["mother"], CATALOGUE, 2)
     assert got == [(n, 1.0) for n in ("boss_of", "mum", "near", "parent")]

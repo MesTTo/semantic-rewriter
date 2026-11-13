@@ -7,21 +7,23 @@ suits small catalogues.
 Each predicate's gloss is filled with neutral letters ("A is the mother of B")
 and embedded once; a goal's candidates are the k predicates of its arity
 nearest it by cosine. Retrieval is symmetric and says nothing about direction;
-the judge decides which way, and how the arguments map.
+the judge decides which way, and how the arguments map. The same model embeds
+the sentences the claim check compares, the knowledge base's statements and the
+rewrites' claims.
 """
 
 from __future__ import annotations
 
 import gc
 import sys
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from types import TracebackType
 from typing import TYPE_CHECKING, Self
 
 from semrewrite.model import LETTERS, Predicate, Proposal, mappings
 
-# numpy names only a type here: the vectors come from the embedding model, so
-# a core install can import AllCandidates without numpy.
+# numpy is imported only where vectors are multiplied: the vectors come from the
+# embedding model, so a core install can import AllCandidates without numpy.
 if TYPE_CHECKING:
     import numpy as np
 
@@ -53,18 +55,35 @@ class EmbeddingRetriever:
     def _sentence(self, predicate: Predicate) -> str:
         return predicate.sentence(*self.fillers[: predicate.arity])
 
-    # Time: one batched forward pass over the glosses not yet cached.
-    def index(self, predicates: Iterable[Predicate]) -> None:
-        """Embed every gloss not yet cached, in one batch."""
-        fresh = sorted({self._sentence(p) for p in predicates} - set(self._vectors))
+    # Time: one batched forward pass over the sentences not yet cached.
+    def _embed(self, sentences: Iterable[str]) -> None:
+        """Embed every sentence not yet cached, in one batch."""
+        fresh = sorted(set(sentences) - set(self._vectors))
         if not fresh:
             return
         if self._model is None:
-            msg = f"the retriever was closed, so it cannot embed {len(fresh)} new glosses; make a new one"
+            msg = f"the retriever was closed, so it cannot embed {len(fresh)} new sentences; make a new one"
             raise RuntimeError(msg)
         vectors = self._model.encode(fresh, normalize_embeddings=True, convert_to_numpy=True)
         self._vectors.update(zip(fresh, vectors, strict=True))
         self.usage["encoded"] += len(fresh)
+
+    def index(self, predicates: Iterable[Predicate]) -> None:
+        """Embed every gloss not yet cached, in one batch."""
+        self._embed(self._sentence(p) for p in predicates)
+
+    # Time: one batched forward pass over the sentences not yet cached, then a |anchors| x |sentences| matrix product of
+    # the embedding width.
+    def cosines(self, anchors: Sequence[str], sentences: Sequence[str]) -> list[list[float]]:
+        """Each anchor's cosine to each of `sentences`, a row per anchor in order; the claim check reads its claims'
+        cosines to the knowledge base's statements so."""
+        import numpy as np
+
+        self._embed([*anchors, *sentences])
+        if not anchors or not sentences:
+            return [[] for _ in anchors]
+        rows = np.stack([self._vectors[s] for s in anchors]) @ np.stack([self._vectors[s] for s in sentences]).T
+        return rows.tolist()
 
     # Time: |among| dot products of the embedding width, then a sort of |among|.
     def top_k(self, goal: Predicate, among: Mapping[str, Predicate], k: int) -> list[tuple[str, float]]:

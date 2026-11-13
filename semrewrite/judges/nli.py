@@ -8,6 +8,7 @@ Judging a proposal and its reverse reads the model in both directions.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import ClassVar
 
 from semrewrite.judges.base import LETTERS, Fillers, SentenceJudge
 from semrewrite.opinion import Opinion
@@ -23,6 +24,9 @@ class NLIJudge(SentenceJudge):
     disagree on label order: cross-encoder/nli-deberta-v3-base puts entailment
     at 1, MoritzLaurer's DeBERTa-v3 checkpoints at 0.
     """
+
+    # Disbelief is the contradiction class, so the claim check counts it against a claim directly.
+    reads_contradiction: ClassVar[bool] = True
 
     def __init__(self, name: str, threshold: float, fillers: Fillers = LETTERS, *, model: str) -> None:
         from sentence_transformers import CrossEncoder

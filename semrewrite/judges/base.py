@@ -64,6 +64,10 @@ class SentenceJudge:
 
     # The pair set whose dev rows calibrate this kind of judge's defaults: the kind of question it is asked.
     calibration_set: ClassVar[str] = DEFAULT_SET
+    #: Whether an opinion's disbelief is the judge's reading that the premise contradicts the conclusion, as an NLI
+    #: model's contradiction class is. A judge giving how likely the conclusion follows has disbelief that it does not
+    #: follow, which says nothing against the conclusion, so the claim check asks it about the claim's negation.
+    reads_contradiction: ClassVar[bool] = False
 
     def __init__(self, name: str, threshold: float, fillers: Fillers = LETTERS) -> None:
         self.name = name

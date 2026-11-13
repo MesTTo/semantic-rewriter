@@ -1,6 +1,6 @@
 """Purpose: subjective-logic binomial opinions as the Subjective Logic Narsese specification (SLN) defines
 them and SNARS's truth.metta computes them: their evidence, Beta and NAL readings, the operators the graded rewriter
-combines them with.
+combines them with, and averaging fusion, which the claim check combines sources that saw the same evidence with.
 
 An opinion (b, d, u, a) about a proposition holds belief b, disbelief d and uncertainty u, which sum to 1, and a base
 rate a, the probability of the proposition before any evidence (J Def 3.1). r units of evidence for the proposition
@@ -37,6 +37,7 @@ mettabase c9bbbe8) computes otherwise, this module follows SLN and the book:
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 # The non-informative prior weight (J 3.11, SLN T1): with W = 2 a vacuous opinion at a = 1/2 is Beta(1, 1).
@@ -316,6 +317,42 @@ class Opinion:
         denominator = W * (1.0 - c) + k * c
         certainty = k * c / denominator
         return cls(f * certainty, (1.0 - f) * certainty, W * (1.0 - c) / denominator, base_rate)
+
+
+# Time: 3 n float operations and 3 compensated sums, n = len(opinions).
+def average(opinions: Sequence[Opinion]) -> Opinion:
+    """Averaging belief fusion: the opinion of the sources' mean evidence, for sources that saw the same evidence, such
+    as two wordings of one statement, where cumulative fusion would count it twice (Jøsang, Information Fusion 11(2),
+    2010; Jøsang, Wang and Zhang, FUSION 2017, section III-C).
+
+    Two sources give b = (b1 u2 + b2 u1)/(u1 + u2) and u = 2 u1 u2/(u1 + u2), which is from_evidence of the mean of
+    (r, s): (2, 0) and (0, 2) average to (1, 1), and an opinion averaged with itself is returned unchanged. For n
+    sources each weighs as 1/u_i, written u_min/u_i here so that no weight overflows. Dogmatic opinions are infinite
+    evidence, so where any is dogmatic those alone average, with equal weights (J 12.15's gamma = 1/2 for two), as
+    fuse() lets a dogmatic opinion outweigh finite evidence. The base rate is the plain mean of the base rates of the
+    opinions that carry weight.
+
+    >>> average([Opinion.from_evidence(2, 0), Opinion.from_evidence(0, 2)]) == Opinion.from_evidence(1, 1)
+    True
+    """
+    if not opinions:
+        msg = "averaging fusion needs at least one opinion"
+        raise ValueError(msg)
+    least = min(o.uncertainty for o in opinions)
+    if least == 0.0:
+        dogmatic = [o for o in opinions if o.uncertainty == 0.0]
+        n = len(dogmatic)
+        return Opinion(math.fsum(o.belief for o in dogmatic) / n, math.fsum(o.disbelief for o in dogmatic) / n, 0.0,
+                       math.fsum(o.base_rate for o in dogmatic) / n)
+    # b = sum(b_i / u_i) / sum(1 / u_i) and u = n / sum(1 / u_i): the mean evidence W b_i/u_i mapped back by J 3.11.
+    weights = [least / o.uncertainty for o in opinions]
+    total = math.fsum(weights)
+    return Opinion(
+        math.fsum(o.belief * w for o, w in zip(opinions, weights, strict=True)) / total,
+        math.fsum(o.disbelief * w for o, w in zip(opinions, weights, strict=True)) / total,
+        len(opinions) * least / total,
+        math.fsum(o.base_rate for o in opinions) / len(opinions),
+    )
 
 
 def _check_unit(name: str, value: float) -> None:
