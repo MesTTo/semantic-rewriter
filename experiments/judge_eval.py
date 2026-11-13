@@ -342,13 +342,13 @@ def hard_table(rows: Sequence[pairs.PairRow], scored: dict[str, dict[str, dict[s
     return table
 
 
-def provenance() -> dict[str, Any]:
-    """What these results were computed from: the code revision, each pair file's digest, and the
-    Jev request ledger's totals, which a rerun answered from the cache does not add to."""
+def run_state() -> dict[str, Any]:
+    """What a run computes from, taken when it starts, before any input is read: the code revision, the inputs that
+    differ from it and each pair file's digest. Taken at the end instead, a file edited during a long run would be
+    recorded as what the run read."""
     head = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], capture_output=True, text=True, check=False)
     dirty = subprocess.run(["git", "-C", str(ROOT), "status", "--porcelain", "--", *INPUTS],
                            capture_output=True, text=True, check=False)
-    ledger = [json.loads(line) for line in JEV_REQUESTS.read_text().splitlines() if line] if JEV_REQUESTS.is_file() else []
     return {
         "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "command": "python experiments/judge_eval.py " + " ".join(sys.argv[1:]),
@@ -357,12 +357,17 @@ def provenance() -> dict[str, Any]:
         "pairs": {
             name: hashlib.sha256((pairs.PAIRS / f"{name}.jsonl").read_bytes()).hexdigest() for name in pairs.SETS
         },
-        "jev_ledger": {
-            "requests": len(ledger),
-            "questions": sum(row["questions"] for row in ledger),
-            "input_tokens": sum(row.get("input_tokens") or 0 for row in ledger),
-            "models": sorted({row["model"] for row in ledger if "model" in row}),
-        },
+    }
+
+
+def jev_ledger() -> dict[str, Any]:
+    """The Jev request ledger's totals once a run has ended, which a rerun answered from the cache does not add to."""
+    ledger = [json.loads(line) for line in JEV_REQUESTS.read_text().splitlines() if line] if JEV_REQUESTS.is_file() else []
+    return {
+        "requests": len(ledger),
+        "questions": sum(row["questions"] for row in ledger),
+        "input_tokens": sum(row.get("input_tokens") or 0 for row in ledger),
+        "models": sorted({row["model"] for row in ledger if "model" in row}),
     }
 
 
@@ -371,6 +376,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     parser.add_argument("--judges", default=",".join(NAMES), help="comma-separated judge names")
     parser.add_argument("--scores", type=pathlib.Path, help="directory to dump every row's score per judge")
     args = parser.parse_args(argv)
+    state = run_state()
     names = [n for n in args.judges.split(",") if n]
     unknown = sorted(set(names) - set(NAMES))
     if unknown:
@@ -395,7 +401,7 @@ def main(argv: Sequence[str] | None = None) -> None:
                              "by_set": engine, "trust": trust, "data_trust": details["data_trusts"][ENGINE_VARIANT]}
 
     results = {
-        "provenance": provenance(),
+        "provenance": {**state, "jev_ledger": jev_ledger()},
         "calibration": {
             "rule": "maximum dev balanced accuracy of admitting scores at or above the threshold, middle of the optimal plateau",
             "default": f"the dev rows of each judge's set, {DEFAULT_SET}'s unless its kind of question needs another, "
