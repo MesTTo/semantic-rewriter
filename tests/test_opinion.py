@@ -1,11 +1,10 @@
 """Purpose: check semrewrite.opinion against the numbers Jøsang's book and SLN print, against the properties the two
-state, and against the implementations it must agree with: ONA's Narsese parser reads every exported line back, and
-SNARS's truth.metta, run on PeTTa, computes every operation it shares to within 1e-9.
+state, and against the implementation it must agree with: SNARS's truth.metta, run on PeTTa, computes every operation
+it shares to within 1e-9.
 
-The ONA check needs ONA_PATH, an OpenNARS-for-Applications checkout with its NAR binary built. The SNARS check needs
-PETTA_PATH, a PeTTa checkout, METTABASE_PATH, the mettabase checkout whose lib/mettabase/snars it loads, and swipl on
-the PATH; it runs PeTTa with mettabase as the working directory, which SNARS's kernel needs, and writes nothing.
-Each is skipped, with the reason, when what it needs is missing. The SNARS check includes the product's base-rate
+The SNARS check needs PETTA_PATH, a PeTTa checkout, METTABASE_PATH, the mettabase checkout whose lib/mettabase/snars
+it loads, and swipl on the PATH; it runs PeTTa with mettabase as the working directory, which SNARS's kernel needs,
+and writes nothing. It is skipped, with the reason, when what it needs is missing. The SNARS check includes the product's base-rate
 corners and fusion of unequal base rates, which truth.metta at mettabase c9bbbe8 gets wrong (sn kdiv drops the cross
 terms, sn fuse-op keeps the first base rate) and its commit 10cdbc4 corrects; it fails on the former.
 """
@@ -26,7 +25,7 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
-from semrewrite.opinion import Opinion, W, narsese_implication
+from semrewrite.opinion import Opinion, W
 
 UNIT = st.floats(min_value=0.0, max_value=1.0)
 # Evidence from none to a million units, which leaves u between 2e-6 and 1.
@@ -421,103 +420,6 @@ def test_operations_refuse_what_they_cannot_answer(build: Callable[[], object]) 
 def test_from_moments_accepts_the_widest_beta_its_base_rate_allows() -> None:
     # Variance m(1 - m) is the Bernoulli limit: no strength at all, so the uncertainty-maximised opinion of mean m.
     assert_close(Opinion.from_moments(0.25, 0.25 * 0.75, 0.5), Opinion(0.0, 0.5, 0.5, 0.5))
-
-
-# ---- export to ONA ----
-
-OWNS_LINE = "<<($X1 * $X0) --> owned_by_p127> ==> <($X0 * $X1) --> owns>>. %0.90;0.91%"
-
-
-def test_exports_a_rewrite_as_an_implication_between_products() -> None:
-    line = narsese_implication("owned_by_p127", ("X1", "X0"), "owns", ("X0", "X1"), Opinion.from_evidence(9, 1))
-    assert line == OWNS_LINE
-
-
-@pytest.mark.parametrize(
-    ("premise_args", "conclusion_args", "want"),
-    [
-        ((), (), "<q ==> p>"),
-        (("X0",), ("X0",), "<<(* $X0) --> q> ==> <(* $X0) --> p>>"),
-        (("X2", "X0", "X1"), ("X0", "X1", "X2"), "<<($X2 * ($X0 * $X1)) --> q> ==> <($X0 * ($X1 * $X2)) --> p>>"),
-        (("X0", "acme"), ("acme", "X0"), "<<($X0 * acme) --> q> ==> <(acme * $X0) --> p>>"),
-    ],
-)
-def test_exports_every_arity_as_ona_writes_it(
-    premise_args: tuple[str, ...], conclusion_args: tuple[str, ...], want: str
-) -> None:
-    # SLN section 6: k = 1 for ONA, so 3 units for and 1 against is f = 0.75, c = 4/5.
-    line = narsese_implication("q", premise_args, "p", conclusion_args, Opinion.from_evidence(3, 1))
-    assert line == f"{want}. %0.75;0.80%"
-
-
-def test_export_caps_confidence_at_onas_maximum() -> None:
-    assert narsese_implication("q", ("X0",), "p", ("X0",), Opinion(1.0, 0.0, 0.0)).endswith("%1.00;0.99%")
-    assert narsese_implication("q", ("X0",), "p", ("X0",), Opinion.from_evidence(500, 0)).endswith("%1.00;0.99%")
-
-
-@pytest.mark.parametrize(
-    ("premise", "premise_args", "conclusion", "conclusion_args", "opinion"),
-    [
-        ("q", ("X0",), "p", ("X0",), Opinion.from_evidence(0, 0)),  # vacuous: no frequency
-        ("q", ("A", "B", "C", "D", "E"), "p", ("A", "B", "C", "D", "E"), Opinion.from_evidence(1, 0)),  # 5 terms
-        ("q" * 32, ("X0",), "p", ("X0",), Opinion.from_evidence(1, 0)),  # longer than ONA's 31 characters
-        ("Q", ("X0",), "p", ("X0",), Opinion.from_evidence(1, 0)),  # not a predicate symbol
-        ("q", ("x-y",), "p", ("X0",), Opinion.from_evidence(1, 0)),  # not a term
-    ],
-)
-def test_export_refuses_what_ona_cannot_read(
-    premise: str, premise_args: tuple[str, ...], conclusion: str, conclusion_args: tuple[str, ...], opinion: Opinion
-) -> None:
-    with pytest.raises(ValueError):
-        narsese_implication(premise, premise_args, conclusion, conclusion_args, opinion)
-
-
-def _same_up_to_variable_names(ours: str, theirs: str) -> bool:
-    """Whether the two terms differ only by a one-to-one renaming of their $ variables."""
-    variable = re.compile(r"\$\w+")
-    if variable.sub("$", ours) != variable.sub("$", theirs):
-        return False
-    pairs = set(zip(variable.findall(ours), variable.findall(theirs), strict=True))
-    return len(pairs) == len({o for o, _ in pairs}) == len({t for _, t in pairs})
-
-
-def _export_cases(rng: random.Random) -> list[str]:
-    """The lines ONA must read back: every arity ONA holds, constants, and random permutations and opinions."""
-    lines = [OWNS_LINE, narsese_implication("q", ("X0",), "p", ("X0",), Opinion(1.0, 0.0, 0.0))]
-    for arity in range(5):
-        for _ in range(8):
-            variables = [f"X{i}" for i in range(arity)]
-            terms = [v if rng.random() < 0.8 else rng.choice(["acme", "q42", "zed"]) for v in variables]
-            premise_terms = rng.sample(terms, arity)
-            opinion = Opinion.from_evidence(rng.uniform(0.01, 300.0), rng.uniform(0.0, 300.0), rng.random())
-            lines.append(narsese_implication(f"pre_{arity}", premise_terms, f"con_{arity}", terms, opinion))
-    return lines
-
-
-@pytest.mark.skipif(not os.environ.get("ONA_PATH"), reason="ONA_PATH names no OpenNARS-for-Applications checkout")
-def test_ona_reads_every_exported_line_back() -> None:
-    nar = Path(os.environ["ONA_PATH"]) / "NAR"
-    if not nar.is_file():
-        pytest.skip(f"{nar} is not built")
-    lines = _export_cases(random.Random(20261113))
-    # ONA prints an input implication once as an event and again, when its implication table takes it (Memory.c),
-    # so each line goes to an emptied memory (*reset) after a comment, which ONA echoes as "Comment: line i", and
-    # the first Input line after that comment is the line as ONA read it.
-    script = "".join(f"*reset\n//line {i}\n{line}\n" for i, line in enumerate(lines))
-    result = subprocess.run([nar, "shell"], input=script, capture_output=True, text=True, check=False)
-    assert result.returncode == 0, result.stdout + result.stderr
-    segments = re.split(r"^Comment: line \d+$", result.stdout, flags=re.MULTILINE)[1:]
-    assert len(segments) == len(lines), result.stdout
-    echo = re.compile(r"^Input: (.*)\. Priority=\S+ Stamp=\S+ Truth: frequency=(\S+), confidence=(\S+)$")
-    for line, segment in zip(lines, segments, strict=True):
-        read = next((m.groups() for m in map(echo.match, segment.splitlines()) if m), None)
-        assert read, (line, segment)
-        term, frequency, confidence = read
-        ours, truth = line.split(". %")
-        f, c = (float(x) for x in truth.rstrip("%").split(";"))
-        assert _same_up_to_variable_names(ours, term), (line, term)
-        assert (float(frequency), float(confidence)) == (f, c), (line, frequency, confidence)
-    print(f"ONA read back all {len(lines)} exported lines")
 
 
 # ---- the SNARS oracle ----

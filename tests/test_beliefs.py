@@ -101,17 +101,3 @@ def test_beliefs_rank_on_the_command_line(monkeypatch, capsys) -> None:
     lines = capsys.readouterr().out.splitlines()
     assert lines == ["parent(alice, tom)    P 0.900  b 0.900  d 0.100  u 0.000",
                      "parent(bob, tom)    P 0.800  b 0.800  d 0.200  u 0.000"]
-
-
-def test_rewrites_export_as_narsese_with_their_opinions(monkeypatch, capsys) -> None:
-    """At judge trust 0.5, mum's (0.9, 0.1, 0) reads (0.45, 0.05, 0.5): f = 0.9 and, with ONA's k = 1, evidence
-    r + s = W (b + d)/u = 2 gives c = 2/3."""
-    from semrewrite import cli, judges
-
-    monkeypatch.setattr(cli, "_judge", lambda args, kb: TableJudge(SCORES, threshold=0.2, trust=0.5))
-    monkeypatch.setattr(cli.formats, "load", lambda path: KB_)
-    monkeypatch.setattr(judges, "default_data_trust", lambda name: 0.0)
-    assert main(["rewrites", "tom.kb", "parent", "--retriever", "all", "--narsese"]) == 0
-    lines = capsys.readouterr().out.splitlines()
-    assert lines[0] == "<<($X0 * $X1) --> mum> ==> <($X0 * $X1) --> parent>>. %0.90;0.67%"
-    assert len(lines) == 3 and all(line.endswith("%") for line in lines)

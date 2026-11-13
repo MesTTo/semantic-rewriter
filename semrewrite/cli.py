@@ -26,9 +26,10 @@ from semrewrite.engines import make as make_engine
 from semrewrite.kb import KB
 from semrewrite.lineage import SETS
 from semrewrite.model import Rewrite, parse_atom
-from semrewrite.opinion import Opinion, narsese_implication
+from semrewrite.opinion import Opinion
 from semrewrite.protocols import Budget
 from semrewrite.rewriter import STRATEGIES, CapabilityError, Rewriter
+from semrewrite.snars import rule_row
 from semrewrite.trace import TextTrace, plural
 
 # The pyproject.toml extra that installs each optional library, by import name;
@@ -71,8 +72,8 @@ def _rewriter(args: argparse.Namespace, kb: KB) -> Rewriter:
 
     admission = Directional(args.directional) if args.directional is not None else Threshold()
     beliefs = getattr(args, "beliefs", False)
-    # Answer beliefs and the Narsese export both read each rewrite's opinion, which the data trust enters.
-    weighed = beliefs or getattr(args, "narsese", False)
+    # Answer beliefs and the SNARS export both read each rewrite's opinion, which the data trust enters.
+    weighed = beliefs or getattr(args, "snars", False)
     return Rewriter(kb, _judge(args, kb), make_engine(args.engine), _retriever(args), k=args.k,
                     budget=Budget(work=args.work, seconds=args.seconds), admission=admission,
                     proofs=getattr(args, "explain", False), trace=TextTrace() if getattr(args, "trace", False) else None,
@@ -134,8 +135,8 @@ def cmd_rewrites(args: argparse.Namespace) -> int:
         print(f"{args.predicate} has no gloss in {kb.name}", file=sys.stderr)
         return 1
     admitted = {r.key: r for r in disc.rewrites(args.predicate)}
-    if args.narsese:
-        return _narsese(rw, admitted)
+    if args.snars:
+        return _snars(rw, admitted)
     proposals = disc.proposals(args.predicate) if args.all else []
     scores = rw.scorer.score(proposals) if proposals else []
     for r in sorted(admitted.values(), key=lambda r: -r.score):
@@ -147,24 +148,13 @@ def cmd_rewrites(args: argparse.Namespace) -> int:
     return 0
 
 
-def _narsese(rw: Rewriter, admitted: dict) -> int:
-    """Print each admitted rewrite as an ONA belief, strongest first: a NAL-6 implication with the rewrite's opinion
-    as %f;c%, evidence counted with k = 1 as ONA counts it. A rewrite whose opinion is vacuous has no frequency to
-    give, so it is named on standard error and left out, and the command then fails."""
+def _snars(rw: Rewriter, admitted: dict) -> int:
+    """Print each admitted rewrite as a SNARS rule row holding its opinion, strongest first: the MeTTa S-expressions
+    mettabase's subjective backward chainer reads and GoalChainer reasons with (semrewrite.snars)."""
     rewrites, opinion = rw.rewrite_opinions(admitted)
-    lines, vacuous = [], []
     for r in sorted(rewrites, key=lambda r: (-opinion[r.key].projection, r.key)):
-        rule = r.rule()
-        (premise,) = rule.body
-        try:
-            lines.append(narsese_implication(premise.pred, premise.args, rule.head.pred, rule.head.args,
-                                             opinion[r.key], k=1.0))
-        except ValueError as error:
-            vacuous.append(f"{r}: {error}")
-    print("\n".join(lines))
-    for line in vacuous:
-        print(f"not exported: {line}", file=sys.stderr)
-    return 1 if vacuous else 0
+        print(rule_row(r, opinion[r.key]))
+    return 0
 
 
 def cmd_engines(args: argparse.Namespace) -> int:
@@ -241,9 +231,9 @@ def parser() -> argparse.ArgumentParser:
     rewriting(rewrites)
     rewrites.add_argument("predicate")
     rewrites.add_argument("--all", action="store_true", help="also show the rejected proposals with their scores")
-    rewrites.add_argument("--narsese", action="store_true",
-                          help="print the admitted rewrites as ONA Narsese implications, each with its opinion as "
-                               "%%f;c%%, the syntax ONA reads")
+    rewrites.add_argument("--snars", action="store_true",
+                          help="print the admitted rewrites as SNARS rules, (: (Opinion b d u a) name (-> premise "
+                               "conclusion)), the MeTTa rows mettabase's chainer and GoalChainer read")
     rewrites.set_defaults(run=cmd_rewrites)
 
     sub.add_parser("engines", help="list engines and their capabilities").set_defaults(run=cmd_engines)

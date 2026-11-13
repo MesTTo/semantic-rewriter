@@ -1,6 +1,6 @@
 """Purpose: subjective-logic binomial opinions as the Subjective Logic Narsese specification (SLN) defines
 them and SNARS's truth.metta computes them: their evidence, Beta and NAL readings, the operators the graded rewriter
-combines them with, and the export of a rewrite to ONA as a NAL-6 implication.
+combines them with.
 
 An opinion (b, d, u, a) about a proposition holds belief b, disbelief d and uncertainty u, which sum to 1, and a base
 rate a, the probability of the proposition before any evidence (J Def 3.1). r units of evidence for the proposition
@@ -37,10 +37,7 @@ mettabase c9bbbe8) computes otherwise, this module follows SLN and the book:
 from __future__ import annotations
 
 import math
-from collections.abc import Sequence
 from dataclasses import dataclass
-
-from semrewrite.model import check_symbol, check_term, is_variable
 
 # The non-informative prior weight (J 3.11, SLN T1): with W = 2 a vacuous opinion at a = 1/2 is Beta(1, 1).
 W = 2.0
@@ -50,13 +47,6 @@ W = 2.0
 # parameters it came from. Every operation here loses a few ulps, so the bound only rejects wrong inputs.
 _TOLERANCE = 1e-9
 
-# ONA's limits on a belief, from its src/Config.h at commit dc4efd0a: an atom name holds ATOMIC_TERM_LEN_MAX - 1 = 31
-# characters (Narsese_AtomicTermIndex cuts longer ones silently), a term fills at most COMPOUND_TERM_SIZE_MAX = 64
-# nodes of its binary heap (buildBinaryTree exits beyond that), and MAX_CONFIDENCE = 0.99 is the highest confidence
-# its truth functions produce. ONA reads an input confidence as given, and Truth_c2w(1.0) is infinite.
-_ONA_ATOM_LENGTH = 31
-_ONA_TERM_NODES = 64
-_ONA_MAX_CONFIDENCE = 0.99
 
 
 @dataclass(frozen=True, slots=True)
@@ -386,93 +376,3 @@ def _multiply(
     belief = x.belief * y.belief + belief_share
     uncertainty = x.uncertainty * y.uncertainty + uncertainty_share
     return belief, disbelief, uncertainty, ax * ay, x_rate_complement + ax * y_rate_complement
-
-
-def narsese_implication(
-    premise: str,
-    premise_args: Sequence[str],
-    conclusion: str,
-    conclusion_args: Sequence[str],
-    opinion: Opinion,
-    k: float = 1.0,
-) -> str:
-    """The rewrite conclusion(...) <= premise(...) as an ONA belief: a NAL-6 implication between products.
-
-    owns(X0, X1) <= owned_by_p127(X1, X0), held as Opinion.from_evidence(9, 1), is the line
-
-        <<($X1 * $X0) --> owned_by_p127> ==> <($X0 * $X1) --> owns>>. %0.90;0.91%
-
-    p(t1, ..., tn) becomes <P --> p> with P the product of its terms, a variable X written as the independent
-    variable $X and a constant as itself; an argument-less predicate is its own atom. The truth is to_nal(k) to two
-    places, with k = 1 as ONA and OpenNARS count evidence (SLN section 6).
-
-    The syntax is ONA's, as its parser reads it and its printer writes it (src/Narsese.c at commit dc4efd0a,
-    https://github.com/opennars/OpenNARS-for-Applications/blob/dc4efd0abd520cdb79bf53bfa3c285ebb24f2e8a/src/Narsese.c):
-    statements <S --> P> and <A ==> C>, a product as the binary compound (a * b), a one-term product as (* a), and
-    an independent variable as $ followed by a name. Every ONA compound has two children, so a product of three or
-    more terms nests to the right, (a * (b * c)), as ONA's examples/nal/map2.nal writes ({SELF} * ($1 * #1)).
-    Variables keep the rewrite's names, never $1 to $9: ONA's Variable_Normalize renames variables in place without
-    skipping the slots it has renamed, and an input that uses its canonical names out of its order comes back with
-    two variables merged. ONA reads the line back as itself up to variable names.
-
-    Raises ValueError for a vacuous opinion, which has no frequency, for a name that is not a predicate symbol or a
-    term, and for what ONA cannot hold: an atom longer than 31 characters, or a statement deeper than its 64-node
-    heap, which admits products of up to 4 terms. The 64 nodes also keep a statement within the 9 variables of one
-    kind ONA allows. The confidence is capped at ONA's MAX_CONFIDENCE, 0.99, since ONA reads c = 1 as infinite
-    evidence (SLN T1's MAX_CONFIDENCE ruling).
-    """
-    f, c = opinion.to_nal(k)
-    if f is None:
-        msg = f"a vacuous opinion has no NAL frequency, and an ONA belief needs one: {opinion}"
-        raise ValueError(msg)
-    check_symbol(premise, "premise")
-    check_symbol(conclusion, "conclusion")
-    premise_terms = [_ona_term(arg) for arg in premise_args]
-    conclusion_terms = [_ona_term(arg) for arg in conclusion_args]
-    atoms = (premise, conclusion, *premise_terms, *conclusion_terms)
-    too_long = [atom for atom in atoms if len(atom) > _ONA_ATOM_LENGTH]
-    if too_long:
-        msg = f"ONA cuts atom names after {_ONA_ATOM_LENGTH} characters, so it would misread {too_long}"
-        raise ValueError(msg)
-    # The implication is heap node 1, its premise node 2 and its conclusion node 3.
-    premise_text, premise_deepest = _ona_statement(premise, premise_terms, 2)
-    conclusion_text, conclusion_deepest = _ona_statement(conclusion, conclusion_terms, 3)
-    deepest = max(premise_deepest, conclusion_deepest)
-    if deepest > _ONA_TERM_NODES:
-        msg = (
-            f"{conclusion}({', '.join(conclusion_args)}) <= {premise}({', '.join(premise_args)}) needs heap node "
-            f"{deepest}, and ONA holds a term in {_ONA_TERM_NODES} nodes, which fits products of up to 4 terms"
-        )
-        raise ValueError(msg)
-    return f"<{premise_text} ==> {conclusion_text}>. %{f:.2f};{min(c, _ONA_MAX_CONFIDENCE):.2f}%"
-
-
-def _ona_term(arg: str) -> str:
-    """A rewrite argument as an ONA term: variable X as $X, a lowercase constant as itself."""
-    check_term(arg)
-    return f"${arg}" if is_variable(arg) else arg
-
-
-def _ona_statement(predicate: str, terms: Sequence[str], index: int) -> tuple[str, int]:
-    """predicate(terms) as ONA writes it, rooted at heap node `index`, with the deepest node it fills.
-
-    ONA stores a term as a binary heap whose node i has children 2i and 2i + 1 (Narsese.c, buildBinaryTree), so a
-    statement <P --> p> at node i puts P at 2i and p at 2i + 1.
-    """
-    if not terms:
-        return predicate, index
-    product, deepest = _ona_product(terms, 2 * index)
-    return f"<{product} --> {predicate}>", max(deepest, 2 * index + 1)
-
-
-# Time: n - 1 nested calls for n terms.
-def _ona_product(terms: Sequence[str], index: int) -> tuple[str, int]:
-    """The product of `terms` rooted at heap node `index`, nested right, with the deepest node it fills."""
-    first, rest = terms[0], terms[1:]
-    if not rest:
-        # ONA fills the second child of a one-term compound with its set terminator.
-        return f"(* {first})", 2 * index + 1
-    if len(rest) == 1:
-        return f"({first} * {rest[0]})", 2 * index + 1
-    inner, deepest = _ona_product(rest, 2 * index + 1)
-    return f"({first} * {inner})", deepest
