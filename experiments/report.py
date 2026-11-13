@@ -272,6 +272,22 @@ def named_cases_table() -> str:
     return _table(["implication", "holds", *names], rows)
 
 
+def snars_table() -> str:
+    """How SNARS, proving and fusing every answer itself from the exported rewrites, ranks each question's answers
+    beside the rewriter's lineage, from experiments/snars_ranking.py."""
+    rows = []
+    for m in _load("snars_ranking.json"):
+        answers, ap, p = m["answers"], m["average_precision"], m["p_range"]
+        outside = "; ".join(f"{a}: {r['rewriter']:,} and {r['snars']:,}" for a, r in m["outside"].items()) or "none"
+        rows.append([m["question"], m["depth"], f"{answers['both']:,} of {answers['rewriter']:,}",
+                     answers["with_several_proofs"], ap["rewriter"], ap["snars"], m["kendall_tau_b"],
+                     f"{p['rewriter'][0]:.3f} to {p['rewriter'][1]:.3f}", f"{p['snars'][0]:.3f} to {p['snars'][1]:.3f}",
+                     outside])
+    return _table(["question", "SNARS depth", "answers both rank", "with several proofs",
+                   "average precision over them, rewriter", "and SNARS", "Kendall's tau-b", "P, rewriter",
+                   "P, SNARS", "answers outside Wikidata's: rank by each"], rows)
+
+
 GENERATORS: dict[str, Callable[[], str]] = {
     "named-cases": named_cases_table,
     "direction-policy": direction_policy_table,
@@ -286,6 +302,7 @@ GENERATORS: dict[str, Callable[[], str]] = {
     "pairs": pairs_table,
     "trust": trust_table,
     "wikidata-beliefs": beliefs_table,
+    "snars-ranking": snars_table,
 }
 
 

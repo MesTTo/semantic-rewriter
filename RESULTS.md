@@ -435,6 +435,21 @@ Lowering Jev's rewrite threshold to 0.1 admits six times as many rewrites into V
 
 The knowledge base gives evidence on a rewrite only where it states the rewrite's conclusion, the setting each data trust was fitted in. None of the three questions states any of its own predicates, so every opinion here is its judge's alone. A first version also counted what the other admitted rewrites derive, reading a row they missed as evidence against a rewrite. With nli-deberta-large that separated Victoria's answers completely, but it lowered Leonardo's average precision from 0.999 to 0.983: of the 858 works `creator` states, the other admitted rewrites derive about 40, so 818 counted against it, and its P fell nearly as low as a rewrite through the material a work is made from. The other rewrites cover only part of a relation, so a row they miss is no evidence against a rewrite.
 
+### SNARS's ranking beside the rewriter's
+
+`semrewrite rewrites --snars` puts the admitted rewrites into the world of mettabase's SNARS, where GoalChainer reasons. To see whether SNARS ranks the answers as the rewriter does, `experiments/snars_ranking.py` gives SNARS the statements those rewrites and the question's own rules read and has it prove and fuse every answer itself, Jev admitting at 0.1 as above.
+
+<!-- BEGIN GENERATED: snars-ranking -->
+| question | SNARS depth | answers both rank | with several proofs | average precision over them, rewriter | and SNARS | Kendall's tau-b | P, rewriter | P, SNARS | answers outside Wikidata's: rank by each |
+|---|---|---|---|---|---|---|---|---|---|
+| leonardo | 1 | 858 of 858 | 50 | 1.000 | 1.000 | 1.000 | 0.239 to 0.978 | 0.566 to 0.923 | annunciation_q154326: 850 and 850; copy_of_the_leonardo_da_vinci_s_last_supper: 851 and 851; leonardo_da_vinci_the_mind_of_the_renaissance_q101731196: 853 and 853; the_child_in_time_q1747269: 854 and 854; the_da_vinci_code_q124474978: 855 and 855 |
+| alphabet | 3 | 2,894 of 2,903 | 2,602 | 1.000 | 1.000 | 0.028 | 0.100 to 0.998 | 0.631 to 0.961 | google_earth_vr: 2,894 and 2,827 |
+<!-- END GENERATED: snars-ranking -->
+
+The two agree exactly where no derivation uses a rewrite twice. Every answer to Leonardo's question comes through one rewrite, and the two rankings order every pair of answers alike: SNARS's P is a monotone function of the rewriter's, its five answers outside Wikidata's at the same five ranks.
+
+They part where a derivation chains rewrites. Alphabet's question owns what Alphabet's holdings own, through its transitive rule, so most answers need the same rewrite at several steps. The rewriter counts a rewrite once however often a derivation uses it, so an answer's P depends on which rewrites it needs and not on how long its chain is. SNARS applies the rewrite, and its structural prior, at every step: the median P of answers whose shortest proof takes 1, 3, 5 and 7 rule applications falls from 0.928 to 0.867, 0.833 and 0.801, and the rankings barely agree. The rewriter ranks Alphabet's one answer outside Wikidata's last; SNARS puts 67 of Wikidata's answers below it.
+
 ## Is pymetta stable enough?
 
 Yes, for this experiment. Everything the rewriter needs from upstream pymetta 0.9.4 worked, and every defect it hit has a workaround in the engine. These held throughout:
