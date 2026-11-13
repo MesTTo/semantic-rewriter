@@ -1,7 +1,8 @@
 """Purpose: tests of candidate retrieval with a stub embedding model: the k nearest
 predicates of the goal's arity come back nearest first, ties by name, each gloss is
-embedded once, a closed retriever serves only what it embedded, and AllCandidates
-proposes every predicate of the goal's arity; and of JudgeRetriever with a stub judge,
+embedded once, a closed retriever serves only what it embedded, the claim check's
+cosines come back a row per anchor, and AllCandidates proposes every predicate of
+the goal's arity; and of JudgeRetriever with a stub judge,
 which ranks each candidate by its best score over the argument mappings.
 """
 
@@ -88,8 +89,14 @@ def test_a_closed_retriever_serves_only_what_it_embedded(retriever: EmbeddingRet
 
 def test_cosines_give_each_anchor_its_row_embedding_each_sentence_once(retriever: EmbeddingRetriever) -> None:
     """The claim check's cosines: a row per anchor over the sentences, in order, each sentence embedded once."""
+    pytest.importorskip(
+        "numpy", reason="cosines multiplies the model's vectors with numpy, which the models extra installs"
+    )
     rows = retriever.cosines(["A is the mother of B", "A is near B"], ["A is the mum of B", "A is near B"])
-    assert rows == pytest.approx([[0.99, 0.6], [0.6 * 0.99 + 0.8 * 0.141, 1.0]])
+    # pytest.approx compares flat sequences only, so each row is compared alone.
+    assert len(rows) == 2
+    assert rows[0] == pytest.approx([0.99, 0.6])
+    assert rows[1] == pytest.approx([0.6 * 0.99 + 0.8 * 0.141, 1.0])
     assert retriever.cosines(["A is near B"], []) == [[]]
     assert retriever.cosines([], ["A is near B"]) == []
     assert retriever.usage["encoded"] == 3
