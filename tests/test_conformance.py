@@ -1,8 +1,9 @@
 """Purpose: tests of the engine conformance kit: every property against every engine
 that imports here, at the Hypothesis profile's case count (400 by default, 100
-under the ci profile), the kit passing a second, top-down engine it knows
-nothing about, and the kit failing each of a dozen deliberately broken engines, since
-a kit that passes a broken engine is worthless.
+under the ci profile), each search split into shards that run in parallel and
+together check exactly the cases of one search, the kit passing a second, top-down
+engine it knows nothing about, and the kit failing each of a dozen deliberately
+broken engines, since a kit that passes a broken engine is worthless.
 """
 
 from __future__ import annotations
@@ -10,6 +11,7 @@ from __future__ import annotations
 import subprocess
 import sys
 import time
+from collections.abc import Callable
 from dataclasses import replace
 
 import pytest
@@ -23,13 +25,30 @@ from semrewrite.protocols import Budget, Capabilities, Engine, Expander, Program
 
 AVAILABLE = available()
 
+# GitHub's standard Linux runner for a public repository has 4 vCPUs
+# (https://docs.github.com/en/actions/reference/runners/github-hosted-runners#standard-github-hosted-runners-for-public-repositories),
+# and pytest-xdist runs a worker on each, so a search split 4 ways can run on all of them.
+SHARDS = 4
 
-@pytest.mark.parametrize("prop", kit.PROPERTIES, ids=lambda p: p.name)
-@pytest.mark.parametrize("name", sorted(REGISTRY))
-def test_registered_engine_conforms(name: str, prop: kit.Property) -> None:
+# Every property on every engine, shard by shard, so the shards of one slow search sit apart in the run order.
+CONFORMANCE = [(name, prop, shard) for shard in range(SHARDS) for name in sorted(REGISTRY) for prop in kit.PROPERTIES]
+
+
+# The slowest search, names on PyMeTTa, takes about as long as the whole PyMeTTa job may, and one test item can't be
+# spread over workers, so each search is split into SHARDS test items that run in parallel, each checking its share
+# of the profile's max_examples cases. Each shard replays the whole seed-0 search and checks only the cases at its
+# position modulo SHARDS, because Hypothesis picks every case from the outcomes of the cases before it: a shard that
+# skipped drawing them would draw different cases. The shards together therefore check the profile's max_examples
+# cases, the very cases and order of the unsharded search, and the shard holding a failing case shrinks it to the
+# unsharded search's falsifying case. Shards with seeds of their own would keep the count but not the cases: each
+# search avoids only its own repeats, and four seeded shards of 25 checked 63 distinct budget cases where one
+# search checks 100.
+@pytest.mark.parametrize(("name", "prop", "shard"), CONFORMANCE,
+                         ids=[f"{name}-{prop.name}-{shard + 1}of{SHARDS}" for name, prop, shard in CONFORMANCE])
+def test_registered_engine_conforms(name: str, prop: kit.Property, shard: int) -> None:
     if name not in AVAILABLE:
         pytest.skip(f"engine {name!r} does not import in this environment")
-    verdict = kit.check(make(name), prop, max_examples=settings().max_examples)
+    verdict = kit.check(make(name), prop, max_examples=settings().max_examples, shard=(shard, SHARDS))
     print("\n".join(verdict.lines()))
     if verdict.outcome == "skip":
         pytest.skip(verdict.detail)
@@ -485,6 +504,57 @@ def test_missing_capability_is_a_skip() -> None:
     with pytest.raises(kit.MissingCapability):
         kit.check_untabled(PythonEngine(), case)
     assert kit.check(PythonEngine(), kit.UNTABLED).outcome == "skip"
+
+
+# Each property's search at 100 examples, and chains of 2 to 4 nodes, whose 12 cases run out first, so the search
+# stops early: the budget property's chains of 60 to 90 nodes, 124 cases, run out the same way at 400 examples.
+SEARCHES = [*((p.name, p.strategy, 100) for p in kit.PROPERTIES), ("chains-2-to-4", lambda: kit.chains((2, 4)), 12)]
+
+
+@pytest.mark.parametrize(("strategy", "count"), [(s, n) for _, s, n in SEARCHES], ids=[name for name, _, _ in SEARCHES])
+def test_shards_check_exactly_the_cases_of_one_search(strategy: Callable[[], object], count: int) -> None:
+    """The SHARDS shards of a search, merged by position, check the cases of the unsharded search in its order."""
+
+    def checked(shard: tuple[int, int]) -> list[kit.Case]:
+        seen: list[kit.Case] = []
+        recording = kit.Property("recording", "records each case", lambda c: None, strategy,
+                                 lambda engine, case: seen.append(case))
+        verdict = kit.check(PythonEngine(), recording, max_examples=100, shard=shard)
+        assert verdict.outcome == "pass" and verdict.cases == len(seen)
+        return seen
+
+    whole = checked((0, 1))
+    parts = [checked((i, SHARDS)) for i in range(SHARDS)]
+    assert len(whole) == count == sum(map(len, parts))
+    assert [parts[k % SHARDS][k // SHARDS] for k in range(count)] == whole
+
+
+def test_the_shard_holding_the_first_failure_shrinks_it_to_the_unsharded_case() -> None:
+    """A failure planted in the search, any case with three rules, is caught by the shard holding the first such
+    case, which shrinks it to the falsifying case the unsharded search reports."""
+
+    def run(shard: tuple[int, int]) -> tuple[kit.Verdict, list[kit.Case]]:
+        seen: list[kit.Case] = []
+
+        def three_rules(engine: Engine, case: kit.Case) -> None:
+            seen.append(case)
+            if len(case.program.rules) == 3:
+                raise kit.ConformanceFailure("three rules")
+
+        return kit.check(PythonEngine(), replace(kit.TABLING, check=three_rules), max_examples=100, shard=shard), seen
+
+    whole, seen = run((0, 1))
+    first = next(k for k, case in enumerate(seen) if len(case.program.rules) == 3)
+    owner, _ = run((first % SHARDS, SHARDS))
+    assert first > 0 and whole.outcome == owner.outcome == "fail"
+    assert owner.case == whole.case and len(whole.case.program.rules) == 3
+
+
+def test_a_shard_needs_a_seed_and_an_index_below_its_count() -> None:
+    with pytest.raises(ValueError, match="needs an int seed"):
+        kit.check(PythonEngine(), kit.TABLING, 10, seed=None, shard=(0, 2))
+    with pytest.raises(ValueError, match="0 <= index < count"):
+        kit.check(PythonEngine(), kit.TABLING, 10, shard=(2, 2))
 
 
 def test_proof_problem_names_each_defect() -> None:

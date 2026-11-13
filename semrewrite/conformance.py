@@ -57,8 +57,10 @@ ConformanceFailure, an AssertionError, when the engine breaks the claim, and
 MissingCapability, a unittest.SkipTest that pytest and Hypothesis both treat as a
 skip, when the engine lacks what the claim needs. Tests can call them inside
 @given with the matching strategy, or call check() or run(), which search with
-hypothesis.find, shrink a failing case and report it. Hypothesis is imported only
-inside the functions that generate or search, so importing this module never needs it.
+hypothesis.find, shrink a failing case and report it; check() can also split one
+seeded search into shards that run in parallel and together check exactly its
+cases. Hypothesis is imported only inside the functions that generate or search,
+so importing this module never needs it.
 """
 
 from __future__ import annotations
@@ -884,25 +886,50 @@ def _explain(engine: Engine, prop: Property, case: Case) -> str:
     return "the case failed during the search but passed when run again, so the engine is not deterministic"
 
 
-def check(engine: Engine, prop: Property, max_examples: int = 200, seed: int | None = 0) -> Verdict:
+# Time: max_examples draws of the property's strategy and about max_examples / count property checks for
+# shard (index, count), plus the checks the shrinker makes after a failure.
+def check(engine: Engine, prop: Property, max_examples: int = 200, seed: int | None = 0,
+          shard: tuple[int, int] = (0, 1)) -> Verdict:
     """Search up to `max_examples` cases for one that fails `prop` on `engine`, shrinking any it finds.
 
     With an int `seed` the search tries the same cases on every run; with None,
     Hypothesis picks them at random. No example database is read or written.
+
+    `shard` (index, count) splits the search across `count` runs, which can go in
+    parallel: every shard replays the whole seeded search, since Hypothesis picks
+    each case from the outcomes before it, and checks only the cases whose position
+    in it is `index` modulo `count`, passing the rest unchecked; once a check fails
+    it checks every case the shrinker tries. Together the shards check exactly the
+    cases one search would, and the shard holding the first failing case shrinks it
+    to the same falsifying case. A random search can't be split, so a shard needs a seed.
     """
+    index, count = shard
+    if not 0 <= index < count:
+        msg = f"shard {shard} is not (index, count) with 0 <= index < count"
+        raise ValueError(msg)
+    if count > 1 and seed is None:
+        msg = "a sharded search needs an int seed, so that every shard replays the same search"
+        raise ValueError(msg)
     reason = prop.needs(engine.capabilities)
     if reason is not None:
         return Verdict(prop.name, "skip", detail=reason)
     hypothesis = _hypothesis()
     tried = 0
     tally = [0, 0]
+    drawn = 0
+    failed = False
 
     def fails(case: Case) -> bool:
-        nonlocal tried
+        nonlocal tried, drawn, failed
+        mine = failed or drawn % count == index
+        drawn += 1
+        if not mine:
+            return False
         tried += 1
         try:
             prop.check(engine, case)
         except Exception:  # noqa: BLE001 - a failure or a crash both falsify the property
+            failed = True
             return True
         return False
 
