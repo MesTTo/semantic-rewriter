@@ -17,7 +17,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from semrewrite.model import Atom, Rewrite, is_variable
-from semrewrite.opinion import W, Opinion
+from semrewrite.opinion import Opinion, W
 
 # The order SNARS's canonical form sorts argument roles in (mettabase src/mettabase/snars/tnf.py, ROLE_PRECEDENCE),
 # and the role each argument position takes here: subject, object, indirect object, then specifiers.
