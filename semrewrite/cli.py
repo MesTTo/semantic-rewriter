@@ -212,7 +212,7 @@ def cmd_judge(args: argparse.Namespace) -> int:
             raise ValueError(msg) from e
         if not (isinstance(row, dict) and all(isinstance(row.get(k), str) for k in ("premise", "conclusion"))):
             msg = f"line {number} is not a JSON object holding a premise and a conclusion, both strings"
-            raise ValueError(msg)  # noqa: TRY004 - bad input, which main() reports as an error, not a programming fault
+            raise ValueError(msg)  # bad input, which main() reports as an error, not a programming fault
         pairs.append((row["premise"], row["conclusion"]))
     overrides = {k: v for k, v in (("trust", args.trust), ("base_rate", args.base_rate)) if v is not None}
     judge = make(args.judge, **overrides)
