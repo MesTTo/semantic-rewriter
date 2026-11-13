@@ -1,30 +1,41 @@
-"""Purpose: write admitted rewrites as SNARS rules, the opinion-typed MeTTa S-expressions that mettabase's subjective
-backward chainer reads and GoalChainer reasons with. The rewrite owns(X0, X1) <= owned_by_p127(X1, X0), held at the
-opinion (0.957, 0.016, 0.027, 0.5), is the row
+"""Purpose: write admitted rewrites into SNARS's live world, the MeTTa S-expressions mettabase's reasoner and so
+GoalChainer reason with. A rewrite becomes two lines: its validity, a statement believed with the rewrite's opinion as
+evidence, and the rewrite itself, a row of SNARS's rule kit whose second premise is that statement. The rewrite
+parent(X0, X1) <= mum(X0, X1), held at the opinion (0.9, 0.05, 0.05, 0.2), is
 
-    (: (Opinion 0.957 0.016 0.027 0.5) rw-owns-owned_by_p127-10 (-> (owned_by_p127 $X1 $X0) (owns $X0 $X1)))
+    !(believe! (sh (tag P d s ()) "valid" (args ((arg s (sh-atom (tag C c NoRoles ()) "rw-parent-mum-01"))))) ((evidence 36.0 2.0) (rate 0.2) (source "semrewrite")))
+    (sn rw rw-parent-mum-01 ded-shape (sh (tag P d so ()) "mum" (args ((arg s $X0) (arg o $X1)))) (sh (tag P d s ()) "valid" (args ((arg s (sh-atom (tag C c NoRoles ()) "rw-parent-mum-01"))))) (sh (tag P d so ()) "parent" (args ((arg s $X0) (arg o $X1)))))
 
-the rule form sbc.metta documents, `(: <Opinion> <name> (-> <premise> <conclusion>))`. In a space beside facts such
-as `(: (Opinion 0.9 0.0 0.1 0.5) wd1 (owned_by_p127 youtube google))`, the chainer applies it by subjective-logic
-deduction: `(sbc (space &kb) (fromNumber 2) (: $o $proof (owns google youtube)))` proves the goal through the proof
-`(rw-owns-owned_by_p127-10 wd1)`.
+Every application of the rewrite then conditions on its one validity statement, as the rewriter's answer beliefs do: SNARS
+revises them all when evidence about the rewrite arrives, and its proof stamps hold the statement's sid, so two proofs
+through the rewrite are never fused as independent. `sn prove` applies the row as it applies GoalChainer's own rule-kit
+rows, by subjective-logic deduction at SNARS's structural prior.
 """
 
 from __future__ import annotations
 
-from semrewrite.model import Rewrite, is_variable
-from semrewrite.opinion import Opinion
+from collections.abc import Sequence
+
+from semrewrite.model import Atom, Rewrite, is_variable
+from semrewrite.opinion import W, Opinion
+
+# The order SNARS's canonical form sorts argument roles in (mettabase src/mettabase/snars/tnf.py, ROLE_PRECEDENCE),
+# and the role each argument position takes here: subject, object, indirect object, then specifiers.
+_PRECEDENCE = "scioxtjr"
+_POSITIONS = ("s", "o", "i")
+# SNARS floors an opinion's uncertainty at this (mettabase lib/mettabase/snars/config.metta, `sn config u-min`), so a
+# dogmatic opinion is written as the most evidence SNARS can hold.
+_U_MIN = 0.001
 
 
 def rule_name(rewrite: Rewrite) -> str:
-    """The row's name, which the chainer's proof trees cite: rw-, the conclusion, the premise and the mapping's digits."""
+    """The row's name, which SNARS's proof trees cite: rw-, the conclusion, the premise and the mapping's digits."""
     return f"rw-{rewrite.conclusion}-{rewrite.premise}-{''.join(str(m) for m in rewrite.mapping)}"
 
 
 def _number(x: float) -> str:
     """A float as PeTTa reads a number, to twelve significant digits, positional where Python would write an
-    exponent: arithmetic noise such as 0.5 * 0.1 = 0.04999999999999999 reads 0.05, and an opinion's masses still sum
-    to 1 within 1e-12.
+    exponent: arithmetic noise such as 0.5 * 0.1 = 0.04999999999999999 reads 0.05.
 
     >>> _number(0.957), _number(1.0), _number(2.5e-05), _number(0.5 * 0.1)
     ('0.957', '1.0', '0.000025', '0.05')
@@ -37,19 +48,53 @@ def _number(x: float) -> str:
     return text
 
 
-def _term(term: str) -> str:
-    """A rule argument in MeTTa: a variable X0 is $X0, a constant stays itself."""
-    return f"${term}" if is_variable(term) else term
+def statement(pred: str, args: Sequence[str]) -> str:
+    """pred(args) as the canonical tree SNARS stores, each argument a variable, $X0, or a concept. An argument's role
+    is s, o or i by its position, then x, and the arguments stand in SNARS's role order, so gave(ann, book, bob)
+    lists bob, the indirect object, before the book:
+
+    >>> statement("gave", ("ann", "book", "bob"))
+    '(sh (tag P d sio ()) "gave" (args ((arg s (sh-atom (tag C c NoRoles ()) "ann")) (arg i (sh-atom (tag C c NoRoles ()) "bob")) (arg o (sh-atom (tag C c NoRoles ()) "book")))))'
+    """
+    roles = [*_POSITIONS[: len(args)], *("x" for _ in args[len(_POSITIONS):])]
+    # sorted is stable, so specifiers keep their positions' order.
+    pairs = sorted(zip(roles, args, strict=True), key=lambda ra: _PRECEDENCE.index(ra[0]))
+    items = " ".join(f"(arg {role} {_term(arg)})" for role, arg in pairs)
+    return f'(sh (tag P d {"".join(r for r, _ in pairs) or "NoRoles"} ()) "{pred}" (args ({items})))'
 
 
-def rule_row(rewrite: Rewrite, opinion: Opinion) -> str:
-    """The rewrite as a SNARS rule row holding `opinion`, its variables those of the rule the engines run."""
+def _term(arg: str) -> str:
+    """An argument in a SNARS tree: a variable X0 is $X0, a constant the concept named after it."""
+    return f"${arg}" if is_variable(arg) else f'(sh-atom (tag C c NoRoles ()) "{arg}")'
+
+
+def _evidence(opinion: Opinion) -> tuple[float, float]:
+    """The evidence SNARS reads back as `opinion` (J 3.11), a dogmatic opinion's at SNARS's floor on uncertainty."""
+    if opinion.uncertainty > 0.0:
+        return opinion.evidence()
+    return W * opinion.belief / _U_MIN, W * opinion.disbelief / _U_MIN
+
+
+def believed(fact: Atom, opinion: Opinion, source: str) -> str:
+    """The line believing `fact` into SNARS's world at `opinion`, as from `source`."""
+    return _believe(statement(fact.pred, fact.args), opinion, source)
+
+
+def _believe(tree: str, opinion: Opinion, source: str) -> str:
+    """The line believing the statement `tree` at `opinion`, as from `source`."""
+    r, s = _evidence(opinion)
+    return (f"!(believe! {tree} ((evidence {_number(r)} {_number(s)}) (rate {_number(opinion.base_rate)}) "
+            f'(source "{source}")))')
+
+
+def rule_rows(rewrite: Rewrite, opinion: Opinion, source: str = "semrewrite") -> tuple[str, str]:
+    """The two lines putting `rewrite`, held at `opinion` by `source`, into SNARS's world: its validity believed at the
+    opinion, and the rule-kit row deriving its conclusion from its premise and its validity. Its variables are those of
+    the rule the engines run."""
     rule = rewrite.rule()
     (premise,) = rule.body
-
-    def atom(pred: str, args: tuple[str, ...]) -> str:
-        return f"({' '.join([pred, *(_term(a) for a in args)])})" if args else f"({pred})"
-
-    truth = " ".join(_number(x) for x in (opinion.belief, opinion.disbelief, opinion.uncertainty, opinion.base_rate))
-    return (f"(: (Opinion {truth}) {rule_name(rewrite)} "
-            f"(-> {atom(premise.pred, premise.args)} {atom(rule.head.pred, rule.head.args)}))")
+    # The rewrite's name is a concept here, not one of the rewriter's constants, so the statement is written directly.
+    validity = statement("valid", (rule_name(rewrite),))
+    row = (f"(sn rw {rule_name(rewrite)} ded-shape {statement(premise.pred, premise.args)} {validity} "
+           f"{statement(rule.head.pred, rule.head.args)})")
+    return _believe(validity, opinion, source), row

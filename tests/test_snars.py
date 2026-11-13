@@ -1,12 +1,12 @@
-"""Purpose: tests of the SNARS export: a rewrite becomes the rule row sbc.metta documents, its variables in the order
-of the rule the engines run, at any arity, with numbers PeTTa reads; the command line prints a rewriter's admitted
-rewrites that way; and mettabase's own chainer, run on PeTTa, proves a conclusion through an exported row by
-subjective-logic deduction.
+"""Purpose: tests of the SNARS export: a rewrite becomes its validity, believed at its opinion, and a rule-kit row
+deriving its conclusion from its premise and that validity; statements are written as SNARS's canonical trees at any
+arity, with numbers PeTTa reads; the command line prints a rewriter's admitted rewrites that way; and SNARS itself, run
+on PeTTa, proves a conclusion through the exported lines.
 
 The SNARS check needs PETTA_PATH, a PeTTa checkout that loads mettabase's SNARS (its fixtures pass on PeTTa d8d4692),
-METTABASE_PATH, the mettabase checkout, and swipl on the PATH; it runs PeTTa with mettabase as the working directory
-and the program on standard input, so it writes nothing, and is skipped, with the reason, when what it needs is
-missing.
+METTABASE_PATH, the mettabase checkout, and swipl on the PATH; it runs PeTTa with mettabase as the working directory,
+mettabase's and PeTTa's Python packages on PYTHONPATH as mettabase's scripts/use-petta-env.sh puts them, and the program
+on standard input, so it writes nothing, and is skipped, with the reason, when what it needs is missing.
 """
 
 from __future__ import annotations
@@ -24,22 +24,36 @@ from semrewrite.cli import main
 from semrewrite.kb import KB
 from semrewrite.model import Atom, Rewrite
 from semrewrite.opinion import Opinion
-from semrewrite.snars import rule_row
+from semrewrite.snars import believed, rule_rows, statement
 
-OWNS = Rewrite("owns", "owned_by_p127", (1, 0))
-
-
-def test_a_rewrite_is_a_rule_row_with_its_opinion() -> None:
-    row = rule_row(OWNS, Opinion(0.957, 0.016, 0.027))
-    assert row == ("(: (Opinion 0.957 0.016 0.027 0.5) rw-owns-owned_by_p127-10 "
-                   "(-> (owned_by_p127 $X1 $X0) (owns $X0 $X1)))")
+MUM = Rewrite("parent", "mum", (0, 1))
+VALID_MUM = '(sh (tag P d s ()) "valid" (args ((arg s (sh-atom (tag C c NoRoles ()) "rw-parent-mum-01")))))'
 
 
-def test_variables_follow_the_rule_at_any_arity_and_numbers_have_no_exponent() -> None:
-    row = rule_row(Rewrite("between", "located", (2, 0, 1)), Opinion(0.25, 0.75 - 2.5e-05, 2.5e-05, 0.1))
-    assert row.endswith("rw-between-located-201 (-> (located $X2 $X0 $X1) (between $X0 $X1 $X2)))")
-    assert "e-" not in row and "0.000025" in row
-    assert rule_row(Rewrite("p", "q", ()), Opinion(1.0, 0.0, 0.0)).endswith("(-> (q) (p)))")
+def test_a_rewrite_becomes_its_validity_belief_and_a_rule_kit_row() -> None:
+    """The example semrewrite.snars gives: (0.9, 0.05, 0.05) is 36 units of evidence for and 2 against."""
+    belief, row = rule_rows(MUM, Opinion(0.9, 0.05, 0.05, 0.2))
+    assert belief == f'!(believe! {VALID_MUM} ((evidence 36.0 2.0) (rate 0.2) (source "semrewrite")))'
+    assert row == ('(sn rw rw-parent-mum-01 ded-shape (sh (tag P d so ()) "mum" (args ((arg s $X0) (arg o $X1)))) '
+                   f'{VALID_MUM} (sh (tag P d so ()) "parent" (args ((arg s $X0) (arg o $X1)))))')
+
+
+def test_statements_take_snars_canonical_role_order_at_any_arity() -> None:
+    """Positions take s, o, i, then x, and SNARS sorts roles s, c, i, o, x, so a third argument comes second."""
+    assert statement("p", ()) == '(sh (tag P d NoRoles ()) "p" (args ()))'
+    assert statement("p", ("X0",)) == '(sh (tag P d s ()) "p" (args ((arg s $X0))))'
+    assert statement("p", ("X0", "X1", "X2", "X3", "X4")) == (
+        '(sh (tag P d sioxx ()) "p" (args ((arg s $X0) (arg i $X2) (arg o $X1) (arg x $X3) (arg x $X4))))')
+    _, row = rule_rows(Rewrite("between", "located", (2, 0, 1)), Opinion(0.25, 0.7, 0.05))
+    assert row.endswith('(sh (tag P d sio ()) "between" (args ((arg s $X0) (arg i $X2) (arg o $X1)))))')
+    assert '"located" (args ((arg s $X2) (arg i $X1) (arg o $X0))))' in row
+
+
+def test_a_dogmatic_opinion_is_written_at_snars_floor_on_uncertainty() -> None:
+    """SNARS holds u at 0.001 or more, so a certain opinion is the 2,000 units of evidence it reads back nearest."""
+    assert "(evidence 2000.0 0.0)" in believed(Atom("mum", ("alice", "tom")), Opinion(1.0, 0.0, 0.0), "kb")
+    belief, _ = rule_rows(MUM, Opinion(0.25, 0.75 - 2.5e-05, 2.5e-05, 0.1))
+    assert "e-" not in belief and "e+" not in belief
 
 
 GLOSSES = {"mum": "{x} is the mum of {y}", "dad": "{x} is the dad of {y}", "parent": "{x} is a parent of {y}"}
@@ -47,44 +61,50 @@ KB_ = KB("tom", glosses=GLOSSES, facts=(Atom("mum", ("alice", "tom")), Atom("dad
 SCORES = {("mum", "parent", (0, 1)): 0.9, ("dad", "parent", (0, 1)): 0.8}
 
 
-def test_the_command_line_prints_the_admitted_rewrites_as_rows(monkeypatch, capsys) -> None:
-    """At judge trust 0.5, mum's (0.9, 0.1, 0) reads (0.45, 0.05, 0.5), the stronger row first."""
+def test_the_command_line_prints_each_admitted_rewrite_as_its_two_lines(monkeypatch, capsys) -> None:
+    """At judge trust 0.5, mum's (0.9, 0.1, 0) reads (0.45, 0.05, 0.5), 1.8 units of evidence for and 0.2 against,
+    and comes before dad's; the judge is named as the evidence's source."""
     from semrewrite import cli
 
     monkeypatch.setattr(cli, "_judge", lambda args, kb: TableJudge(SCORES, threshold=0.2, trust=0.5))
     monkeypatch.setattr(cli.formats, "load", lambda path: KB_)
     assert main(["rewrites", "tom.kb", "parent", "--retriever", "all", "--snars"]) == 0
-    assert capsys.readouterr().out.splitlines() == [
-        "(: (Opinion 0.45 0.05 0.5 0.5) rw-parent-mum-01 (-> (mum $X0 $X1) (parent $X0 $X1)))",
-        "(: (Opinion 0.4 0.1 0.5 0.5) rw-parent-dad-01 (-> (dad $X0 $X1) (parent $X0 $X1)))",
-    ]
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[0] == f'!(believe! {VALID_MUM} ((evidence 1.8 0.2) (rate 0.5) (source "semrewrite stub")))'
+    assert lines[1].startswith("(sn rw rw-parent-mum-01 ded-shape ")
+    assert lines[2].startswith("!(believe! ") and '"rw-parent-dad-01"' in lines[2]
+    assert lines[3].startswith("(sn rw rw-parent-dad-01 ded-shape ")
+    assert len(lines) == 4
 
 
 @pytest.mark.skipif(
     not (os.environ.get("PETTA_PATH") and os.environ.get("METTABASE_PATH") and shutil.which("swipl")),
     reason="the SNARS check needs PETTA_PATH, METTABASE_PATH and swipl",
 )
-def test_snars_proves_a_conclusion_through_an_exported_row() -> None:
+def test_snars_proves_a_conclusion_through_the_exported_lines() -> None:
+    """SNARS's sn prove reaches parent(alice, tom) from the fact mum(alice, tom) and the rewrite's validity, through
+    the exported rule-kit row, at an opinion whose masses sum to 1."""
     petta, mettabase = Path(os.environ["PETTA_PATH"]), Path(os.environ["METTABASE_PATH"])
     program = "\n".join([
         "!(import! &self lib/mettabase/snars)",
-        "!(bind! &kb (new-space))",
-        "!(add-atom &kb (: (Opinion 0.9 0.0 0.1 0.5) f1 (mum alice tom)))",
-        f"!(add-atom &kb {rule_row(Rewrite('parent', 'mum', (0, 1)), Opinion(0.45, 0.05, 0.5))})",
-        "!(let $r (collapse (sbc (space &kb) (fromNumber 1) (: $o $p (parent $x tom)))) (Proved $r))",
+        believed(Atom("mum", ("alice", "tom")), Opinion(1.0, 0.0, 0.0), "kb"),
+        *rule_rows(MUM, Opinion(0.45, 0.05, 0.5)),
+        f"!(let $r (collapse (sn prove {statement('parent', ('alice', 'tom'))} 3)) (Proved $r))",
         "",
     ])
+    path = [str(mettabase / "src"), str(mettabase / "lib"), str(petta / "python"), os.environ.get("PYTHONPATH", "")]
     result = subprocess.run(
         [shutil.which("swipl") or "swipl", "--stack_limit=8g", "-q", "-s", petta / "src" / "main.pl", "--",
          "/dev/stdin", "silent"],
         input=program, cwd=mettabase, capture_output=True, text=True, check=False,
+        env={**os.environ, "PYTHONPATH": os.pathsep.join(p for p in path if p)},
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    proved = re.search(r"\(: \(Opinion (\S+) (\S+) (\S+) (\S+)\) \(rw-parent-mum-01 f1\) \(parent alice tom\)\)",
-                       result.stdout)
+    proved = re.search(r"\(: \(Opinion (\S+) (\S+) (\S+) (\S+)\) \(rw-parent-mum-01 (s[0-9a-f]+) (s[0-9a-f]+)\) "
+                       r'\(sh \(tag P d so \(\)\) "parent"', result.stdout)
     assert proved, result.stdout + result.stderr
-    b, d, u, a = (float(x) for x in proved.groups())
-    # Deduction through a rule held at P = 0.7 from a fact at P = 0.95 projects between the rule's base rate and 1,
-    # as an opinion whose masses sum to 1.
+    b, d, u, a = (float(x) for x in proved.groups()[:4])
+    # The fact's and the validity's sids are the proof's leaves, so a second proof through the rewrite shares one.
+    assert proved.group(5) != proved.group(6)
     assert abs(b + d + u - 1.0) < 1e-9
     assert 0.5 < b + a * u < 1.0

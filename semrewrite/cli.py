@@ -29,7 +29,7 @@ from semrewrite.model import Rewrite, parse_atom
 from semrewrite.opinion import Opinion
 from semrewrite.protocols import Budget
 from semrewrite.rewriter import STRATEGIES, CapabilityError, Rewriter
-from semrewrite.snars import rule_row
+from semrewrite.snars import rule_rows
 from semrewrite.trace import TextTrace, plural
 
 # The pyproject.toml extra that installs each optional library, by import name;
@@ -149,11 +149,13 @@ def cmd_rewrites(args: argparse.Namespace) -> int:
 
 
 def _snars(rw: Rewriter, admitted: dict) -> int:
-    """Print each admitted rewrite as a SNARS rule row holding its opinion, strongest first: the MeTTa S-expressions
-    mettabase's subjective backward chainer reads and GoalChainer reasons with (semrewrite.snars)."""
+    """Print each admitted rewrite as the two lines putting it into SNARS's world, its validity believed at its opinion
+    and its rule-kit row, strongest first: the MeTTa S-expressions mettabase's reasoner and GoalChainer reason with
+    (semrewrite.snars). The judge is named as the evidence's source."""
     rewrites, opinion = rw.rewrite_opinions(admitted)
+    source = f"semrewrite {rw.scorer.judge.name}"
     for r in sorted(rewrites, key=lambda r: (-opinion[r.key].projection, r.key)):
-        print(rule_row(r, opinion[r.key]))
+        print(*rule_rows(r, opinion[r.key], source), sep="\n")
     return 0
 
 
@@ -232,8 +234,8 @@ def parser() -> argparse.ArgumentParser:
     rewrites.add_argument("predicate")
     rewrites.add_argument("--all", action="store_true", help="also show the rejected proposals with their scores")
     rewrites.add_argument("--snars", action="store_true",
-                          help="print the admitted rewrites as SNARS rules, (: (Opinion b d u a) name (-> premise "
-                               "conclusion)), the MeTTa rows mettabase's chainer and GoalChainer read")
+                          help="print each admitted rewrite as two lines of SNARS's world: its validity believed at "
+                               "its opinion, and a rule-kit row deriving its conclusion from its premise and validity")
     rewrites.set_defaults(run=cmd_rewrites)
 
     sub.add_parser("engines", help="list engines and their capabilities").set_defaults(run=cmd_engines)
