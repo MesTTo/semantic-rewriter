@@ -1,10 +1,10 @@
 """Purpose: tests of the direction judges behind semrewrite.judges.make: the
 factory's threshold, trust and base-rate contract, the shared checks on opinions,
 the evaluation metrics, the base rate and the trust fit against brute-force
-definitions, and each
-model judge on the mother/parent case. Jev runs only from the experiment's
-answer cache, in a checkout that has data/raw/jev, with a request budget of
-zero, so these tests send no request.
+definitions, each model judge on the mother/parent case, and each typicality
+judge on the defeasible case that birds typically fly and penguins do not. Jev
+runs only from the experiment's answer cache, in a checkout that has
+data/raw/jev, with a request budget of zero, so these tests send no request.
 """
 
 from __future__ import annotations
@@ -20,7 +20,15 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from semrewrite import judges, pairs
-from semrewrite.judges import JEV_ANSWERS, NAMES, default_base_rate, default_threshold, default_trust, make
+from semrewrite.judges import (
+    JEV_ANSWERS,
+    NAMES,
+    calibration_set,
+    default_base_rate,
+    default_threshold,
+    default_trust,
+    make,
+)
 from semrewrite.judges.base import SentenceJudge, sentence_pairs
 from semrewrite.judges.metrics import (
     at_threshold,
@@ -31,6 +39,7 @@ from semrewrite.judges.metrics import (
     roc_auc,
 )
 from semrewrite.judges.oracle import OracleJudge
+from semrewrite.judges.typical import TypicalJudge
 from semrewrite.model import Predicate, Proposal
 from semrewrite.opinion import Opinion
 from semrewrite.protocols import Judge, calibrated
@@ -107,34 +116,46 @@ def test_fillers_reach_the_sentences_per_proposal() -> None:
 
 
 def test_factory_reads_calibrated_thresholds_and_trusts(tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A judge's threshold and trust are its entry's, and its base rate is that of the set its entry names, stored once
+    for the set: Wikidata's where the entry names none."""
     table = tmp_path / "calibration.json"
-    table.write_text(json.dumps({"base_rate": 0.2, "judges": {"jev": {"default": 0.42, "trust": 0.8},
-                                                              "cosine-qwen3": {"default": 0.9}}}))
+    table.write_text(json.dumps({"sets": {"wikidata": {"base_rate": 0.2}, "delta-atomic": {"base_rate": 0.5}},
+                                 "judges": {"jev": {"default": 0.42, "trust": 0.8},
+                                            "cosine-qwen3": {"default": 0.9},
+                                            "typical-qwen3-4b": {"set": "delta-atomic", "default": 0.3, "trust": 0.6},
+                                            "nli-deberta-base": {"set": "copa", "default": 0.5, "trust": 0.1}}}))
     monkeypatch.setattr(judges, "CALIBRATION", table)
     assert default_threshold("jev", table) == 0.42
     assert make("jev", budget=0).threshold == 0.42
     assert make("jev", threshold=0.7, budget=0).threshold == 0.7
     assert default_trust("jev", table) == make("jev", budget=0).trust == 0.8
     assert make("jev", trust=1.0, budget=0).trust == 1.0
-    assert default_base_rate(table) == make("jev", budget=0).base_rate == 0.2
+    assert calibration_set("jev", table) == "wikidata" and calibration_set("typical-qwen3-4b", table) == "delta-atomic"
+    assert default_base_rate("jev", table) == make("jev", budget=0).base_rate == 0.2
+    assert default_base_rate("typical-qwen3-4b", table) == 0.5
     assert make("jev", base_rate=0.5, budget=0).base_rate == 0.5
     with pytest.raises(LookupError):
         default_threshold("cosine-bge", table)
     with pytest.raises(LookupError, match="no calibrated trust"):
         default_trust("cosine-qwen3", table)
+    with pytest.raises(LookupError, match="no calibrated base_rate for set 'copa'"):
+        default_base_rate("nli-deberta-base", table)
     empty = tmp_path / "empty.json"
     empty.write_text("{}")
-    with pytest.raises(LookupError, match="no calibrated base_rate"):
-        default_base_rate(empty)
+    with pytest.raises(LookupError, match="no calibrated base_rate for set 'wikidata'"):
+        default_base_rate("jev", empty)
     with pytest.raises(ValueError):
         make("no-such-judge", threshold=0.5)
 
 
 def test_committed_calibration_covers_every_judge() -> None:
+    """Every registered judge has a calibrated threshold, trust and base rate, its defaults fitted on the set its kind
+    of question names."""
     for name in NAMES:
         assert 0.0 <= default_threshold(name) <= 1.0
         assert 0.0 <= default_trust(name) <= 1.0
-    assert 0.0 < default_base_rate() < 1.0
+        assert 0.0 < default_base_rate(name) < 1.0
+        assert calibration_set(name) == judges.REGISTRY[name][0].calibration_set
 
 
 def test_factory_builds_the_oracle_from_gold() -> None:
@@ -167,8 +188,9 @@ def test_every_judge_satisfies_the_protocol_and_counts(judge) -> None:
     opinions = judge.opinions([FORWARD, BACKWARD, Proposal(CHILD, PARENT, (1, 0))])
     assert len(opinions) == 3 and all(isinstance(o, Opinion) for o in opinions)
     assert judge.usage["pairs"] == before + 3
-    # Only the NLI judges say more than a probability: their neutral class is uncertainty.
-    if judge.name.startswith("nli-"):
+    # A judge whose model says more than a probability gives its own opinions: an NLI judge's neutral class, a
+    # typicality judge's Unsure, is uncertainty. Every other judge's probability is a dogmatic opinion.
+    if type(judge)._opinions is not SentenceJudge._opinions:
         assert all(o.uncertainty > 0.0 for o in opinions)
     else:
         assert all(o.uncertainty == 0.0 for o in opinions)
@@ -183,6 +205,18 @@ def test_mother_entails_parent_and_not_the_reverse(judge) -> None:
     else:
         assert forward > backward
         assert forward >= 0.5
+
+
+def test_a_typicality_judge_reads_what_typically_follows(judge) -> None:
+    """Birds typically fly and penguins typically do not, the defeasible inference (Reiter 1980) that no entailment
+    judge is asked: a typicality judge believes the first and disbelieves the second."""
+    if not isinstance(judge, TypicalJudge):
+        pytest.skip(f"{judge.name} is asked what is entailed, not what typically follows")
+    bird, penguin, flies = (Predicate(n, g) for n, g in (("bird", "{x} is a bird"), ("penguin", "{x} is a penguin"),
+                                                         ("flies", "{x} can fly")))
+    typical, exception = judge.opinions([Proposal(bird, flies, (0,)), Proposal(penguin, flies, (0,))])
+    assert typical.belief > 0.5 and typical.belief > exception.belief
+    assert exception.disbelief > 0.5
 
 
 @given(st.lists(st.tuples(st.sampled_from([0.0, 0.25, 0.5, 0.75, 1.0]), st.booleans()), min_size=1, max_size=30))
@@ -258,11 +292,17 @@ def test_a_trusted_probability_shrinks_toward_the_base_rate() -> None:
     assert probability_scores([0.7] * 10, labels)["brier"] == pytest.approx(0.21)
 
 
-def test_evaluation_compares_only_one_way_pairs() -> None:
-    """A one-way pair yields its true and false direction's scores; an equivalence or a lone row yields none."""
+def _judge_eval():
+    """experiments/judge_eval.py as a module, loaded from its path, since experiments/ is not a package."""
     spec = importlib.util.spec_from_file_location("judge_eval", pathlib.Path(__file__).parents[1] / "experiments" / "judge_eval.py")
     judge_eval = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(judge_eval)
+    return judge_eval
+
+
+def test_evaluation_compares_only_one_way_pairs() -> None:
+    """A one-way pair yields its true and false direction's scores; an equivalence or a lone row yields none."""
+    judge_eval = _judge_eval()
     row = lambda i, p, c, label, pair: pairs.PairRow(
         id=i, set="hard", split="test", pair=pair, kind="k", premise=p, conclusion=c, swapped=False,
         label=label, types=("person", "person"))
@@ -284,9 +324,7 @@ def test_evaluation_compares_only_one_way_pairs() -> None:
 def test_evaluation_takes_a_set_s_base_rate_from_its_dev_rows_and_fits_trust_there() -> None:
     """One of four dev rows holds, so the set's base rate is 1/4. A judge sure of the true row and silent on the
     others is right wherever it speaks, so it is trusted fully, and its silence projects to 1/4, not one half."""
-    spec = importlib.util.spec_from_file_location("judge_eval", pathlib.Path(__file__).parents[1] / "experiments" / "judge_eval.py")
-    judge_eval = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(judge_eval)
+    judge_eval = _judge_eval()
     rows = [pairs.PairRow(id=str(i), set="hard", split="dev", pair=str(i), kind="k", premise=MOTHER, conclusion=PARENT,
                           swapped=False, label=i == 0, types=("person", "person")) for i in range(4)]
     assert judge_eval.base_rates(rows) == {"hard": 0.25}
@@ -328,3 +366,31 @@ def test_the_judge_command_refuses_a_line_without_two_sentences_naming_it(monkey
         monkeypatch.setattr("sys.stdin", io.StringIO(text))
         assert main(["judge"]) == 1
         assert said in capsys.readouterr().err
+
+
+def test_the_calibration_file_holds_each_set_s_base_rate_once() -> None:
+    """The file holds the base rate of each set some judge is calibrated on, once, Wikidata's for an entry naming no
+    set, and no base rate of its own or in any entry."""
+    judge_eval = _judge_eval()
+    entries = {"nli": {"trust": 0.3}, "typical": {"set": "delta-atomic", "trust": 0.6}, "cosine": {"trust": 0.0}}
+    written = judge_eval.calibration_file(entries, {"wikidata": 0.214, "delta-atomic": 0.504, "copa": 0.5})
+    assert written["sets"] == {"delta-atomic": {"base_rate": 0.504}, "wikidata": {"base_rate": 0.214}}
+    assert list(written["judges"]) == ["cosine", "nli", "typical"]
+    assert "base_rate" not in written and not any("base_rate" in entry for entry in written["judges"].values())
+
+
+def test_evaluation_scores_test_rows_at_the_set_s_own_trust_beside_the_default() -> None:
+    """A silent opinion of a false test row projects to the base rate of the calibration it is read at: one half
+    under a default (1, 1/2), so log loss log 2, and 1/4 under the set's own (1, 1/4), so log loss log 4/3. Dev rows
+    get no own-trust score, since that trust was fitted on them."""
+    judge_eval = _judge_eval()
+    rows = [pairs.PairRow(id=split, set="hard", split=split, pair=split, kind="k", premise=MOTHER, conclusion=PARENT,
+                          swapped=False, label=False, types=("person", "person")) for split in ("dev", "test")]
+    silent = {r.id: Opinion(0.0, 0.0, 1.0) for r in rows}
+    measured = judge_eval.measure(rows, silent, default=None, own=None, calibration=(1.0, 0.5),
+                                  own_calibration=(1.0, 0.25))
+    assert measured["test"]["at_default_trust"]["log_loss"] == pytest.approx(math.log(2.0))
+    assert measured["test"]["at_own_trust"]["log_loss"] == pytest.approx(math.log(4.0 / 3.0))
+    # One false row: no ranking to score.
+    assert measured["test"]["at_own_trust"]["auc"] is None
+    assert "at_own_trust" not in measured["dev"]

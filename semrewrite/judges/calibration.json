@@ -1,24 +1,35 @@
 {
- "about": "written by experiments/judge_eval.py: the default threshold, and the trust and base rate, calibrated on wikidata dev rows with letters fillers; by_set thresholds on each set's dev rows",
- "base_rate": 0.21394395078605605,
+ "about": "written by experiments/judge_eval.py: each judge's default threshold and trust, calibrated with letters fillers on the dev rows of the set its entry names, wikidata's where it names none, and each such set's base rate, the share of its dev rows that hold; by_set thresholds on each set's dev rows",
+ "sets": {
+  "delta-atomic": {
+   "base_rate": 0.5044270833333333
+  },
+  "wikidata": {
+   "base_rate": 0.21394395078605605
+  }
+ },
  "judges": {
   "cosine-bge": {
-   "default": 0.9571969956159592,
+   "default": 0.957196980714798,
    "by_set": {
     "levyholt": 0.914429783821106,
-    "wikidata": 0.9571969956159592
+    "wikidata": 0.957196980714798,
+    "delta-atomic": 0.8813843727111816,
+    "copa": 0.8590667247772217
    },
-   "trust": 0.0015405690415950957,
-   "data_trust": 0.1712337126529756
+   "trust": 0.001540569060717999,
+   "data_trust": 0.17123371371455878
   },
   "cosine-qwen3": {
    "default": 0.9751224517822266,
    "by_set": {
     "levyholt": 0.9468457251787186,
-    "wikidata": 0.9751224517822266
+    "wikidata": 0.9751224517822266,
+    "delta-atomic": 0.9092516750097275,
+    "copa": 0.907937616109848
    },
-   "trust": 0.0005580773307898176,
-   "data_trust": 0.16869232681763607
+   "trust": 0.0005621496889577945,
+   "data_trust": 0.16870426496085067
   },
   "jev": {
    "default": 0.165,
@@ -33,37 +44,57 @@
    "default": 0.2221469032721426,
    "by_set": {
     "levyholt": 0.969776144155973,
-    "wikidata": 0.2221469032721426
+    "wikidata": 0.2221469032721426,
+    "delta-atomic": 0.00216466167772765,
+    "copa": 0.0003034441203363374
    },
-   "trust": 0.31142980545519916,
-   "data_trust": 0.3635013542521893
+   "trust": 0.3114297961631095,
+   "data_trust": 0.36350127004188687
   },
   "nli-deberta-large": {
    "default": 0.6592527778093171,
    "by_set": {
     "levyholt": 0.052514349387895676,
-    "wikidata": 0.6592527778093171
+    "wikidata": 0.6592527778093171,
+    "delta-atomic": 0.0001262252774059026,
+    "copa": 0.00017249086715728134
    },
-   "trust": 0.3478589585846057,
-   "data_trust": 0.40748712686605404
+   "trust": 0.34785897737458393,
+   "data_trust": 0.4074871375823756
   },
   "nli-deberta-large-wanli": {
    "default": 0.05405977550547415,
    "by_set": {
     "levyholt": 0.11583818670626532,
-    "wikidata": 0.05405977550547415
+    "wikidata": 0.05405977550547415,
+    "delta-atomic": 0.001523670403404457,
+    "copa": 0.0015729540484876832
    },
-   "trust": 0.5238106237293019,
-   "data_trust": 0.4209902339069071
+   "trust": 0.5238079757330589,
+   "data_trust": 0.420989332262417
   },
   "reranker-qwen3": {
    "default": 0.8078806102275848,
    "by_set": {
     "levyholt": 0.8594942986965179,
-    "wikidata": 0.8078806102275848
+    "wikidata": 0.8078806102275848,
+    "delta-atomic": 0.4533070772886276,
+    "copa": 0.04338429681956768
    },
-   "trust": 0.0775305415967679,
-   "data_trust": 0.26276143121521167
+   "trust": 0.07735878821260883,
+   "data_trust": 0.2628940374353752
+  },
+  "typical-qwen3-4b": {
+   "set": "delta-atomic",
+   "default": 0.2688319140417118,
+   "by_set": {
+    "levyholt": 0.9999761579800045,
+    "wikidata": 0.9907193774669139,
+    "delta-atomic": 0.2688319140417118,
+    "copa": 0.04738343067548377
+   },
+   "trust": 0.5591332022607642,
+   "data_trust": 0.422960652020163
   }
  }
 }

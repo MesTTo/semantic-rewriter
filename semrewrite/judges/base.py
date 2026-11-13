@@ -16,7 +16,7 @@ import math
 import sys
 from collections.abc import Sequence
 from types import TracebackType
-from typing import Self
+from typing import ClassVar, Self
 
 from semrewrite.model import LETTERS as _LETTERS
 from semrewrite.model import Proposal
@@ -26,6 +26,10 @@ Fillers = tuple[str, ...]
 """The texts standing for the conclusion's arguments in order, such as ("A", "B"); at least the arity many."""
 
 LETTERS: Fillers = _LETTERS
+
+# The labelled set a judge's defaults are calibrated on unless its kind of question needs another: Wikidata's property
+# pairs, which ask what must follow.
+DEFAULT_SET = "wikidata"
 
 
 
@@ -58,6 +62,9 @@ class SentenceJudge:
     calibrated ones.
     """
 
+    # The pair set whose dev rows calibrate this kind of judge's defaults: the kind of question it is asked.
+    calibration_set: ClassVar[str] = DEFAULT_SET
+
     def __init__(self, name: str, threshold: float, fillers: Fillers = LETTERS) -> None:
         self.name = name
         self.threshold = threshold
@@ -67,7 +74,8 @@ class SentenceJudge:
         self.usage: dict[str, int] = {"pairs": 0, "calls": 0}
 
     def opinions(self, proposals: Sequence[Proposal], fillers: Sequence[Fillers] | None = None) -> list[Opinion]:
-        """An opinion per proposal, in order, that its premise entails its conclusion.
+        """An opinion per proposal, in order, that its premise entails its conclusion, or for a typicality judge that
+        its conclusion typically follows.
 
         `fillers`, one pair per proposal, overrides the judge's own fillers, so an
         evaluation can fill each row's arguments with its typed nouns or instances.
@@ -76,10 +84,10 @@ class SentenceJudge:
         return self.sentence_opinions(sentence_pairs(proposals, chosen))
 
     def sentence_opinions(self, pairs: Sequence[tuple[str, str]]) -> list[Opinion]:
-        """An opinion per (premise, conclusion) pair of sentences, in order, that the premise entails the conclusion:
-        the judge applied to sentences written directly, such as a request's text and a statement it may support,
-        rather than read from predicate glosses. The opinions are the judge's own; semrewrite.protocols.calibrated
-        gives them as the rewriter weighs them."""
+        """An opinion per (premise, conclusion) pair of sentences, in order, that the premise entails the conclusion,
+        or for a typicality judge that the conclusion typically follows: the judge applied to sentences written
+        directly, such as a request's text and a statement it may support, rather than read from predicate glosses.
+        The opinions are the judge's own; semrewrite.protocols.calibrated gives them as the rewriter weighs them."""
         if not pairs:
             return []
         opinions = list(self._opinions(pairs))
@@ -91,7 +99,7 @@ class SentenceJudge:
         return opinions
 
     def score(self, proposals: Sequence[Proposal], fillers: Sequence[Fillers] | None = None) -> list[float]:
-        """A score per proposal, in order: the belief of the judge's opinion that its premise entails its conclusion."""
+        """A score per proposal, in order: the belief of the judge's opinion of it."""
         return [o.belief for o in self.opinions(proposals, fillers)]
 
     def _opinions(self, pairs: Sequence[tuple[str, str]]) -> Sequence[Opinion]:

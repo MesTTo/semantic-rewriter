@@ -1,8 +1,9 @@
 """Purpose: the judge factory, which builds judges by name for the command
-line and the experiments. make(name) builds a direction judge, its threshold
-and trust read from semrewrite/judges/calibration.json, where
+line and the experiments. make(name) builds a direction judge, its threshold,
+trust and base rate read from semrewrite/judges/calibration.json, where
 experiments/judge_eval.py writes each judge's threshold and trust calibrated on
-dev rows; make("oracle", gold=...) builds the OracleJudge of
+the dev rows of the labelled set its entry names, and each such set's base rate
+once; make("oracle", gold=...) builds the OracleJudge of
 semrewrite/judges/oracle.py.
 
     from semrewrite.judges import make
@@ -22,12 +23,13 @@ import pathlib
 from collections.abc import Iterable
 from typing import Any
 
-from semrewrite.judges.base import SentenceJudge
+from semrewrite.judges.base import DEFAULT_SET, SentenceJudge
 from semrewrite.judges.embedding import CosineJudge
 from semrewrite.judges.jev import JevJudge
 from semrewrite.judges.nli import NLIJudge
 from semrewrite.judges.oracle import OracleJudge
 from semrewrite.judges.reranker import RerankerJudge
+from semrewrite.judges.typical import TypicalJudge
 from semrewrite.protocols import Judge
 
 CALIBRATION = pathlib.Path(__file__).with_name("calibration.json")
@@ -53,16 +55,22 @@ REGISTRY: dict[str, tuple[type[SentenceJudge], dict[str, Any]]] = {
     "nli-deberta-large": (NLIJudge, {"model": "cross-encoder/nli-deberta-v3-large"}),
     "nli-deberta-large-wanli": (NLIJudge, {"model": "MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli"}),
     "reranker-qwen3": (RerankerJudge, {"model": "Qwen/Qwen3-Reranker-0.6B"}),
+    "typical-qwen3-4b": (TypicalJudge, {"model": "Qwen/Qwen3-4B-Instruct-2507"}),
     "jev": (JevJudge, {"cache": JEV_ANSWERS, "log": JEV_REQUESTS}),
 }
 NAMES = tuple(REGISTRY)
 
 
+def _table(path: pathlib.Path | None) -> tuple[pathlib.Path, dict[str, Any]]:
+    """The calibration file at `path`, the committed one by default, and what it holds, empty when it is missing."""
+    path = CALIBRATION if path is None else path
+    return path, json.loads(path.read_text()) if path.is_file() else {}
+
+
 def _calibrated(name: str, field: str, option: str, path: pathlib.Path | None) -> float:
     """The value of `field` calibrated for judge `name`, which `option` of make() overrides; raises when none was
     calibrated."""
-    path = CALIBRATION if path is None else path
-    table = json.loads(path.read_text()) if path.is_file() else {}
+    path, table = _table(path)
     entry = table.get("judges", {}).get(name, {})
     if field not in entry:
         msg = f"no calibrated {option} for {name!r} in {path}; run experiments/judge_eval.py or pass {option}="
@@ -81,16 +89,24 @@ def default_trust(name: str, path: pathlib.Path | None = None) -> float:
     return _calibrated(name, "trust", "trust", path)
 
 
-def default_base_rate(path: pathlib.Path | None = None) -> float:
-    """The rate at which the labelled dev proposals hold, every judge's base rate: what an opinion projects to where
-    it says nothing. It belongs to the proposals, not to a judge, so the calibration file holds it once; raises when
-    none was calibrated."""
-    path = CALIBRATION if path is None else path
-    table = json.loads(path.read_text()) if path.is_file() else {}
-    if "base_rate" not in table:
-        msg = f"no calibrated base_rate in {path}; run experiments/judge_eval.py or pass base_rate="
+def calibration_set(name: str, path: pathlib.Path | None = None) -> str:
+    """The labelled pair set judge `name`'s defaults were calibrated on: the set its entry names, Wikidata's pairs
+    where it names none."""
+    _, table = _table(path)
+    return str(table.get("judges", {}).get(name, {}).get("set", DEFAULT_SET))
+
+
+def default_base_rate(name: str, path: pathlib.Path | None = None) -> float:
+    """The base rate judge `name`'s opinions take: the rate at which the dev proposals of the set its defaults were
+    calibrated on hold, what an opinion projects to where it says nothing. It belongs to that set's proposals, not to
+    a judge, so the calibration file holds it once per set; raises when none was calibrated."""
+    path, table = _table(path)
+    home = calibration_set(name, path)
+    entry = table.get("sets", {}).get(home, {})
+    if "base_rate" not in entry:
+        msg = f"no calibrated base_rate for set {home!r} in {path}; run experiments/judge_eval.py or pass base_rate="
         raise LookupError(msg)
-    return float(table["base_rate"])
+    return float(entry["base_rate"])
 
 
 def default_data_trust(name: str, path: pathlib.Path | None = None) -> float:
@@ -130,5 +146,5 @@ def make(
     chosen = default_threshold(name) if threshold is None else threshold
     judge = cls(name, chosen, **{**defaults, **options})
     judge.trust = default_trust(name) if trust is None else trust
-    judge.base_rate = default_base_rate() if base_rate is None else base_rate
+    judge.base_rate = default_base_rate(name) if base_rate is None else base_rate
     return judge

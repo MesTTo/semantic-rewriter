@@ -373,19 +373,21 @@ An engine is anything with a `solve(program, query, budget, expand)` method and 
 |---|---|---|
 | `nli-deberta-base`, `nli-deberta-large`, `nli-deberta-large-wanli` | NLI cross-encoders reading premise and conclusion together | `models` |
 | `reranker-qwen3` | Qwen3-Reranker asked yes or no | `models` |
+| `typical-qwen3-4b` | Qwen3-4B-Instruct asked whether the conclusion typically follows, answering yes, no or unsure | `models` |
 | `jev` | TypeSafe's hosted System One model, with answers cached on disk; reads a TypeSafe API key from `TYPESAFE_API_KEY`, or from the file `JEV_KEY_FILE` names | `jev` |
 | `cosine-bge`, `cosine-qwen3` | embedding similarity, the baseline that cannot tell direction | `models` |
 | `oracle` | admits exactly a given set of implications | nothing |
 
-Each judge's default threshold, trust and base rate in `semrewrite/judges/calibration.json` were calibrated on labelled predicate pairs. For the rewriter, calibrate it on your own knowledge bases instead (see RESULTS.md): the pair-set thresholds favour recall, and the rewriter needs precision because it applies every admitted rule everywhere. A judge is anything with `name`, `threshold`, `trust`, `base_rate`, `usage`, `opinions(proposals)` and `close()`, which DESIGN.md describes.
+Each judge's default threshold, trust and base rate in `semrewrite/judges/calibration.json` were calibrated on the labelled pairs of the kind of question it is asked: Wikidata's property pairs for the judges of what must follow, δ-ATOMIC's for `typical-qwen3-4b`. For the rewriter, calibrate it on your own knowledge bases instead (see RESULTS.md): the pair-set thresholds favour recall, and the rewriter needs precision because it applies every admitted rule everywhere. A judge is anything with `name`, `threshold`, `trust`, `base_rate`, `usage`, `opinions(proposals)` and `close()`, which DESIGN.md describes.
 
 ## Data
 
-The pair sets the judges were measured on live under `data/pairs`: a hand-labelled hard set, and pairs from Wikidata's property hierarchy (CC0), whose query results are under `data/raw/wikidata`. The Levy/Holt directional pairs come from [entgraph_eval](https://github.com/mjhosseini/entgraph_eval), which states no license, so this repository does not include them. These commands download them at the commit the experiment used, check each file's SHA-256, and build the pair file:
+The pair sets the judges were measured on live under `data/pairs`: a hand-labelled hard set, and pairs from Wikidata's property hierarchy (CC0), whose query results are under `data/raw/wikidata`. Two more sets hold implications that are true typically rather than by meaning. δ-ATOMIC's defeasible inferences ([Rudinger et al. 2020](https://github.com/rudinger/defeasible-nli), MIT, under `data/raw/delta-atomic`) pair an everyday event about PersonX and a human-written update with an inference the update strengthens or defeats. Balanced COPA's causes and effects ([Kavumba et al. 2019](https://huggingface.co/datasets/pkavumba/balanced-copa), CC BY 4.0 on its author's card) give each question's two alternatives, the more plausible one holding. The Levy/Holt directional pairs come from [entgraph_eval](https://github.com/mjhosseini/entgraph_eval), which states no license, and COPA's own questions state none either, so this repository includes neither. These commands download them at the revisions the experiment used, check each file's SHA-256, and build the pair files:
 
 ```sh
 python -m semrewrite.pairs fetch levyholt
-python -m semrewrite.pairs build levyholt
+python -m semrewrite.pairs fetch copa
+python -m semrewrite.pairs build levyholt copa
 ```
 
 The Jev judge's cached answers are not included either, so rerunning it needs a TypeSafe API key.
@@ -398,6 +400,7 @@ The experiment ran twelve strategies with a perfect judge, and six of them with 
 - Jev and the NLI cross-encoders tell which way an implication runs (direction accuracy 0.77 to 0.89 on two external pair sets); embedding similarity sits at chance.
 - Admission precision decides answer quality, so the judge's threshold has to be calibrated for answer F1, not for pair accuracy.
 - With an imperfect judge, a depth bound of 3 limits how far a false rule spreads. At calibrated thresholds, tabled evaluation bounded at three steps (`depth-tabled`) raised answer F1 for six of the seven judges, nli-deberta-large's from 0.68 to 0.91, and cost the perfect judge three answers that need more than three steps. Bounding three rewrites alone (`rewrite-depth-tabled`) keeps those answers and gave Jev its best F1, 0.92, but scored below the step bound with every other judge.
+- Asked what typically follows rather than what is entailed, Qwen3-4B-Instruct-2507 (`typical-qwen3-4b`) scores held-out log loss 0.588 on δ-ATOMIC's defeasible inferences and 0.485 on Balanced COPA, against nli-deberta-large's 0.661 and 0.637, and on a knowledge base of actions ranks the three that waste time first, where the entailment judge finds one.
 
 RESULTS.md has every number, the method and the twelve PyMeTTa defects found on the way, ten of them with a script under `repros/` that reproduces them.
 

@@ -1,0 +1,27 @@
+% Eight people, each doing one thing, stated in plain words and asked what wastes time.
+gloss watch_tv "{x} watches TV"
+gloss play_games "{x} plays games"
+gloss scroll_feed "{x} scrolls social media"
+gloss study "{x} studies for an exam"
+gloss exercise "{x} goes for a run"
+gloss sleep_early "{x} goes to bed early"
+gloss pay_bills "{x} pays the bills"
+gloss read_book "{x} reads a book"
+gloss wastes_time "{x} wastes time"
+
+watch_tv(sam).
+play_games(kim).
+scroll_feed(raj).
+study(lee).
+exercise(ana).
+sleep_early(joe).
+pay_bills(max).
+read_book(eve).
+
+query wastes_time(X).
+
+% What typically follows, as a careful reader accepts it: watching TV, playing games and scrolling social media
+% typically waste time; studying, running, sleeping early, paying the bills and reading a book typically do not.
+gold watch_tv => wastes_time.
+gold play_games => wastes_time.
+gold scroll_feed => wastes_time.

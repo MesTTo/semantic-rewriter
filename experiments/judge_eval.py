@@ -1,7 +1,7 @@
 """Purpose: judge every labelled pair set with every direction judge under each
 filler variant, calibrate each judge's threshold and trust on dev rows, and
-write the measurements to results/judges.json and the thresholds and trusts the
-judge factory reads to semrewrite/judges/calibration.json.
+write the measurements to results/judges.json and the thresholds, trusts and
+base rates the judge factory reads to semrewrite/judges/calibration.json.
 
     .venv/bin/python experiments/judge_eval.py                       # every judge
     .venv/bin/python experiments/judge_eval.py --judges jev,cosine-bge  # these, merged into the existing files
@@ -15,22 +15,28 @@ Per judge, filler variant and pair set the results give ROC AUC and direction
 accuracy on dev and test, accuracy, balanced accuracy, precision and recall at
 the engine's default threshold, and on test at the threshold calibrated on that
 set's own dev rows. Thresholds maximise balanced accuracy, so the class ratio
-the pair builder produced does not move them. The default threshold is
-calibrated on Wikidata dev rows, since Wikidata properties are knowledge-base
-relations like the engine's catalogue; the hard set has no dev rows and is read
-at the default.
+the pair builder produced does not move them. A judge's default threshold is
+calibrated on the dev rows of the set of its kind of question: Wikidata's for a
+judge of what must follow, since Wikidata properties are knowledge-base
+relations like the engine's catalogue, and delta-ATOMIC's for the typicality
+judge, whose questions are what typically follows from an everyday event; the
+hard set has no dev rows and is read at the default.
 
 A judge's trust is fitted on the same dev rows: the trust maximising the
 labels' likelihood when each row holds with the projection of the judge's
-opinion discounted by it. The results give the log loss and Brier score of
-those projections on dev and test at the default trust.
+opinion at that set's base rate discounted by it. The results give the log loss
+and Brier score of those projections on dev and test at the default trust and
+base rate, and on each set's test rows at the trust fitted on that set's own
+dev rows at its own base rate, since a set asking another kind of question
+calibrates a judge differently. calibration.json holds each judge's set beside
+its defaults, absent for Wikidata's, and each such set's base rate once.
 
 The knowledge base is a second source on a pair whose two properties both have
 statements in the Wikidata examples' knowledge bases: the premise's statements
 read through the pair's mapping, against the conclusion's (semrewrite.evidence).
-Each judge's data trust is fitted on those dev rows jointly with its opinions,
-fused with them, and the results give the test scores of the judge alone and
-fused on the same rows.
+Each judge's data trust is fitted on those dev rows jointly with its opinions at
+its Wikidata calibration, the only rows with such evidence, fused with them, and
+the results give the test scores of the judge alone and fused on the same rows.
 """
 
 from __future__ import annotations
@@ -52,7 +58,7 @@ sys.path.insert(0, str(ROOT))
 from examples.wikidata.questions import property_id
 from semrewrite import formats, pairs
 from semrewrite.evidence import rewrite_evidence
-from semrewrite.judges import CALIBRATION, JEV_REQUESTS, NAMES, REGISTRY, make
+from semrewrite.judges import CALIBRATION, DEFAULT_SET, JEV_REQUESTS, NAMES, REGISTRY, make
 from semrewrite.judges.metrics import (
     at_threshold,
     calibrate,
@@ -66,7 +72,6 @@ from semrewrite.model import Rewrite
 from semrewrite.opinion import Opinion
 
 RESULTS = ROOT / "results" / "judges.json"
-DEFAULT_SET = "wikidata"
 ENGINE_VARIANT = "letters"
 SPLITS = ("dev", "test")
 # The knowledge bases whose statements are the second source on Wikidata pairs.
@@ -100,9 +105,13 @@ def one_way(rows: Sequence[pairs.PairRow], scores: dict[str, float]) -> tuple[li
 
 
 def measure(rows: Sequence[pairs.PairRow], opinions: dict[str, Opinion], default: float | None, own: float | None,
-            calibration: tuple[float, float] | None) -> dict[str, Any]:
+            calibration: tuple[float, float] | None, own_calibration: tuple[float, float] | None = None
+            ) -> dict[str, Any]:
     """One pair set's measurements under one judge and variant, by split; a row's score is its opinion's belief, and
-    its probability its opinion's projection at the calibrated base rate after discounting by the calibrated trust."""
+    its probability its opinion's projection at the calibrated base rate after discounting by the calibrated trust:
+    the default (trust, base rate) on every split, and the set's own, fitted on its dev rows, on its test rows, where
+    the ROC AUC of those probabilities is reported too: unlike the belief's, it reads an opinion's disbelief, which
+    separates a judge's no from its don't-know."""
     scores = {key: o.belief for key, o in opinions.items()}
     out: dict[str, Any] = {}
     for split in SPLITS:
@@ -124,6 +133,9 @@ def measure(rows: Sequence[pairs.PairRow], opinions: dict[str, Opinion], default
         if calibration is not None:
             entry["at_default_trust"] = probability_scores([calibrated(opinions[r.id], calibration).projection
                                                             for r in part], y)
+        if own_calibration is not None and split == "test":
+            p = [calibrated(opinions[r.id], own_calibration).projection for r in part]
+            entry["at_own_trust"] = {**probability_scores(p, y), "auc": roc_auc(p, y)}
         out[split] = entry
     return out
 
@@ -257,6 +269,8 @@ def run_judge(name: str, rows: Sequence[pairs.PairRow], data: dict[str, Opinion]
     calibrations: dict[str, dict[str, tuple[float, float]]] = {}
     data_trusted: dict[str, float | None] = {}
     scored: dict[str, dict[str, float]] = {}
+    # The set whose dev rows calibrate this judge's defaults, the kind of question it is asked.
+    home = REGISTRY[name][0].calibration_set
     for variant, opinions in by_variant.items():
         scores = {key: o.belief for key, o in opinions.items()}
         own = thresholds_for(rows, scores)
@@ -264,21 +278,23 @@ def run_judge(name: str, rows: Sequence[pairs.PairRow], data: dict[str, Opinion]
         thresholds[variant] = own
         calibrations[variant] = fits
         scored[variant] = scores
-        default = own.get(DEFAULT_SET)
-        fit = fits.get(DEFAULT_SET)
-        with_data = data_measure([r for r in rows if r.set == DEFAULT_SET], opinions, data, fit)
+        default = own.get(home)
+        fit = fits.get(home)
+        with_data = data_measure([r for r in rows if r.set == DEFAULT_SET], opinions, data, fits.get(DEFAULT_SET))
         data_trusted[variant] = with_data.get("trust")
         variants[variant] = {
             "thresholds": {"default": default, "by_set": own},
             "trust": {"default": fit and fit[0], "by_set": {k: t for k, (t, _) in fits.items()}},
             "data": with_data,
             "sets": {
-                name_: measure([r for r in rows if r.set == name_], opinions, default, own.get(name_), fit)
+                name_: measure([r for r in rows if r.set == name_], opinions, default, own.get(name_), fit,
+                               fits.get(name_))
                 for name_ in pairs.SETS
             },
         }
     result = {
         "judge": REGISTRY[name][0].__name__,
+        "set": home,
         "model": model,
         "usage": usage,
         "seconds": seconds,
@@ -286,7 +302,26 @@ def run_judge(name: str, rows: Sequence[pairs.PairRow], data: dict[str, Opinion]
         "variants": variants,
     }
     return result, {"scores": scored, "thresholds": thresholds, "calibrations": calibrations,
-                    "data_trusts": data_trusted}
+                    "data_trusts": data_trusted, "set": home}
+
+
+def calibration_file(entries: dict[str, dict[str, Any]], rates: dict[str, float]) -> dict[str, Any]:
+    """What calibration.json holds: each judge's entry, naming its set unless that is Wikidata's, and the base rate of
+    every set some entry is calibrated on, once.
+
+    >>> calibration_file({"a": {"trust": 0.5}, "b": {"set": "copa", "trust": 0.6}}, {"wikidata": 0.2, "copa": 0.5,
+    ...                  "hard": 0.3})["sets"]
+    {'copa': {'base_rate': 0.5}, 'wikidata': {'base_rate': 0.2}}
+    """
+    homes = sorted({entry.get("set", DEFAULT_SET) for entry in entries.values()})
+    return {
+        "about": f"written by experiments/judge_eval.py: each judge's default threshold and trust, calibrated with "
+                 f"{ENGINE_VARIANT} fillers on the dev rows of the set its entry names, {DEFAULT_SET}'s where it "
+                 "names none, and each such set's base rate, the share of its dev rows that hold; by_set thresholds "
+                 "on each set's dev rows",
+        "sets": {home: {"base_rate": rates[home]} for home in homes},
+        "judges": dict(sorted(entries.items())),
+    }
 
 
 def hard_table(rows: Sequence[pairs.PairRow], scored: dict[str, dict[str, dict[str, float]]], previous: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -354,37 +389,34 @@ def main(argv: Sequence[str] | None = None) -> None:
         judged[name], details = run_judge(name, rows, data, rates, args.scores)
         scored[name] = details["scores"]
         engine = details["thresholds"][ENGINE_VARIANT]
-        trust, _ = details["calibrations"][ENGINE_VARIANT][DEFAULT_SET]
-        calibration[name] = {"default": engine[DEFAULT_SET], "by_set": engine,
-                             "trust": trust,
-                             "data_trust": details["data_trusts"][ENGINE_VARIANT]}
+        home = details["set"]
+        trust, _ = details["calibrations"][ENGINE_VARIANT][home]
+        calibration[name] = {**({"set": home} if home != DEFAULT_SET else {}), "default": engine[home],
+                             "by_set": engine, "trust": trust, "data_trust": details["data_trusts"][ENGINE_VARIANT]}
 
     results = {
         "provenance": provenance(),
         "calibration": {
             "rule": "maximum dev balanced accuracy of admitting scores at or above the threshold, middle of the optimal plateau",
-            "default": f"{DEFAULT_SET} dev rows under each variant's fillers",
+            "default": f"the dev rows of each judge's set, {DEFAULT_SET}'s unless its kind of question needs another, "
+                       "under each variant's fillers",
             "engine_variant": ENGINE_VARIANT,
             "trust": "maximum dev likelihood of the labels under each opinion's projection at its set's base rate "
                      "after discounting by the trust (Josang 2016, Eq. 14.6)",
+            "own_trust": "at_own_trust scores a set's test rows at the trust fitted on that set's own dev rows and "
+                         "that set's own base rate",
             "base_rates": rates,
             "base_rate": "each set's share of dev rows that hold: the projection of an opinion that says nothing",
             "data_trust": f"maximum likelihood on {DEFAULT_SET} dev rows with statements on both sides in "
-                          f"{', '.join(p.name for p in EXAMPLES)}, of the judge's trusted opinion fused with the "
-                          "knowledge base's evidence discounted by the data trust",
+                          f"{', '.join(p.name for p in EXAMPLES)}, of the judge's opinion at its {DEFAULT_SET} "
+                          "calibration fused with the knowledge base's evidence discounted by the data trust",
         },
         "judges": dict(sorted(judged.items())),
         "hard_rows": hard_table(rows, scored, results.get("hard_rows", [])),
     }
     RESULTS.parent.mkdir(parents=True, exist_ok=True)
     RESULTS.write_text(json.dumps(results, indent=1, sort_keys=False) + "\n")
-    CALIBRATION.write_text(json.dumps({
-        "about": f"written by experiments/judge_eval.py: the default threshold, and the trust and base rate, "
-                 f"calibrated on {DEFAULT_SET} dev rows with {ENGINE_VARIANT} fillers; by_set thresholds on each "
-                 "set's dev rows",
-        "base_rate": rates[DEFAULT_SET],
-        "judges": dict(sorted(calibration.items())),
-    }, indent=1) + "\n")
+    CALIBRATION.write_text(json.dumps(calibration_file(calibration, rates), indent=1) + "\n")
     print(f"wrote {RESULTS.relative_to(ROOT)} and {CALIBRATION.relative_to(ROOT)} for {', '.join(names)}")
 
 

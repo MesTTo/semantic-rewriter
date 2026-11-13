@@ -9,11 +9,14 @@ Run: .venv/bin/python experiments/report.py
 from __future__ import annotations
 
 import json
+import math
 import re
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from impl_eval import aggregate
+
+from semrewrite.trace import plural
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
@@ -176,26 +179,107 @@ def pairs_table() -> str:
                    "precision", "recall", "balanced accuracy"], rows)
 
 
+# Each pair set's name in prose.
+SET_NAMES = {"levyholt": "Levy/Holt", "wikidata": "Wikidata", "hard": "the hard set", "delta-atomic": "delta-ATOMIC",
+             "copa": "Balanced COPA"}
+# The pair sets of implications that typically hold, in the order the tables show them.
+TYPICAL_SETS = ("delta-atomic", "copa")
+
+
 def trust_table() -> str:
-    """The base rate every judge's opinions take, and each judge's trust and data trust as judge_eval.py fitted them
-    on Wikidata dev pairs, with Wikidata test pairs' ROC AUC and the log loss and Brier score of its calibrated
-    opinions, and on the test pairs the knowledge base has evidence on, its log loss alone and fused with that
-    evidence."""
+    """Each judge's trust as judge_eval.py fitted it on the dev pairs of its set, the kind of question it is asked,
+    with that set's test pairs' ROC AUC and the log loss and Brier score of its calibrated opinions, and the base rate
+    each set's opinions take; and its data trust, fitted on the Wikidata pairs the knowledge base has evidence on, with
+    its log loss on those test pairs alone and fused with that evidence."""
     measured = _load("judges.json")
     judges = measured["judges"]
-    rate = measured["calibration"]["base_rates"]["wikidata"]
-    rows = []
+    rates = measured["calibration"]["base_rates"]
+    rows, homes = [], set()
     for name, j in sorted(judges.items(), key=lambda nj: -nj[1]["variants"]["letters"]["trust"]["default"]):
+        home = j.get("set", "wikidata")
+        homes.add(home)
         variant = j["variants"]["letters"]
-        test = variant["sets"]["wikidata"]["test"]
+        test = variant["sets"][home]["test"]
         data = variant["data"]
-        rows.append([name, variant["trust"]["default"], test["auc"], test["at_default_trust"]["log_loss"],
-                     test["at_default_trust"]["brier"], data["trust"], data["test"]["judge"]["rows"],
-                     data["test"]["judge"]["log_loss"], data["test"]["fused"]["log_loss"]])
-    return (f"Every judge's opinions are taken at the base rate {rate:.3f}, the share of the Wikidata dev pairs that "
-            "hold.\n\n"
-            + _table(["judge", "trust", "test ROC AUC", "test log loss", "test Brier", "data trust",
-                      "test pairs with data", "their log loss, judge alone", "fused with the data"], rows))
+        rows.append([name, SET_NAMES[home], variant["trust"]["default"], test["auc"],
+                     test["at_default_trust"]["log_loss"], test["at_default_trust"]["brier"], data["trust"],
+                     data["test"]["judge"]["rows"], data["test"]["judge"]["log_loss"],
+                     data["test"]["fused"]["log_loss"]])
+    said = " and ".join(f"{rates[home]:.3f} for {SET_NAMES[home]}'s" for home in sorted(homes, key=list(SET_NAMES).index))
+    return (f"Each judge's opinions are taken at the base rate of its set, the share of that set's dev pairs that "
+            f"hold: {said}.\n\n"
+            + _table(["judge", "set", "trust", "test ROC AUC", "test log loss", "test Brier", "data trust",
+                      "Wikidata test pairs with data", "their log loss, judge alone", "fused with the data"], rows))
+
+
+def typical_table() -> str:
+    """Every judge measured on the typical-implication sets' test rows, best log loss first in each set: the ROC AUC
+    of its beliefs, as the other tables rank, and of its probabilities, which read disbelief too, at the trust fitted
+    on that set's own dev rows and at its base rate, with their log loss and Brier score, from results/judges.json;
+    with the scores of answering every test row with the base rate, and the judges the results hold no measurement
+    of."""
+    measured = _load("judges.json")
+    judges = measured["judges"]
+    rates = measured["calibration"]["base_rates"]
+    lines, rows, absent = [], [], set()
+    for pair_set in TYPICAL_SETS:
+        title = SET_NAMES[pair_set]
+        part = []
+        for name, j in judges.items():
+            variant = j["variants"]["letters"]
+            test = variant["sets"].get(pair_set, {}).get("test")
+            if test is None:
+                absent.add(name)
+                continue
+            own = test["at_own_trust"]
+            part.append([name, title, test["rows"], variant["trust"]["by_set"][pair_set], test["auc"], own["auc"],
+                         own["log_loss"], own["brier"]])
+            share, rate = test["positives"] / test["rows"], rates[pair_set]
+        rows += sorted(part, key=lambda r: r[6])
+        if part:
+            # Answering every test row with the dev base rate a: log loss -(s log a + (1 - s) log(1 - a)) and Brier
+            # s (1 - a)^2 + (1 - s) a^2, s the share of test rows that hold.
+            loss = -(share * math.log(rate) + (1 - share) * math.log(1 - rate))
+            brier = share * (1 - rate) ** 2 + (1 - share) * rate**2
+            lines.append(f"{title}'s dev rows hold at the base rate {rate:.3f}; answering every test row with it "
+                         f"scores log loss {loss:.3f} and Brier {brier:.3f}.")
+    text = " ".join(lines) + "\n\n" + _table(["judge", "pair set", "test rows", "trust", "ROC AUC of beliefs",
+                                              "ROC AUC of P", "log loss", "Brier"], rows)
+    if absent:
+        text += f"\n\nNot measured on these sets: {', '.join(sorted(absent))}."
+    return text
+
+
+def typical_actions_table() -> str:
+    """The actions example under each judge experiments/typical_actions.py ran, side by side: each action's opinion
+    that its doer wastes time as the rewriter weighs it, whether the example's gold lines say it does, and the
+    answers each judge's admitted rewrites give, ranked by P, with their average precision against the gold lines'."""
+    measured = _load("typical_actions.json")
+    judges = measured["judges"]
+    names = list(judges)
+    by_action = {name: {r["action"]: r for r in j["actions"]} for name, j in judges.items()}
+    first = judges[names[0]]["actions"]
+    rows = []
+    for r in first:
+        cells = [r["sentence"].replace("A ", "", 1), "yes" if r["gold"] else "no"]
+        for name in names:
+            o = by_action[name][r["action"]]
+            cells += [f"{o['projection']:.2f}", f"{o['belief']:.2f} / {o['disbelief']:.2f} / {o['uncertainty']:.2f}"
+                      + (" *" if o["admitted"] else "")]
+        rows.append(cells)
+    header = ["action", "wastes time"]
+    for name in names:
+        header += [f"{name} P", f"{name} b / d / u"]
+    text = _table(header, rows)
+    for name in names:
+        j = judges[name]
+        answers = ", ".join(f"{a['answer']} ({a['projection']:.2f})" for a in j["answers"]) or "none"
+        text += (f"\n\n{name}: ROC AUC {j['auc']:.3f} against the gold lines. At its threshold {j['threshold']:.3f}, "
+                 f"trust {j['trust']:.3f} and base rate {j['base_rate']:.3f}, it admits "
+                 f"{plural(len(j['rewrites']), 'rewrite')}, and the rewriter answers {answers}, highest P first, "
+                 "where the gold lines give "
+                 f"{', '.join(j['gold_answers'])}: average precision {j['average_precision']:.3f}.")
+    return text
 
 
 def beliefs_table() -> str:
@@ -313,6 +397,8 @@ GENERATORS: dict[str, Callable[[], str]] = {
     "judges-strategies": judges_strategies_table,
     "pairs": pairs_table,
     "trust": trust_table,
+    "typical": typical_table,
+    "typical-actions": typical_actions_table,
     "wikidata-beliefs": beliefs_table,
     "snars-ranking": snars_table,
     "snars-chain": snars_chain_table,

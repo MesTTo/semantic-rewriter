@@ -186,12 +186,14 @@ class Retriever(Protocol):
 
 @runtime_checkable
 class Judge(Protocol):
-    """Gives, per proposal and in order, its opinion that the premise sentence entails the conclusion sentence.
+    """Gives, per proposal and in order, its opinion that the premise sentence entails the conclusion sentence, or,
+    for a typicality judge, that the conclusion typically follows from it.
 
     A proposal's score is its opinion's belief: a judge that gives only a
-    probability p gives the dogmatic opinion (p, 1 - p, 0), and an NLI
+    probability p gives the dogmatic opinion (p, 1 - p, 0), an NLI
     cross-encoder gives its entailment, contradiction and neutral
-    probabilities as belief, disbelief and uncertainty. `threshold` is the
+    probabilities as belief, disbelief and uncertainty, and a typicality
+    judge its model's probabilities of answering yes, no and unsure. `threshold` is the
     calibrated score at which the default admission policy admits, and
     calibration may set it; `trust` is the probability that the judge's
     opinions are right, which discounts them (Jøsang 2016, Eq. 14.6) where
