@@ -6,13 +6,12 @@ score cache keeps apart two predicates that share a gloss.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from dataclasses import dataclass, field
+from stubs import TableJudge
 
 from semrewrite.admission import Directional, Threshold, balanced_accuracy, calibrate_slack
 from semrewrite.discovery import Discoverer, ScoreCache
 from semrewrite.judges.metrics import calibrate
-from semrewrite.model import Predicate, Proposal
+from semrewrite.model import Predicate
 
 CATALOGUE = {p.name: p for p in (
     Predicate("mother", "{x} is the mother of {y}"),
@@ -26,22 +25,8 @@ SCORES = {
 }
 
 
-@dataclass
-class StubJudge:
-    """Scores from a fixed table keyed by proposal key; 0 for anything else."""
-
-    table: dict
-    name: str = "stub"
-    threshold: float = 0.5
-    usage: dict[str, int] = field(default_factory=lambda: {"pairs": 0})
-
-    def score(self, proposals: Sequence[Proposal]) -> list[float]:
-        self.usage["pairs"] += len(proposals)
-        return [self.table.get(p.key, 0.0) for p in proposals]
-
-
 def _admitted(policy, goal: str) -> set[str]:
-    disc = Discoverer(CATALOGUE, None, ScoreCache(StubJudge(SCORES)), admission=policy)
+    disc = Discoverer(CATALOGUE, None, ScoreCache(TableJudge(SCORES)), admission=policy)
     return {rw.premise for rw in disc.rewrites(goal)}
 
 
@@ -59,7 +44,7 @@ def test_slack_one_admits_what_the_threshold_admits() -> None:
 
 
 def test_directional_admission_asks_each_converse_once_more() -> None:
-    judge = StubJudge(SCORES)
+    judge = TableJudge(SCORES)
     disc = Discoverer(CATALOGUE, None, ScoreCache(judge), admission=Directional(slack=0.01))
     disc.rewrites("parent")
     assert disc.stats.proposals == 2 * (2 * 2 + 1)
@@ -91,6 +76,6 @@ def test_two_predicates_sharing_a_gloss_keep_their_own_scores() -> None:
         Predicate("mom", "{x} is the mother of {y}"),
         Predicate("parent", "{x} is a parent of {y}"),
     )}
-    judge = StubJudge({("mom", "parent", (0, 1)): 1.0})
+    judge = TableJudge({("mom", "parent", (0, 1)): 1.0})
     disc = Discoverer(catalogue, None, ScoreCache(judge), admission=Threshold())
     assert {rw.premise for rw in disc.rewrites("parent")} == {"mom"}

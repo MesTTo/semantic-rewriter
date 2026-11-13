@@ -8,15 +8,15 @@ the trace on standard error and leaves standard output to the answers.
 from __future__ import annotations
 
 import io
-from collections.abc import Sequence
-from dataclasses import dataclass, field
+
+from stubs import TableJudge
 
 from semrewrite import formats
 from semrewrite.cli import main
 from semrewrite.discovery import Discoverer, ScoreCache
 from semrewrite.engines.python import PythonEngine
 from semrewrite.kb import KB
-from semrewrite.model import Atom, Predicate, Proposal
+from semrewrite.model import Atom, Predicate
 from semrewrite.protocols import Program, Solution
 from semrewrite.rewriter import Rewriter
 from semrewrite.trace import Expanded, Remembered, Solved, Solving, TextTrace
@@ -35,20 +35,6 @@ SCORES = {
 }
 
 
-@dataclass
-class StubJudge:
-    """Scores from a fixed table keyed by proposal key; 0 for anything else."""
-
-    table: dict
-    name: str = "stub"
-    threshold: float = 0.65
-    usage: dict[str, int] = field(default_factory=lambda: {"pairs": 0})
-
-    def score(self, proposals: Sequence[Proposal]) -> list[float]:
-        self.usage["pairs"] += len(proposals)
-        return [self.table.get(p.key, 0.0) for p in proposals]
-
-
 class StubRanking:
     """Ranks the catalogue in a fixed order, as a retriever that keeps the k best would."""
 
@@ -61,7 +47,7 @@ class StubRanking:
 
 def test_an_expansion_emits_what_was_retrieved_judged_and_admitted_and_a_repeat_comes_from_the_memo() -> None:
     events: list = []
-    disc = Discoverer(CATALOGUE, StubRanking(), ScoreCache(StubJudge(SCORES)), k=2, trace=events.append)
+    disc = Discoverer(CATALOGUE, StubRanking(), ScoreCache(TableJudge(SCORES, threshold=0.65)), k=2, trace=events.append)
     first = disc.rewrites("owns")
     again = disc.rewrites("owns")
     assert first == again and [rw.key for rw in first] == [("owned_by", "owns", (1, 0))]
@@ -78,7 +64,7 @@ def test_a_lazy_solve_emits_its_start_and_stop_around_the_expansions_evaluation_
     kb = KB("owning", glosses={n: p.gloss for n, p in CATALOGUE.items()},
             facts=(Atom("owned_by", ("youtube", "google")),))
     events: list = []
-    rewriter = Rewriter(kb, StubJudge(SCORES), PythonEngine(), StubRanking(), k=2, trace=events.append)
+    rewriter = Rewriter(kb, TableJudge(SCORES, threshold=0.65), PythonEngine(), StubRanking(), k=2, trace=events.append)
     out = rewriter.ask("owns(google, X)", "lazy-tabled")
     assert out.answers == {("google", "youtube")}
     assert isinstance(events[0], Solving) and isinstance(events[-1], Solved)
@@ -88,7 +74,7 @@ def test_a_lazy_solve_emits_its_start_and_stop_around_the_expansions_evaluation_
 
 def test_the_text_trace_prints_each_admission_beside_its_premise_read_the_other_way() -> None:
     events: list = []
-    disc = Discoverer(CATALOGUE, StubRanking(), ScoreCache(StubJudge(SCORES)), k=2, trace=events.append)
+    disc = Discoverer(CATALOGUE, StubRanking(), ScoreCache(TableJudge(SCORES, threshold=0.65)), k=2, trace=events.append)
     disc.rewrites("owns")
     disc.rewrites("owns")
     stream = io.StringIO()
@@ -117,7 +103,7 @@ def test_the_text_trace_prints_each_admission_beside_its_premise_read_the_other_
 
 def test_a_candidate_has_no_rank_when_every_predicate_is_one() -> None:
     events: list = []
-    Discoverer(CATALOGUE, None, ScoreCache(StubJudge(SCORES)), trace=events.append).rewrites("owns")
+    Discoverer(CATALOGUE, None, ScoreCache(TableJudge(SCORES, threshold=0.65)), trace=events.append).rewrites("owns")
     stream = io.StringIO()
     TextTrace(stream)(events[0])
     lines = stream.getvalue().splitlines()

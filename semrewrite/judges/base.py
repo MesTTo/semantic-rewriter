@@ -1,10 +1,12 @@
 """Purpose: the part every model-backed direction judge shares: proposals become
-premise and conclusion sentences under argument fillers, the model's scores are
-checked to be probabilities in input order, usage is counted, and the model is
-released on close.
+premise and conclusion sentences under argument fillers, the model's outputs
+become opinions in input order, a probability as its dogmatic opinion, usage is
+counted, and the model is released on close.
 
 A subclass implements `_score_sentences`, mapping (premise sentence, conclusion
-sentence) pairs to probabilities in [0, 1], and `_release` when it holds a model.
+sentence) pairs to probabilities in [0, 1], or `_opinions` where its model says
+more than a probability, as an NLI model's three classes do; and `_release`
+when it holds a model.
 """
 
 from __future__ import annotations
@@ -18,11 +20,13 @@ from typing import Self
 
 from semrewrite.model import LETTERS as _LETTERS
 from semrewrite.model import Proposal
+from semrewrite.opinion import Opinion
 
 Fillers = tuple[str, ...]
 """The texts standing for the conclusion's arguments in order, such as ("A", "B"); at least the arity many."""
 
 LETTERS: Fillers = _LETTERS
+
 
 
 def sentence_pairs(proposals: Sequence[Proposal], fillers: Sequence[Fillers]) -> list[tuple[str, str]]:
@@ -45,21 +49,23 @@ def sentence_pairs(proposals: Sequence[Proposal], fillers: Sequence[Fillers]) ->
 
 
 class SentenceJudge:
-    """A judge scoring proposals through the sentences they state.
+    """A judge giving opinions of proposals through the sentences they state.
 
-    `usage["pairs"]` counts every proposal scored and `usage["calls"]` every
-    non-empty `score` call; nothing is memoised, so a caller asking twice is
-    charged twice, which is what the engine's call counts measure.
+    `usage["pairs"]` counts every proposal judged and `usage["calls"]` every
+    non-empty `opinions` call; nothing is memoised, so a caller asking twice is
+    charged twice, which is what the engine's call counts measure. `trust` is
+    complete, 1, until the judge factory sets the calibrated one.
     """
 
     def __init__(self, name: str, threshold: float, fillers: Fillers = LETTERS) -> None:
         self.name = name
         self.threshold = threshold
+        self.trust = 1.0
         self.fillers = fillers
         self.usage: dict[str, int] = {"pairs": 0, "calls": 0}
 
-    def score(self, proposals: Sequence[Proposal], fillers: Sequence[Fillers] | None = None) -> list[float]:
-        """A probability per proposal, in order, that its premise entails its conclusion.
+    def opinions(self, proposals: Sequence[Proposal], fillers: Sequence[Fillers] | None = None) -> list[Opinion]:
+        """An opinion per proposal, in order, that its premise entails its conclusion.
 
         `fillers`, one pair per proposal, overrides the judge's own fillers, so an
         evaluation can fill each row's arguments with its typed nouns or instances.
@@ -68,17 +74,28 @@ class SentenceJudge:
         pairs = sentence_pairs(proposals, chosen)
         if not pairs:
             return []
-        scores = [float(s) for s in self._score_sentences(pairs)]
-        if len(scores) != len(pairs):
-            msg = f"{self.name} returned {len(scores)} scores for {len(pairs)} proposals"
+        opinions = list(self._opinions(pairs))
+        if len(opinions) != len(pairs):
+            msg = f"{self.name} returned {len(opinions)} opinions for {len(pairs)} proposals"
             raise RuntimeError(msg)
+        self.usage["pairs"] += len(pairs)
+        self.usage["calls"] += 1
+        return opinions
+
+    def score(self, proposals: Sequence[Proposal], fillers: Sequence[Fillers] | None = None) -> list[float]:
+        """A score per proposal, in order: the belief of the judge's opinion that its premise entails its conclusion."""
+        return [o.belief for o in self.opinions(proposals, fillers)]
+
+    def _opinions(self, pairs: Sequence[tuple[str, str]]) -> Sequence[Opinion]:
+        """The model's probability p for each pair as the dogmatic opinion (p, 1 - p, 0), a probability's equivalent
+        opinion (Jøsang 2016, Table 3.2). The uncertainty a probability leaves unstated enters when the judge's
+        trust discounts the opinion."""
+        scores = [float(s) for s in self._score_sentences(pairs)]
         bad = [s for s in scores if not (0.0 <= s <= 1.0) or math.isnan(s)]
         if bad:
             msg = f"{self.name} returned scores outside [0, 1]: {bad[:5]}"
             raise RuntimeError(msg)
-        self.usage["pairs"] += len(pairs)
-        self.usage["calls"] += 1
-        return scores
+        return [Opinion(s, 1.0 - s, 0.0) for s in scores]
 
     def _score_sentences(self, pairs: Sequence[tuple[str, str]]) -> Sequence[float]:
         raise NotImplementedError

@@ -1,6 +1,7 @@
 """Purpose: the measurements a judge evaluation reports over labelled rows:
 ROC AUC, direction accuracy over one-way pairs, the dev-calibrated threshold,
-and accuracy, balanced accuracy, precision and recall at a threshold.
+accuracy, balanced accuracy, precision and recall at a threshold, the trust
+fitted to a judge's opinions, and the log loss and Brier score of probabilities.
 
 Scores and labels are parallel sequences; a row is admitted when its score
 reaches the threshold, as the engine admits a rewrite. Unequal lengths raise
@@ -13,6 +14,8 @@ import bisect
 import itertools
 import math
 from collections.abc import Sequence
+
+from semrewrite.opinion import Opinion
 
 
 # Plain Python, so the core package imports this without numpy; the results
@@ -128,6 +131,127 @@ def calibrate(scores: Sequence[float], labels: Sequence[bool]) -> float:
     top = max(correct)
     best = [i for i, value in enumerate(correct) if value == top]
     return candidates[best[len(best) // 2]]
+
+
+def fit_trust(opinions: Sequence[Opinion], labels: Sequence[bool]) -> float:
+    """The trust t in [0, 1] maximising the likelihood of the labels when each row holds with the projection of its
+    opinion discounted by t, the analyst's trust in the judge (Jøsang 2016, Eq. 14.6).
+
+    Discounting scales belief and disbelief by t and moves the rest to
+    uncertainty, so a row's projection is linear in t, from the base rate at
+    t = 0 to the opinion's own projection at t = 1; the log-likelihood is then
+    concave in t, and its derivative, decreasing in t, is bisected for its
+    root. A judge whose probability p reads as the dogmatic opinion (p, 1 - p, 0)
+    holds at a + t (p - a): its score shrunk toward the base rate, worth
+    W t / (1 - t) observations (Jøsang 2016, Eq. 3.11 with W = 2).
+
+    Time: 2n opinion operations, then n per bisection step over 64 steps, n = len(opinions).
+
+    >>> round(fit_trust([Opinion(0.9, 0.1, 0.0)] * 10, [True] * 9 + [False]), 6)
+    1.0
+    >>> round(fit_trust([Opinion(0.9, 0.1, 0.0)] * 10, [True] * 7 + [False] * 3), 6)
+    0.5
+    """
+    if len(opinions) != len(labels):
+        msg = f"{len(opinions)} opinions against {len(labels)} labels"
+        raise ValueError(msg)
+    if not opinions:
+        msg = "cannot fit a trust on no rows"
+        raise ValueError(msg)
+    rows = [(o.discount(0.0).projection, o.discount(1.0).projection, bool(y)) for o, y in zip(opinions, labels)]
+
+    def slope(t: float) -> float:
+        total = 0.0
+        for low, high, y in rows:
+            if high == low:
+                continue
+            p = low + t * (high - low)
+            # A projection on the bound its label contradicts, which rounding can reach just inside t = 1, has a
+            # likelihood falling to or rising from zero: an infinite slope with the sign of the row's own.
+            if y:
+                total += (high - low) / p if p > 0.0 else math.copysign(math.inf, high - low)
+            else:
+                total -= (high - low) / (1.0 - p) if p < 1.0 else math.copysign(math.inf, high - low)
+        return total
+
+    if slope(0.0) <= 0.0:
+        return 0.0
+    # At t = 1 a row whose own projection is 0 or 1 against its label makes the slope minus infinity, so the end is
+    # tested just inside it.
+    if slope(math.nextafter(1.0, 0.0)) >= 0.0:
+        return 1.0
+    low, high = 0.0, 1.0
+    for _ in range(64):
+        middle = (low + high) / 2
+        if slope(middle) > 0.0:
+            low = middle
+        else:
+            high = middle
+    return (low + high) / 2
+
+
+# Time: 101 grid evaluations, then 60 golden-section steps, each 2n opinion operations, n = len(judged).
+def fit_data_trust(judged: Sequence[Opinion], data: Sequence[Opinion], labels: Sequence[bool]) -> float:
+    """The trust t in [0, 1] in a second source maximising the likelihood of the labels when each row holds with the
+    projection of the judge's opinion fused with the source's opinion discounted by t (Jøsang 2016, Def. 12.5 and
+    Eq. 14.6). At t = 0 the source is vacuous and the judge's opinion stands alone. Fusion weighs each opinion by the
+    other's uncertainty, so the likelihood need not be concave in t: a grid of 101 points finds the best cell, and
+    golden-section search refines t within its two neighbours.
+
+    >>> judged = [Opinion(0.4, 0.4, 0.2)] * 4
+    >>> data = [Opinion(0.9, 0.0, 0.1)] * 2 + [Opinion(0.0, 0.9, 0.1)] * 2
+    >>> fit_data_trust(judged, data, [True, True, False, False]) > 0.9
+    True
+    >>> fit_data_trust(judged, data, [False, False, True, True])
+    0.0
+    """
+    if not len(judged) == len(data) == len(labels):
+        msg = f"{len(judged)} judge opinions, {len(data)} source opinions and {len(labels)} labels"
+        raise ValueError(msg)
+    if not judged:
+        msg = "cannot fit a trust on no rows"
+        raise ValueError(msg)
+    rows = list(zip(judged, data, [bool(y) for y in labels], strict=True))
+
+    def loss(t: float) -> float:
+        total = 0.0
+        for j, d, y in rows:
+            p = j.fuse(d.discount(t)).projection
+            q = p if y else 1.0 - p
+            if q <= 0.0:
+                return math.inf
+            total -= math.log(q)
+        return total
+
+    grid = [loss(g / 100) for g in range(101)]
+    best = min(range(101), key=lambda g: (grid[g], g))
+    low, high = max(best - 1, 0) / 100, min(best + 1, 100) / 100
+    ratio = (math.sqrt(5.0) - 1.0) / 2.0
+    for _ in range(60):
+        a, b = high - ratio * (high - low), low + ratio * (high - low)
+        if loss(a) <= loss(b):
+            high = b
+        else:
+            low = a
+    middle = (low + high) / 2
+    # The ends are candidates too: a source worth nothing should read exactly 0.
+    return min((best / 100, middle), key=lambda t: (loss(t), t))
+
+
+def probability_scores(probabilities: Sequence[float], labels: Sequence[bool]) -> dict[str, float]:
+    """The mean log loss and Brier score of `probabilities` against the labels, both proper scoring rules, so a
+    calibrated judge's opinions score better than shaded ones.
+
+    >>> probability_scores([0.5, 0.5], [True, False])
+    {'rows': 2, 'log_loss': 0.6931471805599453, 'brier': 0.25}
+    """
+    p, y = _rows(probabilities, labels)
+    if not p:
+        msg = "cannot score no rows"
+        raise ValueError(msg)
+    loss = -sum(math.log(q) if true else math.log(1.0 - q) for q, true in zip(p, y)) / len(p)
+    brier = sum((q - true) ** 2 for q, true in zip(p, y)) / len(p)
+    return {"rows": len(p), "log_loss": loss, "brier": brier}
 
 
 def at_threshold(scores: Sequence[float], labels: Sequence[bool], threshold: float) -> dict[str, float | int | None]:

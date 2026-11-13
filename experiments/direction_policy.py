@@ -19,7 +19,8 @@ from semrewrite.admission import Directional, Threshold, balanced_accuracy, cali
 from semrewrite.benchmarks import BENCHMARKS
 from semrewrite.engines import make as make_engine
 from semrewrite.judges import make
-from semrewrite.protocols import Budget
+from semrewrite.model import Proposal
+from semrewrite.protocols import Budget, Judge
 from semrewrite.retrieve import EmbeddingRetriever
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -34,6 +35,11 @@ def policy_metrics(admitted: list[bool], labels: list[bool]) -> dict:
     return {"admitted": n_admitted, "precision": round(tp / n_admitted, 4) if n_admitted else 1.0,
             "recall": round(tp / positives, 4) if positives else 1.0,
             "balanced_accuracy": round(balanced_accuracy(admitted, labels), 4)}
+
+
+def beliefs(judge: Judge, proposals: list[Proposal]) -> list[float]:
+    """Each proposal's score: the belief of the judge's opinion of it."""
+    return [o.belief for o in judge.opinions(proposals)]
 
 
 def main() -> None:
@@ -53,13 +59,13 @@ def main() -> None:
         base = make(name)
         dev = [r for r in rows if r.set == "wikidata" and r.split == "dev"]
         props = [r.proposal for r in dev]
-        forward, backward = base.score(props), base.score([p.converse() for p in props])
+        forward, backward = beliefs(base, props), beliefs(base, [p.converse() for p in props])
         slack, curve = calibrate_slack(forward, backward, [r.label for r in dev], base.threshold)
         sets = {}
         for set_name in ("levyholt", "wikidata", "hard"):
             test = [r for r in rows if r.set == set_name and r.split == "test"]
             props = [r.proposal for r in test]
-            f, b = base.score(props), base.score([p.converse() for p in props])
+            f, b = beliefs(base, props), beliefs(base, [p.converse() for p in props])
             labels = [r.label for r in test]
             sets[set_name] = {
                 "plain": policy_metrics([x >= base.threshold for x in f], labels),

@@ -1,18 +1,28 @@
 {
  "provenance": {
-  "at": "2026-11-08T18:51:46+1100",
+  "at": "2026-11-13T14:10:48+1100",
   "command": "python experiments/judge_eval.py ",
-  "commit": "88fb97f4f373bed437678ef6cfd4c02046f5dbcb",
-  "inputs_uncommitted": [],
+  "commit": "5bb3db19d9a974a06d4d69d4f26c6db623df27fb",
+  "inputs_uncommitted": [
+   "examples/wikidata/evaluate.py",
+   "experiments/judge_eval.py",
+   "semrewrite/evidence.py",
+   "semrewrite/judges/__init__.py",
+   "semrewrite/judges/base.py",
+   "semrewrite/judges/metrics.py",
+   "semrewrite/judges/nli.py",
+   "semrewrite/judges/oracle.py",
+   "semrewrite/judges/thresholds.json -> semrewrite/judges/calibration.json"
+  ],
   "pairs": {
    "levyholt": "bdabc781b3c407fe9d3874cf733a3626b6eefe21eb5b98dc294fee245407af2e",
    "wikidata": "71b6501ea8e54e68e425bdcf580543f3d3706e01e8f680abe96ed0173dd76dc5",
    "hard": "36295cc3b04ddc0fbca9f9e0d4d8528c64dfe07a2a30585e51c6d03476295155"
   },
   "jev_ledger": {
-   "requests": 37,
-   "questions": 19184,
-   "input_tokens": 844254,
+   "requests": 162,
+   "questions": 29346,
+   "input_tokens": 1327873,
    "models": [
     "jev-1.14.0"
    ]
@@ -21,7 +31,9 @@
  "calibration": {
   "rule": "maximum dev balanced accuracy of admitting scores at or above the threshold, middle of the optimal plateau",
   "default": "wikidata dev rows under each variant's fillers",
-  "engine_variant": "letters"
+  "engine_variant": "letters",
+  "trust": "maximum dev likelihood of the labels under each opinion's projection after discounting by the trust (Josang 2016, Eq. 14.6)",
+  "data_trust": "maximum likelihood on wikidata dev rows with statements on both sides in victoria.metta, leonardo.metta, alphabet.metta, of the judge's trusted opinion fused with the knowledge base's evidence discounted by the data trust"
  },
  "judges": {
   "cosine-bge": {
@@ -33,10 +45,10 @@
     "encoded": 9400
    },
    "seconds": {
-    "load": 9.41,
-    "letters": 1.65,
-    "typed": 1.98,
-    "instances": 0.98
+    "load": 9.17,
+    "letters": 1.74,
+    "typed": 1.88,
+    "instances": 0.88
    },
    "gpu_peak_gib": 0.148,
    "variants": {
@@ -46,6 +58,40 @@
       "by_set": {
        "levyholt": 0.914429783821106,
        "wikidata": 0.9571969956159592
+      }
+     },
+     "trust": {
+      "default": 0.0,
+      "by_set": {
+       "levyholt": 0.0,
+       "wikidata": 0.0
+      }
+     },
+     "data": {
+      "trust": 0.7003302255291408,
+      "dev": {
+       "judge": {
+        "rows": 501,
+        "log_loss": 0.6931471805599453,
+        "brier": 0.25
+       },
+       "fused": {
+        "rows": 501,
+        "log_loss": 0.5169572773668145,
+        "brier": 0.1699690531454093
+       }
+      },
+      "test": {
+       "judge": {
+        "rows": 933,
+        "log_loss": 0.6931471805599453,
+        "brier": 0.25
+       },
+       "fused": {
+        "rows": 933,
+        "log_loss": 0.5332295040672035,
+        "brier": 0.1752508952313924
+       }
       }
      },
      "sets": {
@@ -67,6 +113,11 @@
          "balanced_accuracy": 0.4984126984126984,
          "precision": 0.48936170212765956,
          "recall": 0.07301587301587302
+        },
+        "at_default_trust": {
+         "rows": 630,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        },
        "test": {
@@ -95,6 +146,11 @@
          "balanced_accuracy": 0.49607623318385646,
          "precision": 0.4948453608247423,
          "recall": 0.37668161434977576
+        },
+        "at_default_trust": {
+         "rows": 1784,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        }
       },
@@ -116,6 +172,11 @@
          "balanced_accuracy": 0.5514696485623003,
          "precision": 0.425,
          "recall": 0.16293929712460065
+        },
+        "at_default_trust": {
+         "rows": 1463,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        },
        "test": {
@@ -144,6 +205,11 @@
          "balanced_accuracy": 0.5260902281603472,
          "precision": 0.3137254901960784,
          "recall": 0.11816838995568685
+        },
+        "at_default_trust": {
+         "rows": 3329,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        }
       },
@@ -165,6 +231,11 @@
          "balanced_accuracy": 0.5982142857142858,
          "precision": 0.5178571428571429,
          "recall": 0.5178571428571429
+        },
+        "at_default_trust": {
+         "rows": 140,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        }
       }
@@ -176,6 +247,40 @@
       "by_set": {
        "levyholt": 0.9631116688251495,
        "wikidata": 0.9749725759029388
+      }
+     },
+     "trust": {
+      "default": 0.0,
+      "by_set": {
+       "levyholt": 0.0,
+       "wikidata": 0.0
+      }
+     },
+     "data": {
+      "trust": 0.7003302255291408,
+      "dev": {
+       "judge": {
+        "rows": 501,
+        "log_loss": 0.6931471805599453,
+        "brier": 0.25
+       },
+       "fused": {
+        "rows": 501,
+        "log_loss": 0.5169572773668145,
+        "brier": 0.1699690531454093
+       }
+      },
+      "test": {
+       "judge": {
+        "rows": 933,
+        "log_loss": 0.6931471805599453,
+        "brier": 0.25
+       },
+       "fused": {
+        "rows": 933,
+        "log_loss": 0.5332295040672035,
+        "brier": 0.1752508952313924
+       }
       }
      },
      "sets": {
@@ -197,6 +302,11 @@
          "balanced_accuracy": 0.5,
          "precision": 0.5,
          "recall": 0.07936507936507936
+        },
+        "at_default_trust": {
+         "rows": 630,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        },
        "test": {
@@ -225,6 +335,11 @@
          "balanced_accuracy": 0.500560538116592,
          "precision": 0.5012787723785166,
          "recall": 0.21973094170403587
+        },
+        "at_default_trust": {
+         "rows": 1784,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        }
       },
@@ -246,6 +361,11 @@
          "balanced_accuracy": 0.5593249062369774,
          "precision": 0.4166666666666667,
          "recall": 0.19169329073482427
+        },
+        "at_default_trust": {
+         "rows": 1463,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        },
        "test": {
@@ -274,6 +394,11 @@
          "balanced_accuracy": 0.513741753945073,
          "precision": 0.24571428571428572,
          "recall": 0.12703101920236337
+        },
+        "at_default_trust": {
+         "rows": 3329,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        }
       },
@@ -295,6 +420,11 @@
          "balanced_accuracy": 0.6458333333333333,
          "precision": 0.5689655172413793,
          "recall": 0.5892857142857143
+        },
+        "at_default_trust": {
+         "rows": 140,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        }
       }
@@ -307,6 +437,13 @@
        "levyholt": 0.9625431448221207
       }
      },
+     "trust": {
+      "default": null,
+      "by_set": {
+       "levyholt": 0.0
+      }
+     },
+     "data": {},
      "sets": {
       "levyholt": {
        "dev": {
@@ -354,10 +491,10 @@
     "encoded": 9400
    },
    "seconds": {
-    "load": 10.97,
-    "letters": 4.56,
-    "typed": 7.43,
-    "instances": 3.54
+    "load": 13.11,
+    "letters": 4.04,
+    "typed": 5.72,
+    "instances": 2.96
    },
    "gpu_peak_gib": 1.147,
    "variants": {
@@ -367,6 +504,40 @@
       "by_set": {
        "levyholt": 0.9468457251787186,
        "wikidata": 0.9751224517822266
+      }
+     },
+     "trust": {
+      "default": 0.0,
+      "by_set": {
+       "levyholt": 0.0008249410227665914,
+       "wikidata": 0.0
+      }
+     },
+     "data": {
+      "trust": 0.7003302255291408,
+      "dev": {
+       "judge": {
+        "rows": 501,
+        "log_loss": 0.6931471805599453,
+        "brier": 0.25
+       },
+       "fused": {
+        "rows": 501,
+        "log_loss": 0.5169572773668145,
+        "brier": 0.1699690531454093
+       }
+      },
+      "test": {
+       "judge": {
+        "rows": 933,
+        "log_loss": 0.6931471805599453,
+        "brier": 0.25
+       },
+       "fused": {
+        "rows": 933,
+        "log_loss": 0.5332295040672035,
+        "brier": 0.1752508952313924
+       }
       }
      },
      "sets": {
@@ -388,6 +559,11 @@
          "balanced_accuracy": 0.5031746031746032,
          "precision": 0.5384615384615384,
          "recall": 0.044444444444444446
+        },
+        "at_default_trust": {
+         "rows": 630,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        },
        "test": {
@@ -416,6 +592,11 @@
          "balanced_accuracy": 0.5016816143497758,
          "precision": 0.502086230876217,
          "recall": 0.4047085201793722
+        },
+        "at_default_trust": {
+         "rows": 1784,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        }
       },
@@ -437,6 +618,11 @@
          "balanced_accuracy": 0.5320850118071955,
          "precision": 0.28703703703703703,
          "recall": 0.19808306709265175
+        },
+        "at_default_trust": {
+         "rows": 1463,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        },
        "test": {
@@ -465,6 +651,11 @@
          "balanced_accuracy": 0.5243040006594616,
          "precision": 0.25902335456475584,
          "recall": 0.18020679468242246
+        },
+        "at_default_trust": {
+         "rows": 3329,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        }
       },
@@ -486,6 +677,11 @@
          "balanced_accuracy": 0.6101190476190477,
          "precision": 0.5072463768115942,
          "recall": 0.625
+        },
+        "at_default_trust": {
+         "rows": 140,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        }
       }
@@ -497,6 +693,40 @@
       "by_set": {
        "levyholt": 0.950287401676178,
        "wikidata": 0.9761264026165009
+      }
+     },
+     "trust": {
+      "default": 0.0,
+      "by_set": {
+       "levyholt": 0.0002950674932073134,
+       "wikidata": 0.0
+      }
+     },
+     "data": {
+      "trust": 0.7003302255291408,
+      "dev": {
+       "judge": {
+        "rows": 501,
+        "log_loss": 0.6931471805599453,
+        "brier": 0.25
+       },
+       "fused": {
+        "rows": 501,
+        "log_loss": 0.5169572773668145,
+        "brier": 0.1699690531454093
+       }
+      },
+      "test": {
+       "judge": {
+        "rows": 933,
+        "log_loss": 0.6931471805599453,
+        "brier": 0.25
+       },
+       "fused": {
+        "rows": 933,
+        "log_loss": 0.5332295040672035,
+        "brier": 0.1752508952313924
+       }
       }
      },
      "sets": {
@@ -518,6 +748,11 @@
          "balanced_accuracy": 0.5031746031746032,
          "precision": 0.5084745762711864,
          "recall": 0.19047619047619047
+        },
+        "at_default_trust": {
+         "rows": 630,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        },
        "test": {
@@ -546,6 +781,11 @@
          "balanced_accuracy": 0.5022421524663677,
          "precision": 0.5015873015873016,
          "recall": 0.7085201793721974
+        },
+        "at_default_trust": {
+         "rows": 1784,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        }
       },
@@ -567,6 +807,11 @@
          "balanced_accuracy": 0.5400722322544798,
          "precision": 0.3031674208144796,
          "recall": 0.21405750798722045
+        },
+        "at_default_trust": {
+         "rows": 1463,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        },
        "test": {
@@ -595,6 +840,11 @@
          "balanced_accuracy": 0.5237865683712413,
          "precision": 0.2528957528957529,
          "recall": 0.1935007385524372
+        },
+        "at_default_trust": {
+         "rows": 3329,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        }
       },
@@ -616,6 +866,11 @@
          "balanced_accuracy": 0.6785714285714286,
          "precision": 0.6,
          "recall": 0.6428571428571429
+        },
+        "at_default_trust": {
+         "rows": 140,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        }
       }
@@ -628,6 +883,13 @@
        "levyholt": 0.9804084450006485
       }
      },
+     "trust": {
+      "default": null,
+      "by_set": {
+       "levyholt": 0.0
+      }
+     },
+     "data": {},
      "sets": {
       "levyholt": {
        "dev": {
@@ -679,10 +941,10 @@
     "output_tokens": 0
    },
    "seconds": {
-    "load": 0.09,
+    "load": 0.07,
     "letters": 0.06,
-    "typed": 0.06,
-    "instances": 0.02
+    "typed": 0.08,
+    "instances": 0.05
    },
    "gpu_peak_gib": 0.009,
    "variants": {
@@ -692,6 +954,40 @@
       "by_set": {
        "levyholt": 0.185,
        "wikidata": 0.165
+      }
+     },
+     "trust": {
+      "default": 0.9737370746599263,
+      "by_set": {
+       "levyholt": 0.5456370097262129,
+       "wikidata": 0.9737370746599263
+      }
+     },
+     "data": {
+      "trust": 0.0,
+      "dev": {
+       "judge": {
+        "rows": 501,
+        "log_loss": 0.33896660673102946,
+        "brier": 0.10230754510533256
+       },
+       "fused": {
+        "rows": 501,
+        "log_loss": 0.33896660673102946,
+        "brier": 0.10230754510533256
+       }
+      },
+      "test": {
+       "judge": {
+        "rows": 933,
+        "log_loss": 0.3642497153271369,
+        "brier": 0.11023329639997251
+       },
+       "fused": {
+        "rows": 933,
+        "log_loss": 0.3642497153271369,
+        "brier": 0.11023329639997251
+       }
       }
      },
      "sets": {
@@ -713,6 +1009,11 @@
          "balanced_accuracy": 0.746031746031746,
          "precision": 0.764505119453925,
          "recall": 0.7111111111111111
+        },
+        "at_default_trust": {
+         "rows": 630,
+         "log_loss": 0.7241163724281646,
+         "brier": 0.23728116058965243
         }
        },
        "test": {
@@ -741,6 +1042,11 @@
          "balanced_accuracy": 0.7348654708520179,
          "precision": 0.7804551539491299,
          "recall": 0.6535874439461884
+        },
+        "at_default_trust": {
+         "rows": 1784,
+         "log_loss": 0.7087817256299143,
+         "brier": 0.23770789113457455
         }
        }
       },
@@ -762,6 +1068,11 @@
          "balanced_accuracy": 0.8100889012362829,
          "precision": 0.5456521739130434,
          "recall": 0.8019169329073482
+        },
+        "at_default_trust": {
+         "rows": 1463,
+         "log_loss": 0.33072168766379373,
+         "brier": 0.09964940414613761
         }
        },
        "test": {
@@ -790,6 +1101,11 @@
          "balanced_accuracy": 0.823437510443332,
          "precision": 0.5362595419847328,
          "recall": 0.8301329394387001
+        },
+        "at_default_trust": {
+         "rows": 3329,
+         "log_loss": 0.32198485335149635,
+         "brier": 0.09676647371019216
         }
        }
       },
@@ -811,6 +1127,11 @@
          "balanced_accuracy": 0.9107142857142857,
          "precision": 0.7887323943661971,
          "recall": 1.0
+        },
+        "at_default_trust": {
+         "rows": 140,
+         "log_loss": 0.17200813663457848,
+         "brier": 0.04871739989522646
         }
        }
       }
@@ -822,6 +1143,40 @@
       "by_set": {
        "levyholt": 0.135,
        "wikidata": 0.20500000000000002
+      }
+     },
+     "trust": {
+      "default": 1.0,
+      "by_set": {
+       "levyholt": 0.6802382115127368,
+       "wikidata": 1.0
+      }
+     },
+     "data": {
+      "trust": 0.0,
+      "dev": {
+       "judge": {
+        "rows": 501,
+        "log_loss": 0.38477183020893735,
+        "brier": 0.12259540918163672
+       },
+       "fused": {
+        "rows": 501,
+        "log_loss": 0.38477183020893735,
+        "brier": 0.12259540918163672
+       }
+      },
+      "test": {
+       "judge": {
+        "rows": 933,
+        "log_loss": 0.3935608883968528,
+        "brier": 0.12302690246516612
+       },
+       "fused": {
+        "rows": 933,
+        "log_loss": 0.3935608883968528,
+        "brier": 0.12302690246516612
+       }
       }
      },
      "sets": {
@@ -843,6 +1198,11 @@
          "balanced_accuracy": 0.7571428571428571,
          "precision": 0.7755102040816326,
          "recall": 0.7238095238095238
+        },
+        "at_default_trust": {
+         "rows": 630,
+         "log_loss": 0.6322589673108169,
+         "brier": 0.2094501587301587
         }
        },
        "test": {
@@ -871,6 +1231,11 @@
          "balanced_accuracy": 0.7410313901345291,
          "precision": 0.7394209354120267,
          "recall": 0.7443946188340808
+        },
+        "at_default_trust": {
+         "rows": 1784,
+         "log_loss": 0.7033437908368966,
+         "brier": 0.23019248878923768
         }
        }
       },
@@ -892,6 +1257,11 @@
          "balanced_accuracy": 0.7929809695791082,
          "precision": 0.5081632653061224,
          "recall": 0.7955271565495208
+        },
+        "at_default_trust": {
+         "rows": 1463,
+         "log_loss": 0.3570116258956476,
+         "brier": 0.11178892686261108
         }
        },
        "test": {
@@ -920,6 +1290,11 @@
          "balanced_accuracy": 0.7810606972024123,
          "precision": 0.4692982456140351,
          "recall": 0.7902511078286558
+        },
+        "at_default_trust": {
+         "rows": 3329,
+         "log_loss": 0.36182555424225454,
+         "brier": 0.11370333433463502
         }
        }
       },
@@ -941,6 +1316,11 @@
          "balanced_accuracy": 0.9226190476190477,
          "precision": 0.8115942028985508,
          "recall": 1.0
+        },
+        "at_default_trust": {
+         "rows": 140,
+         "log_loss": 0.13664924772943232,
+         "brier": 0.038783571428571424
         }
        }
       }
@@ -953,6 +1333,13 @@
        "levyholt": 0.395
       }
      },
+     "trust": {
+      "default": null,
+      "by_set": {
+       "levyholt": 0.9273871964532101
+      }
+     },
+     "data": {},
      "sets": {
       "levyholt": {
        "dev": {
@@ -999,19 +1386,53 @@
     "calls": 3
    },
    "seconds": {
-    "load": 10.31,
-    "letters": 10.34,
-    "typed": 8.73,
-    "instances": 2.66
+    "load": 9.41,
+    "letters": 7.19,
+    "typed": 8.62,
+    "instances": 3.0
    },
    "gpu_peak_gib": 0.892,
    "variants": {
     "letters": {
      "thresholds": {
-      "default": 0.2221469059586525,
+      "default": 0.2221469032721426,
       "by_set": {
-       "levyholt": 0.9697761237621307,
-       "wikidata": 0.2221469059586525
+       "levyholt": 0.969776144155973,
+       "wikidata": 0.2221469032721426
+      }
+     },
+     "trust": {
+      "default": 0.31013465083045644,
+      "by_set": {
+       "levyholt": 0.3203255683232329,
+       "wikidata": 0.31013465083045644
+      }
+     },
+     "data": {
+      "trust": 0.7450492567208999,
+      "dev": {
+       "judge": {
+        "rows": 501,
+        "log_loss": 0.659895615655053,
+        "brier": 0.23370442370204828
+       },
+       "fused": {
+        "rows": 501,
+        "log_loss": 0.47401878878948195,
+        "brier": 0.15386226531329739
+       }
+      },
+      "test": {
+       "judge": {
+        "rows": 933,
+        "log_loss": 0.6578383340368621,
+        "brier": 0.2327004391797158
+       },
+       "fused": {
+        "rows": 933,
+        "log_loss": 0.4953525581341975,
+        "brier": 0.16242451410717618
+       }
       }
      },
      "sets": {
@@ -1026,26 +1447,31 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.2221469059586525,
+         "threshold": 0.2221469032721426,
          "rows": 630,
          "admitted": 333,
          "accuracy": 0.653968253968254,
          "balanced_accuracy": 0.653968253968254,
          "precision": 0.6456456456456456,
          "recall": 0.6825396825396826
+        },
+        "at_default_trust": {
+         "rows": 630,
+         "log_loss": 0.6659227588436272,
+         "brier": 0.2366416249243047
         }
        },
        "test": {
         "rows": 1784,
         "positives": 892,
-        "auc": 0.73987889360333,
+        "auc": 0.7398782651973698,
         "direction": {
          "pairs": 892,
          "accuracy": 0.8038116591928252,
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.2221469059586525,
+         "threshold": 0.2221469032721426,
          "rows": 1784,
          "admitted": 867,
          "accuracy": 0.6855381165919282,
@@ -1054,13 +1480,18 @@
          "recall": 0.67152466367713
         },
         "at_own_dev": {
-         "threshold": 0.9697761237621307,
+         "threshold": 0.969776144155973,
          "rows": 1784,
          "admitted": 421,
          "accuracy": 0.609304932735426,
          "balanced_accuracy": 0.6093049327354261,
          "precision": 0.7315914489311164,
          "recall": 0.3452914798206278
+        },
+        "at_default_trust": {
+         "rows": 1784,
+         "log_loss": 0.6580233213326733,
+         "brier": 0.23281347289337329
         }
        }
       },
@@ -1075,13 +1506,18 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.2221469059586525,
+         "threshold": 0.2221469032721426,
          "rows": 1463,
          "admitted": 504,
          "accuracy": 0.7286397812713602,
          "balanced_accuracy": 0.7076371718294208,
          "precision": 0.4166666666666667,
          "recall": 0.670926517571885
+        },
+        "at_default_trust": {
+         "rows": 1463,
+         "log_loss": 0.6669423781755286,
+         "brier": 0.23711632555928178
         }
        },
        "test": {
@@ -1094,7 +1530,7 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.2221469059586525,
+         "threshold": 0.2221469032721426,
          "rows": 3329,
          "admitted": 1127,
          "accuracy": 0.729047762090718,
@@ -1103,13 +1539,18 @@
          "recall": 0.6661742983751846
         },
         "at_own_dev": {
-         "threshold": 0.2221469059586525,
+         "threshold": 0.2221469032721426,
          "rows": 3329,
          "admitted": 1127,
          "accuracy": 0.729047762090718,
          "balanced_accuracy": 0.7056361687954354,
          "precision": 0.40017746228926354,
          "recall": 0.6661742983751846
+        },
+        "at_default_trust": {
+         "rows": 3329,
+         "log_loss": 0.6632969014394862,
+         "brier": 0.23534508220680417
         }
        }
       },
@@ -1124,13 +1565,18 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.2221469059586525,
+         "threshold": 0.2221469032721426,
          "rows": 140,
          "admitted": 81,
          "accuracy": 0.7642857142857142,
          "balanced_accuracy": 0.7916666666666667,
          "precision": 0.6419753086419753,
          "recall": 0.9285714285714286
+        },
+        "at_default_trust": {
+         "rows": 140,
+         "log_loss": 0.622681319265616,
+         "brier": 0.2156829760728083
         }
        }
       }
@@ -1138,10 +1584,44 @@
     },
     "typed": {
      "thresholds": {
-      "default": 0.036115990951657295,
+      "default": 0.03611599015998278,
       "by_set": {
-       "levyholt": 0.9063650667667389,
-       "wikidata": 0.036115990951657295
+       "levyholt": 0.9063650713955855,
+       "wikidata": 0.03611599015998278
+      }
+     },
+     "trust": {
+      "default": 0.11953913145993686,
+      "by_set": {
+       "levyholt": 0.2872082286306842,
+       "wikidata": 0.11953913145993686
+      }
+     },
+     "data": {
+      "trust": 0.7227041023596774,
+      "dev": {
+       "judge": {
+        "rows": 501,
+        "log_loss": 0.6883947311254734,
+        "brier": 0.2476335437518067
+       },
+       "fused": {
+        "rows": 501,
+        "log_loss": 0.5032071014021917,
+        "brier": 0.1651496316020355
+       }
+      },
+      "test": {
+       "judge": {
+        "rows": 933,
+        "log_loss": 0.6899184569954498,
+        "brier": 0.24839069426744018
+       },
+       "fused": {
+        "rows": 933,
+        "log_loss": 0.5219983260104072,
+        "brier": 0.17162565758465992
+       }
       }
      },
      "sets": {
@@ -1156,26 +1636,31 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.036115990951657295,
+         "threshold": 0.03611599015998278,
          "rows": 630,
          "admitted": 444,
          "accuracy": 0.6428571428571429,
          "balanced_accuracy": 0.6428571428571428,
          "precision": 0.6013513513513513,
          "recall": 0.8476190476190476
+        },
+        "at_default_trust": {
+         "rows": 630,
+         "log_loss": 0.6774054478534428,
+         "brier": 0.24216219197625574
         }
        },
        "test": {
         "rows": 1784,
         "positives": 892,
-        "auc": 0.7329947063081904,
+        "auc": 0.73299407790223,
         "direction": {
          "pairs": 892,
          "accuracy": 0.7791479820627802,
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.036115990951657295,
+         "threshold": 0.03611599015998278,
          "rows": 1784,
          "admitted": 1173,
          "accuracy": 0.6709641255605381,
@@ -1184,13 +1669,18 @@
          "recall": 0.82847533632287
         },
         "at_own_dev": {
-         "threshold": 0.9063650667667389,
+         "threshold": 0.9063650713955855,
          "rows": 1784,
          "admitted": 788,
          "accuracy": 0.6849775784753364,
          "balanced_accuracy": 0.6849775784753362,
          "precision": 0.7093908629441624,
          "recall": 0.6266816143497758
+        },
+        "at_default_trust": {
+         "rows": 1784,
+         "log_loss": 0.6737014322841256,
+         "brier": 0.24031815832268746
         }
        }
       },
@@ -1205,13 +1695,18 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.036115990951657295,
+         "threshold": 0.03611599015998278,
          "rows": 1463,
          "admitted": 737,
          "accuracy": 0.6103896103896104,
          "balanced_accuracy": 0.6672996249479094,
          "precision": 0.3256445047489824,
          "recall": 0.7667731629392971
+        },
+        "at_default_trust": {
+         "rows": 1463,
+         "log_loss": 0.6892866784908263,
+         "brier": 0.24807518912413215
         }
        },
        "test": {
@@ -1224,7 +1719,7 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.036115990951657295,
+         "threshold": 0.03611599015998278,
          "rows": 3329,
          "admitted": 1683,
          "accuracy": 0.5914689095824572,
@@ -1233,13 +1728,18 @@
          "recall": 0.7385524372230429
         },
         "at_own_dev": {
-         "threshold": 0.036115990951657295,
+         "threshold": 0.03611599015998278,
          "rows": 3329,
          "admitted": 1683,
          "accuracy": 0.5914689095824572,
          "balanced_accuracy": 0.6462370029252469,
          "precision": 0.29708853238265004,
          "recall": 0.7385524372230429
+        },
+        "at_default_trust": {
+         "rows": 3329,
+         "log_loss": 0.6914458772900449,
+         "brier": 0.2491507118776174
         }
        }
       },
@@ -1254,13 +1754,18 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.036115990951657295,
+         "threshold": 0.03611599015998278,
          "rows": 140,
          "admitted": 80,
          "accuracy": 0.7428571428571429,
          "balanced_accuracy": 0.7678571428571429,
          "precision": 0.625,
          "recall": 0.8928571428571429
+        },
+        "at_default_trust": {
+         "rows": 140,
+         "log_loss": 0.6611394332795734,
+         "brier": 0.23406651461837424
         }
        }
       }
@@ -1270,9 +1775,16 @@
      "thresholds": {
       "default": null,
       "by_set": {
-       "levyholt": 0.9267692565917969
+       "levyholt": 0.926769227284945
       }
      },
+     "trust": {
+      "default": null,
+      "by_set": {
+       "levyholt": 0.3086407715352043
+      }
+     },
+     "data": {},
      "sets": {
       "levyholt": {
        "dev": {
@@ -1295,7 +1807,7 @@
          "ties": 0.0
         },
         "at_own_dev": {
-         "threshold": 0.9267692565917969,
+         "threshold": 0.926769227284945,
          "rows": 1784,
          "admitted": 957,
          "accuracy": 0.6900224215246636,
@@ -1319,19 +1831,53 @@
     "calls": 3
    },
    "seconds": {
-    "load": 14.24,
-    "letters": 23.49,
-    "typed": 25.37,
-    "instances": 7.73
+    "load": 19.16,
+    "letters": 16.27,
+    "typed": 18.24,
+    "instances": 5.41
    },
    "gpu_peak_gib": 1.946,
    "variants": {
     "letters": {
      "thresholds": {
-      "default": 0.659252792596817,
+      "default": 0.6592527778093171,
       "by_set": {
-       "levyholt": 0.05251435004174709,
-       "wikidata": 0.659252792596817
+       "levyholt": 0.052514349387895676,
+       "wikidata": 0.6592527778093171
+      }
+     },
+     "trust": {
+      "default": 0.41110153045595166,
+      "by_set": {
+       "levyholt": 0.3432623977409788,
+       "wikidata": 0.41110153045595166
+      }
+     },
+     "data": {
+      "trust": 0.7691592696494101,
+      "dev": {
+       "judge": {
+        "rows": 501,
+        "log_loss": 0.6593969444439962,
+        "brier": 0.233416777151739
+       },
+       "fused": {
+        "rows": 501,
+        "log_loss": 0.46920524964331445,
+        "brier": 0.1518340848405388
+       }
+      },
+      "test": {
+       "judge": {
+        "rows": 933,
+        "log_loss": 0.6297150579745907,
+        "brier": 0.21934092764305016
+       },
+       "fused": {
+        "rows": 933,
+        "log_loss": 0.4866007646709374,
+        "brier": 0.159856877780963
+       }
       }
      },
      "sets": {
@@ -1346,26 +1892,31 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.659252792596817,
+         "threshold": 0.6592527778093171,
          "rows": 630,
          "admitted": 275,
          "accuracy": 0.653968253968254,
          "balanced_accuracy": 0.653968253968254,
          "precision": 0.6763636363636364,
          "recall": 0.5904761904761905
+        },
+        "at_default_trust": {
+         "rows": 630,
+         "log_loss": 0.664190804609706,
+         "brier": 0.23575643626225848
         }
        },
        "test": {
         "rows": 1784,
         "positives": 892,
-        "auc": 0.7199684791570311,
+        "auc": 0.7199691075629914,
         "direction": {
          "pairs": 892,
          "accuracy": 0.7701793721973094,
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.659252792596817,
+         "threshold": 0.6592527778093171,
          "rows": 1784,
          "admitted": 710,
          "accuracy": 0.6670403587443946,
@@ -1374,13 +1925,18 @@
          "recall": 0.5650224215246636
         },
         "at_own_dev": {
-         "threshold": 0.05251435004174709,
+         "threshold": 0.052514349387895676,
          "rows": 1784,
          "admitted": 809,
          "accuracy": 0.679932735426009,
          "balanced_accuracy": 0.679932735426009,
          "precision": 0.6983930778739185,
          "recall": 0.6334080717488789
+        },
+        "at_default_trust": {
+         "rows": 1784,
+         "log_loss": 0.6635246995631799,
+         "brier": 0.23541628014449062
         }
        }
       },
@@ -1388,20 +1944,25 @@
        "dev": {
         "rows": 1463,
         "positives": 313,
-        "auc": 0.7376038338658147,
+        "auc": 0.7376052229476316,
         "direction": {
          "pairs": 248,
          "accuracy": 0.7983870967741935,
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.659252792596817,
+         "threshold": 0.6592527778093171,
          "rows": 1463,
          "admitted": 413,
          "accuracy": 0.7634996582365003,
          "balanced_accuracy": 0.7065578552576747,
          "precision": 0.4600484261501211,
          "recall": 0.6070287539936102
+        },
+        "at_default_trust": {
+         "rows": 1463,
+         "log_loss": 0.6405873519387959,
+         "brier": 0.22451886382863404
         }
        },
        "test": {
@@ -1414,7 +1975,7 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.659252792596817,
+         "threshold": 0.6592527778093171,
          "rows": 3329,
          "admitted": 892,
          "accuracy": 0.7659957945328928,
@@ -1423,13 +1984,18 @@
          "recall": 0.5834564254062038
         },
         "at_own_dev": {
-         "threshold": 0.659252792596817,
+         "threshold": 0.6592527778093171,
          "rows": 3329,
          "admitted": 892,
          "accuracy": 0.7659957945328928,
          "balanced_accuracy": 0.6980253469414126,
          "precision": 0.4428251121076233,
          "recall": 0.5834564254062038
+        },
+        "at_default_trust": {
+         "rows": 3329,
+         "log_loss": 0.6305540954787596,
+         "brier": 0.21975696104363898
         }
        }
       },
@@ -1444,13 +2010,18 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.659252792596817,
+         "threshold": 0.6592527778093171,
          "rows": 140,
          "admitted": 71,
          "accuracy": 0.7642857142857142,
          "balanced_accuracy": 0.7767857142857143,
          "precision": 0.6619718309859155,
          "recall": 0.8392857142857143
+        },
+        "at_default_trust": {
+         "rows": 140,
+         "log_loss": 0.6265540477100736,
+         "brier": 0.2179305257174362
         }
        }
       }
@@ -1458,10 +2029,44 @@
     },
     "typed": {
      "thresholds": {
-      "default": 0.0832364410161972,
+      "default": 0.08323643861485541,
       "by_set": {
-       "levyholt": 0.9664081335067749,
-       "wikidata": 0.0832364410161972
+       "levyholt": 0.966408111415497,
+       "wikidata": 0.08323643861485541
+      }
+     },
+     "trust": {
+      "default": 0.23769918173502164,
+      "by_set": {
+       "levyholt": 0.28751898686322086,
+       "wikidata": 0.23769918173502164
+      }
+     },
+     "data": {
+      "trust": 0.7439397463140518,
+      "dev": {
+       "judge": {
+        "rows": 501,
+        "log_loss": 0.682861553816723,
+        "brier": 0.2448891211078813
+       },
+       "fused": {
+        "rows": 501,
+        "log_loss": 0.4933894368772913,
+        "brier": 0.16152601967619687
+       }
+      },
+      "test": {
+       "judge": {
+        "rows": 933,
+        "log_loss": 0.6737563170150812,
+        "brier": 0.2404194102386462
+       },
+       "fused": {
+        "rows": 933,
+        "log_loss": 0.508934677910134,
+        "brier": 0.16724869512966498
+       }
       }
      },
      "sets": {
@@ -1476,13 +2081,18 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.0832364410161972,
+         "threshold": 0.08323643861485541,
          "rows": 630,
          "admitted": 374,
          "accuracy": 0.665079365079365,
          "balanced_accuracy": 0.665079365079365,
          "precision": 0.6390374331550802,
          "recall": 0.7587301587301587
+        },
+        "at_default_trust": {
+         "rows": 630,
+         "log_loss": 0.6691164278029459,
+         "brier": 0.23814508913586593
         }
        },
        "test": {
@@ -1495,7 +2105,7 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.0832364410161972,
+         "threshold": 0.08323643861485541,
          "rows": 1784,
          "admitted": 968,
          "accuracy": 0.6816143497757847,
@@ -1504,13 +2114,18 @@
          "recall": 0.7242152466367713
         },
         "at_own_dev": {
-         "threshold": 0.9664081335067749,
+         "threshold": 0.966408111415497,
          "rows": 1784,
          "admitted": 763,
          "accuracy": 0.679932735426009,
          "balanced_accuracy": 0.679932735426009,
          "precision": 0.7103538663171691,
          "recall": 0.6076233183856502
+        },
+        "at_default_trust": {
+         "rows": 1784,
+         "log_loss": 0.664395164239479,
+         "brier": 0.2358323098503024
         }
        }
       },
@@ -1525,13 +2140,18 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.0832364410161972,
+         "threshold": 0.08323643861485541,
          "rows": 1463,
          "admitted": 554,
          "accuracy": 0.6944634313055366,
          "balanced_accuracy": 0.6858980413946382,
          "precision": 0.37906137184115524,
          "recall": 0.670926517571885
+        },
+        "at_default_trust": {
+         "rows": 1463,
+         "log_loss": 0.6764145548588343,
+         "brier": 0.2417188203299279
         }
        },
        "test": {
@@ -1544,7 +2164,7 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.0832364410161972,
+         "threshold": 0.08323643861485541,
          "rows": 3329,
          "admitted": 1272,
          "accuracy": 0.6854911384800241,
@@ -1553,13 +2173,18 @@
          "recall": 0.6661742983751846
         },
         "at_own_dev": {
-         "threshold": 0.0832364410161972,
+         "threshold": 0.08323643861485541,
          "rows": 3329,
          "admitted": 1272,
          "accuracy": 0.6854911384800241,
          "balanced_accuracy": 0.6782983105752243,
          "precision": 0.35455974842767296,
          "recall": 0.6661742983751846
+        },
+        "at_default_trust": {
+         "rows": 3329,
+         "log_loss": 0.6756969457832277,
+         "brier": 0.241367758634265
         }
        }
       },
@@ -1574,13 +2199,18 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.0832364410161972,
+         "threshold": 0.08323643861485541,
          "rows": 140,
          "admitted": 78,
          "accuracy": 0.7714285714285715,
          "balanced_accuracy": 0.7946428571428572,
          "precision": 0.6538461538461539,
          "recall": 0.9107142857142857
+        },
+        "at_default_trust": {
+         "rows": 140,
+         "log_loss": 0.6409633523681896,
+         "brier": 0.22432124513255544
         }
        }
       }
@@ -1590,9 +2220,16 @@
      "thresholds": {
       "default": null,
       "by_set": {
-       "levyholt": 0.8758364915847778
+       "levyholt": 0.8758364773884546
       }
      },
+     "trust": {
+      "default": null,
+      "by_set": {
+       "levyholt": 0.3003343927423582
+      }
+     },
+     "data": {},
      "sets": {
       "levyholt": {
        "dev": {
@@ -1608,14 +2245,14 @@
        "test": {
         "rows": 1784,
         "positives": 892,
-        "auc": 0.7376549649098112,
+        "auc": 0.7376555933157715,
         "direction": {
          "pairs": 892,
          "accuracy": 0.8262331838565022,
          "ties": 0.0
         },
         "at_own_dev": {
-         "threshold": 0.8758364915847778,
+         "threshold": 0.8758364773884546,
          "rows": 1784,
          "admitted": 1083,
          "accuracy": 0.6967488789237668,
@@ -1639,19 +2276,53 @@
     "calls": 3
    },
    "seconds": {
-    "load": 10.5,
-    "letters": 6.3,
-    "typed": 6.2,
-    "instances": 1.81
+    "load": 8.83,
+    "letters": 5.83,
+    "typed": 6.44,
+    "instances": 2.64
    },
    "gpu_peak_gib": 0.981,
    "variants": {
     "letters": {
      "thresholds": {
-      "default": 0.05405977740883827,
+      "default": 0.05405977550547415,
       "by_set": {
-       "levyholt": 0.1158381886780262,
-       "wikidata": 0.05405977740883827
+       "levyholt": 0.11583818670626532,
+       "wikidata": 0.05405977550547415
+      }
+     },
+     "trust": {
+      "default": 0.5886015562316702,
+      "by_set": {
+       "levyholt": 0.3911296304481313,
+       "wikidata": 0.5886015562316702
+      }
+     },
+     "data": {
+      "trust": 0.773657185187064,
+      "dev": {
+       "judge": {
+        "rows": 501,
+        "log_loss": 0.6354981754233772,
+        "brier": 0.22225432987461466
+       },
+       "fused": {
+        "rows": 501,
+        "log_loss": 0.4433469510874514,
+        "brier": 0.14136588589534774
+       }
+      },
+      "test": {
+       "judge": {
+        "rows": 933,
+        "log_loss": 0.6288682259682816,
+        "brier": 0.2191358169476952
+       },
+       "fused": {
+        "rows": 933,
+        "log_loss": 0.4666121287919183,
+        "brier": 0.15137816094929044
+       }
       }
      },
      "sets": {
@@ -1666,13 +2337,18 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.05405977740883827,
+         "threshold": 0.05405977550547415,
          "rows": 630,
          "admitted": 383,
          "accuracy": 0.7015873015873015,
          "balanced_accuracy": 0.7015873015873015,
          "precision": 0.6657963446475196,
          "recall": 0.8095238095238095
+        },
+        "at_default_trust": {
+         "rows": 630,
+         "log_loss": 0.6676415424303224,
+         "brier": 0.2362501152198057
         }
        },
        "test": {
@@ -1685,7 +2361,7 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.05405977740883827,
+         "threshold": 0.05405977550547415,
          "rows": 1784,
          "admitted": 1087,
          "accuracy": 0.7079596412556054,
@@ -1694,13 +2370,18 @@
          "recall": 0.8172645739910314
         },
         "at_own_dev": {
-         "threshold": 0.1158381886780262,
+         "threshold": 0.11583818670626532,
          "rows": 1784,
          "admitted": 999,
          "accuracy": 0.7068385650224215,
          "balanced_accuracy": 0.7068385650224216,
          "precision": 0.6846846846846847,
          "recall": 0.7668161434977578
+        },
+        "at_default_trust": {
+         "rows": 1784,
+         "log_loss": 0.6424191991873176,
+         "brier": 0.2256734548130277
         }
        }
       },
@@ -1715,26 +2396,31 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.05405977740883827,
+         "threshold": 0.05405977550547415,
          "rows": 1463,
          "admitted": 520,
          "accuracy": 0.7518796992481203,
          "balanced_accuracy": 0.7514863175441033,
          "precision": 0.4519230769230769,
          "recall": 0.7507987220447284
+        },
+        "at_default_trust": {
+         "rows": 1463,
+         "log_loss": 0.6210947460279942,
+         "brier": 0.21584997713149234
         }
        },
        "test": {
         "rows": 3329,
         "positives": 677,
-        "auc": 0.8015452232478039,
+        "auc": 0.8015449447589512,
         "direction": {
          "pairs": 552,
          "accuracy": 0.8713768115942029,
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.05405977740883827,
+         "threshold": 0.05405977550547415,
          "rows": 3329,
          "admitted": 1207,
          "accuracy": 0.7404626013817963,
@@ -1743,13 +2429,18 @@
          "recall": 0.7533234859675036
         },
         "at_own_dev": {
-         "threshold": 0.05405977740883827,
+         "threshold": 0.05405977550547415,
          "rows": 3329,
          "admitted": 1207,
          "accuracy": 0.7404626013817963,
          "balanced_accuracy": 0.7452514865734954,
          "precision": 0.4225352112676056,
          "recall": 0.7533234859675036
+        },
+        "at_default_trust": {
+         "rows": 3329,
+         "log_loss": 0.6214154284309387,
+         "brier": 0.2156597872357546
         }
        }
       },
@@ -1764,13 +2455,18 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.05405977740883827,
+         "threshold": 0.05405977550547415,
          "rows": 140,
          "admitted": 76,
          "accuracy": 0.8571428571428571,
          "balanced_accuracy": 0.8809523809523809,
          "precision": 0.7368421052631579,
          "recall": 1.0
+        },
+        "at_default_trust": {
+         "rows": 140,
+         "log_loss": 0.5283679974971212,
+         "brier": 0.17398355880663202
         }
        }
       }
@@ -1778,10 +2474,44 @@
     },
     "typed": {
      "thresholds": {
-      "default": 0.3111717849969864,
+      "default": 0.3111717890174641,
       "by_set": {
-       "levyholt": 0.04396547190845013,
-       "wikidata": 0.3111717849969864
+       "levyholt": 0.0439654719934794,
+       "wikidata": 0.3111717890174641
+      }
+     },
+     "trust": {
+      "default": 0.4421626038556138,
+      "by_set": {
+       "levyholt": 0.5203646660663139,
+       "wikidata": 0.4421626038556138
+      }
+     },
+     "data": {
+      "trust": 0.7538030998538929,
+      "dev": {
+       "judge": {
+        "rows": 501,
+        "log_loss": 0.6640793543160225,
+        "brier": 0.23583359678135757
+       },
+       "fused": {
+        "rows": 501,
+        "log_loss": 0.46811749214764736,
+        "brier": 0.15121546674638495
+       }
+      },
+      "test": {
+       "judge": {
+        "rows": 933,
+        "log_loss": 0.6673010909774753,
+        "brier": 0.2374047918352891
+       },
+       "fused": {
+        "rows": 933,
+        "log_loss": 0.49554682967364544,
+        "brier": 0.16250274299238013
+       }
       }
      },
      "sets": {
@@ -1796,13 +2526,18 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.3111717849969864,
+         "threshold": 0.3111717890174641,
          "rows": 630,
          "admitted": 295,
          "accuracy": 0.7238095238095238,
          "balanced_accuracy": 0.7238095238095238,
          "precision": 0.7389830508474576,
          "recall": 0.692063492063492
+        },
+        "at_default_trust": {
+         "rows": 630,
+         "log_loss": 0.6375935027528207,
+         "brier": 0.2233644100776343
         }
        },
        "test": {
@@ -1815,7 +2550,7 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.3111717849969864,
+         "threshold": 0.3111717890174641,
          "rows": 1784,
          "admitted": 776,
          "accuracy": 0.7331838565022422,
@@ -1824,13 +2559,18 @@
          "recall": 0.6681614349775785
         },
         "at_own_dev": {
-         "threshold": 0.04396547190845013,
+         "threshold": 0.0439654719934794,
          "rows": 1784,
          "admitted": 1013,
          "accuracy": 0.7315022421524664,
          "balanced_accuracy": 0.7315022421524664,
          "precision": 0.7038499506416585,
          "recall": 0.7993273542600897
+        },
+        "at_default_trust": {
+         "rows": 1784,
+         "log_loss": 0.6307375080761378,
+         "brier": 0.22020889698069296
         }
        }
       },
@@ -1845,13 +2585,18 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.3111717849969864,
+         "threshold": 0.3111717890174641,
          "rows": 1463,
          "admitted": 386,
          "accuracy": 0.7819548872180451,
          "balanced_accuracy": 0.7182969856924573,
          "precision": 0.49222797927461137,
          "recall": 0.6070287539936102
+        },
+        "at_default_trust": {
+         "rows": 1463,
+         "log_loss": 0.6616980197003753,
+         "brier": 0.23475851080472246
         }
        },
        "test": {
@@ -1864,7 +2609,7 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.3111717849969864,
+         "threshold": 0.3111717890174641,
          "rows": 3329,
          "admitted": 907,
          "accuracy": 0.7542805647341544,
@@ -1873,13 +2618,18 @@
          "recall": 0.5657311669128509
         },
         "at_own_dev": {
-         "threshold": 0.3111717849969864,
+         "threshold": 0.3111717890174641,
          "rows": 3329,
          "admitted": 907,
          "accuracy": 0.7542805647341544,
          "balanced_accuracy": 0.6840722199571796,
          "precision": 0.422271223814774,
          "recall": 0.5657311669128509
+        },
+        "at_default_trust": {
+         "rows": 3329,
+         "log_loss": 0.6718695501992137,
+         "brier": 0.239501686642923
         }
        }
       },
@@ -1894,13 +2644,18 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.3111717849969864,
+         "threshold": 0.3111717890174641,
          "rows": 140,
          "admitted": 68,
          "accuracy": 0.9,
          "balanced_accuracy": 0.9136904761904762,
          "precision": 0.8088235294117647,
          "recall": 0.9821428571428571
+        },
+        "at_default_trust": {
+         "rows": 140,
+         "log_loss": 0.5383216666823181,
+         "brier": 0.17670849492684906
         }
        }
       }
@@ -1910,9 +2665,16 @@
      "thresholds": {
       "default": null,
       "by_set": {
-       "levyholt": 0.9334717392921448
+       "levyholt": 0.9334718026262305
       }
      },
+     "trust": {
+      "default": null,
+      "by_set": {
+       "levyholt": 0.4004684793287734
+      }
+     },
+     "data": {},
      "sets": {
       "levyholt": {
        "dev": {
@@ -1935,7 +2697,7 @@
          "ties": 0.0
         },
         "at_own_dev": {
-         "threshold": 0.9334717392921448,
+         "threshold": 0.9334718026262305,
          "rows": 1784,
          "admitted": 811,
          "accuracy": 0.7449551569506726,
@@ -1959,10 +2721,10 @@
     "calls": 3
    },
    "seconds": {
-    "load": 75.2,
-    "letters": 35.91,
-    "typed": 35.65,
-    "instances": 8.93
+    "load": 11.88,
+    "letters": 26.25,
+    "typed": 29.14,
+    "instances": 9.8
    },
    "gpu_peak_gib": 1.227,
    "variants": {
@@ -1972,6 +2734,40 @@
       "by_set": {
        "levyholt": 0.8594942986965179,
        "wikidata": 0.8078806102275848
+      }
+     },
+     "trust": {
+      "default": 0.0,
+      "by_set": {
+       "levyholt": 0.1525066169748775,
+       "wikidata": 0.0
+      }
+     },
+     "data": {
+      "trust": 0.7003302255291408,
+      "dev": {
+       "judge": {
+        "rows": 501,
+        "log_loss": 0.6931471805599453,
+        "brier": 0.25
+       },
+       "fused": {
+        "rows": 501,
+        "log_loss": 0.5169572773668145,
+        "brier": 0.1699690531454093
+       }
+      },
+      "test": {
+       "judge": {
+        "rows": 933,
+        "log_loss": 0.6931471805599453,
+        "brier": 0.25
+       },
+       "fused": {
+        "rows": 933,
+        "log_loss": 0.5332295040672035,
+        "brier": 0.1752508952313924
+       }
       }
      },
      "sets": {
@@ -1993,6 +2789,11 @@
          "balanced_accuracy": 0.5761904761904761,
          "precision": 0.5714285714285714,
          "recall": 0.6095238095238096
+        },
+        "at_default_trust": {
+         "rows": 630,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        },
        "test": {
@@ -2021,6 +2822,11 @@
          "balanced_accuracy": 0.6233183856502242,
          "precision": 0.6494565217391305,
          "recall": 0.5358744394618834
+        },
+        "at_default_trust": {
+         "rows": 1784,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        }
       },
@@ -2042,6 +2848,11 @@
          "balanced_accuracy": 0.6022544797888596,
          "precision": 0.31299212598425197,
          "recall": 0.5079872204472844
+        },
+        "at_default_trust": {
+         "rows": 1463,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        },
        "test": {
@@ -2070,6 +2881,11 @@
          "balanced_accuracy": 0.6267074151555861,
          "precision": 0.3267148014440433,
          "recall": 0.534711964549483
+        },
+        "at_default_trust": {
+         "rows": 3329,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        }
       },
@@ -2091,6 +2907,11 @@
          "balanced_accuracy": 0.7053571428571428,
          "precision": 0.5769230769230769,
          "recall": 0.8035714285714286
+        },
+        "at_default_trust": {
+         "rows": 140,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        }
       }
@@ -2102,6 +2923,40 @@
       "by_set": {
        "levyholt": 0.963764101266861,
        "wikidata": 0.8739163875579834
+      }
+     },
+     "trust": {
+      "default": 0.0,
+      "by_set": {
+       "levyholt": 0.15011256741959905,
+       "wikidata": 0.0
+      }
+     },
+     "data": {
+      "trust": 0.7003302255291408,
+      "dev": {
+       "judge": {
+        "rows": 501,
+        "log_loss": 0.6931471805599453,
+        "brier": 0.25
+       },
+       "fused": {
+        "rows": 501,
+        "log_loss": 0.5169572773668145,
+        "brier": 0.1699690531454093
+       }
+      },
+      "test": {
+       "judge": {
+        "rows": 933,
+        "log_loss": 0.6931471805599453,
+        "brier": 0.25
+       },
+       "fused": {
+        "rows": 933,
+        "log_loss": 0.5332295040672035,
+        "brier": 0.1752508952313924
+       }
       }
      },
      "sets": {
@@ -2123,6 +2978,11 @@
          "balanced_accuracy": 0.6158730158730159,
          "precision": 0.578494623655914,
          "recall": 0.8539682539682539
+        },
+        "at_default_trust": {
+         "rows": 630,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        },
        "test": {
@@ -2151,6 +3011,11 @@
          "balanced_accuracy": 0.5947309417040358,
          "precision": 0.6054931335830213,
          "recall": 0.5437219730941704
+        },
+        "at_default_trust": {
+         "rows": 1784,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        }
       },
@@ -2172,6 +3037,11 @@
          "balanced_accuracy": 0.5915696624531185,
          "precision": 0.27033792240300375,
          "recall": 0.6900958466453674
+        },
+        "at_default_trust": {
+         "rows": 1463,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        },
        "test": {
@@ -2200,6 +3070,11 @@
          "balanced_accuracy": 0.602225738608135,
          "precision": 0.26587301587301587,
          "recall": 0.6927621861152142
+        },
+        "at_default_trust": {
+         "rows": 3329,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        }
       },
@@ -2221,6 +3096,11 @@
          "balanced_accuracy": 0.7083333333333334,
          "precision": 0.5555555555555556,
          "recall": 0.8928571428571429
+        },
+        "at_default_trust": {
+         "rows": 140,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25
         }
        }
       }
@@ -2233,6 +3113,13 @@
        "levyholt": 0.979026198387146
       }
      },
+     "trust": {
+      "default": null,
+      "by_set": {
+       "levyholt": 0.03997043650640493
+      }
+     },
+     "data": {},
      "sets": {
       "levyholt": {
        "dev": {

@@ -336,7 +336,7 @@ An engine is anything with a `solve(program, query, budget, expand)` method and 
 | `cosine-bge`, `cosine-qwen3` | embedding similarity, the baseline that cannot tell direction | `models` |
 | `oracle` | admits exactly a given set of implications | nothing |
 
-Each judge's default threshold in `semrewrite/judges/thresholds.json` was calibrated on labelled predicate pairs. For the rewriter, calibrate it on your own knowledge bases instead (see RESULTS.md): the pair-set thresholds favour recall, and the rewriter needs precision because it applies every admitted rule everywhere. A judge is anything with `name`, `threshold`, `usage` and `score(proposals)`.
+Each judge's default threshold and trust in `semrewrite/judges/calibration.json` were calibrated on labelled predicate pairs. For the rewriter, calibrate it on your own knowledge bases instead (see RESULTS.md): the pair-set thresholds favour recall, and the rewriter needs precision because it applies every admitted rule everywhere. A judge is anything with `name`, `threshold`, `trust`, `usage` and `opinions(proposals)`, which DESIGN.md describes.
 
 ## Data
 

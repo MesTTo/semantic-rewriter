@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from typing import Literal, Protocol, get_args, runtime_checkable
 
 from semrewrite.model import Atom, Predicate, Proposal, Rewrite, Rule
+from semrewrite.opinion import Opinion
 
 Status = Literal["ok", "work_limit", "time_limit", "error"]
 """How a run ended: finished, or stopped by the work budget, the time budget or an engine error."""
@@ -185,14 +186,21 @@ class Retriever(Protocol):
 
 @runtime_checkable
 class Judge(Protocol):
-    """Scores proposals: per proposal, in order, the probability that its premise sentence entails its conclusion sentence.
+    """Gives, per proposal and in order, its opinion that the premise sentence entails the conclusion sentence.
 
-    `threshold` is the calibrated score at which the default admission policy
-    admits, and calibration may set it; `usage` counts the model work spent,
-    under units the judge names.
+    A proposal's score is its opinion's belief: a judge that gives only a
+    probability p gives the dogmatic opinion (p, 1 - p, 0), and an NLI
+    cross-encoder gives its entailment, contradiction and neutral
+    probabilities as belief, disbelief and uncertainty. `threshold` is the
+    calibrated score at which the default admission policy admits, and
+    calibration may set it; `trust` is the probability that the judge's
+    opinions are right, which discounts them (Jøsang 2016, Eq. 14.6) where
+    answers are weighed; `usage` counts the model work spent, under units the
+    judge names.
     """
 
     threshold: float
+    trust: float
 
     @property
     def name(self) -> str: ...
@@ -200,7 +208,7 @@ class Judge(Protocol):
     @property
     def usage(self) -> dict[str, int]: ...
 
-    def score(self, proposals: Sequence[Proposal]) -> list[float]: ...
+    def opinions(self, proposals: Sequence[Proposal]) -> list[Opinion]: ...
 
 
 @runtime_checkable

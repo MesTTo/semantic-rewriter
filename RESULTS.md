@@ -456,7 +456,7 @@ done
 What each step produces:
 
 - `pytest` runs the engine tests, the termination properties and the judge tests. The second `pytest` line writes the termination statistics this file quotes; Hypothesis draws new catalogues on each run, so the shares it reports move a little from run to run.
-- `judge_eval.py` writes `results/judges.json` and the calibrated thresholds in `semrewrite/judges/thresholds.json`. Jev's answers are cached on disk, so a rerun sends no requests unless it asks something new, which needs a TypeSafe key; this repository does not include the experiment's cache.
+- `judge_eval.py` writes `results/judges.json` and the calibrated thresholds and trusts in `semrewrite/judges/calibration.json`. Jev's answers are cached on disk, so a rerun sends no requests unless it asks something new, which needs a TypeSafe key; this repository does not include the experiment's cache.
 - `impl_eval.py` writes `results/implementations.<tag>.json` and `.jsonl`. Each judge run takes a process of its own: pymetta keeps about 25 KB for every context that imports `lib_tabling` (see the pymetta section), and three judges in one process outgrew 4 GiB.
 - `direction_policy.py` writes `results/direction_policy.<tag>.json`, and `blowup.py` writes `results/blowup.json`.
 - `report.py` fills the tables in this file; `--complete` makes a missing results file an error.

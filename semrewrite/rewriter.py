@@ -26,9 +26,11 @@ from enum import StrEnum
 from typing import get_args
 
 from semrewrite.discovery import Discoverer, ScoreCache
+from semrewrite.evidence import rewrite_evidence
 from semrewrite.kb import KB
-from semrewrite.lineage import lineages, probability
+from semrewrite.lineage import lineages, moments, probability
 from semrewrite.model import Atom, Key, Mapping, Proposal, Rewrite, Rule, compose, identity, inverse, parse_atom
+from semrewrite.opinion import Opinion
 from semrewrite.protocols import Admission, Budget, DepthCounts, Engine, Judge, Program, Proof, Retriever, Solution
 from semrewrite.trace import Solved, Solving, Tracer
 
@@ -121,7 +123,7 @@ class Outcome:
     `admitted` holds the keys of the rewrites the judge admitted while
     answering, as discovery saw them (before any alias renaming); `proofs`
     holds a derivation per answer when the engine provides them; `beliefs`, when the rewriter was asked for them,
-    holds each answer's probability that some derivation's rewrites are all valid, each valid at its score.
+    holds each answer's opinion that some derivation's rewrites are all valid.
     """
 
     kb: str
@@ -142,7 +144,7 @@ class Outcome:
     tables: int = 0
     seconds: float = 0.0
     proofs: dict[tuple[str, ...], Proof] | None = None
-    beliefs: dict[tuple[str, ...], float] | None = None
+    beliefs: dict[tuple[str, ...], Opinion] | None = None
 
     @property
     def finished(self) -> bool:
@@ -166,6 +168,7 @@ class Rewriter:
         proofs: bool = False,
         trace: Tracer | None = None,
         beliefs: int = 0,
+        data_trust: float = 0.0,
     ) -> None:
         self.kb = kb
         self.catalogue = kb.catalogue()
@@ -182,6 +185,12 @@ class Rewriter:
         # With beliefs = k > 0, each finished ask gives every answer a belief from its lineage, keeping the k most
         # probable rewrite sets per row (semrewrite.lineage says why the bound).
         self.beliefs = beliefs
+        # The probability that the knowledge base's evidence on a rewrite is right (semrewrite.evidence), which
+        # discounts that evidence before it is fused with the judge's opinion; 0 leaves the judge's opinion alone.
+        if not 0.0 <= data_trust <= 1.0:
+            msg = f"data trust is a probability, not {data_trust}"
+            raise ValueError(msg)
+        self.data_trust = data_trust
         self._rules_by_head: dict[str, list[Rule]] = defaultdict(list)
         for rule in kb.rules:
             self._rules_by_head[rule.head.pred].append(rule)
@@ -242,19 +251,43 @@ class Rewriter:
         out.retrievals = disc.stats.retrievals - before[2]
         return out
 
+    def rewrite_opinions(self, keys: Iterable[Key]) -> tuple[tuple[Rewrite, ...], dict[Key, Opinion]]:
+        """The rewrites with these (premise, conclusion, mapping) keys, each at its score, and the opinion that each is
+        valid: its judge's opinion discounted by the judge's trust, fused by cumulative fusion (Jøsang 2016,
+        Def. 12.5) with the knowledge base's evidence on it (semrewrite.evidence) discounted by the data trust. The
+        evidence on each rewrite reads the others at their judges' opinions, so no rewrite's evidence feeds back, and
+        it reads only rewrites with the same conclusion, so the keys must hold every admitted rewrite concluding each
+        predicate they conclude. The score cache holds every proposal discovery asked, so no judge is asked again."""
+        cat = self.catalogue
+        ordered = sorted(keys)
+        proposals = [Proposal(cat[p], cat[c], m) for p, c, m in ordered]
+        rewrites = tuple(Rewrite(c, p, m, s) for (p, c, m), s in zip(ordered, self.scorer.score(proposals), strict=True))
+        opinion = {rw.key: o for rw, o in zip(rewrites, self.scorer.opinions(proposals), strict=True)}
+        if self.data_trust:
+            evidence = rewrite_evidence(self.kb.facts, rewrites, {key: o.projection for key, o in opinion.items()})
+            opinion = {key: o.fuse(Opinion.from_evidence(*evidence[key]).discount(self.data_trust))
+                       for key, o in opinion.items()}
+        return rewrites, opinion
+
     # -- timings -------------------------------------------------------------
 
     def _believe(self, query: Atom, out: Outcome) -> None:
-        """Each answer's belief: the probability that the rewrites of some derivation are all valid, each valid at the
-        score it was admitted with, over the knowledge base and every admitted rewrite with no depth bound, since a
-        bound limits search and not what the admitted rewrites imply. A lineage the work budget stops leaves the run
-        at work_limit with no answers, as an engine's would."""
-        cat = self.catalogue
-        # The scores come from the score cache, which holds every proposal discovery asked, so no judge is asked again.
-        rewrites = tuple(Rewrite(c, p, m, self.scorer.score([Proposal(cat[p], cat[c], m)])[0])
-                         for p, c, m in sorted(out.admitted))
-        weights = {rw.key: rw.score for rw in rewrites}
-        found = lineages(Program(facts=self.kb.facts, rules=self.kb.rules, rewrites=rewrites), query, weights,
+        """Each answer's opinion that the rewrites of some derivation are all valid.
+
+        Each admitted rewrite is valid with a probability distributed as the Beta of its opinion (rewrite_opinions),
+        independently of the others. The answer's probability is then a polynomial in those probabilities, read off
+        its lineage over the knowledge base and every admitted rewrite with no depth bound, since a bound limits
+        search and not what the admitted rewrites imply. Its mean and
+        variance are exact, and its opinion is the Beta matched to those two moments (Cerutti, Kaplan, Kimmig and
+        Şensoy, Machine Learning 2022), with the probability its lineage has at the rewrites' base rates as its
+        base rate, as the product and coproduct of opinions take theirs (Jøsang 2016, Eqs. 7.1 and 7.3). An answer
+        the knowledge base derives with no rewrite is certain. A lineage the work budget stops leaves the run at
+        work_limit with no answers, as an engine's would."""
+        rewrites, opinion = self.rewrite_opinions(out.admitted)
+        mean = {key: o.projection for key, o in opinion.items()}
+        square = {key: o.projection**2 + o.variance for key, o in opinion.items()}
+        base = {key: o.base_rate for key, o in opinion.items()}
+        found = lineages(Program(facts=self.kb.facts, rules=self.kb.rules, rewrites=rewrites), query, mean,
                          self.beliefs, self.budget.work)
         out.work += found.work
         if not found.finished:
@@ -265,7 +298,16 @@ class Rewriter:
         if missing:
             msg = f"the lineage of {query} lacks the engine's answers {missing[:3]}"
             raise RuntimeError(msg)
-        out.beliefs = {row: probability(found.answers[row], weights) for row in out.answers}
+        beliefs = {}
+        for row in out.answers:
+            lin = found.answers[row]
+            first, second = moments(lin, mean, square)
+            variance = second - first * first
+            # E[f^2] - E[f]^2 cancels to a few ulps below zero where the answer is all but certain.
+            if -1e-12 < variance < 0.0:
+                variance = 0.0
+            beliefs[row] = Opinion.from_moments(first, variance, probability(lin, base))
+        out.beliefs = beliefs
 
     def _program(self, rewrites: Iterable[Rewrite] = (), *, kb: KB | None = None, tabled: bool = True, depth: int = 0,
                  depth_counts: DepthCounts = "steps") -> Program:

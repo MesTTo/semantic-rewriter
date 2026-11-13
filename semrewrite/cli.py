@@ -26,6 +26,7 @@ from semrewrite.engines import make as make_engine
 from semrewrite.kb import KB
 from semrewrite.lineage import SETS
 from semrewrite.model import Rewrite, parse_atom
+from semrewrite.opinion import Opinion, narsese_implication
 from semrewrite.protocols import Budget
 from semrewrite.rewriter import STRATEGIES, CapabilityError, Rewriter
 from semrewrite.trace import TextTrace, plural
@@ -66,11 +67,27 @@ def _retriever(args: argparse.Namespace):
 
 
 def _rewriter(args: argparse.Namespace, kb: KB) -> Rewriter:
+    from semrewrite.judges import default_data_trust
+
     admission = Directional(args.directional) if args.directional is not None else Threshold()
+    beliefs = getattr(args, "beliefs", False)
+    # Answer beliefs and the Narsese export both read each rewrite's opinion, which the data trust enters.
+    weighed = beliefs or getattr(args, "narsese", False)
     return Rewriter(kb, _judge(args, kb), make_engine(args.engine), _retriever(args), k=args.k,
                     budget=Budget(work=args.work, seconds=args.seconds), admission=admission,
                     proofs=getattr(args, "explain", False), trace=TextTrace() if getattr(args, "trace", False) else None,
-                    beliefs=SETS if getattr(args, "beliefs", False) else 0)
+                    beliefs=SETS if beliefs else 0, data_trust=default_data_trust(args.judge) if weighed else 0.0)
+
+
+def _opinion_text(o: Opinion) -> str:
+    """An answer's opinion as the command prints it: projected probability, then belief, disbelief and uncertainty."""
+    return f"P {o.projection:.3f}  b {o.belief:.3f}  d {o.disbelief:.3f}  u {o.uncertainty:.3f}"
+
+
+def _opinion_json(o: Opinion) -> dict[str, float]:
+    """An answer's opinion as --json writes it."""
+    return {"projection": round(o.projection, 6), "belief": round(o.belief, 6), "disbelief": round(o.disbelief, 6),
+            "uncertainty": round(o.uncertainty, 6), "base_rate": round(o.base_rate, 6)}
 
 
 def cmd_ask(args: argparse.Namespace) -> int:
@@ -82,20 +99,21 @@ def cmd_ask(args: argparse.Namespace) -> int:
     rows = sorted(out.answers)
     beliefs = out.beliefs
     if beliefs is not None:
-        # Ranked by belief, strongest first; --min-belief drops the answers below it.
-        rows = sorted((r for r in rows if beliefs[r] >= args.min_belief), key=lambda r: (-beliefs[r], r))
+        # Ranked by projected probability, highest first; --answer-threshold drops the answers below it.
+        rows = sorted((r for r in rows if beliefs[r].projection >= args.answer_threshold),
+                      key=lambda r: (-beliefs[r].projection, r))
     if args.json:
         print(json.dumps({
             "query": str(query), "status": out.status, "detail": out.detail,
             "answers": [list(a) for a in rows],
-            **({"beliefs": [round(out.beliefs[r], 6) for r in rows]} if out.beliefs is not None else {}),
+            **({"beliefs": [_opinion_json(beliefs[r]) for r in rows]} if beliefs is not None else {}),
             "rewrites": sorted([p, c, list(m)] for p, c, m in out.admitted),
             "cost": {"work": out.work, "seconds": round(out.seconds, 3), "expansions": out.expansions,
                      "proposals": out.proposals, "tables": out.tables},
         }, indent=1))
     else:
         for row in rows:
-            belief = f"    belief {out.beliefs[row]:.3f}" if out.beliefs is not None else ""
+            belief = "" if beliefs is None else f"    {_opinion_text(beliefs[row])}"
             print(f"{query.pred}({', '.join(row)}){belief}")
             if args.explain and out.proofs and row in out.proofs:
                 print("\n".join("    " + line for line in out.proofs[row].lines()))
@@ -116,6 +134,8 @@ def cmd_rewrites(args: argparse.Namespace) -> int:
         print(f"{args.predicate} has no gloss in {kb.name}", file=sys.stderr)
         return 1
     admitted = {r.key: r for r in disc.rewrites(args.predicate)}
+    if args.narsese:
+        return _narsese(rw, admitted)
     proposals = disc.proposals(args.predicate) if args.all else []
     scores = rw.scorer.score(proposals) if proposals else []
     for r in sorted(admitted.values(), key=lambda r: -r.score):
@@ -125,6 +145,26 @@ def cmd_rewrites(args: argparse.Namespace) -> int:
             print(f"reject  {s:.3f}  {p.rewrite(s)}")
     print(f"{disc.stats.proposals:,} judge questions at threshold {rw.scorer.threshold:.3f}", file=sys.stderr)
     return 0
+
+
+def _narsese(rw: Rewriter, admitted: dict) -> int:
+    """Print each admitted rewrite as an ONA belief, strongest first: a NAL-6 implication with the rewrite's opinion
+    as %f;c%, evidence counted with k = 1 as ONA counts it. A rewrite whose opinion is vacuous has no frequency to
+    give, so it is named on standard error and left out, and the command then fails."""
+    rewrites, opinion = rw.rewrite_opinions(admitted)
+    lines, vacuous = [], []
+    for r in sorted(rewrites, key=lambda r: (-opinion[r.key].projection, r.key)):
+        rule = r.rule()
+        (premise,) = rule.body
+        try:
+            lines.append(narsese_implication(premise.pred, premise.args, rule.head.pred, rule.head.args,
+                                             opinion[r.key], k=1.0))
+        except ValueError as error:
+            vacuous.append(f"{r}: {error}")
+    print("\n".join(lines))
+    for line in vacuous:
+        print(f"not exported: {line}", file=sys.stderr)
+    return 1 if vacuous else 0
 
 
 def cmd_engines(args: argparse.Namespace) -> int:
@@ -190,10 +230,10 @@ def parser() -> argparse.ArgumentParser:
                           "evaluation reaching a predicate, the candidates retrieved, the judge's verdicts and the "
                           "rewrites admitted")
     ask.add_argument("--beliefs", action="store_true",
-                     help="give each answer the probability that some derivation's rewrites are all valid, each at "
-                          "its score, and rank the answers by it")
-    ask.add_argument("--min-belief", type=float, default=0.0, metavar="P",
-                     help="with --beliefs, print only the answers whose belief is at least P")
+                     help="give each answer an opinion that some derivation's rewrites are all valid: its projected "
+                          "probability P with belief b, disbelief d and uncertainty u; rank the answers by P")
+    ask.add_argument("--answer-threshold", type=float, default=0.0, metavar="P",
+                     help="with --beliefs, print only the answers whose projected probability is at least P")
     ask.add_argument("--json", action="store_true")
     ask.set_defaults(run=cmd_ask)
 
@@ -201,6 +241,9 @@ def parser() -> argparse.ArgumentParser:
     rewriting(rewrites)
     rewrites.add_argument("predicate")
     rewrites.add_argument("--all", action="store_true", help="also show the rejected proposals with their scores")
+    rewrites.add_argument("--narsese", action="store_true",
+                          help="print the admitted rewrites as ONA Narsese implications, each with its opinion as "
+                               "%%f;c%%, the syntax ONA reads")
     rewrites.set_defaults(run=cmd_rewrites)
 
     sub.add_parser("engines", help="list engines and their capabilities").set_defaults(run=cmd_engines)

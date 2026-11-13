@@ -13,6 +13,7 @@ import types
 import pytest
 
 from semrewrite.model import Predicate
+from semrewrite.opinion import Opinion
 from semrewrite.retrieve import AllCandidates, EmbeddingRetriever, JudgeRetriever
 
 
@@ -95,16 +96,17 @@ _JUDGED = {("mum", (0, 1)): 0.9, ("parent", (1, 0)): 0.95, ("parent", (0, 1)): 0
 
 
 class _StubJudge:
-    """Scores a proposal by its premise's name and mapping, and records how many it scored."""
+    """Judges a proposal by its premise's name and mapping, as the dogmatic opinion of a probability, and records how
+    many it judged."""
 
-    name, threshold = "stub", 0.5
+    name, threshold, trust = "stub", 0.5, 1.0
 
     def __init__(self) -> None:
         self.scored = 0
 
-    def score(self, proposals) -> list[float]:
+    def opinions(self, proposals) -> list[Opinion]:
         self.scored += len(proposals)
-        return [_JUDGED.get((p.premise.name, p.mapping), 0.0) for p in proposals]
+        return [Opinion(s, 1.0 - s, 0.0) for s in (_JUDGED.get((p.premise.name, p.mapping), 0.0) for p in proposals)]
 
 
 def test_the_judge_retriever_ranks_by_the_best_mapping_and_scores_each_candidate_once() -> None:

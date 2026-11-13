@@ -18,23 +18,25 @@ from dataclasses import dataclass, field
 
 from semrewrite.admission import Threshold
 from semrewrite.model import Key, Predicate, Proposal, Rewrite, identity, mappings
+from semrewrite.opinion import Opinion
 from semrewrite.protocols import Admission, Judge, Retriever
 from semrewrite.trace import Expanded, Remembered, Tracer
 
 
 class ScoreCache:
-    """A judge wrapper that remembers each proposal's score, by both predicates' names and sentences and the mapping.
+    """A judge wrapper that remembers the judge's opinion of each proposal, by both predicates' names and sentences
+    and the mapping, and gives a proposal's score as that opinion's belief.
 
     Strategies compared on one judge share its model calls while each still
     counts every proposal it asked for: `logical` counts proposals asked,
-    `computed` those the judge actually scored. The key holds the names as well
-    as the sentences because a judge may read either: the oracle scores by
+    `computed` those the judge actually judged. The key holds the names as well
+    as the sentences because a judge may read either: the oracle judges by
     name, so mum and mom glossed alike can still differ in what they entail.
     """
 
     def __init__(self, judge: Judge) -> None:
         self.judge = judge
-        self._scores: dict[tuple[str, str, str, str, tuple[int, ...]], float] = {}
+        self._opinions: dict[tuple[str, str, str, str, tuple[int, ...]], Opinion] = {}
         self.logical = 0
         self.computed = 0
 
@@ -49,21 +51,30 @@ class ScoreCache:
 
     def scores(self) -> list[float]:
         """Every score computed so far, one per distinct proposal."""
-        return list(self._scores.values())
+        return [o.belief for o in self._opinions.values()]
 
-    def score(self, proposals: Sequence[Proposal]) -> list[float]:
-        """Scores for `proposals`, computing only those never seen."""
+    def _judged(self, proposals: Sequence[Proposal]) -> list[Opinion]:
+        """The judge's own opinions of `proposals`, asking it only for those never seen."""
         self.logical += len(proposals)
-        missing = list({self._key(p): p for p in proposals if self._key(p) not in self._scores}.values())
+        missing = list({self._key(p): p for p in proposals if self._key(p) not in self._opinions}.values())
         if missing:
             self.computed += len(missing)
-            for p, s in zip(missing, self.judge.score(missing), strict=True):
-                s = float(s)
-                if not 0.0 <= s <= 1.0:
-                    msg = f"judge {self.judge.name} scored {s} for {p.key}; scores must lie in [0, 1]"
-                    raise ValueError(msg)
-                self._scores[self._key(p)] = s
-        return [self._scores[self._key(p)] for p in proposals]
+            for p, o in zip(missing, self.judge.opinions(missing), strict=True):
+                if not isinstance(o, Opinion):
+                    msg = f"judge {self.judge.name} gave {o!r} for {p.key}; a judge gives Opinion values"
+                    raise TypeError(msg)
+                self._opinions[self._key(p)] = o
+        return [self._opinions[self._key(p)] for p in proposals]
+
+    def score(self, proposals: Sequence[Proposal]) -> list[float]:
+        """Scores for `proposals`: the belief of the judge's opinion of each."""
+        return [o.belief for o in self._judged(proposals)]
+
+    def opinions(self, proposals: Sequence[Proposal]) -> list[Opinion]:
+        """The judge's opinion of each proposal discounted by the judge's trust (Jøsang 2016, Eq. 14.6), the opinion
+        an answer's belief weighs."""
+        trust = self.judge.trust
+        return [o.discount(trust) for o in self._judged(proposals)]
 
 
 @dataclass

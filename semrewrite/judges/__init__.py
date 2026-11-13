@@ -1,12 +1,14 @@
 """Purpose: the judge factory, which builds judges by name for the command
 line and the experiments. make(name) builds a direction judge, its threshold
-read from semrewrite/judges/thresholds.json, where experiments/judge_eval.py
-writes each judge's threshold calibrated on dev rows; make("oracle", gold=...)
-builds the OracleJudge of semrewrite/judges/oracle.py.
+and trust read from semrewrite/judges/calibration.json, where
+experiments/judge_eval.py writes each judge's threshold and trust calibrated on
+dev rows; make("oracle", gold=...) builds the OracleJudge of
+semrewrite/judges/oracle.py.
 
     from semrewrite.judges import make
     judge = make("nli-deberta-large")
     judge.score([Proposal(mother, parent, (0, 1)), Proposal(parent, mother, (0, 1))])  # high, then low
+    judge.opinions([Proposal(mother, parent, (0, 1))])  # belief, disbelief and uncertainty of each
 
 Every judge keeps its model loaded until close(); load one at a time on a
 shared GPU.
@@ -28,7 +30,7 @@ from semrewrite.judges.oracle import OracleJudge
 from semrewrite.judges.reranker import RerankerJudge
 from semrewrite.protocols import Judge
 
-THRESHOLDS = pathlib.Path(__file__).with_name("thresholds.json")
+CALIBRATION = pathlib.Path(__file__).with_name("calibration.json")
 # Jev's answer cache and request log: SEMREWRITE_JEV_DIR when set, else the
 # repository's data/raw/jev when running from a checkout, else the user cache.
 _CHECKOUT_JEV = pathlib.Path(__file__).resolve().parents[2] / "data" / "raw" / "jev"
@@ -56,25 +58,45 @@ REGISTRY: dict[str, tuple[type[SentenceJudge], dict[str, Any]]] = {
 NAMES = tuple(REGISTRY)
 
 
+def _calibrated(name: str, field: str, option: str, path: pathlib.Path | None) -> float:
+    """The value of `field` calibrated for judge `name`, which `option` of make() overrides; raises when none was
+    calibrated."""
+    path = CALIBRATION if path is None else path
+    table = json.loads(path.read_text()) if path.is_file() else {}
+    entry = table.get("judges", {}).get(name, {})
+    if field not in entry:
+        msg = f"no calibrated {option} for {name!r} in {path}; run experiments/judge_eval.py or pass {option}="
+        raise LookupError(msg)
+    return float(entry[field])
+
+
 def default_threshold(name: str, path: pathlib.Path | None = None) -> float:
     """The threshold calibrated for `name` on dev rows; raises when none was calibrated."""
-    path = THRESHOLDS if path is None else path
-    table = json.loads(path.read_text()) if path.is_file() else {}
-    entry = table.get("judges", {}).get(name)
-    if entry is None:
-        msg = f"no calibrated threshold for {name!r} in {path}; run experiments/judge_eval.py or pass threshold="
-        raise LookupError(msg)
-    return float(entry["default"])
+    return _calibrated(name, "default", "threshold", path)
+
+
+def default_trust(name: str, path: pathlib.Path | None = None) -> float:
+    """The trust calibrated for `name` on dev rows, the probability that its opinions are right; raises when none was
+    calibrated."""
+    return _calibrated(name, "trust", "trust", path)
+
+
+def default_data_trust(name: str, path: pathlib.Path | None = None) -> float:
+    """The trust in the knowledge base's evidence on a rewrite, calibrated on dev rows jointly with judge `name`'s
+    opinions, which it is fused with; the oracle needs none, being right by construction, so it gets 0."""
+    return 0.0 if name == "oracle" else _calibrated(name, "data_trust", "data_trust", path)
 
 
 def make(
-    name: str, *, threshold: float | None = None, gold: Iterable[tuple[str, str, Any]] | None = None, **options: Any
+    name: str, *, threshold: float | None = None, trust: float | None = None,
+    gold: Iterable[tuple[str, str, Any]] | None = None, **options: Any,
 ) -> Judge:
-    """The judge called `name`, at `threshold` or its calibrated default.
+    """The judge called `name`, at `threshold` and `trust` or their calibrated defaults.
 
     `options` reach the judge's constructor: `fillers=("X", "Y")` for any judge,
     `budget=` or `cache=` for Jev. "oracle" needs `gold`, the (premise,
-    conclusion, mapping) triples that hold; a bool stands for a binary swap.
+    conclusion, mapping) triples that hold; a bool stands for a binary swap. The
+    oracle is right by construction, so its trust is complete unless given.
     """
     if name == "oracle":
         if gold is None:
@@ -83,10 +105,14 @@ def make(
         oracle = OracleJudge.of(gold)
         if threshold is not None:
             oracle.threshold = threshold
+        if trust is not None:
+            oracle.trust = trust
         return oracle
     if name not in REGISTRY:
         msg = f"unknown judge {name!r}; known: {', '.join(NAMES)}, oracle"
         raise ValueError(msg)
     cls, defaults = REGISTRY[name]
     chosen = default_threshold(name) if threshold is None else threshold
-    return cls(name, chosen, **{**defaults, **options})
+    judge = cls(name, chosen, **{**defaults, **options})
+    judge.trust = default_trust(name) if trust is None else trust
+    return judge

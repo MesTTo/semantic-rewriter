@@ -30,7 +30,7 @@ A predicate has a name, an arity and a gloss, a sentence template with one place
 
 A rewrite is an implication from a premise predicate to a conclusion predicate of the same arity, together with an argument mapping. For binary predicates the mapping is either the identity (`mother(x, y) ⇒ parent(x, y)`) or the swap (`child_of(y, x) ⇒ parent(x, y)`). For arity n it is any permutation of the n positions. Read as a rule, the rewrite `parent ⇐ child_of, swap` is `parent(X, Y) :- child_of(Y, X)`.
 
-A proposal is a rewrite before judgement. A judge returns a score in [0, 1] for each proposal, read as the probability that the premise sentence entails the conclusion sentence.
+A proposal is a rewrite before judgement. A judge returns an opinion of each proposal in subjective logic's terms (Jøsang, *Subjective Logic*, 2016): a belief, a disbelief and an uncertainty that sum to 1, and a base rate, the probability assumed without evidence. The opinion's belief is the proposal's score, read as the probability that the premise sentence entails the conclusion sentence. A judge that gives only a probability p gives the dogmatic opinion (p, 1 − p, 0).
 
 The catalogue is the set of predicates the knowledge base declares, with their glosses. Discovery only ever proposes rewrites between catalogue predicates, which is what keeps the rewrite set finite.
 
@@ -115,16 +115,19 @@ Reference implementations: `EmbeddingRetriever` embeds each gloss with its place
 ```python
 class Judge(Protocol):
     threshold: float                      # calibration may set it
+    trust: float                          # calibration may set it
     @property
     def name(self) -> str: ...
     @property
     def usage(self) -> dict[str, int]: ...
-    def score(self, proposals: Sequence[Proposal]) -> list[float]: ...
+    def opinions(self, proposals: Sequence[Proposal]) -> list[Opinion]: ...
 ```
 
-It returns one score in [0, 1] per proposal, in input order, where the score estimates the probability that the premise sentence entails the conclusion sentence. A judge must read direction: it must be able to score `mother ⇒ parent` high and `parent ⇒ mother` low. Embedding similarity cannot do this by construction, since the two sentences of a pair are the same distance apart in both directions. `usage` counts the model work spent, under units the judge names, such as pairs and calls.
+It returns one opinion per proposal, in input order, whose belief, the score, estimates the probability that the premise sentence entails the conclusion sentence. An NLI cross-encoder gives its entailment, contradiction and neutral probabilities as belief, disbelief and uncertainty, since neutral is SNLI's class for a conclusion that might be true given the premise; the other reference judges give a probability. A judge must read direction: it must be able to score `mother ⇒ parent` high and `parent ⇒ mother` low. Embedding similarity cannot do this by construction, since the two sentences of a pair are the same distance apart in both directions. `usage` counts the model work spent, under units the judge names, such as pairs and calls.
 
 `threshold` is the score at or above which the default admission policy admits a proposal. It is calibrated, never guessed (see Calibration).
+
+`trust` is the probability that the judge's opinions are right. Where answers are weighed, each of the judge's opinions is discounted by it (Jøsang 2016, Eq. 14.6): belief and disbelief are scaled by the trust and the rest becomes uncertainty, so a probability p from a judge trusted at t projects to a + t(p − a), its score drawn toward the base rate. It is calibrated with the threshold.
 
 Reference implementations: three NLI cross-encoders (DeBERTa-v3 base and large, and a DeBERTa-v3-large checkpoint trained on WANLI among other sets), a yes/no reranker (Qwen3-Reranker-0.6B), Jev (TypeSafe's hosted System One model, asked one yes/no question per proposal, with its answers cached on disk), two cosine judges kept as the similarity baseline, and an oracle judge that admits exactly a given set of implications, used by tests and to separate engine behaviour from judge error.
 
@@ -152,6 +155,16 @@ class Discoverer:
 It turns a goal predicate into its admitted rewrites: retrieve k candidates, build every proposal (each candidate under each argument mapping, plus the goal's own symmetry), score them, admit, and sort strongest first. With its memo on, it expands each predicate at most once and returns the same tuple afterwards; this is condition 3 of the termination theorem. Its statistics count expansions, proposals and retrievals, which is how judge cost per query is measured.
 
 The discoverer is engine-independent and lives in the rewriter's process. An engine never sees retriever, judge or admission policy; it sees only the rewrites.
+
+### Answer beliefs
+
+Asked for beliefs (`ask --beliefs`), the rewriter gives every answer of a finished run an opinion that it holds. A rewrite's validity is one unknown shared by every application of it: if "B is owned by A ⇒ A owns B" is wrong, it is wrong for every company. So an answer holds when every rewrite of some derivation is valid, and its lineage is the minimal sets of rewrites its derivations use (PosBool provenance; Green, Karvounarakis and Tannen, PODS 2007). A descent of ten generations through `mother ⇒ parent` needs that one rewrite, not ten copies of it.
+
+`semrewrite.lineage` computes each answer's lineage over the knowledge base and every rewrite admitted while answering, with no depth bound, since a bound limits search and not what the admitted rewrites imply. It evaluates the magic-sets transformation of the program for the query (Beeri and Ramakrishnan, 1991) bottom-up, so it derives only what the query reaches, as the engines' top-down evaluation does, and it checks that every answer the engine returned has a lineage.
+
+Each admitted rewrite is valid with a probability distributed as the Beta of its judge's opinion discounted by the judge's trust, independently of the other rewrites. The answer's probability is then a polynomial in those probabilities. Its mean is the weighted model count of its lineage, computed by Shannon expansion on one rewrite at a time, and its second moment comes from the same expansion over pairs, both exactly. The answer's opinion is the Beta matched to those two moments (Cerutti, Kaplan, Kimmig and Şensoy, Machine Learning, 2022), with as base rate the probability its lineage has at the rewrites' base rates, as the product and coproduct of opinions take theirs (Jøsang 2016, Eqs. 7.1 and 7.3). An answer the knowledge base derives with no rewrite is certain. Only the matching is an approximation, and where the matched Beta would leave belief or disbelief negative its strength is raised to the least that keeps both at zero or above, as Cerutti et al. do.
+
+A lineage keeps at most k sets per answer, the most probable, 16 by default. Dropping a set from a disjunction only lowers its probability, so a bounded lineage gives a lower bound, and the bound is what keeps lineages over many chained rewrites in memory: over 184 rewrites admitted for Queen Victoria's descendants an unbounded run passed 11 GiB. The lineage counts its work against the run's budget, and a run whose lineage the budget stops ends at `work_limit` with no answers.
 
 ### Engine
 
@@ -229,6 +242,8 @@ The rewriter refuses a strategy the engine's capabilities cannot run, rather tha
 A judge's threshold and a direction-aware policy's slack are frozen guesses unless they are fitted to data, so the reference implementation fits them:
 
 - On labelled predicate pairs, a threshold maximising balanced accuracy, and the slack that maximises balanced accuracy of the direction-aware policy.
+- On the same labelled pairs, each judge's trust: the trust maximising the labels' likelihood when each pair holds with the projection of the judge's opinion discounted by it. The projection is linear in the trust, so the log-likelihood is concave and its maximum is found by bisecting its derivative.
+- On the labelled Wikidata pairs whose two properties both have statements in the examples' knowledge bases, each judge's data trust: the trust in the knowledge base's evidence that maximises the labels' likelihood once that evidence, discounted by it, is fused with the judge's trusted opinion. Fusion weighs each opinion by the other's uncertainty, so this likelihood need not be concave; a grid finds its best cell and golden-section search refines it.
 - On knowledge bases with gold answers, the threshold maximising answer F1 of a given strategy, chosen leave-one-knowledge-base-out: for each knowledge base, the threshold that is best on the others is scored on it.
 
 The second fit is the one the rewriter needs. Balanced accuracy favours recall, while the rewriter needs precision because it applies every admitted rewrite everywhere. In the experiment, Jev's pair-calibrated threshold was 0.165, and its answer-calibrated threshold for lazy-tabled evaluation was 0.65 on every held-out fold.
@@ -266,7 +281,11 @@ These defaults come from the experiment in `RESULTS.md`: four generated knowledg
 
 - Function symbols, arithmetic and negation are outside the protocol, because they break the bounded term-size property or monotonicity that the guarantees rest on.
 - Discovery never invents predicates and never reads facts from text. Both would unfreeze the catalogue or the constants.
-- The rewriter admits rewrites and then reasons exactly. It does not score proofs, as soft-unification systems do; a score per answer would change unification, scoring and the stopping condition, and is a different system.
+- The rewriter admits rewrites and then reasons exactly. Answer beliefs come after evaluation, from each answer's lineage, and never steer unification, search or the stopping condition, as soft-unification systems' proof scores do.
+- Answer beliefs assume the admitted rewrites are valid independently of one another and of the knowledge base, which is taken as true. Two rewrites a judge misreads for one shared reason, such as two glosses that both mention ownership, are correlated: the belief of an answer needing both is then too low, and of an answer reachable through either too high.
+- Trust only shrinks a judge's opinions toward the base rate; it cannot recalibrate them. A judge that ranks pairs well but states miscalibrated probabilities gets little trust: reranker-qwen3 ranks Wikidata test pairs at ROC AUC 0.67, and its trust fits to 0.
+- The data trust is fitted where the knowledge base's evidence compares a property with another property's statements, and used where it compares a rewrite with what the other admitted rewrites derive. The two differ: the rewrites admitted for a question cover only part of its relation, so a rewrite stating much that they miss reads as evidence against it.
+- Beliefs need a lineage over named predicates, so a strategy that answers over merged alias classes refuses them, as it refuses proofs.
 - Admission decides each rewrite on its own. Choosing the rewrite set jointly under transitivity, as entailment-graph methods do, needs every pair's score before admitting anything, so it cannot run goal by goal.
 - The rewrite set grows while a query runs and is kept only in the memo. Maintaining answers incrementally as facts change is left to the engine.
 - A depth bound counting steps counts the knowledge base's own rule steps as well as rewrite steps, so besides limiting how far a false rewrite spreads, it cuts recursion through user rules deeper than the bound, such as an ancestor rule over more generations than the bound allows. A bound on rewrites alone (`rewrite-depth-tabled`) keeps that recursion complete. It guarantees termination only with tables: without them a recursive user rule can loop, as it would in Prolog.

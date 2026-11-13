@@ -9,15 +9,17 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 
 from semrewrite.model import Key, Mapping, Proposal, keys_of
+from semrewrite.opinion import Opinion
 
 
 @dataclass
 class OracleJudge:
-    """Scores 1.0 for a proposal whose (premise, conclusion, mapping) is in `gold` and 0.0 otherwise."""
+    """Certain belief for a proposal whose (premise, conclusion, mapping) is in `gold`, certain disbelief otherwise."""
 
     gold: frozenset[Key]
     name: str = "oracle"
     threshold: float = 0.5
+    trust: float = 1.0
     usage: dict[str, int] = field(default_factory=lambda: {"pairs": 0})
 
     @classmethod
@@ -25,7 +27,7 @@ class OracleJudge:
         """Build from (premise, conclusion, mapping) triples; a bool stands for the swap of a binary pair."""
         return cls(keys_of(triples))
 
-    def score(self, proposals: Sequence[Proposal]) -> list[float]:
-        """1.0 for a gold implication and 0.0 otherwise."""
+    def opinions(self, proposals: Sequence[Proposal]) -> list[Opinion]:
+        """(1, 0, 0) for a gold implication and (0, 1, 0) otherwise."""
         self.usage["pairs"] += len(proposals)
-        return [1.0 if p.key in self.gold else 0.0 for p in proposals]
+        return [Opinion(1.0, 0.0, 0.0) if p.key in self.gold else Opinion(0.0, 1.0, 0.0) for p in proposals]
