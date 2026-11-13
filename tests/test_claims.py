@@ -17,7 +17,18 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from stubs import SentenceTableJudge, TableEmbedder, YesNoTableJudge
 
-from semrewrite.claims import ClaimCheck, conditional, negated, sentence, stance, standing_out, statements, weigh
+import semrewrite.judges
+from semrewrite.claims import (
+    ClaimCheck,
+    Stated,
+    conditional,
+    negated,
+    sentence,
+    stance,
+    standing_out,
+    statements,
+    weigh,
+)
 from semrewrite.cli import main
 from semrewrite.engines import make
 from semrewrite.kb import KB
@@ -161,8 +172,8 @@ def test_without_arguments_the_answer_keeps_watching_tv_s_derivation() -> None:
 def test_a_fact_states_its_gloss_filled_with_its_arguments_names() -> None:
     kb = KB("k", glosses={"mother": "{y} is the mother of {x}", "tv": "I watch TV", "same": "I watch TV."},
             facts=(Atom("mother", ("edward_vii", "queen_victoria")), Atom("tv", ()), Atom("same", ())))
-    assert statements(kb) == {"queen victoria is the mother of edward vii.": frozenset({"mother"}),
-                              "I watch TV.": frozenset({"tv", "same"})}
+    assert statements(kb) == {"queen victoria is the mother of edward vii.": Stated(frozenset({"mother"}), False),
+                              "I watch TV.": Stated(frozenset({"tv", "same"}), True)}
 
 
 def test_a_rewrite_claims_its_proposal_as_a_conditional() -> None:
@@ -190,14 +201,28 @@ def test_a_statement_is_read_when_its_cosine_stands_out_by_the_modified_z_score(
 
 
 def test_a_rewrite_s_own_predicates_statements_are_never_read() -> None:
-    """kim's statement lies nearer the gaming claim than anything, and the judge would read it as a contradiction,
-    but the knowledge base's evidence on the rewrite reads it, so the check does not."""
+    """"I play video games." lies nearer the gaming claim than anything and names no individual, and the judge reads
+    it as a contradiction, but the knowledge base's evidence on the rewrite reads it, so the check does not."""
+    kb, judge, embedder = actions(holes=False, believed=False)
+    claim = "If I play video games, I waste time."
+    embedder = TableEmbedder({**embedder.table, (claim, "I play video games."): 0.99})
+    judge.table[("I play video games.", claim)] = reading(0.0, 0.99)
+    check = ClaimCheck(kb, judge, embedder)
+    (readings,) = check.readings([Rewrite("wastes_time", "play_games", ())]).values()
+    assert "I play video games." not in {r.statement for r in readings}
+
+
+def test_statements_naming_individuals_are_read_only_when_asked() -> None:
+    """raj's statement stands out from the gaming claim and the judge reads it as a contradiction, but it names raj,
+    so it bears on the rule through its rows and the check leaves it unread; asked to read every statement, it reads
+    it."""
     kb, judge, embedder = actions(holes=True, believed=False)
     claim = "If A plays games, A wastes time."
-    embedder = TableEmbedder({**embedder.table, (claim, "kim plays games."): 0.99})
-    check = ClaimCheck(kb, judge, embedder)
-    (readings,) = check.readings([Rewrite("wastes_time", "play_games", (0,))]).values()
-    assert "kim plays games." not in {r.statement for r in readings}
+    embedder = TableEmbedder({**embedder.table, (claim, "raj scrolls social media."): 0.95})
+    games = Rewrite("wastes_time", "play_games", (0,))
+    assert ClaimCheck(kb, judge, embedder).readings([games])[games.key] == ()
+    (r,) = ClaimCheck(kb, judge, embedder, with_arguments=True).readings([games])[games.key]
+    assert (r.statement, r.side) == ("raj scrolls social media.", "against")
 
 
 # ---- what a reading does to answers ----
@@ -336,9 +361,7 @@ def actions_cli(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(cli, "_judge", lambda args, kb: judge)
     monkeypatch.setattr(cli, "_embedder", lambda retriever: embedder)
     monkeypatch.setattr(cli.formats, "load", lambda path: kb)
-    monkeypatch.setattr(cli, "default_data_trust", lambda name: 0.0, raising=False)
-    import semrewrite.judges
-
+    # The stub judge has no calibrated data trust; the knowledge base states no wastes_time, so it would weigh nothing.
     monkeypatch.setattr(semrewrite.judges, "default_data_trust", lambda name: 0.0)
     return kb
 

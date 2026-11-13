@@ -1,9 +1,9 @@
 """Purpose: the claim check, which weighs each rewrite the rewriter admits against what the knowledge base states, read
 by meaning. A rewrite claims the conditional its proposal states, "If A plays games, A wastes time."; each fact is a
 statement, its predicate's gloss filled with its arguments' names as words, "kim plays games." The run's judge reads
-the statements that stand out in similarity to a claim against it: what it reads as following from a statement
-counts for the claim, what it reads as contradicted counts against, and statements it reads as saying the same are
-one source. The sources' opinions fuse with the rewrite's own, so an answer moves through its lineage: with "I
+against a claim the statements that name no individual and stand out in similarity to it: what it reads as following
+from a statement counts for the claim, what it reads as contradicted counts against, and statements it reads as
+saying the same are one source. The sources' opinions fuse with the rewrite's own, so an answer moves through its lineage: with "I
 consider gaming to be productive." stated, the match from playing games loses belief, and an answer that also comes
 through watching TV keeps that derivation.
 
@@ -58,15 +58,27 @@ def sentence(text: str) -> str:
     return f"{_bare(text)}."
 
 
-def statements(kb: KB) -> dict[str, frozenset[str]]:
-    """Each sentence the knowledge base states, with the predicates whose facts state it. A fact is its predicate's
-    gloss filled with its arguments' names as words, so play_games(kim) under "{x} plays games" states "kim plays
-    games.", and a fact with no arguments states its gloss."""
+@dataclass(frozen=True, slots=True)
+class Stated:
+    """A sentence the knowledge base states: the predicates whose facts state it, and whether one of those facts
+    names no individual, having no arguments."""
+
+    predicates: frozenset[str]
+    general: bool
+
+
+def statements(kb: KB) -> dict[str, Stated]:
+    """Each sentence the knowledge base states. A fact is its predicate's gloss filled with its arguments' names as
+    words, so play_games(kim) under "{x} plays games" states "kim plays games.", and a fact with no arguments states
+    its gloss, naming no individual."""
     catalogue = kb.catalogue()
-    out: dict[str, set[str]] = {}
+    preds: dict[str, set[str]] = {}
+    general: dict[str, bool] = {}
     for fact in kb.facts:
-        out.setdefault(sentence(catalogue[fact.pred].sentence(*map(words, fact.args))), set()).add(fact.pred)
-    return {text: frozenset(preds) for text, preds in out.items()}
+        text = sentence(catalogue[fact.pred].sentence(*map(words, fact.args)))
+        preds.setdefault(text, set()).add(fact.pred)
+        general[text] = general.get(text, False) or not fact.args
+    return {text: Stated(frozenset(ps), general[text]) for text, ps in preds.items()}
 
 
 def conditional(premise: str, conclusion: str) -> str:
@@ -173,19 +185,31 @@ def standing_out(similarities: Sequence[float], spread: float = SPREAD) -> list[
 class ClaimCheck:
     """Weighs rewrites against one knowledge base's statements with one sentence judge, whose opinions are calibrated
     as answers weigh them (protocols.calibrated), and one embedding model, whose cosines choose the statements each
-    claim is read against. A rewrite's own predicates' statements are left out: the knowledge base's evidence on the
-    rewrite (semrewrite.evidence) reads them as rows, and the judge would read a statement of the premise against the
-    rule as its own opinion of the rule again. Each claim is read once; `usage` counts the claims read, the judge
-    pairs asked and the statements embedded, and `seconds` the time spent."""
+    claim is read against.
 
-    def __init__(self, kb: KB, judge: SentenceJudge, embedder: Embedder, spread: float = SPREAD) -> None:
+    A claim is read against the statements that name no individual, unless `with_arguments` reads every statement. A
+    fact with arguments states something about the individuals it names, and bears on a rule through its rows, which
+    the knowledge base's evidence on the rewrite reads (semrewrite.evidence), as an assertion about individuals bears
+    on a terminological axiom through its instances (Baader et al., The Description Logic Handbook, 2003); read by
+    meaning against a rule written with letters, the judge reads it as noise. On Alphabet's Wikidata question,
+    reading every statement asked 39,429 judge pairs, moved 54 of 62 rewrites and lowered the lowest P inside
+    Wikidata's answer from 0.237 to 0.081, with no gain in average precision (RESULTS.md). Every statement still sets
+    the background a statement must stand out from. A rewrite's own predicates' statements are left out of both: the
+    knowledge base's evidence on the rewrite reads them as rows, and the judge would read a statement of the premise
+    against the rule as its own opinion of the rule again. Each claim is read once; `usage` counts the claims read,
+    the judge pairs asked and the statements embedded, and `seconds` the time spent."""
+
+    def __init__(self, kb: KB, judge: SentenceJudge, embedder: Embedder, spread: float = SPREAD,
+                 with_arguments: bool = False) -> None:
         self.catalogue: Mapping[str, Predicate] = kb.catalogue()
         self.judge = judge
         self.embedder = embedder
         self.spread = spread
+        self.with_arguments = with_arguments
         stated = statements(kb)
         self._sentences = sorted(stated)
-        self._stated_by = [stated[text] for text in self._sentences]
+        self._stated_by = [stated[text].predicates for text in self._sentences]
+        self._readable = [with_arguments or stated[text].general for text in self._sentences]
         self._read: dict[Key, tuple[Reading, ...]] = {}
         self._same: dict[tuple[str, str], float] = {}
         self.usage: dict[str, int] = {"claims": 0, "pairs": 0, "statements": len(self._sentences)}
@@ -212,6 +236,9 @@ class ClaimCheck:
     # read contradiction) and one over the ordered pairs among each claim's kept statements not judged before.
     def _read_claims(self, keys: Sequence[Key]) -> None:
         self.usage["claims"] += len(keys)
+        if not any(self._readable):
+            self._read.update({key: () for key in keys})
+            return
         claims = [self.claim(key) for key in keys]
         # Each claim's kept statements with their cosines, nearest first; only these outlive their batch's rows.
         near: list[dict[int, float]] = []
@@ -220,7 +247,8 @@ class ClaimCheck:
             for (premise, conclusion, _), row in zip(keys[start:start + BATCH], rows, strict=True):
                 positions = [j for j, preds in enumerate(self._stated_by)
                              if premise not in preds and conclusion not in preds]
-                chosen = (positions[i] for i in standing_out([row[j] for j in positions], self.spread))
+                chosen = (j for j in (positions[i] for i in standing_out([row[j] for j in positions], self.spread))
+                          if self._readable[j])
                 near.append(dict(sorted(((j, row[j]) for j in chosen), key=lambda jc: (-jc[1], jc[0]))))
         kept = [list(js) for js in near]
         contradiction = self.judge.reads_contradiction
