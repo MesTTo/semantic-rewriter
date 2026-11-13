@@ -71,7 +71,7 @@ def measure(name: str) -> dict[str, Any]:
                       data_trust=default_data_trust(name))
         keys = [(action, goal, (0,)) for action in sorted(doer)]
         rewrites, opinion = rw.rewrite_opinions(keys)
-        rows = []
+        rows: list[dict[str, Any]] = []
         for key, rewrite in zip(keys, rewrites, strict=True):
             o = opinion[key]
             rows.append({"action": key[0], "sentence": rw.catalogue[key[0]].sentence("A"), "doer": doer[key[0]],
@@ -93,9 +93,9 @@ def measure(name: str) -> dict[str, Any]:
                          "disbelief": beliefs[a].disbelief, "uncertainty": beliefs[a].uncertainty} for a in answers],
             "gold_answers": sorted(gold_answers),
             "average_precision": average_precision([a[0] for a in answers], gold_answers),
-            "rewrites": sorted(({"premise": r.premise, "conclusion": r.conclusion, "score": r.score,
-                                 "projection": weighed[r.key].projection} for r in admitted),
-                               key=lambda r: (-r["projection"], r["premise"], r["conclusion"])),
+            "rewrites": [{"premise": r.premise, "conclusion": r.conclusion, "score": r.score,
+                          "projection": weighed[r.key].projection}
+                         for r in sorted(admitted, key=lambda r: (-weighed[r.key].projection, r.premise, r.conclusion))],
         }
     finally:
         judge.close()
