@@ -414,6 +414,7 @@ Every query terminates when the catalogue of predicates is finite, rewrites only
 uv sync --all-extras
 uv run pytest                                  # unit, property and conformance tests, 400 cases per property
 uv run pytest --hypothesis-profile=ci -n auto  # the same with 100 cases per property on every CPU, as CI runs PyMeTTa
+uv run pytest --hypothesis-profile=ci -n 4 --store-durations --clean-durations  # refresh .test_durations, which balances CI's PyMeTTa runners
 uv run ruff check .                            # lint, as CI does
 uv run ty check semrewrite                     # type check, with every extra installed
 uv run semrewrite conformance --engine pymetta

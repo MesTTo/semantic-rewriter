@@ -34,6 +34,7 @@ Results = "https://github.com/MesTTo/semantic-rewriter/blob/main/RESULTS.md"
 dev = [
     "pytest>=8.0",
     "pytest-xdist>=3.8",
+    "pytest-split>=0.11",
     "hypothesis>=6.100",
     "ruff==0.17.4",
     "ty==0.0.99",

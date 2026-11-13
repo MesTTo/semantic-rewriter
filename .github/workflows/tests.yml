@@ -1,4 +1,4 @@
-# Purpose: run the test suite on every push and pull request: the dependency-free core with the pure-Python engine on three Python versions, with the Levy/Holt and Balanced COPA pairs fetched at their pinned revisions, and the PyMeTTa engine, whose property tests and conformance run under the ci Hypothesis profile (100 cases each) on every vCPU of the runner, and ruff 0.17.4 over the tree.
+# Purpose: run the test suite on every push and pull request: the dependency-free core with the pure-Python engine on three Python versions, with the Levy/Holt and Balanced COPA pairs fetched at their pinned revisions, and the PyMeTTa engine, whose property tests and conformance run under the ci Hypothesis profile (100 cases each) split across four runners and every vCPU of each, and ruff 0.17.4 over the tree.
 name: tests
 on: [push, pull_request]
 jobs:
@@ -17,17 +17,26 @@ jobs:
       - run: python -m semrewrite.pairs fetch copa && python -m semrewrite.pairs build copa
       - run: pytest -q -rs
       - run: semrewrite conformance --engine python --examples 200
-  # pytest-xdist runs the tests on all of the runner's vCPUs. Most tests take milliseconds and the slowest minutes,
-  # so --dist worksteal lets a worker that runs out take tests still queued on another.
+  # The suite is more than one runner can finish in 15 minutes, so pytest-split gives each runner of the matrix one
+  # group of tests, balanced by the durations in .test_durations (README.md's Development section refreshes them), and
+  # pytest-xdist runs a group on all of the runner's vCPUs. Most tests take milliseconds and the slowest minutes, so
+  # --dist worksteal lets a worker that runs out take tests still queued on another. A failing group lets the others
+  # finish, so one run reports every failure.
   pymetta:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
-      - run: pip install -e ".[pymetta,conformance]" pytest pytest-xdist
-      - run: pytest -q -rs --hypothesis-profile=ci -n auto --dist worksteal --durations=10
+      - run: pip install -e ".[pymetta,conformance]" pytest pytest-xdist pytest-split
+      - run: >-
+          pytest -q -rs --hypothesis-profile=ci -n auto --dist worksteal --durations=10
+          --splits ${{ strategy.job-total }} --group ${{ matrix.group }} --splitting-algorithm least_duration
   lint:
     runs-on: ubuntu-latest
     steps:
