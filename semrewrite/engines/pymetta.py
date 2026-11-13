@@ -69,8 +69,11 @@ more inferences for depth-bounded parent(X, max) after another untabled run. And
 Python's cyclic collector stays off while the engine counts, as timeit keeps it off
 while timing: a collection there ran the finalizers of earlier solves' garbage,
 which call into the engine, 3 more inferences now and then. pymetta counts only the
-thread that started its runtime, so a solve on another thread reports a meaningless
-count, -40 for a solve the main thread counts 2,358.
+thread that started its runtime: on any other thread stats() reports a small negative
+number, -40 for a solve the main thread counts 2,358
+(repros/stats_on_other_threads_negative.py), so the engine refuses to solve there. A
+thread's warm-up ends by stopping an endless loop at 1,000 inferences, which pymetta's
+limit does on every thread, and a thread that counts less of that loop is refused.
 
 pymetta 0.9.4 charges an op's calls differently by its parameter's
 annotation, so each op's annotation is the one measured cheapest where it is
@@ -105,7 +108,8 @@ from semrewrite.protocols import Budget, Capabilities, Expander, Program, Proof,
 # The solves this process has run, which tag every function name a solve defines.
 _SOLVES = itertools.count()
 
-# Whether this thread's first solve has run every encoding outside any count (_settle).
+# Whether this thread has run every encoding outside any count, and why the engine refuses it when pymetta can't
+# count work on it (_settle).
 _SETTLED = threading.local()
 
 # The heads of a proof term (module docstring).
@@ -181,8 +185,7 @@ class PyMeTTaEngine:
                                 proofs=True, repeatable_work=True)
 
     def __init__(self) -> None:
-        if not getattr(_SETTLED, "done", False):
-            _settle(self)
+        _ready(self)
 
     # -- the protocol ----------------------------------------------------------
 
@@ -192,8 +195,7 @@ class PyMeTTaEngine:
             status = "work_limit" if budget.work <= 0 else "time_limit"
             return Solution(status=status, detail=f"budget {budget} leaves nothing to spend", reached=frozenset(),
                             proofs={} if program.proofs else None)
-        if not getattr(_SETTLED, "done", False):
-            _settle(self)
+        _ready(self)
         tag = next(_SOLVES)
         preds, consts = _Names(f"p{tag}__"), _Names("c__")
         native = expand is None and program.depth == 0 and program.tabled
@@ -286,6 +288,14 @@ class PyMeTTaEngine:
         return solution, result
 
 
+def _ready(engine: PyMeTTaEngine) -> None:
+    """Warm this thread up on its first use, and refuse it for good when pymetta can't count work on it (_settle)."""
+    if not getattr(_SETTLED, "done", False):
+        _settle(engine)
+    if refusal := getattr(_SETTLED, "refusal", None):
+        raise RuntimeError(refusal)
+
+
 def _settle(engine: PyMeTTaEngine) -> None:
     """Solve a small program once in every encoding the engine writes, outside any count, so that no later solve on
     this thread counts pymetta resolving a builtin, op or library predicate, or creating a global, for the first time.
@@ -297,9 +307,10 @@ def _settle(engine: PyMeTTaEngine) -> None:
     inferences more. e(X, Y) reaches no cycle and runs under each; f(X, Y) runs wherever a run on a cycle
     terminates, with tables or a bound, since the first tabled cycle of a process, and the first proof table to join
     two proofs of one answer, cost their first solve more too. Each must answer as the program says, since a
-    warm-up that failed would hide the engine's own fault.
+    warm-up that failed would hide the engine's own fault. Last, f(X, Y) runs without tables or a bound, an endless
+    loop, to check that this thread counts work at all.
     """
-    # Time: 88 solves of this eight-clause program, once per thread.
+    # Time: 89 solves of this eight-clause program, once per thread.
     _SETTLED.done = True
     rewrites = (Rewrite("d", "c", (1, 0)), Rewrite("e", "d", (0, 1)), Rewrite("g", "d", (0, 1)),
                 Rewrite("f", "g", (1, 0)), Rewrite("g", "f", (1, 0)))
@@ -324,9 +335,22 @@ def _settle(engine: PyMeTTaEngine) -> None:
                     msg = (f"the warm-up solve of {query} in {program} ended {solution.status} with "
                            f"{sorted(solution.answers)}: {solution.detail}")
                     raise RuntimeError(msg)
+        # pymetta 0.9.4 counts inferences only on the thread that started its runtime, and on any other thread
+        # stats() reports a small negative number (repros/stats_on_other_threads_negative.py), which would make
+        # every work figure, and every budget check that reads one, wrong. pymetta's limit stops a run on every
+        # thread, so an endless loop it stops at 1,000 inferences has spent at least that many, and a thread that
+        # counts less of it counts nothing the engine could report.
+        loop = engine.solve(Program(facts=facts, rules=rules, rewrites=rewrites, tabled=False), queries[1][0],
+                            Budget(work=1_000, seconds=60.0))
     except BaseException:
         _SETTLED.done = False
         raise
+    if loop.status != "work_limit" or loop.work < 1_000:
+        _SETTLED.refusal = (f"pymetta counts inferences only on the thread that started its runtime: thread "
+                            f"{threading.current_thread().name!r} counted {loop.work} for a loop pymetta's limit "
+                            f"stopped at 1,000 ({loop.status}), so this engine can't measure work there; solve on "
+                            f"the thread that first used pymetta")
+        raise RuntimeError(_SETTLED.refusal)
 
 
 def _read_answers(solution: Solution, result: list, query: Atom, consts: _Names, reader: _ProofReader | None) -> None:

@@ -3,7 +3,8 @@ the engine can run answers every benchmark query exactly under a perfect judge,
 strategies it cannot run are refused by name, names spelled like engine
 keywords keep their answers, without tables rewriting loops on a cycle, and an
 engine claiming repeatable work counts a fresh process's first solves as it
-counts them again.
+counts them again, and counts a solve on a second thread as on the first or
+refuses it.
 """
 
 from __future__ import annotations
@@ -224,6 +225,50 @@ def test_a_fresh_process_counts_each_first_solve_as_it_counts_the_solve_again(en
         assert status_again == status, (strategy, query, status, status_again)
         if status == "ok":
             assert work_again == work, (strategy, query, work, work_again)
+
+
+@pytest.mark.parametrize("engine_name", ENGINES)
+def test_a_solve_on_a_second_thread_counts_its_work_or_is_refused(engine_name: str) -> None:
+    """A solve on a thread other than the one that first used the engine counts the same work and answers as there,
+    or the engine refuses it; it never reports a count it couldn't measure.
+
+    pymetta 0.9.4 counts inferences only on the thread that started its runtime, and reported -40 work for a solve
+    the main thread counts 2,358. The process is a fresh one, so its main thread is the one that starts the engine.
+    """
+    code = (
+        "import json\n"
+        "import threading\n"
+        "from semrewrite.benchmarks import BENCHMARKS\n"
+        "from semrewrite.engines import make\n"
+        "from semrewrite.judges.oracle import OracleJudge\n"
+        "from semrewrite.protocols import Budget\n"
+        "from semrewrite.rewriter import Rewriter\n"
+        "kb = BENCHMARKS['family']()\n"
+        f"rewriter = Rewriter(kb, OracleJudge(kb.entailed()), make({engine_name!r}), None, "
+        "budget=Budget(work=100_000, seconds=60.0))\n"
+        "def ask():\n"
+        "    o = rewriter.ask('grandparent(X, kai)', 'nomemo-tabled')\n"
+        "    return {'status': o.status, 'work': o.work, 'answers': sorted(o.answers)}\n"
+        "here, there = ask(), {}\n"
+        "def elsewhere():\n"
+        "    try:\n"
+        "        there.update(ask())\n"
+        "    except RuntimeError as e:\n"
+        "        there['refused'] = str(e)\n"
+        "thread = threading.Thread(target=elsewhere)\n"
+        "thread.start()\n"
+        "thread.join()\n"
+        "print(json.dumps([here, there]))\n"
+    )
+    package_root = str(Path(semrewrite.__file__).resolve().parents[1])
+    done = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True,
+                          env={**os.environ, "PYTHONPATH": package_root})
+    here, there = json.loads(done.stdout.strip().splitlines()[-1])
+    assert here["status"] == "ok" and here["answers"], here
+    if "refused" in there:
+        assert "only on the thread that started its runtime" in there["refused"], there
+    else:
+        assert there == here
 
 
 @pytest.mark.parametrize("engine_name", ENGINES)

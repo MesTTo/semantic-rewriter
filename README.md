@@ -446,7 +446,7 @@ The experiment ran twelve strategies with a perfect judge, and six of them with 
 - With an imperfect judge, a depth bound of 3 limits how far a false rule spreads. At calibrated thresholds, tabled evaluation bounded at three steps (`depth-tabled`) raised answer F1 for six of the seven judges, nli-deberta-large's from 0.68 to 0.91, and cost the perfect judge three answers that need more than three steps. Bounding three rewrites alone (`rewrite-depth-tabled`) keeps those answers and gave Jev its best F1, 0.92, but scored below the step bound with every other judge.
 - Asked what typically follows rather than what is entailed, Qwen3-4B-Instruct-2507 (`typical-qwen3-4b`) scores held-out log loss 0.588 on δ-ATOMIC's defeasible inferences and 0.485 on Balanced COPA, against nli-deberta-large's 0.661 and 0.637, and on a knowledge base of actions ranks the three that waste time first, where the entailment judge finds one.
 
-RESULTS.md has every number, the method and the thirteen PyMeTTa defects found on the way, eleven of them with a script under `repros/` that reproduces them.
+RESULTS.md has every number, the method and the sixteen PyMeTTa defects found on the way, fourteen of them with a script under `repros/` that reproduces them.
 
 ## Guarantees and limits
 
