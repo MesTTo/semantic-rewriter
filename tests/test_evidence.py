@@ -126,7 +126,7 @@ def _log_likelihood(judged: list[Opinion], data: list[Opinion], labels: list[boo
     return total
 
 
-@settings(max_examples=100, deadline=None)
+@settings(max_examples=100)
 @given(st.lists(st.tuples(opinions_, opinions_, st.booleans()), min_size=1, max_size=12))
 def test_the_fitted_data_trust_is_the_likeliest_on_a_fine_grid(rows: list[tuple[Opinion, Opinion, bool]]) -> None:
     judged, data, labels = ([r[i] for r in rows] for i in range(3))

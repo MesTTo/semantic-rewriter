@@ -143,7 +143,7 @@ def test_proofs_come_only_when_asked_for() -> None:
     assert unasked.work == asked.work
 
 
-@settings(max_examples=300, deadline=None)
+@settings(max_examples=300)
 @given(kit.cases())
 def test_round_k_derives_the_facts_of_height_k(case: kit.Case) -> None:
     """Each answer's proof is its first derivation, so its height is the least height any derivation has."""
@@ -193,7 +193,7 @@ def test_a_bound_on_rewrites_cuts_rewrite_chains_and_ignores_rules_between_them(
     assert solve(chain, Atom("p0", ("X",))).answers == set()
 
 
-@settings(max_examples=300, deadline=None)
+@settings(max_examples=300)
 @given(kit.cases(), st.integers(1, 4))
 def test_level_k_derives_the_facts_needing_k_rewrites(case: kit.Case, depth: int) -> None:
     """Under a bound on rewrites each answer's proof is its first derivation, so it uses the fewest rewrites any
@@ -208,7 +208,7 @@ def test_level_k_derives_the_facts_needing_k_rewrites(case: kit.Case, depth: int
         assert kit.proof_problem(proof, Atom(case.query.pred, answer), bounded) is None
 
 
-@settings(max_examples=300, deadline=None)
+@settings(max_examples=300)
 @given(kit.cases(), st.integers(1, 4))
 def test_a_bound_on_rewrites_expands_only_predicates_fewer_rewrites_away(case: kit.Case, depth: int) -> None:
     """With a bound of n rewrites, expand runs once for each predicate fewer than n rewrites from the query."""
@@ -222,7 +222,7 @@ def test_a_bound_on_rewrites_expands_only_predicates_fewer_rewrites_away(case: k
     assert s.status == "ok" and s.answers == kit.reference(bounded, case.query)
 
 
-@settings(max_examples=300, deadline=None)
+@settings(max_examples=300)
 @given(kit.cases(), st.integers(1, 4))
 def test_depth_bound_expands_only_predicates_closer_than_it(case: kit.Case, depth: int) -> None:
     """With depth n, expand runs once for each predicate at distance < n and never further; answers and proofs keep least_model(depth=n)."""

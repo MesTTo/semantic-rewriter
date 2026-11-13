@@ -57,7 +57,7 @@ def _brute(program: Program, query: Atom) -> dict[tuple[str, ...], list[frozense
     return found
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60)
 @given(programs(), st.sampled_from(CONSTANTS))
 def test_each_answer_s_lineage_is_the_minimal_rewrite_sets_that_derive_it(program: Program, constant: str) -> None:
     query = Atom("p", ("X", constant))
@@ -68,7 +68,7 @@ def test_each_answer_s_lineage_is_the_minimal_rewrite_sets_that_derive_it(progra
     assert got.answers == expected
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60)
 @given(programs(), st.sampled_from(CONSTANTS))
 def test_probability_and_second_moment_equal_the_sums_over_rewrite_subsets(program: Program, constant: str) -> None:
     query = Atom("p", ("X", constant))

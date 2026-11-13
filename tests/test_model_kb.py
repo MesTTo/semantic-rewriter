@@ -162,7 +162,7 @@ def _parts(kb: KB) -> tuple:
     return (dict(kb.glosses), kb.facts, kb.rules, kb.queries, kb.gold, kb.traps)
 
 
-@settings(max_examples=300, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=300, suppress_health_check=[HealthCheck.too_slow])
 @given(_knowledge_bases())
 def test_text_and_json_round_trip_any_knowledge_base(kb: KB) -> None:
     """Accents, arrows, quotes and backslashes in a gloss, arity 0 and traps all survive both formats."""
@@ -170,7 +170,7 @@ def test_text_and_json_round_trip_any_knowledge_base(kb: KB) -> None:
     assert _parts(formats.loads_json(formats.dumps_json(kb))) == _parts(kb)
 
 
-@settings(max_examples=60, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=60, suppress_health_check=[HealthCheck.too_slow])
 @given(_knowledge_bases())
 def test_metta_round_trips_any_knowledge_base(kb: KB) -> None:
     pytest.importorskip("metta")
@@ -280,7 +280,7 @@ def _programs(draw: st.DrawFn) -> tuple[KB, list[Rewrite], Atom]:
     return kb, list(rewrites.values()), Atom(query_pred, args)
 
 
-@settings(max_examples=400, deadline=None, suppress_health_check=[HealthCheck.too_slow, HealthCheck.filter_too_much])
+@settings(max_examples=400, suppress_health_check=[HealthCheck.too_slow, HealthCheck.filter_too_much])
 @given(_programs())
 def test_canonicalisation_never_changes_answers(case: tuple[KB, list[Rewrite], Atom]) -> None:
     """Renaming alias classes to their roots, with arguments re-mapped, answers every query exactly as before."""

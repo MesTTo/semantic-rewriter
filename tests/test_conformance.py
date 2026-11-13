@@ -468,13 +468,13 @@ def test_broken_engine_fails_the_whole_run() -> None:
 # The kit's own parts -----------------------------------------------------------------
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60)
 @given(kit.chains(nodes=(2, 12)))
 def test_chain_closed_form_is_the_reference(case: kit.Case) -> None:
     assert set(case.answers) == kit.reference(case.program, case.query)
 
 
-@settings(max_examples=100, deadline=None)
+@settings(max_examples=100)
 @given(kit.cases())
 def test_properties_run_inside_given(case: kit.Case) -> None:
     engine = PythonEngine()
@@ -482,7 +482,7 @@ def test_properties_run_inside_given(case: kit.Case) -> None:
         check(engine, case)
 
 
-@settings(max_examples=100, deadline=None)
+@settings(max_examples=100)
 @given(kit.cases())
 def test_cases_have_a_rewrite_cycle_and_one_arity_per_predicate(case: kit.Case) -> None:
     program = case.program
