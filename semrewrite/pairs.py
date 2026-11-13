@@ -6,14 +6,15 @@ data/pairs/hard.toml: implications that hold by meaning (Levy/Holt, Wikidata's
 property hierarchy, the hard set) and implications that typically hold
 (delta-ATOMIC's defeasible inferences, Balanced COPA's causes and effects).
 
-A row says whether its premise predicate entails its conclusion predicate over
-shared arguments, as a Proposal does: a binary row reads them in order or
+A row says whether its premise predicate entails its conclusion predicate, or
+in a set of typical implications whether the conclusion typically follows,
+over shared arguments, as a Proposal does: a binary row reads them in order or
 swapped, and a row of any other arity, one argument or none, in order. Rows
 that are each other's reverse, (P, Q, s) and (Q, P, s), share a `pair` id, so
 direction accuracy can compare a pair's two directions.
 
     python -m semrewrite.pairs fetch levyholt    # download a set's source files at their pinned revision: levyholt,
-                                                 # defeasible or copa
+                                                 # delta-atomic or copa
     python -m semrewrite.pairs fetch wikidata    # rerun the Wikidata queries, overwriting their results
     python -m semrewrite.pairs build [SET ...]   # rebuild data/pairs/<set>.jsonl from the sources, every set by default
 
@@ -40,7 +41,7 @@ from semrewrite.model import LETTERS, Predicate, Proposal, identity
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 RAW = ROOT / "data" / "raw"
 PAIRS = ROOT / "data" / "pairs"
-SETS = ("levyholt", "wikidata", "hard", "defeasible", "copa")
+SETS = ("levyholt", "wikidata", "hard", "delta-atomic", "copa")
 FILLER_VARIANTS = ("letters", "typed", "instances")
 
 Fillers = tuple[str, ...]
@@ -52,7 +53,8 @@ Fillers = tuple[str, ...]
 class PairRow:
     """One labelled implication proposal.
 
-    `label` is gold for "premise entails conclusion" under the swap flag.
+    `label` is gold for "premise entails conclusion" under the swap flag, or in
+    a set of typical implications for "conclusion typically follows".
     `types` names the kind of each of the conclusion's arguments ("person",
     "place"), which the premise shares; `instances` are example arguments,
     present only where the source gives them. Premise and conclusion take the
@@ -231,7 +233,7 @@ def _github(repository: str, commit: str, path: str) -> str:
 
 
 LEVYHOLT_COMMIT = "e5652b3faab2a41b1abfb4bff441b69e31925756"
-DEFEASIBLE_COMMIT = "c675ffc1b0eec5fa56287f08490da8ed43c1ecc5"
+DELTA_ATOMIC_COMMIT = "c675ffc1b0eec5fa56287f08490da8ed43c1ecc5"
 COPA_REVISION = "813bd03cd6e07d9bd8d7333896ad5d40abb95ea9"
 
 # Each downloaded set's files under data/raw/<set>/, by the name its builder reads, where a pinned revision of the
@@ -249,14 +251,14 @@ PINS: dict[str, dict[str, Pin]] = {
             ("test_dir", "rels"): "de6164136ce4e23d6ed330d4370c05482b69d5e55601f8c32da8f6f8efc72300",
         }.items()
     },
-    "defeasible": {
-        "dev.jsonl": Pin(_github("rudinger/defeasible-nli", DEFEASIBLE_COMMIT,
+    "delta-atomic": {
+        "dev.jsonl": Pin(_github("rudinger/defeasible-nli", DELTA_ATOMIC_COMMIT,
                                  "data/defeasible-nli/defeasible-atomic/dev.jsonl"),
                          "eabae7870c588d070ac7e4177ec9062dcf74da25a21afd063cdd2e8d046b1bfc"),
-        "test.jsonl": Pin(_github("rudinger/defeasible-nli", DEFEASIBLE_COMMIT,
+        "test.jsonl": Pin(_github("rudinger/defeasible-nli", DELTA_ATOMIC_COMMIT,
                                   "data/defeasible-nli/defeasible-atomic/test.jsonl"),
                           "8315f9e4864c3e191635e96d00d07786dcd0a15aded9a8cdea742bdb53daeca8"),
-        "LICENSE": Pin(_github("rudinger/defeasible-nli", DEFEASIBLE_COMMIT, "LICENSE"),
+        "LICENSE": Pin(_github("rudinger/defeasible-nli", DELTA_ATOMIC_COMMIT, "LICENSE"),
                        "4f3cbbc5e111fe600a5d515c5dbd5f437545d19b3ae3ba36acb9785cc9d88246"),
     },
     "copa": {
@@ -512,7 +514,7 @@ def _joined(*sentences: str) -> str:
     return " ".join(s if s[-1:] in ".!?" else f"{s}." for s in (s.strip() for s in sentences))
 
 
-def defeasible_rows(raw: pathlib.Path = RAW / "defeasible") -> list[PairRow]:
+def delta_atomic_rows(raw: pathlib.Path = RAW / "delta-atomic") -> list[PairRow]:
     """delta-ATOMIC's dev and test updates as typical implications, one row each, labelled by the update.
 
     Each line of Rudinger et al.'s files (Findings of EMNLP 2020) gives an
@@ -526,7 +528,7 @@ def defeasible_rows(raw: pathlib.Path = RAW / "defeasible") -> list[PairRow]:
     sentences are the source's own, so they have no arguments to fill, and
     each row is its own pair, since the source labels no reverse.
     """
-    _require("defeasible", raw)
+    _require("delta-atomic", raw)
     rows: list[PairRow] = []
     for split in ("dev", "test"):
         for n, line in enumerate((raw / f"{split}.jsonl").read_text().splitlines(), 1):
@@ -539,9 +541,9 @@ def defeasible_rows(raw: pathlib.Path = RAW / "defeasible") -> list[PairRow]:
                 raise ValueError(msg)
             if item["UpdateTypeImpossible"]:
                 continue
-            row = f"defeasible:{split}:{n:05d}"
+            row = f"delta-atomic:{split}:{n:05d}"
             rows.append(PairRow(
-                id=row, set="defeasible", split=split, pair=row, kind=str(item["AtomicRelationType"]),
+                id=row, set="delta-atomic", split=split, pair=row, kind=str(item["AtomicRelationType"]),
                 premise=_statement(f"{row}:premise", _joined(item["Premise"], item["Update"])),
                 conclusion=_statement(f"{row}:conclusion", item["Hypothesis"]), swapped=False,
                 label=item["UpdateType"] == "strengthener", types=(),
@@ -913,7 +915,7 @@ def build(names: Iterable[str] = SETS, directory: pathlib.Path = PAIRS) -> dict[
     return counts
 
 
-BUILDERS = {"levyholt": levyholt_rows, "wikidata": wikidata_rows, "hard": hard_rows, "defeasible": defeasible_rows,
+BUILDERS = {"levyholt": levyholt_rows, "wikidata": wikidata_rows, "hard": hard_rows, "delta-atomic": delta_atomic_rows,
             "copa": copa_rows}
 FETCH = {**{name: functools.partial(fetch, name) for name in PINS}, "wikidata": fetch_wikidata}
 

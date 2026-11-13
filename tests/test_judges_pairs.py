@@ -149,7 +149,7 @@ def test_a_row_of_any_arity_keeps_its_arguments_consistent() -> None:
                              "conclusion": tired, "swapped": False, "label": True, "types": ("person",), **change})
 
 
-def test_defeasible_rows_follow_their_updates(tmp_path: pathlib.Path) -> None:
+def test_delta_atomic_rows_follow_their_updates(tmp_path: pathlib.Path) -> None:
     """A strengthener's row holds and a weakener's does not; the premise is the event and then the update, closed by
     full stops; a line marked impossible is left out; braces in the source read literally."""
     lines = [
@@ -165,9 +165,9 @@ def test_defeasible_rows_follow_their_updates(tmp_path: pathlib.Path) -> None:
     for split in ("dev", "test"):
         (tmp_path / f"{split}.jsonl").write_text("".join(json.dumps(line) + "\n" for line in lines))
     (tmp_path / "LICENSE").write_text("MIT\n")
-    rows = pairs.defeasible_rows(tmp_path)
-    assert [(r.id, r.label) for r in rows] == [("defeasible:dev:00001", False), ("defeasible:dev:00002", True),
-                                               ("defeasible:test:00001", False), ("defeasible:test:00002", True)]
+    rows = pairs.delta_atomic_rows(tmp_path)
+    assert [(r.id, r.label) for r in rows] == [("delta-atomic:dev:00001", False), ("delta-atomic:dev:00002", True),
+                                               ("delta-atomic:test:00001", False), ("delta-atomic:test:00002", True)]
     weakened = rows[0]
     assert weakened.proposal.sentences(pairs.fillers_for(weakened, "letters")) == (
         "PersonX yells for PersonY. PersonX yells a curse at them.", "Because PersonX wanted to be nice")
@@ -176,7 +176,7 @@ def test_defeasible_rows_follow_their_updates(tmp_path: pathlib.Path) -> None:
     pairs.check(rows)
     lines[0]["Hypothesis"] = "PersonX wanted {nothing}"
     (tmp_path / "dev.jsonl").write_text(json.dumps(lines[0]) + "\n")
-    assert pairs.defeasible_rows(tmp_path)[0].conclusion.sentence() == "PersonX wanted {nothing}"
+    assert pairs.delta_atomic_rows(tmp_path)[0].conclusion.sentence() == "PersonX wanted {nothing}"
 
 
 def test_copa_rows_read_cause_to_effect(tmp_path: pathlib.Path) -> None:
@@ -212,9 +212,9 @@ def test_typical_sets_keep_the_published_sizes_and_balance() -> None:
     """delta-ATOMIC keeps 3,840 dev and 4,138 test updates, about half strengtheners (Rudinger et al. 2020, Table 2);
     Balanced COPA's 1,000 dev and 500 test questions give two rows each, one holding, and every alternative of a
     mirrored question holds under one premise and fails under the other (Kavumba et al. 2019)."""
-    defeasible = rows_of("defeasible")
-    assert Counter(r.split for r in defeasible) == {"dev": 3840, "test": 4138}
-    assert Counter((r.split, r.label) for r in defeasible) == {("dev", True): 1937, ("dev", False): 1903,
+    delta_atomic = rows_of("delta-atomic")
+    assert Counter(r.split for r in delta_atomic) == {"dev": 3840, "test": 4138}
+    assert Counter((r.split, r.label) for r in delta_atomic) == {("dev", True): 1937, ("dev", False): 1903,
                                                                ("test", True): 2091, ("test", False): 2047}
     copa = rows_of("copa")
     assert Counter((r.split, r.label) for r in copa) == {("dev", True): 1000, ("dev", False): 1000,
