@@ -37,6 +37,9 @@ KB = ROOT / "examples" / "actions.kb"
 QUERY = "wastes_time(X)"
 RESULTS = ROOT / "results" / "typical_actions.json"
 JUDGES = ("nli-deberta-large", "typical-qwen3-4b")
+# What a run reads from the repository: the package the rewriter and the judges come from, calibration.json
+# included, the example and this script.
+INPUTS = ("semrewrite", "examples/actions.kb", "experiments/typical_actions.py")
 
 
 def average_precision(ranked: Sequence[str], relevant: set[str]) -> float | None:
@@ -98,15 +101,24 @@ def measure(name: str) -> dict[str, Any]:
         judge.close()
 
 
+def provenance() -> dict[str, Any]:
+    """What a run is computed from, taken before the judges load: the code revision and the inputs that differ
+    from it."""
+    head = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], capture_output=True, text=True, check=False)
+    dirty = subprocess.run(["git", "-C", str(ROOT), "status", "--porcelain", "--", *INPUTS],
+                           capture_output=True, text=True, check=False)
+    return {"at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+            "command": "python experiments/typical_actions.py " + " ".join(sys.argv[1:]),
+            "commit": head.stdout.strip() or None,
+            "inputs_uncommitted": sorted(line[3:] for line in dirty.stdout.splitlines())}
+
+
 def main(argv: Sequence[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--judges", default=",".join(JUDGES), help="comma-separated judge names")
     args = parser.parse_args(argv)
-    head = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], capture_output=True, text=True, check=False)
     results = {
-        "provenance": {"at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-                       "command": "python experiments/typical_actions.py " + " ".join(sys.argv[1:]),
-                       "commit": head.stdout.strip() or None},
+        "provenance": provenance(),
         "kb": str(KB.relative_to(ROOT)), "query": QUERY,
         "judges": {name: measure(name) for name in args.judges.split(",") if name},
     }
