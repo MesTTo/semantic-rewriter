@@ -305,9 +305,11 @@ def test_statements_the_judge_reads_as_the_same_count_once() -> None:
         if same:
             judge.table |= {(first, second): reading(0.9, 0.0), (second, first): reading(0.9, 0.0)}
         embedder = TableEmbedder({**embedder.table, (claim, first): 0.8, (claim, second): 0.79})
-        rewriter = Rewriter(kb, judge, make("python"), None, claims=ClaimCheck(kb, judge, embedder))
-        _, opinion = rewriter.rewrite_opinions([("play_games", "wastes_time", (0,))])
-        (readings,) = rewriter.claims.readings([Rewrite("wastes_time", "play_games", (0,))]).values()
+        check = ClaimCheck(kb, judge, embedder)
+        _, opinion = Rewriter(kb, judge, make("python"), None, claims=check).rewrite_opinions(
+            [("play_games", "wastes_time", (0,))]
+        )
+        (readings,) = check.readings([Rewrite("wastes_time", "play_games", (0,))]).values()
         assert {r.statement for r in readings} == {first, second}
         assert {r.source for r in readings} == ({first} if same else {first, second})
         return opinion[("play_games", "wastes_time", (0,))]
