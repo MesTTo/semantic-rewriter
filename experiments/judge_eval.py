@@ -51,7 +51,7 @@ sys.path.insert(0, str(ROOT))
 
 from examples.wikidata.questions import property_id
 from semrewrite import formats, pairs
-from semrewrite.evidence import derived, statement_evidence
+from semrewrite.evidence import rewrite_evidence
 from semrewrite.judges import CALIBRATION, JEV_REQUESTS, NAMES, REGISTRY, make
 from semrewrite.judges.metrics import (
     at_threshold,
@@ -161,11 +161,14 @@ def data_opinions(rows: Sequence[pairs.PairRow]) -> dict[str, Opinion]:
     for r in rows:
         if r.set != "wikidata":
             continue
-        premise, conclusion = (statements.get(p.name.split(":")[0], set()) for p in (r.premise, r.conclusion))
-        if premise and conclusion:
-            # derived() reads only the rewrite's mapping, so the placeholder names stand for the pair's properties.
-            read = derived(Rewrite("conclusion", "premise", r.proposal.mapping), premise)
-            out[r.id] = Opinion.from_evidence(*statement_evidence(read, dict.fromkeys(conclusion, 1.0)))
+        # The pair as a rewrite between placeholder predicates holding its properties' statements. Its evidence is
+        # (0, 0) exactly when either property has no statements, which leaves the pair without data.
+        stated = {name: statements.get(p.name.split(":")[0], set())
+                  for name, p in (("conclusion", r.conclusion), ("premise", r.premise))}
+        rewrite = Rewrite("conclusion", "premise", r.proposal.mapping)
+        evidence = rewrite_evidence(stated, [rewrite])[rewrite.key]
+        if sum(evidence):
+            out[r.id] = Opinion.from_evidence(*evidence)
     return out
 
 

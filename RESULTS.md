@@ -10,7 +10,7 @@ Which implementation? Twelve were built, as settings of five knobs. The one to u
 
 Can a cross-encoder or Jev tell which way? Yes. On the Levy/Holt and Wikidata pairs, Jev gets 0.82 to 0.89 direction accuracy, the NLI cross-encoders 0.77 to 0.87, and embedding similarity sits at chance. Inside the rewriter, the deciding quantity is admission precision, because every false rewrite becomes a rule applied everywhere. Jev at a threshold calibrated on the other benchmarks reaches answer F1 0.892, and 0.916 with its rewrites bounded at three. On the same basis the best cross-encoder reaches 0.70, and 0.91 once evaluation is tabled and bounded at three steps; similarity alone reaches at most 0.47. Asking each judge both ways and rejecting the weaker direction lowered every cross-encoder's false-rewrite rate.
 
-How sure is each answer? Each answer can carry an opinion: the probability that every rewrite of one of its derivations is right, each right as its judge's opinion says, discounted by how far the judge proved right on labelled pairs. Jev's trust fits to 0.974. On the Wikidata questions, Jev admitting at 0.1 instead of 0.65 brings in 21 answers outside Wikidata's record for Victoria and one for Alphabet, and every one of them ranks below every answer Wikidata records. The knowledge base's own statements, as a second source on each rewrite, add nothing to Jev, whose trust in them fits to 0. They lower the NLI cross-encoders' log loss on labelled pairs from about 0.64 to about 0.48, but among a question's rewrites they help on one question and hurt on another, since there they count a rewrite's statements the other rewrites miss as evidence against it.
+How sure is each answer? Each answer can carry an opinion: the probability that every rewrite of one of its derivations is right, each right as its judge's opinion says, discounted by how far the judge proved right on labelled pairs. Jev's trust fits to 0.974. On the Wikidata questions, Jev admitting at 0.1 instead of 0.65 brings in 21 answers outside Wikidata's record for Victoria and one for Alphabet, and every one of them ranks below every answer Wikidata records. The knowledge base's own statements, as a second source on each rewrite, add nothing to Jev, whose trust in them fits to 0. They lower the NLI cross-encoders' log loss on labelled pairs from about 0.64 to about 0.48, where the knowledge base states both properties, and give no evidence on a question asked in its own words, which states none of its predicates.
 
 Is pymetta stable enough? Yes. Tabling, ops called inside tables, table refresh and budgets all did what the rewriter needed. I found twelve defects, seven of which involve state that outlives a `MeTTa()` context; ten have a script under `repros/`, and the engine works around every one.
 
@@ -413,25 +413,25 @@ The last three columns test the knowledge base as a second source, on the 933 te
 
 ### Answer beliefs on the Wikidata questions
 
-Each question is answered with one rewrite on a path, by Jev at the rewrite threshold calibrated for answer F1, 0.65, and at 0.1, and by nli-deberta-large at its calibrated threshold, 0.659. Every answer is ranked by P and scored against Wikidata's own answer: the average precision of the ranking, the best F1 an answer threshold reaches and the P it sits at, and the lowest P inside Wikidata's answer beside the highest outside it. The last column ranks the answers again after the knowledge base's evidence on each rewrite is fused in at the judge's data trust.
+Each question is answered with one rewrite on a path, by Jev at the rewrite threshold calibrated for answer F1, 0.65, and at 0.1, and by nli-deberta-large at its calibrated threshold, 0.659. Every answer is ranked by P and scored against Wikidata's own answer: the average precision of the ranking, the best F1 an answer threshold reaches and the P it sits at, and the lowest P inside Wikidata's answer beside the highest outside it.
 
 <!-- BEGIN GENERATED: wikidata-beliefs -->
-| question | judge | rewrite threshold | answers | not in Wikidata's | F1 of all answers | average precision by P | best F1 by P (at P) | lowest P inside | highest P outside | average precision with the knowledge base's evidence (data trust) |
-|---|---|---|---|---|---|---|---|---|---|---|
-| victoria | jev | 0.65 | 1,164 | 0 | 1.000 | 1.000 | 1.000 (0.958) | 0.958 | none | 1.000 (0.00) |
-| victoria | jev | 0.1 | 1,185 | 21 | 0.991 | 1.000 | 1.000 (0.958) | 0.958 | 0.334 | 1.000 (0.00) |
-| victoria | nli-deberta-large | 0.659 | 1,188 | 24 | 0.990 | 1.000 | 0.999 (0.643) | 0.643 | 0.643 | 1.000 (0.77) |
-| leonardo | jev | 0.65 | 851 | 2 | 0.996 | 0.994 | 0.997 (0.704) | 0.704 | 0.695 | 0.994 (0.00) |
-| leonardo | jev | 0.1 | 858 | 5 | 0.996 | 0.999 | 0.997 (0.704) | 0.247 | 0.695 | 0.999 (0.00) |
-| leonardo | nli-deberta-large | 0.659 | 858 | 5 | 0.996 | 0.999 | 0.996 (0.705) | 0.705 | 0.705 | 0.983 (0.77) |
-| alphabet | jev | 0.65 | 2,849 | 0 | 0.938 | 0.883 | 0.938 (0.955) | 0.955 | none | 0.883 (0.00) |
-| alphabet | jev | 0.1 | 2,903 | 1 | 0.947 | 0.900 | 0.947 (0.222) | 0.222 | 0.108 | 0.900 (0.00) |
-| alphabet | nli-deberta-large | 0.659 | 2,906 | 4 | 0.947 | 0.899 | 0.947 (0.497) | 0.497 | 0.643 | 0.898 (0.77) |
+| question | judge | rewrite threshold | answers | not in Wikidata's | F1 of all answers | average precision by P | best F1 by P (at P) | lowest P inside | highest P outside |
+|---|---|---|---|---|---|---|---|---|---|
+| victoria | jev | 0.65 | 1,164 | 0 | 1.000 | 1.000 | 1.000 (0.958) | 0.958 | none |
+| victoria | jev | 0.1 | 1,185 | 21 | 0.991 | 1.000 | 1.000 (0.958) | 0.958 | 0.334 |
+| victoria | nli-deberta-large | 0.659 | 1,188 | 24 | 0.990 | 1.000 | 0.999 (0.643) | 0.643 | 0.643 |
+| leonardo | jev | 0.65 | 851 | 2 | 0.996 | 0.994 | 0.997 (0.704) | 0.704 | 0.695 |
+| leonardo | jev | 0.1 | 858 | 5 | 0.996 | 0.999 | 0.997 (0.704) | 0.247 | 0.695 |
+| leonardo | nli-deberta-large | 0.659 | 858 | 5 | 0.996 | 0.999 | 0.996 (0.705) | 0.705 | 0.705 |
+| alphabet | jev | 0.65 | 2,849 | 0 | 0.938 | 0.883 | 0.938 (0.955) | 0.955 | none |
+| alphabet | jev | 0.1 | 2,903 | 1 | 0.947 | 0.900 | 0.947 (0.222) | 0.222 | 0.108 |
+| alphabet | nli-deberta-large | 0.659 | 2,906 | 4 | 0.947 | 0.899 | 0.947 (0.497) | 0.497 | 0.643 |
 <!-- END GENERATED: wikidata-beliefs -->
 
 Lowering Jev's rewrite threshold to 0.1 admits six times as many rewrites into Victoria's descendants, 110 against 18, and brings in 21 answers outside Wikidata's record. All 21 rank below all 1,164 of Wikidata's, at P 0.334 or less against 0.958 or more, so an answer threshold between them keeps exactly Wikidata's answer. On Alphabet the lower threshold finds 53 more of Wikidata's holdings, and its one answer outside the record, at P 0.108, ranks below all of them, so F1 rises from 0.938 to 0.947. On Leonardo it finds four more of Wikidata's works and three more answers outside it. There P does not separate the two sets: the highest answer outside, at 0.695, ranks above the lowest of Wikidata's, at 0.247, though the best answer threshold, 0.704, still reaches F1 0.997.
 
-The knowledge base's evidence changes nothing for Jev, whose data trust is 0. For nli-deberta-large, at a data trust of 0.77, its effect depends on the question. It separated Victoria's answers completely, every answer outside Wikidata's at P 0.361 or less and every answer inside at 0.408 or more, where alone the two sets met at 0.643. It left Alphabet's average precision where it was, and it lowered Leonardo's from 0.999 to 0.983. On Leonardo the evidence counted against `creator`, the property Wikidata itself files a work's maker under: of the 858 works it states, the other admitted rewrites derive about 40, so the other 818 count against it, and its P fell from 0.705 to 0.270, nearly as low as a rewrite through the material a work is made from. The data trust was fitted on property pairs, where the conclusion's own statements are the reference; among a question's rewrites the reference is what the other rewrites derive, which covers only part of the relation, so a rewrite stating much the others miss reads as wrong.
+The knowledge base gives evidence on a rewrite only where it states the rewrite's conclusion, the setting each data trust was fitted in. None of the three questions states any of its own predicates, so every opinion here is its judge's alone. A first version also counted what the other admitted rewrites derive, reading a row they missed as evidence against a rewrite. With nli-deberta-large that separated Victoria's answers, every answer outside Wikidata's at P 0.361 or less and every answer inside at 0.408 or more, where the judge alone has the two sets meet at 0.643. It also lowered Leonardo's average precision from 0.999 to 0.983: of the 858 works `creator` states, the other admitted rewrites derive about 40, so 818 counted against it, and its P fell from 0.705 to 0.270, nearly as low as a rewrite through the material a work is made from. The other rewrites cover only part of a relation, so a row they miss is no evidence against a rewrite.
 
 ## Is pymetta stable enough?
 

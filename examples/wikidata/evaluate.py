@@ -68,8 +68,7 @@ WORK = 50_000_000
 STOPPED = {"work_limit": "the work budget stopped it", "time_limit": "the time budget stopped it"}
 # The judges and rewrite thresholds whose answers get opinions, None for the judge's calibrated default: Jev at the
 # threshold RESULTS.md calibrated for answer F1 and at a low one that admits more true rewrites with the false, leaving
-# the answer threshold to sort their answers; and nli-deberta-large, whose opinions the knowledge base's evidence is
-# fused with at a data trust above 0, where Jev's is 0.
+# the answer threshold to sort their answers; and nli-deberta-large, a model that runs locally, beside Jev's hosted one.
 BELIEF_RUNS = (("jev", 0.65), ("jev", 0.1), ("nli-deberta-large", None))
 
 
@@ -209,26 +208,20 @@ def summary(names: list[str]) -> str:
     return "\n".join(rows)
 
 
-# Time: one cascade ranking and one solve, then the lineage of every answer; the second rewriter shares the first's
-# discoverer, so only the lineage runs again.
+# Time: one cascade ranking and one solve, then the lineage of every answer.
 @cache
-def _believed(name: str, judge_name: str, threshold: float | None) -> tuple[Outcome, Outcome]:
+def _believed(name: str, judge_name: str, threshold: float | None) -> Outcome:
     """The question answered with `judge_name` admitting at `threshold`, its calibrated default when None, one rewrite
-    on a path, each answer with its opinion: from the judge's opinions alone, and fused with the knowledge base's
-    evidence at the judge's calibrated data trust."""
+    on a path, each answer with its opinion as `semrewrite ask --beliefs` gives it: from the judge's opinions fused
+    with the knowledge base's evidence at the judge's calibrated data trust."""
     _, kb, _, _ = _question(name)
     engine, retriever = _tools()
-    budget = Budget(work=WORK, seconds=math.inf)
     judge = make_judge(judge_name) if threshold is None else make_judge(judge_name, threshold=threshold)
-    alone = Rewriter(kb, judge, engine, retriever, k=K, budget=budget, beliefs=SETS)
-    disc = alone.discoverer()
-    strategy = replace(STRATEGY, depth=1)
-    first = alone.ask(kb.queries[0], strategy, disc)
-    fused = Rewriter(kb, alone.scorer, engine, retriever, k=K, budget=budget, beliefs=SETS,
-                     data_trust=default_data_trust(judge_name))
-    second = fused.ask(kb.queries[0], strategy, disc)
+    rewriter = Rewriter(kb, judge, engine, retriever, k=K, budget=Budget(work=WORK, seconds=math.inf), beliefs=SETS,
+                        data_trust=default_data_trust(judge_name))
+    out = rewriter.ask(kb.queries[0], replace(STRATEGY, depth=1), rewriter.discoverer())
     judge.close()
-    return first, second
+    return out
 
 
 def ranking(question: Question, truth: set[str], out: Outcome) -> dict[str, float | None]:
@@ -259,19 +252,17 @@ def ranking(question: Question, truth: set[str], out: Outcome) -> dict[str, floa
 
 def belief_rows(names: list[str]) -> list[dict[str, object]]:
     """Each named question's runs, every question's when none is named, for each judge and threshold BELIEF_RUNS
-    names: its answers, how many Wikidata's answer holds, and how well their projected probabilities rank them, from
-    the judge's opinions alone and with the knowledge base's evidence fused in at its data trust."""
+    names: its answers, how many Wikidata's answer holds, and how well their projected probabilities rank them."""
     rows: list[dict[str, object]] = []
     for name in names or list(QUESTIONS):
         question, _, truth, _ = _question(name)
         for judge_name, chosen in BELIEF_RUNS:
-            alone, fused = _believed(name, judge_name, chosen)
-            got = question.answers_of(alone.answers)
+            out = _believed(name, judge_name, chosen)
+            got = question.answers_of(out.answers)
             threshold = make_threshold(judge_name) if chosen is None else chosen
             rows.append({"question": name, "judge": judge_name, "threshold": threshold,
-                         "data_trust": default_data_trust(judge_name), "answers": len(got), "outside": len(got - truth),
-                         "truth": len(truth), "rewrites": len(alone.admitted),
-                         "alone": ranking(question, truth, alone), "fused": ranking(question, truth, fused)})
+                         "answers": len(got), "outside": len(got - truth), "truth": len(truth),
+                         "rewrites": len(out.admitted), "ranking": ranking(question, truth, out)})
     return rows
 
 
@@ -281,16 +272,15 @@ def beliefs(rows: list[dict[str, object]]) -> str:
         return "none" if x is None else f"{x:.3f}"
 
     head = ["question", "judge", "rewrite threshold", "answers", "not in Wikidata's", "F1 of all answers",
-            "average precision by P", "best F1 by P (at P)", "lowest P inside", "highest P outside",
-            "average precision with the knowledge base's evidence (data trust)"]
+            "average precision by P", "best F1 by P (at P)", "lowest P inside", "highest P outside"]
     lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     for r in rows:
-        m, f = r["alone"], r["fused"]
-        assert isinstance(m, dict) and isinstance(f, dict)
+        m = r["ranking"]
+        assert isinstance(m, dict)
         lines.append("| " + " | ".join([
             str(r["question"]), str(r["judge"]), f"{r['threshold']:.3g}", f"{r['answers']:,}", f"{r['outside']:,}",
             number(m["f1"]), number(m["ap"]), f"{number(m['best_f1'])} ({number(m['at'])})",
-            number(m["lowest_inside"]), number(m["highest_outside"]), f"{number(f['ap'])} ({r['data_trust']:.2f})"])
+            number(m["lowest_inside"]), number(m["highest_outside"])])
             + " |")
     return "\n".join(lines)
 
@@ -300,7 +290,7 @@ def placed(name: str, threshold: float, shown: int = 5) -> str:
     probability: the `shown` highest outside Wikidata's answer and the `shown` lowest inside it, with each one's rank
     and opinion, as a markdown table."""
     question, _, truth, _ = _question(name)
-    out, _ = _believed(name, "jev", threshold)
+    out = _believed(name, "jev", threshold)
     if not out.finished or out.beliefs is None:
         msg = f"{name}: {out.status} {out.detail}"
         raise RuntimeError(msg)

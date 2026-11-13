@@ -49,11 +49,10 @@ SCORES = {("mum", "parent", (0, 1)): 0.9, ("dad", "parent", (0, 1)): 0.8}
 
 def test_the_command_line_prints_the_admitted_rewrites_as_rows(monkeypatch, capsys) -> None:
     """At judge trust 0.5, mum's (0.9, 0.1, 0) reads (0.45, 0.05, 0.5), the stronger row first."""
-    from semrewrite import cli, judges
+    from semrewrite import cli
 
     monkeypatch.setattr(cli, "_judge", lambda args, kb: TableJudge(SCORES, threshold=0.2, trust=0.5))
     monkeypatch.setattr(cli.formats, "load", lambda path: KB_)
-    monkeypatch.setattr(judges, "default_data_trust", lambda name: 0.0)
     assert main(["rewrites", "tom.kb", "parent", "--retriever", "all", "--snars"]) == 0
     assert capsys.readouterr().out.splitlines() == [
         "(: (Opinion 0.45 0.05 0.5 0.5) rw-parent-mum-01 (-> (mum $X0 $X1) (parent $X0 $X1)))",

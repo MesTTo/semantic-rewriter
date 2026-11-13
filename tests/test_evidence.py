@@ -1,8 +1,9 @@
-"""Purpose: tests of the knowledge base as a second source on rewrites: evidence counts each row by its membership
-probability; a rewrite reads its premise's statements into its conclusion's rows exactly as the engine derives them;
-each rewrite's evidence comes from the conclusion's statements and the other rewrites, never from itself; the
-rewriter fuses that evidence, discounted by the data trust, with the judge's opinion, and a data trust of 0 changes
-nothing; and the data trust fitted is the likeliest on a fine grid.
+"""Purpose: tests of the knowledge base as a second source on rewrites: evidence counts each row in the extension for
+and each row outside it against; a rewrite reads its premise's statements into its conclusion's rows exactly as the
+engine derives them; each rewrite's evidence comes from its conclusion's statements alone, none where the knowledge
+base never states the conclusion, whatever other rewrites are admitted; the rewriter fuses that evidence, discounted
+by the data trust, with the judge's opinion, and a data trust of 0 changes nothing; and the data trust fitted is the
+likeliest on a fine grid.
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ from hypothesis import strategies as st
 from stubs import TableJudge
 
 from semrewrite.engines.python import PythonEngine
-from semrewrite.evidence import derived, rewrite_evidence, statement_evidence
+from semrewrite.evidence import derived, rewrite_evidence, statement_evidence, statements
 from semrewrite.judges.metrics import fit_data_trust
 from semrewrite.kb import KB
 from semrewrite.model import Atom, Rewrite
@@ -26,15 +27,10 @@ from semrewrite.rewriter import Rewriter
 CONSTANTS = ("a", "b", "c")
 
 
-@given(st.lists(st.tuples(st.tuples(st.sampled_from(CONSTANTS), st.sampled_from(CONSTANTS)), st.floats(0, 1)),
-                max_size=12))
-def test_each_row_counts_for_by_its_membership_and_against_by_the_rest(rows: list[tuple[tuple[str, str], float]]
-                                                                       ) -> None:
-    extension = dict(rows)
-    premise = [row for row, _ in rows] + [("z", "z")]
-    positive, negative = statement_evidence(premise, extension)
-    assert positive + negative == pytest.approx(len(premise))
-    assert positive == pytest.approx(sum(extension.get(row, 0.0) for row in premise))
+@given(st.sets(st.tuples(st.sampled_from(CONSTANTS), st.sampled_from(CONSTANTS))),
+       st.sets(st.tuples(st.sampled_from(CONSTANTS), st.sampled_from(CONSTANTS))))
+def test_each_row_in_the_extension_counts_for_and_each_row_outside_it_against(rows: set, extension: set) -> None:
+    assert statement_evidence(rows, extension) == (len(rows & extension), len(rows - extension))
 
 
 @settings(max_examples=100)
@@ -46,22 +42,45 @@ def test_a_rewrite_reads_its_premise_s_statements_as_the_engine_derives_them(map
     assert derived(rewrite, facts) == solved.answers
 
 
-def test_a_rewrite_s_evidence_comes_from_the_conclusion_s_statements_and_the_other_rewrites() -> None:
-    """mum derives parent(alice, tom) and parent(carol, alice); dad derives parent(carol, alice) too, and the
-    knowledge base states parent(alice, tom). So mum's evidence is 1 (stated) + 0.8 (through dad) for, 0.2 against;
-    dad's is 0.9 (through mum) for its one row; guardian's row nobody else derives counts against it."""
+def test_a_rewrite_s_evidence_comes_from_its_conclusion_s_statements_alone() -> None:
+    """The knowledge base states parent(alice, tom) alone. mum derives it and parent(carol, alice), one row for and
+    one against; dad derives parent(carol, alice) as well, which counts against dad too though mum derives it;
+    guardian's row counts against it."""
     facts = (Atom("mum", ("alice", "tom")), Atom("mum", ("carol", "alice")), Atom("dad", ("carol", "alice")),
              Atom("guardian", ("erin", "tom")), Atom("parent", ("alice", "tom")))
     mum, dad, guardian = (Rewrite("parent", p, (0, 1)) for p in ("mum", "dad", "guardian"))
-    got = rewrite_evidence(facts, [mum, dad, guardian], {mum.key: 0.9, dad.key: 0.8, guardian.key: 0.3})
-    assert got[mum.key] == pytest.approx((1.8, 0.2))
-    assert got[dad.key] == pytest.approx((0.9, 0.1))
-    assert got[guardian.key] == pytest.approx((0.0, 1.0))
+    assert rewrite_evidence(statements(facts), [mum, dad, guardian]) == {
+        mum.key: (1, 1), dad.key: (0, 1), guardian.key: (0, 1)}
+
+
+def test_a_rewrite_into_a_predicate_the_knowledge_base_never_states_has_no_evidence() -> None:
+    """A knowledge base of actions in plain words, in small, and the question "wastes time", which no statement
+    uses. Each person does one action, so no other rewrite derives the row a rewrite derives; that is no evidence
+    against any of them."""
+    facts = (Atom("watch_tv", ("sam",)), Atom("play_games", ("kim",)), Atom("study", ("lee",)))
+    rewrites = [Rewrite("wastes_time", p, (0,)) for p in ("watch_tv", "play_games", "study")]
+    assert set(rewrite_evidence(statements(facts), rewrites).values()) == {(0, 0)}
+
+
+PREDICATES = st.sampled_from(("p", "q", "r"))
+ROWS = st.tuples(st.sampled_from(CONSTANTS), st.sampled_from(CONSTANTS))
+
+
+@settings(max_examples=100)
+@given(st.sets(st.tuples(PREDICATES, ROWS)),
+       st.sets(st.tuples(PREDICATES, PREDICATES, st.permutations(range(2)).map(tuple))))
+def test_a_rewrite_s_evidence_does_not_depend_on_the_other_rewrites(facts: set, triples: set) -> None:
+    stated = statements(Atom(p, row) for p, row in facts)
+    rewrites = [Rewrite(c, p, tuple(m)) for c, p, m in triples if c != p]
+    together = rewrite_evidence(stated, rewrites)
+    for rw in rewrites:
+        assert rewrite_evidence(stated, [rw]) == {rw.key: together[rw.key]}
 
 
 GLOSSES = {"mum": "{x} is the mum of {y}", "dad": "{x} is the dad of {y}", "parent": "{x} is a parent of {y}"}
 KB_ = KB("tom", glosses=GLOSSES, facts=(Atom("mum", ("alice", "tom")), Atom("mum", ("carol", "alice")),
-                                         Atom("dad", ("carol", "alice")), Atom("dad", ("bob", "tom"))))
+                                         Atom("dad", ("carol", "alice")), Atom("dad", ("bob", "tom")),
+                                         Atom("parent", ("carol", "alice"))))
 SCORES = {("mum", "parent", (0, 1)): 0.9, ("dad", "parent", (0, 1)): 0.8}
 
 
@@ -75,10 +94,10 @@ def _alice(data_trust: float) -> Opinion:
 
 def test_the_rewriter_fuses_the_knowledge_base_s_evidence_at_its_data_trust() -> None:
     """alice is tom's parent through mum alone, so her opinion is mum's: the judge's (0.9, 0.1, 0) at trust 0.5,
-    fused with mum's evidence, 1 row of 2 also derived by dad (projection 0.5 + 0.5 (0.8 - 0.5) = 0.65), discounted
-    by the data trust."""
+    fused with mum's evidence, discounted by the data trust: of mum's two rows the knowledge base states
+    parent(carol, alice) and not parent(alice, tom), one for and one against."""
     judged = Opinion(0.9, 0.1, 0.0).discount(0.5)
-    data = Opinion.from_evidence(0.65, 1.35)
+    data = Opinion.from_evidence(1, 1)
     for t in (0.25, 1.0):
         expected = judged.fuse(data.discount(t))
         got = _alice(t)

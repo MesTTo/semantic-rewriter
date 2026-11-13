@@ -3,20 +3,11 @@
   "question": "victoria",
   "judge": "jev",
   "threshold": 0.65,
-  "data_trust": 0.0,
   "answers": 1164,
   "outside": 0,
   "truth": 1164,
   "rewrites": 18,
-  "alone": {
-   "ap": 1.0,
-   "best_f1": 1.0,
-   "at": 0.9576564250901654,
-   "f1": 1.0,
-   "lowest_inside": 0.9576564250901654,
-   "highest_outside": null
-  },
-  "fused": {
+  "ranking": {
    "ap": 1.0,
    "best_f1": 1.0,
    "at": 0.9576564250901654,
@@ -29,20 +20,11 @@
   "question": "victoria",
   "judge": "jev",
   "threshold": 0.1,
-  "data_trust": 0.0,
   "answers": 1185,
   "outside": 21,
   "truth": 1164,
   "rewrites": 110,
-  "alone": {
-   "ap": 1.0,
-   "best_f1": 1.0,
-   "at": 0.9576564250901654,
-   "f1": 0.9910600255427842,
-   "lowest_inside": 0.9576564250901654,
-   "highest_outside": 0.33414081903329595
-  },
-  "fused": {
+  "ranking": {
    "ap": 1.0,
    "best_f1": 1.0,
    "at": 0.9576564250901654,
@@ -55,46 +37,28 @@
   "question": "victoria",
   "judge": "nli-deberta-large",
   "threshold": 0.6592527778093171,
-  "data_trust": 0.7691592696494101,
   "answers": 1188,
   "outside": 24,
   "truth": 1164,
   "rewrites": 117,
-  "alone": {
+  "ranking": {
    "ap": 0.999989724482184,
    "best_f1": 0.999140154772141,
    "at": 0.6432996902850505,
    "f1": 0.9897959183673469,
    "lowest_inside": 0.6429624417054361,
    "highest_outside": 0.6430592009658118
-  },
-  "fused": {
-   "ap": 1.0,
-   "best_f1": 1.0,
-   "at": 0.40837257601138727,
-   "f1": 0.9897959183673469,
-   "lowest_inside": 0.40837257601138727,
-   "highest_outside": 0.36141566457143326
   }
  },
  {
   "question": "leonardo",
   "judge": "jev",
   "threshold": 0.65,
-  "data_trust": 0.0,
   "answers": 851,
   "outside": 2,
   "truth": 854,
   "rewrites": 16,
-  "alone": {
-   "ap": 0.9941451990632318,
-   "best_f1": 0.9970640046975925,
-   "at": 0.7044847856785845,
-   "f1": 0.9958944281524926,
-   "lowest_inside": 0.7044847856785845,
-   "highest_outside": 0.6947474149319852
-  },
-  "fused": {
+  "ranking": {
    "ap": 0.9941451990632318,
    "best_f1": 0.9970640046975925,
    "at": 0.7044847856785845,
@@ -107,20 +71,11 @@
   "question": "leonardo",
   "judge": "jev",
   "threshold": 0.1,
-  "data_trust": 0.0,
   "answers": 858,
   "outside": 5,
   "truth": 854,
   "rewrites": 52,
-  "alone": {
-   "ap": 0.99880579584206,
-   "best_f1": 0.9970640046975925,
-   "at": 0.7044847856785845,
-   "f1": 0.9964953271028038,
-   "lowest_inside": 0.24682836058841914,
-   "highest_outside": 0.6947474149319852
-  },
-  "fused": {
+  "ranking": {
    "ap": 0.99880579584206,
    "best_f1": 0.9970640046975925,
    "at": 0.7044847856785845,
@@ -133,46 +88,28 @@
   "question": "leonardo",
   "judge": "nli-deberta-large",
   "threshold": 0.6592527778093171,
-  "data_trust": 0.7691592696494101,
   "answers": 858,
   "outside": 5,
   "truth": 854,
   "rewrites": 59,
-  "alone": {
+  "ranking": {
    "ap": 0.9985338888290272,
    "best_f1": 0.9964953271028038,
    "at": 0.704794759048796,
    "f1": 0.9964953271028038,
    "lowest_inside": 0.704794759048796,
    "highest_outside": 0.7052586290705143
-  },
-  "fused": {
-   "ap": 0.9830866360789074,
-   "best_f1": 0.9964953271028038,
-   "at": 0.24405339912718788,
-   "f1": 0.9964953271028038,
-   "lowest_inside": 0.24405339912718788,
-   "highest_outside": 0.46836409423668446
   }
  },
  {
   "question": "alphabet",
   "judge": "jev",
   "threshold": 0.65,
-  "data_trust": 0.0,
   "answers": 2849,
   "outside": 0,
   "truth": 3225,
   "rewrites": 3,
-  "alone": {
-   "ap": 0.8834108527131783,
-   "best_f1": 0.9380968060586105,
-   "at": 0.9547853167085656,
-   "f1": 0.9380968060586105,
-   "lowest_inside": 0.9547853167085656,
-   "highest_outside": null
-  },
-  "fused": {
+  "ranking": {
    "ap": 0.8834108527131783,
    "best_f1": 0.9380968060586105,
    "at": 0.9547853167085656,
@@ -185,20 +122,11 @@
   "question": "alphabet",
   "judge": "jev",
   "threshold": 0.1,
-  "data_trust": 0.0,
   "answers": 2903,
   "outside": 1,
   "truth": 3225,
   "rewrites": 42,
-  "alone": {
-   "ap": 0.8998449612403101,
-   "best_f1": 0.9472825199934716,
-   "at": 0.2221543070534627,
-   "f1": 0.9471279373368147,
-   "lowest_inside": 0.2221543070534627,
-   "highest_outside": 0.10797804580851159
-  },
-  "fused": {
+  "ranking": {
    "ap": 0.8998449612403101,
    "best_f1": 0.9472825199934716,
    "at": 0.2221543070534627,
@@ -211,26 +139,17 @@
   "question": "alphabet",
   "judge": "nli-deberta-large",
   "threshold": 0.6592527778093171,
-  "data_trust": 0.7691592696494101,
   "answers": 2906,
   "outside": 4,
   "truth": 3225,
   "rewrites": 62,
-  "alone": {
+  "ranking": {
    "ap": 0.8990188020011542,
    "best_f1": 0.9469734051231848,
    "at": 0.4973041217204998,
    "f1": 0.9466644919262763,
    "lowest_inside": 0.4973041217204998,
    "highest_outside": 0.6427061140812262
-  },
-  "fused": {
-   "ap": 0.8980708926380193,
-   "best_f1": 0.9468189233278956,
-   "at": 0.17133347460713902,
-   "f1": 0.9466644919262763,
-   "lowest_inside": 0.17133347460713902,
-   "highest_outside": 0.38592954404920593
   }
  }
 ]

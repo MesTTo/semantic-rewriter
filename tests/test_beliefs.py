@@ -91,12 +91,10 @@ def test_beliefs_are_refused_where_answers_are_over_merged_predicates() -> None:
 
 
 def test_beliefs_rank_on_the_command_line(monkeypatch, capsys) -> None:
-    from semrewrite import cli, judges
+    from semrewrite import cli
 
     monkeypatch.setattr(cli, "_judge", lambda args, kb: TableJudge(SCORES, threshold=0.2))
     monkeypatch.setattr(cli.formats, "load", lambda path: KB_)
-    # The stub judge has no calibrated data trust; at 0 its opinions stand alone.
-    monkeypatch.setattr(judges, "default_data_trust", lambda name: 0.0)
     assert main(["ask", "tom.kb", "parent(X, tom)", "--retriever", "all", "--beliefs", "--answer-threshold", "0.5"]) == 0
     lines = capsys.readouterr().out.splitlines()
     assert lines == ["parent(alice, tom)    P 0.900  b 0.900  d 0.100  u 0.000",

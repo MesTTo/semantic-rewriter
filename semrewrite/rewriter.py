@@ -26,7 +26,7 @@ from enum import StrEnum
 from typing import get_args
 
 from semrewrite.discovery import Discoverer, ScoreCache
-from semrewrite.evidence import rewrite_evidence
+from semrewrite.evidence import rewrite_evidence, statements
 from semrewrite.kb import KB
 from semrewrite.lineage import lineages, moments, probability
 from semrewrite.model import Atom, Key, Mapping, Proposal, Rewrite, Rule, compose, identity, inverse, parse_atom
@@ -255,16 +255,15 @@ class Rewriter:
         """The rewrites with these (premise, conclusion, mapping) keys, each at its score, and the opinion that each is
         valid: its judge's opinion discounted by the judge's trust, fused by cumulative fusion (Jøsang 2016,
         Def. 12.5) with the knowledge base's evidence on it (semrewrite.evidence) discounted by the data trust. The
-        evidence on each rewrite reads the others at their judges' opinions, so no rewrite's evidence feeds back, and
-        it reads only rewrites with the same conclusion, so the keys must hold every admitted rewrite concluding each
-        predicate they conclude. The score cache holds every proposal discovery asked, so no judge is asked again."""
+        evidence on each rewrite reads only the knowledge base's statements, so it does not depend on which other
+        rewrites the keys hold. The score cache holds every proposal discovery asked, so no judge is asked again."""
         cat = self.catalogue
         ordered = sorted(keys)
         proposals = [Proposal(cat[p], cat[c], m) for p, c, m in ordered]
         rewrites = tuple(Rewrite(c, p, m, s) for (p, c, m), s in zip(ordered, self.scorer.score(proposals), strict=True))
         opinion = {rw.key: o for rw, o in zip(rewrites, self.scorer.opinions(proposals), strict=True)}
         if self.data_trust:
-            evidence = rewrite_evidence(self.kb.facts, rewrites, {key: o.projection for key, o in opinion.items()})
+            evidence = rewrite_evidence(statements(self.kb.facts), rewrites)
             opinion = {key: o.fuse(Opinion.from_evidence(*evidence[key]).discount(self.data_trust))
                        for key, o in opinion.items()}
         return rewrites, opinion
