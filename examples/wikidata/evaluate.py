@@ -225,8 +225,8 @@ def summary(names: list[str]) -> str:
     return "\n".join(rows)
 
 
-# Time: one cascade ranking and one solve, then the lineage of every answer, and with the check one reading of each
-# admitted rewrite against the statements that stand out from it.
+# Time: one cascade ranking and one solve, then the lineage of every answer, and the check's one reading of each
+# admitted rewrite against the statements that stand out from it, none where no statement names no individual.
 @cache
 def _believed(name: str, judge_name: str, threshold: float | None, check: str = "general"
               ) -> tuple[Outcome, dict | None]:
