@@ -270,7 +270,10 @@ opinions_ = st.tuples(st.floats(0, 1), st.floats(0, 1), st.floats(0, 1)).filter(
     lambda m: Opinion(m[0] / sum(m), m[1] / sum(m), m[2] / sum(m)))
 
 
-@settings(max_examples=200)
+# Time: 1001 grid likelihoods of n rows per example, n <= 20, about 20 ms: a tenth of Hypothesis's 200 ms default
+# deadline, which one example stalled by memory pressure exceeded (419 ms, then 22 ms on replay), so the deadline is
+# off, as on the repository's other heavy properties.
+@settings(max_examples=200, deadline=None)
 @given(st.lists(st.tuples(opinions_, st.booleans()), min_size=1, max_size=20))
 def test_the_fitted_trust_is_the_likeliest_on_a_fine_grid(rows: list[tuple[Opinion, bool]]) -> None:
     """No trust on a grid of 1001 points gives the labels a higher likelihood than the fitted one."""
