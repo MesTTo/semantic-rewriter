@@ -14,6 +14,8 @@ How sure is each answer? Each answer can carry an opinion: the probability that 
 
 Can a judge tell what typically follows? Yes, when it is asked that. A knowledge base of everyday actions asks what typically follows, such as whether someone who watches TV wastes time, and the NLI cross-encoders call such pairs neutral. Qwen3-4B-Instruct-2507, asked whether the conclusion typically follows, scores held-out log loss 0.588 on δ-ATOMIC's defeasible inferences and 0.485 on Balanced COPA's causes and effects, against nli-deberta-large's 0.661 and 0.637 and the base rate's 0.693, and picks COPA's more plausible alternative for 450 of 500 questions. On a knowledge base of eight actions it ranks the three that waste time first, and the entailment judge finds one of them.
 
+Can a stated belief withdraw an answer? Yes, with `--check`, by lowering the match it contradicts. With "I consider gaming to be productive" stated, nli-deberta-large lowers the gaming match from P 0.456 to 0.334 and leaves watching TV's at 0.478, and typical-qwen3-4b lowers kim, who plays games, from 0.885 to 0.747 and leaves sam, who watches TV, at 0.782. The check reads the rewrite, not the answer, because the judge reads the belief as contradicting every answer sentence, and it reads only statements that name no individual and stand out in similarity to the rewrite, because the judge reads most others as contradictions too.
+
 Is pymetta stable enough? Yes. Tabling, ops called inside tables, table refresh and budgets all did what the rewriter needed. I found twelve defects, seven of which involve state that outlives a `MeTTa()` context; ten have a script under `repros/`, and the engine works around every one.
 
 ## What was built
