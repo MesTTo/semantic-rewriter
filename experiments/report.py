@@ -384,7 +384,70 @@ def snars_chain_table() -> str:
                   rows)
 
 
+def claim_actions_table() -> str:
+    """The actions example with the claim check on, from experiments/claim_check.py: for each judge, form and rewrite
+    threshold, the gaming and watching-TV matches and the answers through them, each one's P without the gaming belief
+    and with it, what the check read against each match, and the check's cost with the belief stated."""
+    runs = {(r["judge"], r["form"], r["threshold"], r["believed"]): r for r in _load("claim_check_actions.json")}
+    rows = []
+    for judge, form, threshold, believed in runs:
+        if believed:
+            continue
+        before, after = runs[(judge, form, threshold, False)], runs[(judge, form, threshold, True)]
+        items = [(f"match {name.replace(' => ', ' ⇒ ')}", "matches", name) for name in before["matches"]
+                 if name.endswith("=> wastes_time") and name.split(" => ")[0] in ("play_games", "watch_tv")]
+        items += [(f"answer wastes_time({'' if name == '()' else name})", "answers", name) for name in before["answers"]]
+        for label, kind, name in items:
+            read = after[kind][name].get("read")
+            weighed = ("nothing" if not read else "; ".join(
+                f"{x['side']} \"{x['statement']}\" (b {x['b']:.3f}, d {x['d']:.3f})" for x in read)) if kind == "matches" else ""
+            pairs = after["cost"]["pairs"]
+            rows.append([judge, form, f"{threshold:.3g}", label, before[kind][name]["P"], after[kind][name]["P"],
+                         weighed, f"{pairs} pair{'s' * (pairs != 1)}, {after['cost']['seconds']:.2f} s"])
+    return _table(["judge", "form", "rewrite threshold", "match or answer", "P without the belief", "P with it",
+                   "read against it, with the belief stated", "check's cost"], rows)
+
+
+def claim_readings_table() -> str:
+    """How each judge reads delta-ATOMIC's updates against inferences written as conditionals, with no gate, from
+    experiments/claim_gate.py: other premises' updates read as contradicting the claim, and a claim's own weakener read
+    as contradicting it and own strengthener as entailing it."""
+    rows = [[judge, split, m[split]["before"]["other_contradiction"], m[split]["before"]["weakener_as_written"],
+             m[split]["before"]["strengthener_as_written"]]
+            for judge, m in sorted(_load("claim_gate.json").items()) for split in ("dev", "test")]
+    return _table(["judge", "split", "other premises' updates read as contradicting a claim",
+                   "own weakeners read as contradicting it", "own strengtheners read as entailing it"], rows)
+
+
+def claim_gate_table() -> str:
+    """The claim check's gate on delta-ATOMIC's updates, from experiments/claim_gate.py: by judge and knowledge-base
+    size, at the spread chosen on nli-deberta-large's dev updates, the share of a claim's own updates the gate reads,
+    the other premises' updates it reads per claim and the spurious contradictions among them per claim, on dev and
+    test, and the spurious contradictions per claim at the rule of thumb 3.5 beside them."""
+    measured = _load("claim_gate.json")
+    chosen = measured["nli-deberta-large"]["chosen_spread"]
+    if chosen is None:
+        return "No spread on the grid kept nli-deberta-large's spurious contradictions within the budget on dev."
+    rows = []
+    for judge, m in sorted(measured.items()):
+        for size in sorted(m["dev"]["sizes"], key=lambda s: (s == "all", int(s) if s.isdigit() else 0)):
+            at = {(split, spread): next(r for r in m[split]["sizes"][size] if r["spread"] == spread)
+                  for split in ("dev", "test") for spread in (chosen, 3.5)}
+            rows.append([judge, size, at[("test", chosen)]["own_recall"], at[("test", chosen)]["others_per_claim"],
+                         f"{at[('dev', chosen)]['spurious_per_claim']:.4f}",
+                         f"{at[('test', chosen)]['spurious_per_claim']:.4f}",
+                         f"{at[('dev', 3.5)]['spurious_per_claim']:.4f}",
+                         f"{at[('test', 3.5)]['spurious_per_claim']:.4f}"])
+    return (f"The gate's spread is {chosen:g}, chosen on nli-deberta-large's dev updates.\n\n"
+            + _table(["judge", "statements in the knowledge base", "own updates read, test",
+                      "other updates read per claim, test", "spurious contradictions per claim, dev", "test",
+                      "at 3.5, dev", "at 3.5, test"], rows))
+
+
 GENERATORS: dict[str, Callable[[], str]] = {
+    "claim-check-actions": claim_actions_table,
+    "claim-readings": claim_readings_table,
+    "claim-gate": claim_gate_table,
     "named-cases": named_cases_table,
     "direction-policy": direction_policy_table,
     "blowup": blowup_table,

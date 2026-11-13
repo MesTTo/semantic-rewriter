@@ -1,0 +1,392 @@
+[
+ {
+  "judge": "nli-deberta-large",
+  "form": "with holes",
+  "believed": false,
+  "threshold": 0.6592527778093171,
+  "answers": {
+   "sam": {
+    "P": 0.42049386779954967,
+    "b": 0.26282579038981463,
+    "d": 0.00021447398576890375,
+    "u": 0.7369597356244165
+   }
+  },
+  "matches": {
+   "watch_tv => wastes_time": {
+    "P": 0.42049386779954967,
+    "b": 0.26282579038981463,
+    "d": 0.00021447398576887196,
+    "u": 0.7369597356244165,
+    "mapping": [
+     0
+    ],
+    "score": 0.7555527431555009,
+    "claim": "If A watches TV, A wastes time.",
+    "read": []
+   }
+  },
+  "cost": {
+   "claims": 1,
+   "pairs": 0,
+   "statements": 8,
+   "seconds": 0.1913124138955027
+  }
+ },
+ {
+  "judge": "nli-deberta-large",
+  "form": "with holes",
+  "believed": true,
+  "threshold": 0.6592527778093171,
+  "answers": {
+   "sam": {
+    "P": 0.42049386779954967,
+    "b": 0.26282579038981463,
+    "d": 0.00021447398576890375,
+    "u": 0.7369597356244165
+   }
+  },
+  "matches": {
+   "watch_tv => wastes_time": {
+    "P": 0.42049386779954967,
+    "b": 0.26282579038981463,
+    "d": 0.00021447398576887196,
+    "u": 0.7369597356244165,
+    "mapping": [
+     0
+    ],
+    "score": 0.7555527431555009,
+    "claim": "If A watches TV, A wastes time.",
+    "read": []
+   }
+  },
+  "cost": {
+   "claims": 1,
+   "pairs": 0,
+   "statements": 9,
+   "seconds": 0.0474055539816618
+  }
+ },
+ {
+  "judge": "nli-deberta-large",
+  "form": "with holes",
+  "believed": false,
+  "threshold": 0.03,
+  "answers": {
+   "kim": {
+    "P": 0.22442184804502274,
+    "b": 0.013641236136228696,
+    "d": 0.0011445938236254172,
+    "u": 0.985214170040146
+   },
+   "sam": {
+    "P": 0.42049386779954967,
+    "b": 0.26282579038981463,
+    "d": 0.00021447398576890375,
+    "u": 0.7369597356244165
+   }
+  },
+  "matches": {
+   "play_games => wastes_time": {
+    "P": 0.22442184804502274,
+    "b": 0.013641236136228653,
+    "d": 0.0011445938236251325,
+    "u": 0.9852141700401462,
+    "mapping": [
+     0
+    ],
+    "score": 0.03921484785596187,
+    "claim": "If A plays games, A wastes time.",
+    "read": []
+   },
+   "watch_tv => wastes_time": {
+    "P": 0.42049386779954967,
+    "b": 0.26282579038981463,
+    "d": 0.00021447398576887196,
+    "u": 0.7369597356244165,
+    "mapping": [
+     0
+    ],
+    "score": 0.7555527431555009,
+    "claim": "If A watches TV, A wastes time.",
+    "read": []
+   }
+  },
+  "cost": {
+   "claims": 2,
+   "pairs": 0,
+   "statements": 8,
+   "seconds": 0.01768538006581366
+  }
+ },
+ {
+  "judge": "nli-deberta-large",
+  "form": "with holes",
+  "believed": true,
+  "threshold": 0.03,
+  "answers": {
+   "kim": {
+    "P": 0.14711655738413393,
+    "b": 0.008945226216484858,
+    "d": 0.34522519711172417,
+    "u": 0.645829576671791
+   },
+   "sam": {
+    "P": 0.42049386779954967,
+    "b": 0.26282579038981463,
+    "d": 0.00021447398576890375,
+    "u": 0.7369597356244165
+   }
+  },
+  "matches": {
+   "play_games => wastes_time": {
+    "P": 0.14711655738413393,
+    "b": 0.008945226216484864,
+    "d": 0.34522519711172417,
+    "u": 0.645829576671791,
+    "mapping": [
+     0
+    ],
+    "score": 0.03921484785596187,
+    "claim": "If A plays games, A wastes time.",
+    "read": [
+     {
+      "statement": "I consider gaming to be productive.",
+      "similarity": 0.7195981740951538,
+      "side": "against",
+      "P": 0.13952678134485594,
+      "b": 3.1259329977888314e-06,
+      "d": 0.3478463696978378,
+      "u": 0.6521505043691644
+     }
+    ]
+   },
+   "watch_tv => wastes_time": {
+    "P": 0.42049386779954967,
+    "b": 0.26282579038981463,
+    "d": 0.00021447398576887196,
+    "u": 0.7369597356244165,
+    "mapping": [
+     0
+    ],
+    "score": 0.7555527431555009,
+    "claim": "If A watches TV, A wastes time.",
+    "read": []
+   }
+  },
+  "cost": {
+   "claims": 2,
+   "pairs": 1,
+   "statements": 9,
+   "seconds": 0.03177746199071407
+  }
+ },
+ {
+  "judge": "nli-deberta-large",
+  "form": "first person",
+  "believed": false,
+  "threshold": 0.6592527778093171,
+  "answers": {
+   "()": {
+    "P": 0.7165445972392712,
+    "b": 0.541248274516765,
+    "d": 0.0,
+    "u": 0.458751725483235
+   }
+  },
+  "matches": {
+   "play_games => wastes_time": {
+    "P": 0.456479923234647,
+    "b": 0.308606058141764,
+    "d": 0.0002135436764857947,
+    "u": 0.6911803981817501,
+    "mapping": [],
+    "score": 0.8871585754106872,
+    "claim": "If I play video games, I waste time.",
+    "read": []
+   },
+   "watch_tv => wastes_time": {
+    "P": 0.478482185151918,
+    "b": 0.3365543464066127,
+    "d": 5.770444200804037e-05,
+    "u": 0.6633879491513792,
+    "mapping": [],
+    "score": 0.9675023112125959,
+    "claim": "If I watch TV, I waste time.",
+    "read": []
+   }
+  },
+  "cost": {
+   "claims": 2,
+   "pairs": 0,
+   "statements": 8,
+   "seconds": 0.006146237021312118
+  }
+ },
+ {
+  "judge": "nli-deberta-large",
+  "form": "first person",
+  "believed": true,
+  "threshold": 0.6592527778093171,
+  "answers": {
+   "()": {
+    "P": 0.6524212412741555,
+    "b": 0.4757410095892055,
+    "d": 0.06188556531302858,
+    "u": 0.4623734250977659
+   }
+  },
+  "matches": {
+   "gaming_productive => play_games": {
+    "P": 0.5256165525190305,
+    "b": 0.39653101076066344,
+    "d": 0.00010749533361424738,
+    "u": 0.6033614939057222,
+    "mapping": [],
+    "score": 0.9581604079477685,
+    "claim": "If I consider gaming to be productive, I play video games.",
+    "read": []
+   },
+   "play_games => wastes_time": {
+    "P": 0.33352466561340266,
+    "b": 0.22548242114825323,
+    "d": 0.2695150112718311,
+    "u": 0.5050025675799157,
+    "mapping": [],
+    "score": 0.8871595456096408,
+    "claim": "If I play video games, I waste time.",
+    "read": [
+     {
+      "statement": "I consider gaming to be productive.",
+      "similarity": 0.7644031047821045,
+      "side": "against",
+      "P": 0.13952739301814643,
+      "b": 3.6090567034232192e-06,
+      "d": 0.34784528571776596,
+      "u": 0.6521511052255307
+     }
+    ]
+   },
+   "watch_tv => wastes_time": {
+    "P": 0.4784821871228814,
+    "b": 0.3365543489141379,
+    "d": 5.770444243797195e-05,
+    "u": 0.6633879466434242,
+    "mapping": [],
+    "score": 0.9675023184210496,
+    "claim": "If I watch TV, I waste time.",
+    "read": []
+   }
+  },
+  "cost": {
+   "claims": 3,
+   "pairs": 1,
+   "statements": 9,
+   "seconds": 0.02347948681563139
+  }
+ },
+ {
+  "judge": "nli-deberta-large",
+  "form": "first person",
+  "believed": false,
+  "threshold": 0.03,
+  "answers": {
+   "()": {
+    "P": 0.7165445972392712,
+    "b": 0.541248274516765,
+    "d": 0.0,
+    "u": 0.458751725483235
+   }
+  },
+  "matches": {
+   "play_games => wastes_time": {
+    "P": 0.456479923234647,
+    "b": 0.308606058141764,
+    "d": 0.0002135436764857947,
+    "u": 0.6911803981817501,
+    "mapping": [],
+    "score": 0.8871585754106872,
+    "claim": "If I play video games, I waste time.",
+    "read": []
+   },
+   "watch_tv => wastes_time": {
+    "P": 0.478482185151918,
+    "b": 0.3365543464066127,
+    "d": 5.770444200804037e-05,
+    "u": 0.6633879491513792,
+    "mapping": [],
+    "score": 0.9675023112125959,
+    "claim": "If I watch TV, I waste time.",
+    "read": []
+   }
+  },
+  "cost": {
+   "claims": 2,
+   "pairs": 0,
+   "statements": 8,
+   "seconds": 0.00013847998343408108
+  }
+ },
+ {
+  "judge": "nli-deberta-large",
+  "form": "first person",
+  "believed": true,
+  "threshold": 0.03,
+  "answers": {
+   "()": {
+    "P": 0.6524212412741555,
+    "b": 0.4757410095892055,
+    "d": 0.06188556531302858,
+    "u": 0.4623734250977659
+   }
+  },
+  "matches": {
+   "gaming_productive => play_games": {
+    "P": 0.5256165525190305,
+    "b": 0.39653101076066344,
+    "d": 0.00010749533361424738,
+    "u": 0.6033614939057222,
+    "mapping": [],
+    "score": 0.9581604079477685,
+    "claim": "If I consider gaming to be productive, I play video games.",
+    "read": []
+   },
+   "play_games => wastes_time": {
+    "P": 0.33352466561340266,
+    "b": 0.22548242114825323,
+    "d": 0.2695150112718311,
+    "u": 0.5050025675799157,
+    "mapping": [],
+    "score": 0.8871595456096408,
+    "claim": "If I play video games, I waste time.",
+    "read": [
+     {
+      "statement": "I consider gaming to be productive.",
+      "similarity": 0.7644031047821045,
+      "side": "against",
+      "P": 0.13952739301814643,
+      "b": 3.6090567034232192e-06,
+      "d": 0.34784528571776596,
+      "u": 0.6521511052255307
+     }
+    ]
+   },
+   "watch_tv => wastes_time": {
+    "P": 0.4784821871228814,
+    "b": 0.3365543489141379,
+    "d": 5.770444243797195e-05,
+    "u": 0.6633879466434242,
+    "mapping": [],
+    "score": 0.9675023184210496,
+    "claim": "If I watch TV, I waste time.",
+    "read": []
+   }
+  },
+  "cost": {
+   "claims": 3,
+   "pairs": 1,
+   "statements": 9,
+   "seconds": 0.019788318080827594
+  }
+ }
+]

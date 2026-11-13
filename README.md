@@ -200,6 +200,23 @@ descendant_of(british_army, queen_victoria)    P 0.324  b 0.321  d 0.637  u 0.04
 
 The British Army descends from Victoria because one of her sons served in it, read through a rewrite that takes a person's military branch for their child. Jev admitted that rewrite at 0.330, so the answer is more probably wrong than right. [RESULTS.md](RESULTS.md#how-sure-is-each-answer) has the same measurement on all three questions.
 
+### Does what the knowledge base states change the answer?
+
+`--check` reads each rewrite the judge admitted against what the knowledge base states, so a belief you state can withdraw a match it contradicts. `examples/actions_first_person.kb` states eight things I do, such as "I watch TV" and "I play video games", and asks whether I waste time. nli-deberta-large matches two of them:
+
+```sh
+semrewrite rewrites examples/actions_first_person.kb wastes_time --retriever all --check
+```
+
+Add the belief to the file, as a gloss and a fact with no arguments, and ask again:
+
+```text
+gloss gaming_productive "I consider gaming to be productive".
+gaming_productive.
+```
+
+The judge reads the belief as contradicting the gaming match, "If I play video games, I waste time.", and as saying nothing about watching TV's, so the gaming match falls from P 0.456 to 0.334, below watching TV's 0.478, which does not move. `--explain` names the statement that weighed and how the judge read it. The check reads rewrites, not answers: the same model reads the belief as contradicting "sam wastes time." as surely as "kim wastes time.", though only kim plays games. It reads only the statements that stand out in similarity to a rewrite, because it reads most unrelated statements as contradictions too; [DESIGN.md](DESIGN.md#the-claim-check) says how, and [RESULTS.md](RESULTS.md#what-the-knowledge-base-states) gives the measurements.
+
 ## A small example: choosing the threshold
 
 `examples/parent_of_tom.kb` states Tom's family in words that never say "parent", in the rewriter's plain-text format. Each predicate has a gloss, a sentence with a placeholder per argument, which is what the entailment model reads, and the `gold` lines say which implications a careful reader accepts:
@@ -331,7 +348,9 @@ The core runs on Python 3.11 or later; the PyMeTTa engine needs 3.12 or later. `
 ```sh
 semrewrite ask KB QUERY [--judge NAME] [--engine python|pymetta] [--strategy NAME] [--depth N] [--explain] [--trace] [--json]
 semrewrite ask KB QUERY --beliefs [--answer-threshold P]  # each answer with its opinion, ranked by P
+semrewrite ask KB QUERY --check [--explain]               # opinions after weighing each rewrite against what KB states
 semrewrite rewrites KB PREDICATE [--judge NAME] [--all]   # what discovery admits, and with --all what it rejects
+semrewrite rewrites KB PREDICATE --check                  # each admitted rewrite's opinion and the statements read
 semrewrite rewrites KB PREDICATE --snars                  # the admitted rewrites as SNARS beliefs and rules for GoalChainer
 semrewrite judge [--judge NAME] [--trust T] [--base-rate A] < PAIRS  # each sentence pair's opinion, as JSON lines
 semrewrite engines                                       # installed engines and their capabilities
@@ -340,7 +359,7 @@ semrewrite conformance --engine NAME                     # check an engine again
 semrewrite convert family.metta family.kb                # between the text, JSON and MeTTa formats
 ```
 
-`--judge oracle` uses the `gold` lines of the knowledge base instead of a model, which is how tests and the experiment separate engine behaviour from judge error. `--retriever all` judges every predicate of the right arity instead of the 8 nearest by gloss embedding, which suits small catalogues and loads no embedding model. `--retriever judge` ranks every predicate with the `--prefilter` judge, the cross-encoder nli-deberta-large by default, and the admitting judge sees only the `--k` it ranks highest, which suits a catalogue too large to judge whole, such as Wikidata's 1,790 properties above. `--depth N` replaces the strategy's depth bound, counted the way the strategy counts it, and `--depth 0` removes it. `--explain` prints each answer's derivation and the rewrites admitted, and `--trace` prints each step on standard error as it happens, as in the Alphabet example above. `--beliefs` prints each answer with its opinion, highest P first, as in the Victoria example above, and `--answer-threshold P` drops the answers below P. `rewrites --snars` prints each admitted rewrite as two lines of the live world of mettabase's SNARS, the subjective-logic reasoner GoalChainer uses: its validity, a statement `(valid rw-owns-owned_by_p127-10)` believed with the rewrite's opinion as evidence, and a row of SNARS's rule kit deriving `owns(X0, X1)` from `owned_by_p127(X1, X0)` and that statement. SNARS's `sn prove` then applies the rewrite by subjective-logic deduction, and every application of it shares the one validity statement, as every answer through it does here. `judge` reads sentence pairs from standard input, one JSON object a line with a `premise` and a `conclusion`, and writes each pair's opinion as a JSON line, calibrated at the judge's trust and base rate unless `--trust` and `--base-rate` give others, for pairs drawn from another population; GoalChainer uses it to ask whether a request states an element of a problem. The exit status is 0 when the query finished, 2 when a budget stopped it and 1 on an error.
+`--judge oracle` uses the `gold` lines of the knowledge base instead of a model, which is how tests and the experiment separate engine behaviour from judge error. `--retriever all` judges every predicate of the right arity instead of the 8 nearest by gloss embedding, which suits small catalogues and loads no embedding model. `--retriever judge` ranks every predicate with the `--prefilter` judge, the cross-encoder nli-deberta-large by default, and the admitting judge sees only the `--k` it ranks highest, which suits a catalogue too large to judge whole, such as Wikidata's 1,790 properties above. `--depth N` replaces the strategy's depth bound, counted the way the strategy counts it, and `--depth 0` removes it. `--explain` prints each answer's derivation and the rewrites admitted, and `--trace` prints each step on standard error as it happens, as in the Alphabet example above. `--beliefs` prints each answer with its opinion, highest P first, as in the Victoria example above, and `--answer-threshold P` drops the answers below P. `--check` weighs each admitted rewrite against the knowledge base's statements read by meaning before the answers are weighed, and turns `--beliefs` on; with `--explain` it lists under each admitted rewrite the statements read against it and how the judge read each, and `--json` writes them with the check's cost. `rewrites --check` prints each admitted rewrite's opinion after the check, and `rewrites --snars --check` exports that opinion. The check needs a judge that reads sentences, so `--judge oracle` refuses it, and it uses the run's embedding model, loading the default one when `--retriever` is `all` or `judge`. `rewrites --snars` prints each admitted rewrite as two lines of the live world of mettabase's SNARS, the subjective-logic reasoner GoalChainer uses: its validity, a statement `(valid rw-owns-owned_by_p127-10)` believed with the rewrite's opinion as evidence, and a row of SNARS's rule kit deriving `owns(X0, X1)` from `owned_by_p127(X1, X0)` and that statement. SNARS's `sn prove` then applies the rewrite by subjective-logic deduction, and every application of it shares the one validity statement, as every answer through it does here. `judge` reads sentence pairs from standard input, one JSON object a line with a `premise` and a `conclusion`, and writes each pair's opinion as a JSON line, calibrated at the judge's trust and base rate unless `--trust` and `--base-rate` give others, for pairs drawn from another population; GoalChainer uses it to ask whether a request states an element of a problem. The exit status is 0 when the query finished, 2 when a budget stopped it and 1 on an error.
 
 ## Python
 
@@ -355,6 +374,8 @@ outcome = rewriter.ask("grandparent(X, tom)", "lazy-tabled")
 print(outcome.answers)        # {('carol', 'tom'), ('dave', 'tom')}
 print(outcome.admitted)       # the rewrites admitted, as (premise, conclusion, argument mapping)
 ```
+
+`Rewriter(kb, judge, engine, beliefs=16, claims=ClaimCheck(kb, judge, EmbeddingRetriever()))` gives answers beliefs after the claim check, `ClaimCheck` from `semrewrite` and `EmbeddingRetriever` from `semrewrite.retrieve`; `outcome.readings` then holds the statements read against each admitted rewrite.
 
 A knowledge base can also be built in code with `KB`, `atom` and `Rule`, and predicates may have any arity: `gave(x, y, z)` with the gloss `{x} gave {y} to {z}` implies `received(z, y, x)`, and discovery proposes every argument mapping.
 

@@ -6,7 +6,8 @@ nli-deberta-large ranks all 1,790 properties and the judge decides on the top K.
 question, then the rewrites each judge admitted into the question's own predicates and some of the answers each run
 got wrong; summary() puts the runs allowed one rewrite on a path in one table across the questions; beliefs() ranks
 each question's answers by the opinion each gets from its lineage, with Jev admitting at two rewrite thresholds and
-nli-deberta-large at its own, and scores the ranking against Wikidata's answer.
+nli-deberta-large at its own, the last also with the claim check reading each admitted rewrite against the knowledge
+base's statements (semrewrite.claims), and scores the ranking against Wikidata's answer.
 
 Run from the repository root: python examples/wikidata/evaluate.py [NAME ...]; with --beliefs first it
 prints the beliefs table and writes results/wikidata_beliefs.json, which RESULTS.md's table reads.
@@ -39,13 +40,15 @@ sys.path[:0] = [str(ROOT), str(HERE)]
 from questions import QUESTIONS, Question, property_id
 
 from semrewrite import formats
+from semrewrite.claims import ClaimCheck
 from semrewrite.engines import make as make_engine
 from semrewrite.judges import default_data_trust
 from semrewrite.judges import default_threshold as make_threshold
 from semrewrite.judges import make as make_judge
+from semrewrite.judges.base import SentenceJudge
 from semrewrite.lineage import SETS
 from semrewrite.protocols import Budget
-from semrewrite.retrieve import JudgeRetriever
+from semrewrite.retrieve import EmbeddingRetriever, JudgeRetriever
 from semrewrite.rewriter import STRATEGIES, Rewriter
 
 if TYPE_CHECKING:
@@ -70,6 +73,9 @@ STOPPED = {"work_limit": "the work budget stopped it", "time_limit": "the time b
 # threshold RESULTS.md calibrated for answer F1 and at a low one that admits more true rewrites with the false, leaving
 # the answer threshold to sort their answers; and nli-deberta-large, a model that runs locally, beside Jev's hosted one.
 BELIEF_RUNS = (("jev", 0.65), ("jev", 0.1), ("nli-deberta-large", None))
+# The belief runs repeated with the claim check on. Its judge is the run's, asked about new sentence pairs, so it runs
+# with the locally run nli-deberta-large; Jev would need a TypeSafe key for every pair its cache lacks.
+CHECK_RUNS = (("nli-deberta-large", None),)
 
 
 @cache
@@ -79,6 +85,14 @@ def _tools() -> tuple[Engine, JudgeRetriever]:
     retriever = JudgeRetriever(make_judge("nli-deberta-large"))
     atexit.register(retriever.close)
     return make_engine("pymetta"), retriever
+
+
+@cache
+def _embedder() -> EmbeddingRetriever:
+    """The embedding model the claim check chooses statements with, one a process, released when the process ends."""
+    embedder = EmbeddingRetriever()
+    atexit.register(embedder.close)
+    return embedder
 
 
 @cache
@@ -208,20 +222,30 @@ def summary(names: list[str]) -> str:
     return "\n".join(rows)
 
 
-# Time: one cascade ranking and one solve, then the lineage of every answer.
+# Time: one cascade ranking and one solve, then the lineage of every answer, and with the check one reading of each
+# admitted rewrite against the statements that stand out from it.
 @cache
-def _believed(name: str, judge_name: str, threshold: float | None) -> Outcome:
+def _believed(name: str, judge_name: str, threshold: float | None, check: bool = False) -> tuple[Outcome, dict | None]:
     """The question answered with `judge_name` admitting at `threshold`, its calibrated default when None, one rewrite
     on a path, each answer with its opinion as `semrewrite ask --beliefs` gives it: from the judge's opinions fused
-    with the knowledge base's evidence at the judge's calibrated data trust."""
+    with the knowledge base's evidence at the judge's calibrated data trust, and with `check`, as `--check` gives it,
+    with the statements the judge reads against each rewrite's claim fused in too. With the check comes its cost:
+    the claims it read, the judge pairs it asked, the statements it embedded and its seconds."""
     _, kb, _, _ = _question(name)
     engine, retriever = _tools()
     judge = make_judge(judge_name) if threshold is None else make_judge(judge_name, threshold=threshold)
+    if check and not isinstance(judge, SentenceJudge):
+        msg = f"judge {judge_name} does not read sentences, so it cannot check claims"
+        raise TypeError(msg)
+    claims = ClaimCheck(kb, judge, _embedder()) if check and isinstance(judge, SentenceJudge) else None
     rewriter = Rewriter(kb, judge, engine, retriever, k=K, budget=Budget(work=WORK, seconds=math.inf), beliefs=SETS,
-                        data_trust=default_data_trust(judge_name))
+                        data_trust=default_data_trust(judge_name), claims=claims)
     out = rewriter.ask(kb.queries[0], replace(STRATEGY, depth=1), rewriter.discoverer())
     judge.close()
-    return out
+    if claims is None:
+        return out, None
+    weighed = sum(any(r.opinion.belief or r.opinion.disbelief for r in rs) for rs in (out.readings or {}).values())
+    return out, {**claims.usage, "seconds": claims.seconds, "rewrites_weighed": weighed}
 
 
 def ranking(question: Question, truth: set[str], out: Outcome) -> dict[str, float | None]:
@@ -256,11 +280,12 @@ def belief_rows(names: list[str]) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
     for name in names or list(QUESTIONS):
         question, _, truth, _ = _question(name)
-        for judge_name, chosen in BELIEF_RUNS:
-            out = _believed(name, judge_name, chosen)
+        runs = [(judge, chosen, False) for judge, chosen in BELIEF_RUNS] + [(j, c, True) for j, c in CHECK_RUNS]
+        for judge_name, chosen, check in runs:
+            out, cost = _believed(name, judge_name, chosen, check)
             got = question.answers_of(out.answers)
             threshold = make_threshold(judge_name) if chosen is None else chosen
-            rows.append({"question": name, "judge": judge_name, "threshold": threshold,
+            rows.append({"question": name, "judge": judge_name, "threshold": threshold, "check": cost,
                          "answers": len(got), "outside": len(got - truth), "truth": len(truth),
                          "rewrites": len(out.admitted), "ranking": ranking(question, truth, out)})
     return rows
@@ -271,15 +296,22 @@ def beliefs(rows: list[dict[str, object]]) -> str:
     def number(x: object) -> str:
         return "none" if x is None else f"{x:.3f}"
 
-    head = ["question", "judge", "rewrite threshold", "answers", "not in Wikidata's", "F1 of all answers",
-            "average precision by P", "best F1 by P (at P)", "lowest P inside", "highest P outside"]
+    def checked(cost: object) -> str:
+        if not isinstance(cost, dict):
+            return "off"
+        return (f"{cost['rewrites_weighed']} of {cost['claims']} rewrites moved; {cost['pairs']:,} judge pairs, "
+                f"{cost['seconds']:.1f} s")
+
+    head = ["question", "judge", "rewrite threshold", "claim check", "answers", "not in Wikidata's",
+            "F1 of all answers", "average precision by P", "best F1 by P (at P)", "lowest P inside",
+            "highest P outside"]
     lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     for r in rows:
         m = r["ranking"]
         assert isinstance(m, dict)
         lines.append("| " + " | ".join([
-            str(r["question"]), str(r["judge"]), f"{r['threshold']:.3g}", f"{r['answers']:,}", f"{r['outside']:,}",
-            number(m["f1"]), number(m["ap"]), f"{number(m['best_f1'])} ({number(m['at'])})",
+            str(r["question"]), str(r["judge"]), f"{r['threshold']:.3g}", checked(r.get("check")), f"{r['answers']:,}",
+            f"{r['outside']:,}", number(m["f1"]), number(m["ap"]), f"{number(m['best_f1'])} ({number(m['at'])})",
             number(m["lowest_inside"]), number(m["highest_outside"])])
             + " |")
     return "\n".join(lines)
@@ -290,7 +322,7 @@ def placed(name: str, threshold: float, shown: int = 5) -> str:
     probability: the `shown` highest outside Wikidata's answer and the `shown` lowest inside it, with each one's rank
     and opinion, as a markdown table."""
     question, _, truth, _ = _question(name)
-    out = _believed(name, "jev", threshold)
+    out, _ = _believed(name, "jev", threshold)
     if not out.finished or out.beliefs is None:
         msg = f"{name}: {out.status} {out.detail}"
         raise RuntimeError(msg)

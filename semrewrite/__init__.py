@@ -12,10 +12,12 @@ semrewrite.protocols.Engine.
     print(rw.ask("parent(X, tom)").answers)
 
 Importing this module needs neither PyMeTTa nor any model; engines and judges
-load their backends when made.
+load their backends when made. Rewriter(..., claims=ClaimCheck(kb, judge,
+embedder)) weighs each admitted rewrite against the knowledge base's statements.
 """
 
 from semrewrite.admission import Directional, Threshold
+from semrewrite.claims import ClaimCheck
 from semrewrite.discovery import Discoverer, ScoreCache
 from semrewrite.kb import KB, atom
 from semrewrite.model import Atom, Predicate, Proposal, Rewrite, Rule, parse_atom
@@ -25,7 +27,8 @@ from semrewrite.rewriter import STRATEGIES, CapabilityError, Outcome, Rewriter, 
 __version__ = "0.1.0"
 
 __all__ = [
-    "KB", "STRATEGIES", "Admission", "Atom", "Budget", "Capabilities", "CapabilityError", "Directional", "Discoverer",
+    "KB", "STRATEGIES", "Admission", "Atom", "Budget", "Capabilities", "CapabilityError", "ClaimCheck", "Directional",
+    "Discoverer",
     "Engine", "Judge", "Outcome", "Predicate", "Program", "Proof", "Proposal", "Retriever", "Rewrite", "Rewriter",
     "Rule", "ScoreCache", "Solution", "Strategy", "Threshold", "atom", "parse_atom",
 ]

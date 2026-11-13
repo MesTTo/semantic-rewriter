@@ -1,0 +1,3192 @@
+{
+ "nli-deberta-large": {
+  "chosen_spread": 3.75,
+  "dev": {
+   "before": {
+    "other_contradiction": 0.2495,
+    "other_pairs": 2000,
+    "own_as_written": 0.1813157894736842,
+    "own_pairs": 3800,
+    "strengthener_as_written": 0.032105263157894734,
+    "weakener_as_written": 0.33052631578947367
+   },
+   "claims": 1900,
+   "judge": "nli-deberta-large",
+   "pairs_judged": 51667,
+   "seconds": {
+    "embedding": 10.6,
+    "judging": 165.2
+   },
+   "sizes": {
+    "128": [
+     {
+      "net_per_claim": -0.15877520137587967,
+      "other_contradiction": 0.1765724177726486,
+      "others_per_claim": 0.9121052631578948,
+      "own_as_written": 0.14087301587301587,
+      "own_recall": 0.13263157894736843,
+      "spread": 2.0,
+      "spurious_per_claim": 0.16105263157894736
+     },
+     {
+      "net_per_claim": -0.058685920079888876,
+      "other_contradiction": 0.17534246575342466,
+      "others_per_claim": 0.38421052631578945,
+      "own_as_written": 0.1373134328358209,
+      "own_recall": 0.0881578947368421,
+      "spread": 2.25,
+      "spurious_per_claim": 0.06736842105263158
+     },
+     {
+      "net_per_claim": -0.013885135217408464,
+      "other_contradiction": 0.15807560137457044,
+      "others_per_claim": 0.1531578947368421,
+      "own_as_written": 0.15714285714285714,
+      "own_recall": 0.05526315789473684,
+      "spread": 2.5,
+      "spurious_per_claim": 0.024210526315789474
+     },
+     {
+      "net_per_claim": 0.0004349984237244815,
+      "other_contradiction": 0.128,
+      "others_per_claim": 0.06578947368421052,
+      "own_as_written": 0.17557251908396945,
+      "own_recall": 0.034473684210526316,
+      "spread": 2.75,
+      "spurious_per_claim": 0.008421052631578947
+     },
+     {
+      "net_per_claim": 0.003944343959309075,
+      "other_contradiction": 0.1,
+      "others_per_claim": 0.02631578947368421,
+      "own_as_written": 0.189873417721519,
+      "own_recall": 0.020789473684210528,
+      "spread": 3.0,
+      "spurious_per_claim": 0.002631578947368421
+     },
+     {
+      "net_per_claim": 0.004266478234311389,
+      "other_contradiction": 0.19047619047619047,
+      "others_per_claim": 0.011052631578947368,
+      "own_as_written": 0.26,
+      "own_recall": 0.013157894736842105,
+      "spread": 3.25,
+      "spurious_per_claim": 0.002105263157894737
+     },
+     {
+      "net_per_claim": 0.0022049407990860095,
+      "other_contradiction": 0.1,
+      "others_per_claim": 0.005263157894736842,
+      "own_as_written": 0.18518518518518517,
+      "own_recall": 0.007105263157894737,
+      "spread": 3.5,
+      "spurious_per_claim": 0.0005263157894736842
+     },
+     {
+      "net_per_claim": 0.0016454485661580897,
+      "other_contradiction": 0.2,
+      "others_per_claim": 0.002631578947368421,
+      "own_as_written": 0.25,
+      "own_recall": 0.004210526315789474,
+      "spread": 3.75,
+      "spurious_per_claim": 0.0005263157894736842
+     },
+     {
+      "net_per_claim": 0.0011243906257577129,
+      "other_contradiction": 0.5,
+      "others_per_claim": 0.0010526315789473684,
+      "own_as_written": 0.375,
+      "own_recall": 0.002105263157894737,
+      "spread": 4.0,
+      "spurious_per_claim": 0.0005263157894736842
+     },
+     {
+      "net_per_claim": 1.6488463630796005e-06,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 1.6488463630796005e-06,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0
+     }
+    ],
+    "32": [
+     {
+      "net_per_claim": -0.04120484884545467,
+      "other_contradiction": 0.22437137330754353,
+      "others_per_claim": 0.27210526315789474,
+      "own_as_written": 0.1341991341991342,
+      "own_recall": 0.12157894736842105,
+      "spread": 2.0,
+      "spurious_per_claim": 0.061052631578947365
+     },
+     {
+      "net_per_claim": -0.014389505166002379,
+      "other_contradiction": 0.2277580071174377,
+      "others_per_claim": 0.14789473684210527,
+      "own_as_written": 0.15151515151515152,
+      "own_recall": 0.0868421052631579,
+      "spread": 2.25,
+      "spurious_per_claim": 0.03368421052631579
+     },
+     {
+      "net_per_claim": -0.007073480519058552,
+      "other_contradiction": 0.22916666666666666,
+      "others_per_claim": 0.07578947368421053,
+      "own_as_written": 0.14537444933920704,
+      "own_recall": 0.05973684210526316,
+      "spread": 2.5,
+      "spurious_per_claim": 0.017368421052631578
+     },
+     {
+      "net_per_claim": 4.096225249454913e-05,
+      "other_contradiction": 0.2,
+      "others_per_claim": 0.042105263157894736,
+      "own_as_written": 0.15757575757575756,
+      "own_recall": 0.04342105263157895,
+      "spread": 2.75,
+      "spurious_per_claim": 0.008421052631578947
+     },
+     {
+      "net_per_claim": 0.0008480275955490012,
+      "other_contradiction": 0.14,
+      "others_per_claim": 0.02631578947368421,
+      "own_as_written": 0.1320754716981132,
+      "own_recall": 0.027894736842105264,
+      "spread": 3.0,
+      "spurious_per_claim": 0.0036842105263157894
+     },
+     {
+      "net_per_claim": -0.00018760680430562207,
+      "other_contradiction": 0.21428571428571427,
+      "others_per_claim": 0.014736842105263158,
+      "own_as_written": 0.1506849315068493,
+      "own_recall": 0.019210526315789473,
+      "spread": 3.25,
+      "spurious_per_claim": 0.003157894736842105
+     },
+     {
+      "net_per_claim": -0.0007841298045119381,
+      "other_contradiction": 0.25,
+      "others_per_claim": 0.008421052631578947,
+      "own_as_written": 0.1590909090909091,
+      "own_recall": 0.011578947368421053,
+      "spread": 3.5,
+      "spurious_per_claim": 0.002105263157894737
+     },
+     {
+      "net_per_claim": 0.0006646142135804354,
+      "other_contradiction": 0.23076923076923078,
+      "others_per_claim": 0.006842105263157895,
+      "own_as_written": 0.2692307692307692,
+      "own_recall": 0.006842105263157895,
+      "spread": 3.75,
+      "spurious_per_claim": 0.0015789473684210526
+     },
+     {
+      "net_per_claim": 0.0018277366984691009,
+      "other_contradiction": 0.2222222222222222,
+      "others_per_claim": 0.004736842105263158,
+      "own_as_written": 0.375,
+      "own_recall": 0.004210526315789474,
+      "spread": 4.0,
+      "spurious_per_claim": 0.0010526315789473684
+     },
+     {
+      "net_per_claim": 0.0007492609212590852,
+      "other_contradiction": 0.2,
+      "others_per_claim": 0.002631578947368421,
+      "own_as_written": 0.42857142857142855,
+      "own_recall": 0.0018421052631578947,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0005263157894736842
+     },
+     {
+      "net_per_claim": -0.00011741688735531206,
+      "other_contradiction": 0.3333333333333333,
+      "others_per_claim": 0.0015789473684210526,
+      "own_as_written": 0.25,
+      "own_recall": 0.0010526315789473684,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0005263157894736842
+     },
+     {
+      "net_per_claim": 0.00043423965319284226,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0010526315789473684,
+      "own_as_written": 0.5,
+      "own_recall": 0.0005263157894736842,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0005422829542543802,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0005263157894736842,
+      "own_as_written": 1.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0005422829542543802,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0005263157894736842,
+      "own_as_written": 1.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0005422829542543802,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0005263157894736842,
+      "own_as_written": 1.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0005472327644132962,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 1.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0005472327644132962,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 1.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0
+     }
+    ],
+    "512": [
+     {
+      "net_per_claim": -0.607177629561959,
+      "other_contradiction": 0.16980822815931815,
+      "others_per_claim": 3.2110526315789474,
+      "own_as_written": 0.12959381044487428,
+      "own_recall": 0.13605263157894737,
+      "spread": 2.0,
+      "spurious_per_claim": 0.5452631578947369
+     },
+     {
+      "net_per_claim": -0.2440234067168097,
+      "other_contradiction": 0.170394469296462,
+      "others_per_claim": 1.2942105263157895,
+      "own_as_written": 0.1303030303030303,
+      "own_recall": 0.0868421052631579,
+      "spread": 2.25,
+      "spurious_per_claim": 0.22052631578947368
+     },
+     {
+      "net_per_claim": -0.09914410163438642,
+      "other_contradiction": 0.1695736434108527,
+      "others_per_claim": 0.5431578947368421,
+      "own_as_written": 0.14150943396226415,
+      "own_recall": 0.05578947368421053,
+      "spread": 2.5,
+      "spurious_per_claim": 0.09210526315789473
+     },
+     {
+      "net_per_claim": -0.037786841058512606,
+      "other_contradiction": 0.1550561797752809,
+      "others_per_claim": 0.23421052631578948,
+      "own_as_written": 0.171875,
+      "own_recall": 0.03368421052631579,
+      "spread": 2.75,
+      "spurious_per_claim": 0.03631578947368421
+     },
+     {
+      "net_per_claim": -0.01646543531096214,
+      "other_contradiction": 0.15577889447236182,
+      "others_per_claim": 0.10473684210526316,
+      "own_as_written": 0.17567567567567569,
+      "own_recall": 0.019473684210526317,
+      "spread": 3.0,
+      "spurious_per_claim": 0.01631578947368421
+     },
+     {
+      "net_per_claim": -0.005834924969741371,
+      "other_contradiction": 0.14285714285714285,
+      "others_per_claim": 0.04421052631578947,
+      "own_as_written": 0.175,
+      "own_recall": 0.010526315789473684,
+      "spread": 3.25,
+      "spurious_per_claim": 0.00631578947368421
+     },
+     {
+      "net_per_claim": -0.0021093624276796613,
+      "other_contradiction": 0.13157894736842105,
+      "others_per_claim": 0.02,
+      "own_as_written": 0.15789473684210525,
+      "own_recall": 0.005,
+      "spread": 3.5,
+      "spurious_per_claim": 0.002631578947368421
+     },
+     {
+      "net_per_claim": -0.0010465200489535409,
+      "other_contradiction": 0.125,
+      "others_per_claim": 0.008421052631578947,
+      "own_as_written": 0.125,
+      "own_recall": 0.002105263157894737,
+      "spread": 3.75,
+      "spurious_per_claim": 0.0010526315789473684
+     },
+     {
+      "net_per_claim": -0.0005416777353878573,
+      "other_contradiction": 0.14285714285714285,
+      "others_per_claim": 0.0036842105263157894,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 4.0,
+      "spurious_per_claim": 0.0005263157894736842
+     },
+     {
+      "net_per_claim": -0.0005400306135983214,
+      "other_contradiction": 0.2,
+      "others_per_claim": 0.002631578947368421,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0005263157894736842
+     },
+     {
+      "net_per_claim": 4.919321453098241e-07,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0010526315789473684,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0
+     }
+    ],
+    "8": [
+     {
+      "net_per_claim": -0.00762297657200583,
+      "other_contradiction": 0.25280898876404495,
+      "others_per_claim": 0.09368421052631579,
+      "own_as_written": 0.12530120481927712,
+      "own_recall": 0.10921052631578948,
+      "spread": 2.0,
+      "spurious_per_claim": 0.02368421052631579
+     },
+     {
+      "net_per_claim": -0.008352271323190589,
+      "other_contradiction": 0.22727272727272727,
+      "others_per_claim": 0.06947368421052631,
+      "own_as_written": 0.10185185185185185,
+      "own_recall": 0.08526315789473685,
+      "spread": 2.25,
+      "spurious_per_claim": 0.015789473684210527
+     },
+     {
+      "net_per_claim": -0.006702926378426689,
+      "other_contradiction": 0.21428571428571427,
+      "others_per_claim": 0.05157894736842105,
+      "own_as_written": 0.099601593625498,
+      "own_recall": 0.06605263157894736,
+      "spread": 2.5,
+      "spurious_per_claim": 0.011052631578947368
+     },
+     {
+      "net_per_claim": -0.0013306801083040822,
+      "other_contradiction": 0.16901408450704225,
+      "others_per_claim": 0.03736842105263158,
+      "own_as_written": 0.1065989847715736,
+      "own_recall": 0.0518421052631579,
+      "spread": 2.75,
+      "spurious_per_claim": 0.00631578947368421
+     },
+     {
+      "net_per_claim": -0.0010322637133717801,
+      "other_contradiction": 0.14,
+      "others_per_claim": 0.02631578947368421,
+      "own_as_written": 0.09876543209876543,
+      "own_recall": 0.04263157894736842,
+      "spread": 3.0,
+      "spurious_per_claim": 0.0036842105263157894
+     },
+     {
+      "net_per_claim": -0.0015293319682587283,
+      "other_contradiction": 0.175,
+      "others_per_claim": 0.021052631578947368,
+      "own_as_written": 0.09375,
+      "own_recall": 0.03368421052631579,
+      "spread": 3.25,
+      "spurious_per_claim": 0.0036842105263157894
+     },
+     {
+      "net_per_claim": -0.0009800190693387248,
+      "other_contradiction": 0.18181818181818182,
+      "others_per_claim": 0.017368421052631578,
+      "own_as_written": 0.09259259259259259,
+      "own_recall": 0.028421052631578948,
+      "spread": 3.5,
+      "spurious_per_claim": 0.003157894736842105
+     },
+     {
+      "net_per_claim": -1.093154755919183e-06,
+      "other_contradiction": 0.20833333333333334,
+      "others_per_claim": 0.01263157894736842,
+      "own_as_written": 0.10126582278481013,
+      "own_recall": 0.020789473684210528,
+      "spread": 3.75,
+      "spurious_per_claim": 0.002631578947368421
+     },
+     {
+      "net_per_claim": 0.0007779197544029872,
+      "other_contradiction": 0.16666666666666666,
+      "others_per_claim": 0.009473684210526316,
+      "own_as_written": 0.08955223880597014,
+      "own_recall": 0.017631578947368422,
+      "spread": 4.0,
+      "spurious_per_claim": 0.0015789473684210526
+     },
+     {
+      "net_per_claim": 0.0007499541078695033,
+      "other_contradiction": 0.07142857142857142,
+      "others_per_claim": 0.007368421052631579,
+      "own_as_written": 0.08,
+      "own_recall": 0.013157894736842105,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0005263157894736842
+     },
+     {
+      "net_per_claim": 0.0012871786925398039,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.005263157894736842,
+      "own_as_written": 0.0975609756097561,
+      "own_recall": 0.010789473684210526,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0012982953659255085,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.004736842105263158,
+      "own_as_written": 0.1111111111111111,
+      "own_recall": 0.009473684210526316,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0013053702090112741,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.004736842105263158,
+      "own_as_written": 0.125,
+      "own_recall": 0.008421052631578947,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0018475024962595979,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0036842105263157894,
+      "own_as_written": 0.14285714285714285,
+      "own_recall": 0.007368421052631579,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.001738808925396815,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0036842105263157894,
+      "own_as_written": 0.17391304347826086,
+      "own_recall": 0.0060526315789473685,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.001742993097960653,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.002631578947368421,
+      "own_as_written": 0.21052631578947367,
+      "own_recall": 0.005,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0017391398861527608,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.002105263157894737,
+      "own_as_written": 0.25,
+      "own_recall": 0.004210526315789474,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0
+     }
+    ],
+    "all": [
+     {
+      "net_per_claim": -4.569677303311217,
+      "other_contradiction": 0.17280731846769581,
+      "others_per_claim": 23.013157894736842,
+      "own_as_written": 0.12786259541984732,
+      "own_recall": 0.13789473684210526,
+      "spread": 2.0,
+      "spurious_per_claim": 3.9768421052631577
+     },
+     {
+      "net_per_claim": -1.7757017667008772,
+      "other_contradiction": 0.16767653227685855,
+      "others_per_claim": 9.033684210526316,
+      "own_as_written": 0.12094395280235988,
+      "own_recall": 0.08921052631578948,
+      "spread": 2.25,
+      "spurious_per_claim": 1.5147368421052632
+     },
+     {
+      "net_per_claim": -0.7353879757613742,
+      "other_contradiction": 0.16500852757248435,
+      "others_per_claim": 3.703157894736842,
+      "own_as_written": 0.14832535885167464,
+      "own_recall": 0.055,
+      "spread": 2.5,
+      "spurious_per_claim": 0.6110526315789474
+     },
+     {
+      "net_per_claim": -0.3054447657026312,
+      "other_contradiction": 0.15428002654280026,
+      "others_per_claim": 1.5863157894736841,
+      "own_as_written": 0.1774193548387097,
+      "own_recall": 0.03263157894736842,
+      "spread": 2.75,
+      "spurious_per_claim": 0.24473684210526317
+     },
+     {
+      "net_per_claim": -0.12653261744866137,
+      "other_contradiction": 0.13764880952380953,
+      "others_per_claim": 0.7073684210526315,
+      "own_as_written": 0.18840579710144928,
+      "own_recall": 0.018157894736842106,
+      "spread": 3.0,
+      "spurious_per_claim": 0.09736842105263158
+     },
+     {
+      "net_per_claim": -0.05466938374223244,
+      "other_contradiction": 0.12932604735883424,
+      "others_per_claim": 0.2889473684210526,
+      "own_as_written": 0.17073170731707318,
+      "own_recall": 0.010789473684210526,
+      "spread": 3.25,
+      "spurious_per_claim": 0.03736842105263158
+     },
+     {
+      "net_per_claim": -0.023700307058082806,
+      "other_contradiction": 0.12757201646090535,
+      "others_per_claim": 0.12789473684210526,
+      "own_as_written": 0.16666666666666666,
+      "own_recall": 0.004736842105263158,
+      "spread": 3.5,
+      "spurious_per_claim": 0.01631578947368421
+     },
+     {
+      "net_per_claim": -0.0074058556876174,
+      "other_contradiction": 0.125,
+      "others_per_claim": 0.042105263157894736,
+      "own_as_written": 0.14285714285714285,
+      "own_recall": 0.0018421052631578947,
+      "spread": 3.75,
+      "spurious_per_claim": 0.005263157894736842
+     },
+     {
+      "net_per_claim": -0.0030029308412489893,
+      "other_contradiction": 0.08571428571428572,
+      "others_per_claim": 0.018421052631578946,
+      "own_as_written": 0.5,
+      "own_recall": 0.0005263157894736842,
+      "spread": 4.0,
+      "spurious_per_claim": 0.0015789473684210526
+     },
+     {
+      "net_per_claim": -0.0019083694023511453,
+      "other_contradiction": 0.05555555555555555,
+      "others_per_claim": 0.009473684210526316,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0005263157894736842
+     },
+     {
+      "net_per_claim": -0.0004352850642618728,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0036842105263157894,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": -0.0002721492063835399,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0015789473684210526,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": -5.889004739559521e-05,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0010526315789473684,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": -2.238222341686877e-06,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0005263157894736842,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0
+     }
+    ]
+   },
+   "statements": 3748,
+   "trust": 0.3478589585846057
+  },
+  "test": {
+   "before": {
+    "other_contradiction": 0.271,
+    "other_pairs": 2000,
+    "own_as_written": 0.18148510014655594,
+    "own_pairs": 4094,
+    "strengthener_as_written": 0.03175378602833415,
+    "weakener_as_written": 0.3312164142647777
+   },
+   "claims": 2047,
+   "judge": "nli-deberta-large",
+   "pairs_judged": 58338,
+   "seconds": {
+    "embedding": 13.2,
+    "judging": 191.1
+   },
+   "sizes": {
+    "128": [
+     {
+      "net_per_claim": -0.1614863330020472,
+      "other_contradiction": 0.18358291735995563,
+      "others_per_claim": 0.8808011724474841,
+      "own_as_written": 0.14613778705636743,
+      "own_recall": 0.11700048851978505,
+      "spread": 2.0,
+      "spurious_per_claim": 0.1617000488519785
+     },
+     {
+      "net_per_claim": -0.06373772166013879,
+      "other_contradiction": 0.1882673942701228,
+      "others_per_claim": 0.35808500244259894,
+      "own_as_written": 0.1414141414141414,
+      "own_recall": 0.07254518808011724,
+      "spread": 2.25,
+      "spurious_per_claim": 0.06741573033707865
+     },
+     {
+      "net_per_claim": -0.018641753608141205,
+      "other_contradiction": 0.16831683168316833,
+      "others_per_claim": 0.14802149487054225,
+      "own_as_written": 0.164021164021164,
+      "own_recall": 0.046165119687347336,
+      "spread": 2.5,
+      "spurious_per_claim": 0.024914509037616023
+     },
+     {
+      "net_per_claim": -0.009286243699395652,
+      "other_contradiction": 0.18840579710144928,
+      "others_per_claim": 0.06741573033707865,
+      "own_as_written": 0.14563106796116504,
+      "own_recall": 0.02515876893014167,
+      "spread": 2.75,
+      "spurious_per_claim": 0.012701514411333659
+     },
+     {
+      "net_per_claim": -0.002441321156761726,
+      "other_contradiction": 0.1694915254237288,
+      "others_per_claim": 0.02882266731802638,
+      "own_as_written": 0.16981132075471697,
+      "own_recall": 0.012945774303859306,
+      "spread": 3.0,
+      "spurious_per_claim": 0.004885197850512946
+     },
+     {
+      "net_per_claim": -0.00026006510742883327,
+      "other_contradiction": 0.21739130434782608,
+      "others_per_claim": 0.011235955056179775,
+      "own_as_written": 0.1935483870967742,
+      "own_recall": 0.007572056668295066,
+      "spread": 3.25,
+      "spurious_per_claim": 0.002442598925256473
+     },
+     {
+      "net_per_claim": -0.00058865712536466,
+      "other_contradiction": 0.25,
+      "others_per_claim": 0.005862237420615535,
+      "own_as_written": 0.25,
+      "own_recall": 0.0029311187103077674,
+      "spread": 3.5,
+      "spurious_per_claim": 0.0014655593551538837
+     },
+     {
+      "net_per_claim": 0.0009615684093182439,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0019540791402051783,
+      "own_as_written": 0.3,
+      "own_recall": 0.002442598925256473,
+      "spread": 3.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.00048475289398322205,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0009770395701025891,
+      "own_as_written": 0.25,
+      "own_recall": 0.0009770395701025891,
+      "spread": 4.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 2.5874943319719612e-05,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 0.0,
+      "own_recall": 0.0007327796775769418,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 1.9459413783856735e-05,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 0.0,
+      "own_recall": 0.0004885197850512946,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 1.7451908833453765e-07,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002442598925256473,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0
+     }
+    ],
+    "32": [
+     {
+      "net_per_claim": -0.034293958566592224,
+      "other_contradiction": 0.1812191103789127,
+      "others_per_claim": 0.29653150952613583,
+      "own_as_written": 0.1543340380549683,
+      "own_recall": 0.11553492916463116,
+      "spread": 2.0,
+      "spurious_per_claim": 0.0537371763556424
+     },
+     {
+      "net_per_claim": -0.010495950886381843,
+      "other_contradiction": 0.17197452229299362,
+      "others_per_claim": 0.1533952125061065,
+      "own_as_written": 0.1606060606060606,
+      "own_recall": 0.0806057645334636,
+      "spread": 2.25,
+      "spurious_per_claim": 0.026380068392769906
+     },
+     {
+      "net_per_claim": -0.008162218478448422,
+      "other_contradiction": 0.1878453038674033,
+      "others_per_claim": 0.08842208109428432,
+      "own_as_written": 0.14485981308411214,
+      "own_recall": 0.05227161700048852,
+      "spread": 2.5,
+      "spurious_per_claim": 0.016609672691744015
+     },
+     {
+      "net_per_claim": 0.0006019091448327999,
+      "other_contradiction": 0.11458333333333333,
+      "others_per_claim": 0.04689789936492428,
+      "own_as_written": 0.15602836879432624,
+      "own_recall": 0.03444064484611627,
+      "spread": 2.75,
+      "spurious_per_claim": 0.00537371763556424
+     },
+     {
+      "net_per_claim": 0.0005181168269963849,
+      "other_contradiction": 0.11320754716981132,
+      "others_per_claim": 0.025891548607718612,
+      "own_as_written": 0.16091954022988506,
+      "own_recall": 0.021250610649731314,
+      "spread": 3.0,
+      "spurious_per_claim": 0.0029311187103077674
+     },
+     {
+      "net_per_claim": 0.0019533972063131583,
+      "other_contradiction": 0.125,
+      "others_per_claim": 0.01172447484123107,
+      "own_as_written": 0.24444444444444444,
+      "own_recall": 0.010991695163654128,
+      "spread": 3.25,
+      "spurious_per_claim": 0.0014655593551538837
+     },
+     {
+      "net_per_claim": 0.0016588380558097027,
+      "other_contradiction": 0.08333333333333333,
+      "others_per_claim": 0.005862237420615535,
+      "own_as_written": 0.20833333333333334,
+      "own_recall": 0.005862237420615535,
+      "spread": 3.5,
+      "spurious_per_claim": 0.0004885197850512946
+     },
+     {
+      "net_per_claim": -0.0003941718660217694,
+      "other_contradiction": 0.1,
+      "others_per_claim": 0.004885197850512946,
+      "own_as_written": 0.08333333333333333,
+      "own_recall": 0.0029311187103077674,
+      "spread": 3.75,
+      "spurious_per_claim": 0.0004885197850512946
+     },
+     {
+      "net_per_claim": -0.00037411864978225464,
+      "other_contradiction": 0.14285714285714285,
+      "others_per_claim": 0.003419638495359062,
+      "own_as_written": 0.1,
+      "own_recall": 0.002442598925256473,
+      "spread": 4.0,
+      "spurious_per_claim": 0.0004885197850512946
+     },
+     {
+      "net_per_claim": -0.0008912063712549278,
+      "other_contradiction": 0.2,
+      "others_per_claim": 0.002442598925256473,
+      "own_as_written": 0.0,
+      "own_recall": 0.0012212994626282364,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0004885197850512946
+     },
+     {
+      "net_per_claim": -0.0005264890460560708,
+      "other_contradiction": 0.2,
+      "others_per_claim": 0.002442598925256473,
+      "own_as_written": 0.0,
+      "own_recall": 0.0004885197850512946,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0004885197850512946
+     },
+     {
+      "net_per_claim": -0.0005262925949089125,
+      "other_contradiction": 0.2,
+      "others_per_claim": 0.002442598925256473,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002442598925256473,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0004885197850512946
+     },
+     {
+      "net_per_claim": 1.6164918189238767e-06,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0009770395701025891,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002442598925256473,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 1.710325630687546e-06,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0004885197850512946,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002442598925256473,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 2.8271511548626356e-06,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002442598925256473,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 2.8271511548626356e-06,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002442598925256473,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 2.8271511548626356e-06,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002442598925256473,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0
+     }
+    ],
+    "512": [
+     {
+      "net_per_claim": -0.6075388602074691,
+      "other_contradiction": 0.1745398773006135,
+      "others_per_claim": 3.185148998534441,
+      "own_as_written": 0.14435146443514643,
+      "own_recall": 0.1167562286272594,
+      "spread": 2.0,
+      "spurious_per_claim": 0.5559355153883733
+     },
+     {
+      "net_per_claim": -0.2105736142246152,
+      "other_contradiction": 0.15576923076923077,
+      "others_per_claim": 1.2701514411333659,
+      "own_as_written": 0.14426229508196722,
+      "own_recall": 0.07449926722032242,
+      "spread": 2.25,
+      "spurious_per_claim": 0.1978505129457743
+     },
+     {
+      "net_per_claim": -0.08012858079548643,
+      "other_contradiction": 0.1563106796116505,
+      "others_per_claim": 0.5031753786028335,
+      "own_as_written": 0.15591397849462366,
+      "own_recall": 0.045432340009770394,
+      "spread": 2.5,
+      "spurious_per_claim": 0.07865168539325842
+     },
+     {
+      "net_per_claim": -0.027479063709427872,
+      "other_contradiction": 0.1411192214111922,
+      "others_per_claim": 0.20078163165608207,
+      "own_as_written": 0.15306122448979592,
+      "own_recall": 0.023937469467513434,
+      "spread": 2.75,
+      "spurious_per_claim": 0.028334147532975085
+     },
+     {
+      "net_per_claim": -0.009336810030776568,
+      "other_contradiction": 0.13966480446927373,
+      "others_per_claim": 0.08744504152418173,
+      "own_as_written": 0.1864406779661017,
+      "own_recall": 0.01441133365901319,
+      "spread": 3.0,
+      "spurious_per_claim": 0.012212994626282364
+     },
+     {
+      "net_per_claim": -0.004029013460268538,
+      "other_contradiction": 0.14102564102564102,
+      "others_per_claim": 0.038104543234000976,
+      "own_as_written": 0.21428571428571427,
+      "own_recall": 0.006839276990718124,
+      "spread": 3.25,
+      "spurious_per_claim": 0.00537371763556424
+     },
+     {
+      "net_per_claim": -0.0020278856321923906,
+      "other_contradiction": 0.15151515151515152,
+      "others_per_claim": 0.01612115290669272,
+      "own_as_written": 0.1875,
+      "own_recall": 0.0039081582804103565,
+      "spread": 3.5,
+      "spurious_per_claim": 0.002442598925256473
+     },
+     {
+      "net_per_claim": 0.0002797274674352584,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.008793356130923302,
+      "own_as_written": 0.3333333333333333,
+      "own_recall": 0.0014655593551538837,
+      "spread": 3.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": -0.000340805750715469,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.00537371763556424,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002442598925256473,
+      "spread": 4.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": -0.00017025641800640253,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0019540791402051783,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": -1.1258259059596359e-05,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0009770395701025891,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0
+     }
+    ],
+    "8": [
+     {
+      "net_per_claim": -0.008011094556543724,
+      "other_contradiction": 0.22580645161290322,
+      "others_per_claim": 0.10600879335613092,
+      "own_as_written": 0.13615023474178403,
+      "own_recall": 0.10405471421592574,
+      "spread": 2.0,
+      "spurious_per_claim": 0.023937469467513434
+     },
+     {
+      "net_per_claim": -0.005590139449938506,
+      "other_contradiction": 0.2532467532467532,
+      "others_per_claim": 0.07523204689789936,
+      "own_as_written": 0.14375,
+      "own_recall": 0.07816316560820713,
+      "spread": 2.25,
+      "spurious_per_claim": 0.019052271617000488
+     },
+     {
+      "net_per_claim": -0.0034097422862886554,
+      "other_contradiction": 0.25862068965517243,
+      "others_per_claim": 0.05666829506595017,
+      "own_as_written": 0.14112903225806453,
+      "own_recall": 0.060576453346360526,
+      "spread": 2.5,
+      "spurious_per_claim": 0.014655593551538837
+     },
+     {
+      "net_per_claim": -0.0001695990631643815,
+      "other_contradiction": 0.1978021978021978,
+      "others_per_claim": 0.044455300439667805,
+      "own_as_written": 0.140625,
+      "own_recall": 0.04689789936492428,
+      "spread": 2.75,
+      "spurious_per_claim": 0.008793356130923302
+     },
+     {
+      "net_per_claim": 0.002850646024742994,
+      "other_contradiction": 0.1774193548387097,
+      "others_per_claim": 0.030288226673180263,
+      "own_as_written": 0.1509433962264151,
+      "own_recall": 0.03883732291157792,
+      "spread": 3.0,
+      "spurious_per_claim": 0.00537371763556424
+     },
+     {
+      "net_per_claim": 0.0028731642482190145,
+      "other_contradiction": 0.21951219512195122,
+      "others_per_claim": 0.020029311187103077,
+      "own_as_written": 0.15503875968992248,
+      "own_recall": 0.0315095261358085,
+      "spread": 3.25,
+      "spurious_per_claim": 0.004396678065461651
+     },
+     {
+      "net_per_claim": 0.0030503163822398175,
+      "other_contradiction": 0.21875,
+      "others_per_claim": 0.015632633121641426,
+      "own_as_written": 0.16666666666666666,
+      "own_recall": 0.024914509037616023,
+      "spread": 3.5,
+      "spurious_per_claim": 0.003419638495359062
+     },
+     {
+      "net_per_claim": 0.003200507050283858,
+      "other_contradiction": 0.2413793103448276,
+      "others_per_claim": 0.014167073766487542,
+      "own_as_written": 0.19540229885057472,
+      "own_recall": 0.021250610649731314,
+      "spread": 3.75,
+      "spurious_per_claim": 0.003419638495359062
+     },
+     {
+      "net_per_claim": 0.0046171745015447935,
+      "other_contradiction": 0.23809523809523808,
+      "others_per_claim": 0.010258915486077186,
+      "own_as_written": 0.2222222222222222,
+      "own_recall": 0.017586712261846604,
+      "spread": 4.0,
+      "spurious_per_claim": 0.002442598925256473
+     },
+     {
+      "net_per_claim": 0.0047005606935314375,
+      "other_contradiction": 0.2222222222222222,
+      "others_per_claim": 0.008793356130923302,
+      "own_as_written": 0.23809523809523808,
+      "own_recall": 0.015388373229115779,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0019540791402051783
+     },
+     {
+      "net_per_claim": 0.004763680803413089,
+      "other_contradiction": 0.3076923076923077,
+      "others_per_claim": 0.006350757205666829,
+      "own_as_written": 0.2631578947368421,
+      "own_recall": 0.013922813873961895,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0019540791402051783
+     },
+     {
+      "net_per_claim": 0.004742358115706126,
+      "other_contradiction": 0.3,
+      "others_per_claim": 0.004885197850512946,
+      "own_as_written": 0.28888888888888886,
+      "own_recall": 0.010991695163654128,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0014655593551538837
+     },
+     {
+      "net_per_claim": 0.0028838295530113117,
+      "other_contradiction": 0.3333333333333333,
+      "others_per_claim": 0.004396678065461651,
+      "own_as_written": 0.2571428571428571,
+      "own_recall": 0.008549096238397655,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0014655593551538837
+     },
+     {
+      "net_per_claim": 0.002308639185371154,
+      "other_contradiction": 0.25,
+      "others_per_claim": 0.0039081582804103565,
+      "own_as_written": 0.23333333333333334,
+      "own_recall": 0.0073277967757694185,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0009770395701025891
+     },
+     {
+      "net_per_claim": 0.002303084735067582,
+      "other_contradiction": 0.25,
+      "others_per_claim": 0.0039081582804103565,
+      "own_as_written": 0.2692307692307692,
+      "own_recall": 0.006350757205666829,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0009770395701025891
+     },
+     {
+      "net_per_claim": 0.0012961298811677128,
+      "other_contradiction": 0.14285714285714285,
+      "others_per_claim": 0.003419638495359062,
+      "own_as_written": 0.2222222222222222,
+      "own_recall": 0.004396678065461651,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0004885197850512946
+     },
+     {
+      "net_per_claim": 0.0018042196924794823,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0029311187103077674,
+      "own_as_written": 0.2222222222222222,
+      "own_recall": 0.004396678065461651,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0
+     }
+    ],
+    "all": [
+     {
+      "net_per_claim": -4.610042325307749,
+      "other_contradiction": 0.16506468020345227,
+      "others_per_claim": 24.395701025891547,
+      "own_as_written": 0.14345114345114346,
+      "own_recall": 0.11748900830483634,
+      "spread": 2.0,
+      "spurious_per_claim": 4.0268685881778215
+     },
+     {
+      "net_per_claim": -1.7243089495751225,
+      "other_contradiction": 0.1578182573044787,
+      "others_per_claim": 9.413287738153395,
+      "own_as_written": 0.13815789473684212,
+      "own_recall": 0.07425500732779677,
+      "spread": 2.25,
+      "spurious_per_claim": 1.4855886663409867
+     },
+     {
+      "net_per_claim": -0.6407796629482837,
+      "other_contradiction": 0.14971106034135198,
+      "others_per_claim": 3.635075720566683,
+      "own_as_written": 0.13259668508287292,
+      "own_recall": 0.04421104054714216,
+      "spread": 2.5,
+      "spurious_per_claim": 0.5442110405471422
+     },
+     {
+      "net_per_claim": -0.26210481302490385,
+      "other_contradiction": 0.15067114093959733,
+      "others_per_claim": 1.455788959452858,
+      "own_as_written": 0.15306122448979592,
+      "own_recall": 0.023937469467513434,
+      "spread": 2.75,
+      "spurious_per_claim": 0.21934538348803126
+     },
+     {
+      "net_per_claim": -0.10592044048775504,
+      "other_contradiction": 0.15016501650165018,
+      "others_per_claim": 0.592085979482169,
+      "own_as_written": 0.16981132075471697,
+      "own_recall": 0.012945774303859306,
+      "spread": 3.0,
+      "spurious_per_claim": 0.08891060087933561
+     },
+     {
+      "net_per_claim": -0.04756062253033114,
+      "other_contradiction": 0.16470588235294117,
+      "others_per_claim": 0.24914509037616023,
+      "own_as_written": 0.16666666666666666,
+      "own_recall": 0.005862237420615535,
+      "spread": 3.25,
+      "spurious_per_claim": 0.04103566194430874
+     },
+     {
+      "net_per_claim": -0.0173090666389069,
+      "other_contradiction": 0.1497584541062802,
+      "others_per_claim": 0.10112359550561797,
+      "own_as_written": 0.23076923076923078,
+      "own_recall": 0.0031753786028334147,
+      "spread": 3.5,
+      "spurious_per_claim": 0.015144113336590131
+     },
+     {
+      "net_per_claim": -0.006019600884415839,
+      "other_contradiction": 0.14814814814814814,
+      "others_per_claim": 0.03957010258915486,
+      "own_as_written": 0.3333333333333333,
+      "own_recall": 0.0014655593551538837,
+      "spread": 3.75,
+      "spurious_per_claim": 0.005862237420615535
+     },
+     {
+      "net_per_claim": -0.002301924887482567,
+      "other_contradiction": 0.12903225806451613,
+      "others_per_claim": 0.015144113336590131,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.0,
+      "spurious_per_claim": 0.0019540791402051783
+     },
+     {
+      "net_per_claim": -0.000545617242381295,
+      "other_contradiction": 0.1111111111111111,
+      "others_per_claim": 0.004396678065461651,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0004885197850512946
+     },
+     {
+      "net_per_claim": -0.0005251463020464888,
+      "other_contradiction": 0.25,
+      "others_per_claim": 0.0019540791402051783,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0004885197850512946
+     },
+     {
+      "net_per_claim": -0.0005208868625953394,
+      "other_contradiction": 0.5,
+      "others_per_claim": 0.0009770395701025891,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0004885197850512946
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0
+     }
+    ]
+   },
+   "statements": 4037,
+   "trust": 0.3478589585846057
+  }
+ },
+ "nli-deberta-large-wanli": {
+  "chosen_spread": 3.75,
+  "dev": {
+   "before": {
+    "other_contradiction": 0.184,
+    "other_pairs": 2000,
+    "own_as_written": 0.14342105263157895,
+    "own_pairs": 3800,
+    "strengthener_as_written": 0.024736842105263158,
+    "weakener_as_written": 0.26210526315789473
+   },
+   "claims": 1900,
+   "judge": "nli-deberta-large-wanli",
+   "pairs_judged": 51667,
+   "seconds": {
+    "embedding": 12.5,
+    "judging": 70.6
+   },
+   "sizes": {
+    "128": [
+     {
+      "net_per_claim": -0.23557861173564285,
+      "other_contradiction": 0.1402192729371033,
+      "others_per_claim": 0.9121052631578948,
+      "own_as_written": 0.10714285714285714,
+      "own_recall": 0.13263157894736843,
+      "spread": 2.0,
+      "spurious_per_claim": 0.12789473684210526
+     },
+     {
+      "net_per_claim": -0.09104758077560135,
+      "other_contradiction": 0.15205479452054796,
+      "others_per_claim": 0.38421052631578945,
+      "own_as_written": 0.12238805970149254,
+      "own_recall": 0.0881578947368421,
+      "spread": 2.25,
+      "spurious_per_claim": 0.05842105263157895
+     },
+     {
+      "net_per_claim": -0.020142835178363138,
+      "other_contradiction": 0.13745704467353953,
+      "others_per_claim": 0.1531578947368421,
+      "own_as_written": 0.15714285714285714,
+      "own_recall": 0.05526315789473684,
+      "spread": 2.5,
+      "spurious_per_claim": 0.021052631578947368
+     },
+     {
+      "net_per_claim": 0.00553137523569909,
+      "other_contradiction": 0.112,
+      "others_per_claim": 0.06578947368421052,
+      "own_as_written": 0.19083969465648856,
+      "own_recall": 0.034473684210526316,
+      "spread": 2.75,
+      "spurious_per_claim": 0.007368421052631579
+     },
+     {
+      "net_per_claim": 0.006285733273650328,
+      "other_contradiction": 0.08,
+      "others_per_claim": 0.02631578947368421,
+      "own_as_written": 0.17721518987341772,
+      "own_recall": 0.020789473684210528,
+      "spread": 3.0,
+      "spurious_per_claim": 0.002105263157894737
+     },
+     {
+      "net_per_claim": 0.009526101022343495,
+      "other_contradiction": 0.047619047619047616,
+      "others_per_claim": 0.011052631578947368,
+      "own_as_written": 0.24,
+      "own_recall": 0.013157894736842105,
+      "spread": 3.25,
+      "spurious_per_claim": 0.0005263157894736842
+     },
+     {
+      "net_per_claim": 0.004356600145534409,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.005263157894736842,
+      "own_as_written": 0.14814814814814814,
+      "own_recall": 0.007105263157894737,
+      "spread": 3.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.004018902811913218,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.002631578947368421,
+      "own_as_written": 0.25,
+      "own_recall": 0.004210526315789474,
+      "spread": 3.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.002197599437392076,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0010526315789473684,
+      "own_as_written": 0.25,
+      "own_recall": 0.002105263157894737,
+      "spread": 4.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 6.717574428023636e-07,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 6.717574428023636e-07,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0
+     }
+    ],
+    "32": [
+     {
+      "net_per_claim": -0.03654153447560904,
+      "other_contradiction": 0.15087040618955513,
+      "others_per_claim": 0.27210526315789474,
+      "own_as_written": 0.1277056277056277,
+      "own_recall": 0.12157894736842105,
+      "spread": 2.0,
+      "spurious_per_claim": 0.04105263157894737
+     },
+     {
+      "net_per_claim": -0.002736331626585109,
+      "other_contradiction": 0.1387900355871886,
+      "others_per_claim": 0.14789473684210527,
+      "own_as_written": 0.1393939393939394,
+      "own_recall": 0.0868421052631579,
+      "spread": 2.25,
+      "spurious_per_claim": 0.020526315789473684
+     },
+     {
+      "net_per_claim": 0.004957456926794918,
+      "other_contradiction": 0.1527777777777778,
+      "others_per_claim": 0.07578947368421053,
+      "own_as_written": 0.14977973568281938,
+      "own_recall": 0.05973684210526316,
+      "spread": 2.5,
+      "spurious_per_claim": 0.011578947368421053
+     },
+     {
+      "net_per_claim": 0.011417807260239195,
+      "other_contradiction": 0.125,
+      "others_per_claim": 0.042105263157894736,
+      "own_as_written": 0.15757575757575756,
+      "own_recall": 0.04342105263157895,
+      "spread": 2.75,
+      "spurious_per_claim": 0.005263157894736842
+     },
+     {
+      "net_per_claim": 0.008018720077485934,
+      "other_contradiction": 0.12,
+      "others_per_claim": 0.02631578947368421,
+      "own_as_written": 0.14150943396226415,
+      "own_recall": 0.027894736842105264,
+      "spread": 3.0,
+      "spurious_per_claim": 0.003157894736842105
+     },
+     {
+      "net_per_claim": 0.006566538188579628,
+      "other_contradiction": 0.17857142857142858,
+      "others_per_claim": 0.014736842105263158,
+      "own_as_written": 0.1643835616438356,
+      "own_recall": 0.019210526315789473,
+      "spread": 3.25,
+      "spurious_per_claim": 0.002631578947368421
+     },
+     {
+      "net_per_claim": 0.0009318633840695508,
+      "other_contradiction": 0.25,
+      "others_per_claim": 0.008421052631578947,
+      "own_as_written": 0.11363636363636363,
+      "own_recall": 0.011578947368421053,
+      "spread": 3.5,
+      "spurious_per_claim": 0.002105263157894737
+     },
+     {
+      "net_per_claim": 0.002746419082740905,
+      "other_contradiction": 0.23076923076923078,
+      "others_per_claim": 0.006842105263157895,
+      "own_as_written": 0.19230769230769232,
+      "own_recall": 0.006842105263157895,
+      "spread": 3.75,
+      "spurious_per_claim": 0.0015789473684210526
+     },
+     {
+      "net_per_claim": 0.00297518404940679,
+      "other_contradiction": 0.2222222222222222,
+      "others_per_claim": 0.004736842105263158,
+      "own_as_written": 0.25,
+      "own_recall": 0.004210526315789474,
+      "spread": 4.0,
+      "spurious_per_claim": 0.0010526315789473684
+     },
+     {
+      "net_per_claim": 0.0014681146449340137,
+      "other_contradiction": 0.2,
+      "others_per_claim": 0.002631578947368421,
+      "own_as_written": 0.2857142857142857,
+      "own_recall": 0.0018421052631578947,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0005263157894736842
+     },
+     {
+      "net_per_claim": 0.0004077899887799021,
+      "other_contradiction": 0.3333333333333333,
+      "others_per_claim": 0.0015789473684210526,
+      "own_as_written": 0.25,
+      "own_recall": 0.0010526315789473684,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0005263157894736842
+     },
+     {
+      "net_per_claim": 0.0010365021817862296,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0010526315789473684,
+      "own_as_written": 0.5,
+      "own_recall": 0.0005263157894736842,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0011303012413368017,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0005263157894736842,
+      "own_as_written": 1.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0011303012413368017,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0005263157894736842,
+      "own_as_written": 1.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0011303012413368017,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0005263157894736842,
+      "own_as_written": 1.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0011313791594029846,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 1.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0011313791594029846,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 1.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0
+     }
+    ],
+    "512": [
+     {
+      "net_per_claim": -0.9740936881522797,
+      "other_contradiction": 0.15013932142271758,
+      "others_per_claim": 3.2110526315789474,
+      "own_as_written": 0.10638297872340426,
+      "own_recall": 0.13605263157894737,
+      "spread": 2.0,
+      "spurious_per_claim": 0.48210526315789476
+     },
+     {
+      "net_per_claim": -0.37013013085225727,
+      "other_contradiction": 0.14680764538430255,
+      "others_per_claim": 1.2942105263157895,
+      "own_as_written": 0.12121212121212122,
+      "own_recall": 0.0868421052631579,
+      "spread": 2.25,
+      "spurious_per_claim": 0.19
+     },
+     {
+      "net_per_claim": -0.1400269817591089,
+      "other_contradiction": 0.14244186046511628,
+      "others_per_claim": 0.5431578947368421,
+      "own_as_written": 0.14150943396226415,
+      "own_recall": 0.05578947368421053,
+      "spread": 2.5,
+      "spurious_per_claim": 0.07736842105263157
+     },
+     {
+      "net_per_claim": -0.04440568813291926,
+      "other_contradiction": 0.12134831460674157,
+      "others_per_claim": 0.23421052631578948,
+      "own_as_written": 0.15625,
+      "own_recall": 0.03368421052631579,
+      "spread": 2.75,
+      "spurious_per_claim": 0.028421052631578948
+     },
+     {
+      "net_per_claim": -0.016072288979340835,
+      "other_contradiction": 0.11557788944723618,
+      "others_per_claim": 0.10473684210526316,
+      "own_as_written": 0.16216216216216217,
+      "own_recall": 0.019473684210526317,
+      "spread": 3.0,
+      "spurious_per_claim": 0.012105263157894737
+     },
+     {
+      "net_per_claim": -0.006322215976335282,
+      "other_contradiction": 0.13095238095238096,
+      "others_per_claim": 0.04421052631578947,
+      "own_as_written": 0.125,
+      "own_recall": 0.010526315789473684,
+      "spread": 3.25,
+      "spurious_per_claim": 0.005789473684210527
+     },
+     {
+      "net_per_claim": -0.003036172952133388,
+      "other_contradiction": 0.13157894736842105,
+      "others_per_claim": 0.02,
+      "own_as_written": 0.10526315789473684,
+      "own_recall": 0.005,
+      "spread": 3.5,
+      "spurious_per_claim": 0.002631578947368421
+     },
+     {
+      "net_per_claim": -0.0016010800851900377,
+      "other_contradiction": 0.125,
+      "others_per_claim": 0.008421052631578947,
+      "own_as_written": 0.125,
+      "own_recall": 0.002105263157894737,
+      "spread": 3.75,
+      "spurious_per_claim": 0.0010526315789473684
+     },
+     {
+      "net_per_claim": -0.00032102321471199046,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0036842105263157894,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 4.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": -0.0003076754413720343,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.002631578947368421,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": -1.6084080542306046e-06,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0010526315789473684,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002631578947368421,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0
+     }
+    ],
+    "8": [
+     {
+      "net_per_claim": -0.012306654214119025,
+      "other_contradiction": 0.2247191011235955,
+      "others_per_claim": 0.09368421052631579,
+      "own_as_written": 0.0746987951807229,
+      "own_recall": 0.10921052631578948,
+      "spread": 2.0,
+      "spurious_per_claim": 0.021052631578947368
+     },
+     {
+      "net_per_claim": -0.00703648129524649,
+      "other_contradiction": 0.20454545454545456,
+      "others_per_claim": 0.06947368421052631,
+      "own_as_written": 0.07407407407407407,
+      "own_recall": 0.08526315789473685,
+      "spread": 2.25,
+      "spurious_per_claim": 0.014210526315789474
+     },
+     {
+      "net_per_claim": -0.004741468417453273,
+      "other_contradiction": 0.1836734693877551,
+      "others_per_claim": 0.05157894736842105,
+      "own_as_written": 0.06772908366533864,
+      "own_recall": 0.06605263157894736,
+      "spread": 2.5,
+      "spurious_per_claim": 0.009473684210526316
+     },
+     {
+      "net_per_claim": 0.0016376208645421744,
+      "other_contradiction": 0.14084507042253522,
+      "others_per_claim": 0.03736842105263158,
+      "own_as_written": 0.08121827411167512,
+      "own_recall": 0.0518421052631579,
+      "spread": 2.75,
+      "spurious_per_claim": 0.005263157894736842
+     },
+     {
+      "net_per_claim": 0.0017784904368997748,
+      "other_contradiction": 0.12,
+      "others_per_claim": 0.02631578947368421,
+      "own_as_written": 0.07407407407407407,
+      "own_recall": 0.04263157894736842,
+      "spread": 3.0,
+      "spurious_per_claim": 0.003157894736842105
+     },
+     {
+      "net_per_claim": 0.002719057180057823,
+      "other_contradiction": 0.1,
+      "others_per_claim": 0.021052631578947368,
+      "own_as_written": 0.0703125,
+      "own_recall": 0.03368421052631579,
+      "spread": 3.25,
+      "spurious_per_claim": 0.002105263157894737
+     },
+     {
+      "net_per_claim": 0.002755989907618323,
+      "other_contradiction": 0.12121212121212122,
+      "others_per_claim": 0.017368421052631578,
+      "own_as_written": 0.08333333333333333,
+      "own_recall": 0.028421052631578948,
+      "spread": 3.5,
+      "spurious_per_claim": 0.002105263157894737
+     },
+     {
+      "net_per_claim": 0.002061994000273013,
+      "other_contradiction": 0.16666666666666666,
+      "others_per_claim": 0.01263157894736842,
+      "own_as_written": 0.10126582278481013,
+      "own_recall": 0.020789473684210528,
+      "spread": 3.75,
+      "spurious_per_claim": 0.002105263157894737
+     },
+     {
+      "net_per_claim": 0.0021080595723169697,
+      "other_contradiction": 0.2222222222222222,
+      "others_per_claim": 0.009473684210526316,
+      "own_as_written": 0.1044776119402985,
+      "own_recall": 0.017631578947368422,
+      "spread": 4.0,
+      "spurious_per_claim": 0.002105263157894737
+     },
+     {
+      "net_per_claim": 0.0028906457625702906,
+      "other_contradiction": 0.14285714285714285,
+      "others_per_claim": 0.007368421052631579,
+      "own_as_written": 0.12,
+      "own_recall": 0.013157894736842105,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0010526315789473684
+     },
+     {
+      "net_per_claim": 0.002501491584582381,
+      "other_contradiction": 0.1,
+      "others_per_claim": 0.005263157894736842,
+      "own_as_written": 0.12195121951219512,
+      "own_recall": 0.010789473684210526,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0005263157894736842
+     },
+     {
+      "net_per_claim": 0.0025061723290966845,
+      "other_contradiction": 0.1111111111111111,
+      "others_per_claim": 0.004736842105263158,
+      "own_as_written": 0.1388888888888889,
+      "own_recall": 0.009473684210526316,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0005263157894736842
+     },
+     {
+      "net_per_claim": 0.0032535918294722046,
+      "other_contradiction": 0.1111111111111111,
+      "others_per_claim": 0.004736842105263158,
+      "own_as_written": 0.15625,
+      "own_recall": 0.008421052631578947,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0005263157894736842
+     },
+     {
+      "net_per_claim": 0.003526904147496024,
+      "other_contradiction": 0.14285714285714285,
+      "others_per_claim": 0.0036842105263157894,
+      "own_as_written": 0.17857142857142858,
+      "own_recall": 0.007368421052631579,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0005263157894736842
+     },
+     {
+      "net_per_claim": 0.004197284817689402,
+      "other_contradiction": 0.14285714285714285,
+      "others_per_claim": 0.0036842105263157894,
+      "own_as_written": 0.21739130434782608,
+      "own_recall": 0.0060526315789473685,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0005263157894736842
+     },
+     {
+      "net_per_claim": 0.004243653093278075,
+      "other_contradiction": 0.2,
+      "others_per_claim": 0.002631578947368421,
+      "own_as_written": 0.2631578947368421,
+      "own_recall": 0.005,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0005263157894736842
+     },
+     {
+      "net_per_claim": 0.0042201520910300164,
+      "other_contradiction": 0.25,
+      "others_per_claim": 0.002105263157894737,
+      "own_as_written": 0.3125,
+      "own_recall": 0.004210526315789474,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0005263157894736842
+     }
+    ],
+    "all": [
+     {
+      "net_per_claim": -7.408583442986351,
+      "other_contradiction": 0.15156089193825042,
+      "others_per_claim": 23.013157894736842,
+      "own_as_written": 0.10687022900763359,
+      "own_recall": 0.13789473684210526,
+      "spread": 2.0,
+      "spurious_per_claim": 3.4878947368421054
+     },
+     {
+      "net_per_claim": -2.9227366748888786,
+      "other_contradiction": 0.14984852015847122,
+      "others_per_claim": 9.033684210526316,
+      "own_as_written": 0.11504424778761062,
+      "own_recall": 0.08921052631578948,
+      "spread": 2.25,
+      "spurious_per_claim": 1.3536842105263158
+     },
+     {
+      "net_per_claim": -1.154287997236317,
+      "other_contradiction": 0.1445423536100057,
+      "others_per_claim": 3.703157894736842,
+      "own_as_written": 0.15311004784688995,
+      "own_recall": 0.055,
+      "spread": 2.5,
+      "spurious_per_claim": 0.5352631578947369
+     },
+     {
+      "net_per_claim": -0.4500865367573947,
+      "other_contradiction": 0.12873258128732581,
+      "others_per_claim": 1.5863157894736841,
+      "own_as_written": 0.18548387096774194,
+      "own_recall": 0.03263157894736842,
+      "spread": 2.75,
+      "spurious_per_claim": 0.20421052631578948
+     },
+     {
+      "net_per_claim": -0.17710810892851991,
+      "other_contradiction": 0.11607142857142858,
+      "others_per_claim": 0.7073684210526315,
+      "own_as_written": 0.17391304347826086,
+      "own_recall": 0.018157894736842106,
+      "spread": 3.0,
+      "spurious_per_claim": 0.08210526315789474
+     },
+     {
+      "net_per_claim": -0.07204814168866892,
+      "other_contradiction": 0.11293260473588343,
+      "others_per_claim": 0.2889473684210526,
+      "own_as_written": 0.14634146341463414,
+      "own_recall": 0.010789473684210526,
+      "spread": 3.25,
+      "spurious_per_claim": 0.03263157894736842
+     },
+     {
+      "net_per_claim": -0.03717871819309139,
+      "other_contradiction": 0.12757201646090535,
+      "others_per_claim": 0.12789473684210526,
+      "own_as_written": 0.1111111111111111,
+      "own_recall": 0.004736842105263158,
+      "spread": 3.5,
+      "spurious_per_claim": 0.01631578947368421
+     },
+     {
+      "net_per_claim": -0.009867236711653592,
+      "other_contradiction": 0.1,
+      "others_per_claim": 0.042105263157894736,
+      "own_as_written": 0.14285714285714285,
+      "own_recall": 0.0018421052631578947,
+      "spread": 3.75,
+      "spurious_per_claim": 0.004210526315789474
+     },
+     {
+      "net_per_claim": -0.0029925772058293286,
+      "other_contradiction": 0.05714285714285714,
+      "others_per_claim": 0.018421052631578946,
+      "own_as_written": 0.5,
+      "own_recall": 0.0005263157894736842,
+      "spread": 4.0,
+      "spurious_per_claim": 0.0010526315789473684
+     },
+     {
+      "net_per_claim": -0.0012474279707060285,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.009473684210526316,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": -0.0010125787345858423,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0036842105263157894,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": -0.0008769527288679424,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0015789473684210526,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": -0.0007476526433573213,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0010526315789473684,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": -1.7031278589043734e-06,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0005263157894736842,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0
+     }
+    ]
+   },
+   "statements": 3748,
+   "trust": 0.5238106237293019
+  },
+  "test": {
+   "before": {
+    "other_contradiction": 0.178,
+    "other_pairs": 2000,
+    "own_as_written": 0.14753297508549096,
+    "own_pairs": 4094,
+    "strengthener_as_written": 0.030288226673180263,
+    "weakener_as_written": 0.26477772349780165
+   },
+   "claims": 2047,
+   "judge": "nli-deberta-large-wanli",
+   "pairs_judged": 58338,
+   "seconds": {
+    "embedding": 16.5,
+    "judging": 92.5
+   },
+   "sizes": {
+    "128": [
+     {
+      "net_per_claim": -0.24975705403703707,
+      "other_contradiction": 0.15585135884636717,
+      "others_per_claim": 0.8808011724474841,
+      "own_as_written": 0.11899791231732777,
+      "own_recall": 0.11700048851978505,
+      "spread": 2.0,
+      "spurious_per_claim": 0.13727405959941377
+     },
+     {
+      "net_per_claim": -0.09881978084205147,
+      "other_contradiction": 0.16234652114597545,
+      "others_per_claim": 0.35808500244259894,
+      "own_as_written": 0.11784511784511785,
+      "own_recall": 0.07254518808011724,
+      "spread": 2.25,
+      "spurious_per_claim": 0.05813385442110405
+     },
+     {
+      "net_per_claim": -0.033469038180022885,
+      "other_contradiction": 0.16501650165016502,
+      "others_per_claim": 0.14802149487054225,
+      "own_as_written": 0.13227513227513227,
+      "own_recall": 0.046165119687347336,
+      "spread": 2.5,
+      "spurious_per_claim": 0.024425989252564728
+     },
+     {
+      "net_per_claim": -0.013347982659440668,
+      "other_contradiction": 0.15217391304347827,
+      "others_per_claim": 0.06741573033707865,
+      "own_as_written": 0.13592233009708737,
+      "own_recall": 0.02515876893014167,
+      "spread": 2.75,
+      "spurious_per_claim": 0.010258915486077186
+     },
+     {
+      "net_per_claim": -0.004556585271272219,
+      "other_contradiction": 0.13559322033898305,
+      "others_per_claim": 0.02882266731802638,
+      "own_as_written": 0.1320754716981132,
+      "own_recall": 0.012945774303859306,
+      "spread": 3.0,
+      "spurious_per_claim": 0.0039081582804103565
+     },
+     {
+      "net_per_claim": -0.001109041756222305,
+      "other_contradiction": 0.13043478260869565,
+      "others_per_claim": 0.011235955056179775,
+      "own_as_written": 0.0967741935483871,
+      "own_recall": 0.007572056668295066,
+      "spread": 3.25,
+      "spurious_per_claim": 0.0014655593551538837
+     },
+     {
+      "net_per_claim": -0.0018467010202426872,
+      "other_contradiction": 0.16666666666666666,
+      "others_per_claim": 0.005862237420615535,
+      "own_as_written": 0.08333333333333333,
+      "own_recall": 0.0029311187103077674,
+      "spread": 3.5,
+      "spurious_per_claim": 0.0009770395701025891
+     },
+     {
+      "net_per_claim": -6.53452011581907e-05,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0019540791402051783,
+      "own_as_written": 0.1,
+      "own_recall": 0.002442598925256473,
+      "spread": 3.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0006050122885821777,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0009770395701025891,
+      "own_as_written": 0.25,
+      "own_recall": 0.0009770395701025891,
+      "spread": 4.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 1.2869055050496119e-05,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 0.0,
+      "own_recall": 0.0007327796775769418,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 1.0895904591838245e-05,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 0.0,
+      "own_recall": 0.0004885197850512946,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 1.2519514976569392e-06,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002442598925256473,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0
+     }
+    ],
+    "32": [
+     {
+      "net_per_claim": -0.06403147925127983,
+      "other_contradiction": 0.17462932454695224,
+      "others_per_claim": 0.29653150952613583,
+      "own_as_written": 0.12050739957716702,
+      "own_recall": 0.11553492916463116,
+      "spread": 2.0,
+      "spurious_per_claim": 0.051783097215437224
+     },
+     {
+      "net_per_claim": -0.0182388353769995,
+      "other_contradiction": 0.17197452229299362,
+      "others_per_claim": 0.1533952125061065,
+      "own_as_written": 0.1303030303030303,
+      "own_recall": 0.0806057645334636,
+      "spread": 2.25,
+      "spurious_per_claim": 0.026380068392769906
+     },
+     {
+      "net_per_claim": -0.012972289917203483,
+      "other_contradiction": 0.19337016574585636,
+      "others_per_claim": 0.08842208109428432,
+      "own_as_written": 0.11214953271028037,
+      "own_recall": 0.05227161700048852,
+      "spread": 2.5,
+      "spurious_per_claim": 0.01709819247679531
+     },
+     {
+      "net_per_claim": -0.003154486113733164,
+      "other_contradiction": 0.15625,
+      "others_per_claim": 0.04689789936492428,
+      "own_as_written": 0.10638297872340426,
+      "own_recall": 0.03444064484611627,
+      "spread": 2.75,
+      "spurious_per_claim": 0.0073277967757694185
+     },
+     {
+      "net_per_claim": -0.00462193473041166,
+      "other_contradiction": 0.20754716981132076,
+      "others_per_claim": 0.025891548607718612,
+      "own_as_written": 0.06896551724137931,
+      "own_recall": 0.021250610649731314,
+      "spread": 3.0,
+      "spurious_per_claim": 0.00537371763556424
+     },
+     {
+      "net_per_claim": 0.0014350347736151031,
+      "other_contradiction": 0.16666666666666666,
+      "others_per_claim": 0.01172447484123107,
+      "own_as_written": 0.13333333333333333,
+      "own_recall": 0.010991695163654128,
+      "spread": 3.25,
+      "spurious_per_claim": 0.0019540791402051783
+     },
+     {
+      "net_per_claim": 0.0009345054355501329,
+      "other_contradiction": 0.08333333333333333,
+      "others_per_claim": 0.005862237420615535,
+      "own_as_written": 0.08333333333333333,
+      "own_recall": 0.005862237420615535,
+      "spread": 3.5,
+      "spurious_per_claim": 0.0004885197850512946
+     },
+     {
+      "net_per_claim": -0.0009033579490185469,
+      "other_contradiction": 0.1,
+      "others_per_claim": 0.004885197850512946,
+      "own_as_written": 0.0,
+      "own_recall": 0.0029311187103077674,
+      "spread": 3.75,
+      "spurious_per_claim": 0.0004885197850512946
+     },
+     {
+      "net_per_claim": -0.000863139161413501,
+      "other_contradiction": 0.14285714285714285,
+      "others_per_claim": 0.003419638495359062,
+      "own_as_written": 0.0,
+      "own_recall": 0.002442598925256473,
+      "spread": 4.0,
+      "spurious_per_claim": 0.0004885197850512946
+     },
+     {
+      "net_per_claim": -0.0010937926216744243,
+      "other_contradiction": 0.2,
+      "others_per_claim": 0.002442598925256473,
+      "own_as_written": 0.0,
+      "own_recall": 0.0012212994626282364,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0004885197850512946
+     },
+     {
+      "net_per_claim": -0.0010946599744265473,
+      "other_contradiction": 0.2,
+      "others_per_claim": 0.002442598925256473,
+      "own_as_written": 0.0,
+      "own_recall": 0.0004885197850512946,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0004885197850512946
+     },
+     {
+      "net_per_claim": -0.0010858445362206303,
+      "other_contradiction": 0.2,
+      "others_per_claim": 0.002442598925256473,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002442598925256473,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0004885197850512946
+     },
+     {
+      "net_per_claim": -1.2845416405582242e-06,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0009770395701025891,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002442598925256473,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 2.5340315905042504e-07,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0004885197850512946,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002442598925256473,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 4.5058024904049856e-06,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002442598925256473,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 4.5058024904049856e-06,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002442598925256473,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 4.5058024904049856e-06,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002442598925256473,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0
+     }
+    ],
+    "512": [
+     {
+      "net_per_claim": -1.016518319800807,
+      "other_contradiction": 0.15184049079754602,
+      "others_per_claim": 3.185148998534441,
+      "own_as_written": 0.12133891213389121,
+      "own_recall": 0.1167562286272594,
+      "spread": 2.0,
+      "spurious_per_claim": 0.4836345872007816
+     },
+     {
+      "net_per_claim": -0.36504939420996113,
+      "other_contradiction": 0.14,
+      "others_per_claim": 1.2701514411333659,
+      "own_as_written": 0.12131147540983607,
+      "own_recall": 0.07449926722032242,
+      "spread": 2.25,
+      "spurious_per_claim": 0.17782120175867122
+     },
+     {
+      "net_per_claim": -0.13544648589433328,
+      "other_contradiction": 0.13592233009708737,
+      "others_per_claim": 0.5031753786028335,
+      "own_as_written": 0.12903225806451613,
+      "own_recall": 0.045432340009770394,
+      "spread": 2.5,
+      "spurious_per_claim": 0.06839276990718124
+     },
+     {
+      "net_per_claim": -0.04944370306418087,
+      "other_contradiction": 0.13138686131386862,
+      "others_per_claim": 0.20078163165608207,
+      "own_as_written": 0.1326530612244898,
+      "own_recall": 0.023937469467513434,
+      "spread": 2.75,
+      "spurious_per_claim": 0.026380068392769906
+     },
+     {
+      "net_per_claim": -0.020116044336049035,
+      "other_contradiction": 0.11731843575418995,
+      "others_per_claim": 0.08744504152418173,
+      "own_as_written": 0.11864406779661017,
+      "own_recall": 0.01441133365901319,
+      "spread": 3.0,
+      "spurious_per_claim": 0.010258915486077186
+     },
+     {
+      "net_per_claim": -0.015561282139646991,
+      "other_contradiction": 0.1794871794871795,
+      "others_per_claim": 0.038104543234000976,
+      "own_as_written": 0.03571428571428571,
+      "own_recall": 0.006839276990718124,
+      "spread": 3.25,
+      "spurious_per_claim": 0.006839276990718124
+     },
+     {
+      "net_per_claim": -0.009062659038445489,
+      "other_contradiction": 0.24242424242424243,
+      "others_per_claim": 0.01612115290669272,
+      "own_as_written": 0.0625,
+      "own_recall": 0.0039081582804103565,
+      "spread": 3.5,
+      "spurious_per_claim": 0.0039081582804103565
+     },
+     {
+      "net_per_claim": -0.0033265289053146345,
+      "other_contradiction": 0.16666666666666666,
+      "others_per_claim": 0.008793356130923302,
+      "own_as_written": 0.16666666666666666,
+      "own_recall": 0.0014655593551538837,
+      "spread": 3.75,
+      "spurious_per_claim": 0.0014655593551538837
+     },
+     {
+      "net_per_claim": -0.0010291134396565465,
+      "other_contradiction": 0.09090909090909091,
+      "others_per_claim": 0.00537371763556424,
+      "own_as_written": 0.0,
+      "own_recall": 0.0002442598925256473,
+      "spread": 4.0,
+      "spurious_per_claim": 0.0004885197850512946
+     },
+     {
+      "net_per_claim": -1.6466058885708444e-05,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0019540791402051783,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": -1.0515057416967196e-05,
+      "other_contradiction": 0.0,
+      "others_per_claim": 0.0009770395701025891,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0
+     }
+    ],
+    "8": [
+     {
+      "net_per_claim": -0.008576638004683133,
+      "other_contradiction": 0.17050691244239632,
+      "others_per_claim": 0.10600879335613092,
+      "own_as_written": 0.09624413145539906,
+      "own_recall": 0.10405471421592574,
+      "spread": 2.0,
+      "spurious_per_claim": 0.0180752320468979
+     },
+     {
+      "net_per_claim": -0.009126438900992155,
+      "other_contradiction": 0.19480519480519481,
+      "others_per_claim": 0.07523204689789936,
+      "own_as_written": 0.09375,
+      "own_recall": 0.07816316560820713,
+      "spread": 2.25,
+      "spurious_per_claim": 0.014655593551538837
+     },
+     {
+      "net_per_claim": -0.00698835843717598,
+      "other_contradiction": 0.19827586206896552,
+      "others_per_claim": 0.05666829506595017,
+      "own_as_written": 0.08064516129032258,
+      "own_recall": 0.060576453346360526,
+      "spread": 2.5,
+      "spurious_per_claim": 0.011235955056179775
+     },
+     {
+      "net_per_claim": -0.007341023650960505,
+      "other_contradiction": 0.1978021978021978,
+      "others_per_claim": 0.044455300439667805,
+      "own_as_written": 0.078125,
+      "own_recall": 0.04689789936492428,
+      "spread": 2.75,
+      "spurious_per_claim": 0.008793356130923302
+     },
+     {
+      "net_per_claim": -0.0018795903114292515,
+      "other_contradiction": 0.22580645161290322,
+      "others_per_claim": 0.030288226673180263,
+      "own_as_written": 0.09433962264150944,
+      "own_recall": 0.03883732291157792,
+      "spread": 3.0,
+      "spurious_per_claim": 0.006839276990718124
+     },
+     {
+      "net_per_claim": 0.00032274001385647295,
+      "other_contradiction": 0.21951219512195122,
+      "others_per_claim": 0.020029311187103077,
+      "own_as_written": 0.10852713178294573,
+      "own_recall": 0.0315095261358085,
+      "spread": 3.25,
+      "spurious_per_claim": 0.004396678065461651
+     },
+     {
+      "net_per_claim": 0.00018363827735754976,
+      "other_contradiction": 0.21875,
+      "others_per_claim": 0.015632633121641426,
+      "own_as_written": 0.11764705882352941,
+      "own_recall": 0.024914509037616023,
+      "spread": 3.5,
+      "spurious_per_claim": 0.003419638495359062
+     },
+     {
+      "net_per_claim": 0.0011882096687795064,
+      "other_contradiction": 0.20689655172413793,
+      "others_per_claim": 0.014167073766487542,
+      "own_as_written": 0.13793103448275862,
+      "own_recall": 0.021250610649731314,
+      "spread": 3.75,
+      "spurious_per_claim": 0.0029311187103077674
+     },
+     {
+      "net_per_claim": 0.0014668363509200144,
+      "other_contradiction": 0.23809523809523808,
+      "others_per_claim": 0.010258915486077186,
+      "own_as_written": 0.1527777777777778,
+      "own_recall": 0.017586712261846604,
+      "spread": 4.0,
+      "spurious_per_claim": 0.002442598925256473
+     },
+     {
+      "net_per_claim": 0.002228985309271577,
+      "other_contradiction": 0.2222222222222222,
+      "others_per_claim": 0.008793356130923302,
+      "own_as_written": 0.15873015873015872,
+      "own_recall": 0.015388373229115779,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0019540791402051783
+     },
+     {
+      "net_per_claim": 0.003032667239451329,
+      "other_contradiction": 0.3076923076923077,
+      "others_per_claim": 0.006350757205666829,
+      "own_as_written": 0.17543859649122806,
+      "own_recall": 0.013922813873961895,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0019540791402051783
+     },
+     {
+      "net_per_claim": 0.00449518047824701,
+      "other_contradiction": 0.3,
+      "others_per_claim": 0.004885197850512946,
+      "own_as_written": 0.2222222222222222,
+      "own_recall": 0.010991695163654128,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0014655593551538837
+     },
+     {
+      "net_per_claim": 0.0036078122533126063,
+      "other_contradiction": 0.3333333333333333,
+      "others_per_claim": 0.004396678065461651,
+      "own_as_written": 0.2571428571428571,
+      "own_recall": 0.008549096238397655,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0014655593551538837
+     },
+     {
+      "net_per_claim": 0.00291466519594241,
+      "other_contradiction": 0.375,
+      "others_per_claim": 0.0039081582804103565,
+      "own_as_written": 0.26666666666666666,
+      "own_recall": 0.0073277967757694185,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0014655593551538837
+     },
+     {
+      "net_per_claim": 0.002480237788777877,
+      "other_contradiction": 0.375,
+      "others_per_claim": 0.0039081582804103565,
+      "own_as_written": 0.2692307692307692,
+      "own_recall": 0.006350757205666829,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0014655593551538837
+     },
+     {
+      "net_per_claim": 0.00010971951703994645,
+      "other_contradiction": 0.2857142857142857,
+      "others_per_claim": 0.003419638495359062,
+      "own_as_written": 0.16666666666666666,
+      "own_recall": 0.004396678065461651,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0009770395701025891
+     },
+     {
+      "net_per_claim": 0.00047918749605745244,
+      "other_contradiction": 0.16666666666666666,
+      "others_per_claim": 0.0029311187103077674,
+      "own_as_written": 0.16666666666666666,
+      "own_recall": 0.004396678065461651,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0004885197850512946
+     }
+    ],
+    "all": [
+     {
+      "net_per_claim": -7.87388736929746,
+      "other_contradiction": 0.15056670271136208,
+      "others_per_claim": 24.395701025891547,
+      "own_as_written": 0.11850311850311851,
+      "own_recall": 0.11748900830483634,
+      "spread": 2.0,
+      "spurious_per_claim": 3.673180263800684
+     },
+     {
+      "net_per_claim": -2.9842999544947926,
+      "other_contradiction": 0.1476464788001453,
+      "others_per_claim": 9.413287738153395,
+      "own_as_written": 0.12828947368421054,
+      "own_recall": 0.07425500732779677,
+      "spread": 2.25,
+      "spurious_per_claim": 1.3898387884709331
+     },
+     {
+      "net_per_claim": -1.1284588050820574,
+      "other_contradiction": 0.14635129686870044,
+      "others_per_claim": 3.635075720566683,
+      "own_as_written": 0.1270718232044199,
+      "own_recall": 0.04421104054714216,
+      "spread": 2.5,
+      "spurious_per_claim": 0.5319980459208598
+     },
+     {
+      "net_per_claim": -0.44106324333346686,
+      "other_contradiction": 0.14463087248322148,
+      "others_per_claim": 1.455788959452858,
+      "own_as_written": 0.12244897959183673,
+      "own_recall": 0.023937469467513434,
+      "spread": 2.75,
+      "spurious_per_claim": 0.21055202735710796
+     },
+     {
+      "net_per_claim": -0.18087891304987808,
+      "other_contradiction": 0.14686468646864687,
+      "others_per_claim": 0.592085979482169,
+      "own_as_written": 0.1320754716981132,
+      "own_recall": 0.012945774303859306,
+      "spread": 3.0,
+      "spurious_per_claim": 0.08695652173913043
+     },
+     {
+      "net_per_claim": -0.084213773064452,
+      "other_contradiction": 0.1588235294117647,
+      "others_per_claim": 0.24914509037616023,
+      "own_as_written": 0.08333333333333333,
+      "own_recall": 0.005862237420615535,
+      "spread": 3.25,
+      "spurious_per_claim": 0.03957010258915486
+     },
+     {
+      "net_per_claim": -0.035299988523825286,
+      "other_contradiction": 0.16908212560386474,
+      "others_per_claim": 0.10112359550561797,
+      "own_as_written": 0.07692307692307693,
+      "own_recall": 0.0031753786028334147,
+      "spread": 3.5,
+      "spurious_per_claim": 0.01709819247679531
+     },
+     {
+      "net_per_claim": -0.017387724934228417,
+      "other_contradiction": 0.20987654320987653,
+      "others_per_claim": 0.03957010258915486,
+      "own_as_written": 0.16666666666666666,
+      "own_recall": 0.0014655593551538837,
+      "spread": 3.75,
+      "spurious_per_claim": 0.008304836345872008
+     },
+     {
+      "net_per_claim": -0.007333549095691073,
+      "other_contradiction": 0.22580645161290322,
+      "others_per_claim": 0.015144113336590131,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.0,
+      "spurious_per_claim": 0.003419638495359062
+     },
+     {
+      "net_per_claim": -0.002025369004717187,
+      "other_contradiction": 0.2222222222222222,
+      "others_per_claim": 0.004396678065461651,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.25,
+      "spurious_per_claim": 0.0009770395701025891
+     },
+     {
+      "net_per_claim": -0.0019636484887487126,
+      "other_contradiction": 0.5,
+      "others_per_claim": 0.0019540791402051783,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.5,
+      "spurious_per_claim": 0.0009770395701025891
+     },
+     {
+      "net_per_claim": -0.0010654786187333655,
+      "other_contradiction": 0.5,
+      "others_per_claim": 0.0009770395701025891,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 4.75,
+      "spurious_per_claim": 0.0004885197850512946
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.0,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.25,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.5,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 5.75,
+      "spurious_per_claim": 0.0
+     },
+     {
+      "net_per_claim": 0.0,
+      "other_contradiction": null,
+      "others_per_claim": 0.0,
+      "own_as_written": null,
+      "own_recall": 0.0,
+      "spread": 6.0,
+      "spurious_per_claim": 0.0
+     }
+    ]
+   },
+   "statements": 4037,
+   "trust": 0.5238106237293019
+  }
+ }
+}
