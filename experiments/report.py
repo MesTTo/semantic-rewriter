@@ -390,7 +390,7 @@ def claim_actions_table() -> str:
     and with it, what the check read against each match, and the check's cost with the belief stated."""
     runs = {(r["judge"], r["form"], r["threshold"], r["believed"]): r for r in _load("claim_check_actions.json")}
     rows = []
-    for judge, form, threshold, believed in runs:
+    for judge, form, threshold, believed in sorted(runs):
         if believed:
             continue
         before, after = runs[(judge, form, threshold, False)], runs[(judge, form, threshold, True)]

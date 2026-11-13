@@ -3,6 +3,7 @@
   "question": "victoria",
   "judge": "jev",
   "threshold": 0.65,
+  "check": null,
   "answers": 1164,
   "outside": 0,
   "truth": 1164,
@@ -20,6 +21,7 @@
   "question": "victoria",
   "judge": "jev",
   "threshold": 0.1,
+  "check": null,
   "answers": 1185,
   "outside": 21,
   "truth": 1164,
@@ -37,6 +39,7 @@
   "question": "victoria",
   "judge": "nli-deberta-large",
   "threshold": 0.6592527778093171,
+  "check": null,
   "answers": 1188,
   "outside": 24,
   "truth": 1164,
@@ -51,9 +54,60 @@
   }
  },
  {
+  "question": "victoria",
+  "judge": "nli-deberta-large",
+  "threshold": 0.6592527778093171,
+  "check": {
+   "claims": 117,
+   "pairs": 0,
+   "statements": 23116,
+   "seconds": 6.880983710289001e-05,
+   "rewrites_weighed": 0,
+   "reads": "general"
+  },
+  "answers": 1188,
+  "outside": 24,
+  "truth": 1164,
+  "rewrites": 117,
+  "ranking": {
+   "ap": 0.999989724482184,
+   "best_f1": 0.999140154772141,
+   "at": 0.3579687873415615,
+   "f1": 0.9897959183673469,
+   "lowest_inside": 0.35766086842658834,
+   "highest_outside": 0.3577710339692322
+  }
+ },
+ {
+  "question": "victoria",
+  "judge": "nli-deberta-large",
+  "threshold": 0.6592527778093171,
+  "check": {
+   "claims": 117,
+   "pairs": 417,
+   "statements": 23116,
+   "seconds": 13.088293474167585,
+   "rewrites_weighed": 29,
+   "reads": "every"
+  },
+  "answers": 1188,
+  "outside": 24,
+  "truth": 1164,
+  "rewrites": 117,
+  "ranking": {
+   "ap": 0.9999564273742119,
+   "best_f1": 0.9987096774193548,
+   "at": 0.48678348220404943,
+   "f1": 0.9897959183673469,
+   "lowest_inside": 0.35766086842658834,
+   "highest_outside": 0.45163324020993245
+  }
+ },
+ {
   "question": "leonardo",
   "judge": "jev",
   "threshold": 0.65,
+  "check": null,
   "answers": 851,
   "outside": 2,
   "truth": 854,
@@ -71,6 +125,7 @@
   "question": "leonardo",
   "judge": "jev",
   "threshold": 0.1,
+  "check": null,
   "answers": 858,
   "outside": 5,
   "truth": 854,
@@ -88,6 +143,7 @@
   "question": "leonardo",
   "judge": "nli-deberta-large",
   "threshold": 0.6592527778093171,
+  "check": null,
   "answers": 858,
   "outside": 5,
   "truth": 854,
@@ -102,9 +158,60 @@
   }
  },
  {
+  "question": "leonardo",
+  "judge": "nli-deberta-large",
+  "threshold": 0.6592527778093171,
+  "check": {
+   "claims": 59,
+   "pairs": 0,
+   "statements": 13291,
+   "seconds": 3.574998117983341e-05,
+   "rewrites_weighed": 0,
+   "reads": "general"
+  },
+  "answers": 858,
+  "outside": 5,
+  "truth": 854,
+  "rewrites": 59,
+  "ranking": {
+   "ap": 0.9985338888290272,
+   "best_f1": 0.9964953271028038,
+   "at": 0.48638133690131036,
+   "f1": 0.9964953271028038,
+   "lowest_inside": 0.48638133690131036,
+   "highest_outside": 0.48699773886915654
+  }
+ },
+ {
+  "question": "leonardo",
+  "judge": "nli-deberta-large",
+  "threshold": 0.6592527778093171,
+  "check": {
+   "claims": 59,
+   "pairs": 1081,
+   "statements": 13291,
+   "seconds": 8.289487370057032,
+   "rewrites_weighed": 31,
+   "reads": "every"
+  },
+  "answers": 858,
+  "outside": 5,
+  "truth": 854,
+  "rewrites": 59,
+  "ranking": {
+   "ap": 0.9985338888290272,
+   "best_f1": 0.9964953271028038,
+   "at": 0.3624618585881669,
+   "f1": 0.9964953271028038,
+   "lowest_inside": 0.3624618585881669,
+   "highest_outside": 0.48699773886915654
+  }
+ },
+ {
   "question": "alphabet",
   "judge": "jev",
   "threshold": 0.65,
+  "check": null,
   "answers": 2849,
   "outside": 0,
   "truth": 3225,
@@ -122,6 +229,7 @@
   "question": "alphabet",
   "judge": "jev",
   "threshold": 0.1,
+  "check": null,
   "answers": 2903,
   "outside": 1,
   "truth": 3225,
@@ -139,6 +247,7 @@
   "question": "alphabet",
   "judge": "nli-deberta-large",
   "threshold": 0.6592527778093171,
+  "check": null,
   "answers": 2906,
   "outside": 4,
   "truth": 3225,
@@ -150,6 +259,56 @@
    "f1": 0.9466644919262763,
    "lowest_inside": 0.23709026982183343,
    "highest_outside": 0.35748169515653805
+  }
+ },
+ {
+  "question": "alphabet",
+  "judge": "nli-deberta-large",
+  "threshold": 0.6592527778093171,
+  "check": {
+   "claims": 62,
+   "pairs": 0,
+   "statements": 18841,
+   "seconds": 4.797009751200676e-05,
+   "rewrites_weighed": 0,
+   "reads": "general"
+  },
+  "answers": 2906,
+  "outside": 4,
+  "truth": 3225,
+  "rewrites": 62,
+  "ranking": {
+   "ap": 0.8990147433809731,
+   "best_f1": 0.9469734051231848,
+   "at": 0.23709026982183343,
+   "f1": 0.9466644919262763,
+   "lowest_inside": 0.23709026982183343,
+   "highest_outside": 0.35748169515653805
+  }
+ },
+ {
+  "question": "alphabet",
+  "judge": "nli-deberta-large",
+  "threshold": 0.6592527778093171,
+  "check": {
+   "claims": 62,
+   "pairs": 39429,
+   "statements": 18841,
+   "seconds": 139.28560325712897,
+   "rewrites_weighed": 54,
+   "reads": "every"
+  },
+  "answers": 2906,
+  "outside": 4,
+  "truth": 3225,
+  "rewrites": 62,
+  "ranking": {
+   "ap": 0.898591877934644,
+   "best_f1": 0.9468189233278956,
+   "at": 0.08135081418091589,
+   "f1": 0.9466644919262763,
+   "lowest_inside": 0.08135081418091589,
+   "highest_outside": 0.22590325414642848
   }
  }
 ]
