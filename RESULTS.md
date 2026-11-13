@@ -1,6 +1,6 @@
 # Semantic rewriter on pymetta: results
 
-This file answers the five questions behind the experiment. The tables between `GENERATED` markers come from the files under `results/`, rendered by `python experiments/report.py`; the commands that regenerate those files are at the end.
+This file answers the six questions behind the experiment. The tables between `GENERATED` markers come from the files under `results/`, rendered by `python experiments/report.py`; the commands that regenerate those files are at the end.
 
 ## Short answers
 
@@ -11,6 +11,8 @@ Which implementation? Twelve were built, as settings of five knobs. The one to u
 Can a cross-encoder or Jev tell which way? Yes. On the Levy/Holt and Wikidata pairs, Jev gets 0.82 to 0.89 direction accuracy, the NLI cross-encoders 0.77 to 0.87, and embedding similarity sits at chance. Inside the rewriter, the deciding quantity is admission precision, because every false rewrite becomes a rule applied everywhere. Jev at a threshold calibrated on the other benchmarks reaches answer F1 0.892, and 0.916 with its rewrites bounded at three. On the same basis the best cross-encoder reaches 0.70, and 0.91 once evaluation is tabled and bounded at three steps; similarity alone reaches at most 0.47. Asking each judge both ways and rejecting the weaker direction lowered every cross-encoder's false-rewrite rate.
 
 How sure is each answer? Each answer can carry an opinion: the probability that every rewrite of one of its derivations is right, each right as its judge's opinion says at the rate labelled pairs hold, discounted by how far the judge proved right on them. Jev's trust fits to 0.958. On the Wikidata questions, Jev admitting at 0.1 instead of 0.65 brings in 21 answers outside Wikidata's record for Victoria and one for Alphabet, and every one of them ranks below every answer Wikidata records. The knowledge base's own statements, as a second source on each rewrite, add nothing to Jev, whose trust in them fits to 0, and about 0.01 to the NLI cross-encoders' log loss on labelled pairs once their opinions take the pairs' base rate. They give no evidence on a question asked in its own words, which states none of its predicates.
+
+Can a judge tell what typically follows? Yes, when it is asked that. A knowledge base of everyday actions asks what typically follows, such as whether someone who watches TV wastes time, and the NLI cross-encoders call such pairs neutral. Qwen3-4B-Instruct-2507, asked whether the conclusion typically follows, scores held-out log loss 0.588 on δ-ATOMIC's defeasible inferences and 0.485 on Balanced COPA's causes and effects, against nli-deberta-large's 0.661 and 0.637 and the base rate's 0.693, and picks COPA's more plausible alternative for 450 of 500 questions. On a knowledge base of eight actions it ranks the three that waste time first, and the entailment judge finds one of them.
 
 Is pymetta stable enough? Yes. Tabling, ops called inside tables, table refresh and budgets all did what the rewriter needed. I found twelve defects, seven of which involve state that outlives a `MeTTa()` context; ten have a script under `repros/`, and the engine works around every one.
 
@@ -204,17 +206,17 @@ Telling the direction is not the same as admitting only true rules, though. Each
 Scores on the hand-labelled hard set, with arguments written as A and B. A star means the score reaches that judge's default threshold, so the rewriter would admit the implication.
 
 <!-- BEGIN GENERATED: named-cases -->
-| implication | holds | cosine-bge | cosine-qwen3 | jev | nli-deberta-base | nli-deberta-large | nli-deberta-large-wanli | reranker-qwen3 |
-|---|---|---|---|---|---|---|---|---|
-| A is the mother of B ⇒ A is a parent of B | yes | 0.97* | 0.98* | 0.99* | 0.99* | 1.00* | 1.00* | 0.99* |
-| A is a parent of B ⇒ A is the mother of B | no | 0.97* | 0.98* | 0.03 | 0.00 | 0.03 | 0.00 | 0.38 |
-| A is the legal guardian of B ⇒ A is a parent of B | no | 0.90 | 0.97 | 0.05 | 0.98* | 0.82* | 0.00 | 0.97* |
-| A is the stepmother of B ⇒ A is a parent of B | no | 0.93 | 0.97 | 0.32* | 0.99* | 0.99* | 0.95* | 0.94* |
-| A is the mother-in-law of B ⇒ A is the mother of B | no | 0.97* | 0.99* | 0.05 | 0.99* | 0.96* | 0.00 | 0.96* |
-| A employs B ⇒ A manages B | no | 0.93 | 0.97 | 0.29* | 0.99* | 1.00* | 0.98* | 0.92* |
-| A manages B ⇒ A employs B | no | 0.93 | 0.97 | 0.18* | 0.99* | 0.99* | 0.96* | 0.98* |
-| A causes B ⇒ A is correlated with B | no | 0.90 | 0.95 | 0.65* | 0.98* | 0.97* | 0.39* | 0.82* |
-| A causes B ⇒ A prevents B | no | 0.91 | 0.96 | 0.01 | 0.00 | 0.00 | 0.00 | 0.41 |
+| implication | holds | cosine-bge | cosine-qwen3 | jev | nli-deberta-base | nli-deberta-large | nli-deberta-large-wanli | reranker-qwen3 | typical-qwen3-4b |
+|---|---|---|---|---|---|---|---|---|---|
+| A is the mother of B ⇒ A is a parent of B | yes | 0.97* | 0.98* | 0.99* | 0.99* | 1.00* | 1.00* | 0.99* | 1.00* |
+| A is a parent of B ⇒ A is the mother of B | no | 0.97* | 0.98* | 0.03 | 0.00 | 0.03 | 0.00 | 0.38 | 1.00* |
+| A is the legal guardian of B ⇒ A is a parent of B | no | 0.90 | 0.97 | 0.05 | 0.98* | 0.82* | 0.00 | 0.97* | 1.00* |
+| A is the stepmother of B ⇒ A is a parent of B | no | 0.93 | 0.97 | 0.32* | 0.99* | 0.99* | 0.95* | 0.94* | 1.00* |
+| A is the mother-in-law of B ⇒ A is the mother of B | no | 0.97* | 0.99* | 0.05 | 0.99* | 0.96* | 0.00 | 0.96* | 0.12 |
+| A employs B ⇒ A manages B | no | 0.93 | 0.97 | 0.29* | 0.99* | 1.00* | 0.98* | 0.92* | 1.00* |
+| A manages B ⇒ A employs B | no | 0.93 | 0.97 | 0.18* | 0.99* | 0.99* | 0.96* | 0.98* | 0.99* |
+| A causes B ⇒ A is correlated with B | no | 0.90 | 0.95 | 0.65* | 0.98* | 0.97* | 0.39* | 0.82* | 1.00* |
+| A causes B ⇒ A prevents B | no | 0.91 | 0.96 | 0.01 | 0.00 | 0.00 | 0.00 | 0.41 | 0.06 |
 <!-- END GENERATED: named-cases -->
 
 ### On labelled predicate pairs
@@ -240,9 +242,12 @@ Scores on the hand-labelled hard set, with arguments written as A and B. A star 
 | nli-deberta-large-wanli | levyholt | 1,784 | 892 | 0.834 | 0.779 | 0.054 | 0.671 | 0.817 | 0.708 |
 | nli-deberta-large-wanli | wikidata | 3,329 | 552 | 0.871 | 0.802 | 0.054 | 0.423 | 0.753 | 0.745 |
 | nli-deberta-large-wanli | hard | 140 | 29 | 0.966 | 0.919 | 0.054 | 0.737 | 1.000 | 0.881 |
-| reranker-qwen3 | levyholt | 1,784 | 892 | 0.694 | 0.656 | 0.808 | 0.631 | 0.614 | 0.628 |
-| reranker-qwen3 | wikidata | 3,329 | 552 | 0.762 | 0.668 | 0.808 | 0.327 | 0.535 | 0.627 |
-| reranker-qwen3 | hard | 140 | 29 | 0.828 | 0.778 | 0.808 | 0.577 | 0.804 | 0.705 |
+| reranker-qwen3 | levyholt | 1,784 | 892 | 0.692 | 0.656 | 0.808 | 0.632 | 0.613 | 0.628 |
+| reranker-qwen3 | wikidata | 3,329 | 552 | 0.764 | 0.669 | 0.808 | 0.326 | 0.535 | 0.626 |
+| reranker-qwen3 | hard | 140 | 29 | 0.828 | 0.777 | 0.808 | 0.577 | 0.804 | 0.705 |
+| typical-qwen3-4b | levyholt | 1,784 | 892 | 0.709 | 0.693 | 0.269 | 0.542 | 0.924 | 0.572 |
+| typical-qwen3-4b | wikidata | 3,329 | 552 | 0.873 | 0.848 | 0.269 | 0.326 | 0.907 | 0.714 |
+| typical-qwen3-4b | hard | 140 | 29 | 0.966 | 0.972 | 0.269 | 0.519 | 1.000 | 0.690 |
 <!-- END GENERATED: pairs -->
 
 ### Inside the rewriter
@@ -393,23 +398,24 @@ With `--beliefs`, every answer comes with an opinion that it holds: a belief, a 
 
 ### How far each judge is trusted
 
-A judge's opinions are taken at the base rate of the pairs it is asked about, the share of them that hold, which is what an opinion projects to where it says nothing. Its trust is fitted on the Wikidata dev pairs, as its threshold is: it is the trust whose discounted opinions give the labels the highest likelihood. The table gives each judge's trust, the test pairs' ROC AUC, and the log loss and Brier score of its calibrated opinions on them. A judge that answered every pair with the base rate would score 0.505 and 0.162.
+A judge's opinions are taken at the base rate of the pairs it is asked about, the share of them that hold, which is what an opinion projects to where it says nothing. Its trust is fitted on the dev pairs of the set of its kind of question, as its threshold is: the Wikidata pairs for the judges of what must follow, δ-ATOMIC's for the typicality judge. It is the trust whose discounted opinions give the labels the highest likelihood. The table gives each judge's set and trust, that set's test pairs' ROC AUC, and the log loss and Brier score of its calibrated opinions on them. A judge that answered every pair with the base rate would score 0.505 and 0.162 on the Wikidata pairs, and 0.693 and 0.250 on δ-ATOMIC's.
 
 <!-- BEGIN GENERATED: trust -->
-Every judge's opinions are taken at the base rate 0.214, the share of the Wikidata dev pairs that hold.
+Each judge's opinions are taken at the base rate of its set, the share of that set's dev pairs that hold: 0.214 for Wikidata's and 0.504 for delta-ATOMIC's.
 
-| judge | trust | test ROC AUC | test log loss | test Brier | data trust | test pairs with data | their log loss, judge alone | fused with the data |
-|---|---|---|---|---|---|---|---|---|
-| jev | 0.958 | 0.878 | 0.321 | 0.097 | 0.000 | 933 | 0.365 | 0.365 |
-| nli-deberta-large-wanli | 0.524 | 0.802 | 0.432 | 0.134 | 0.421 | 933 | 0.465 | 0.453 |
-| nli-deberta-large | 0.348 | 0.754 | 0.454 | 0.143 | 0.407 | 933 | 0.488 | 0.481 |
-| nli-deberta-base | 0.311 | 0.744 | 0.464 | 0.147 | 0.364 | 933 | 0.492 | 0.482 |
-| reranker-qwen3 | 0.078 | 0.668 | 0.499 | 0.160 | 0.263 | 933 | 0.539 | 0.535 |
-| cosine-bge | 0.002 | 0.531 | 0.505 | 0.162 | 0.171 | 933 | 0.553 | 0.551 |
-| cosine-qwen3 | 0.001 | 0.532 | 0.505 | 0.162 | 0.169 | 933 | 0.553 | 0.551 |
+| judge | set | trust | test ROC AUC | test log loss | test Brier | data trust | Wikidata test pairs with data | their log loss, judge alone | fused with the data |
+|---|---|---|---|---|---|---|---|---|---|
+| jev | Wikidata | 0.958 | 0.878 | 0.321 | 0.097 | 0.000 | 933 | 0.365 | 0.365 |
+| typical-qwen3-4b | delta-ATOMIC | 0.559 | 0.751 | 0.588 | 0.200 | 0.423 | 933 | 0.491 | 0.477 |
+| nli-deberta-large-wanli | Wikidata | 0.524 | 0.802 | 0.432 | 0.134 | 0.421 | 933 | 0.465 | 0.453 |
+| nli-deberta-large | Wikidata | 0.348 | 0.754 | 0.454 | 0.143 | 0.407 | 933 | 0.488 | 0.481 |
+| nli-deberta-base | Wikidata | 0.311 | 0.744 | 0.464 | 0.147 | 0.364 | 933 | 0.492 | 0.482 |
+| reranker-qwen3 | Wikidata | 0.077 | 0.669 | 0.499 | 0.160 | 0.263 | 933 | 0.539 | 0.535 |
+| cosine-bge | Wikidata | 0.002 | 0.531 | 0.505 | 0.162 | 0.171 | 933 | 0.553 | 0.551 |
+| cosine-qwen3 | Wikidata | 0.001 | 0.532 | 0.505 | 0.162 | 0.169 | 933 | 0.553 | 0.551 |
 <!-- END GENERATED: trust -->
 
-Jev is trusted almost completely, at 0.958, and its opinions reach a test log loss of 0.321. The NLI cross-encoders are trusted at 0.31 to 0.52. Their neutral class says nothing about a pair, so it projects to the base rate, and their test log loss is 0.43 to 0.46; projected to one half instead, as before the base rate was calibrated, it was 0.62 to 0.66, worse than answering every pair with the base rate. The cosine judges get no trust, since they rank the test pairs at chance, and score exactly what the base rate scores. The reranker ranks them better, at an AUC of 0.668, but its probabilities run high: two thirds of the Wikidata test pairs it scores at 0.81 or more are false, so it is trusted at 0.08. Trust only shrinks a probability toward the base rate; it cannot recalibrate it.
+Jev is trusted almost completely, at 0.958, and its opinions reach a test log loss of 0.321. The NLI cross-encoders are trusted at 0.31 to 0.52. Their neutral class says nothing about a pair, so it projects to the base rate, and their test log loss is 0.43 to 0.46; projected to one half instead, as before the base rate was calibrated, it was 0.62 to 0.66, worse than answering every pair with the base rate. The cosine judges get no trust, since they rank the test pairs at chance, and score exactly what the base rate scores. The reranker ranks them better, at an AUC of 0.669, but its probabilities run high: two thirds of the Wikidata test pairs it scores at 0.81 or more are false, so it is trusted at 0.08. Trust only shrinks a probability toward the base rate; it cannot recalibrate it. The typicality judge's row is for δ-ATOMIC's pairs, its own kind of question: there it is trusted at 0.559, and its test log loss is 0.588 against the 0.693 its base rate alone scores. On the Wikidata pairs it would be trusted at 0.253, since there it says yes to what only typically holds.
 
 The last three columns test the knowledge base as a second source, on the 933 test pairs whose two properties both have statements in the Wikidata examples' knowledge bases. Its evidence on a pair counts the premise's statements the conclusion also states as for it, and the rest as against it. Its trust, fitted jointly with each judge, is 0 for Jev. With the NLI cross-encoders it is 0.36 to 0.42, and fusing the statements in lowers their log loss on those pairs by about 0.01, to between 0.45 and 0.48. Before the base rate was calibrated the same fusion lowered it from about 0.64 to 0.48: most of what the statements added then was the correction the base rate now makes.
 
@@ -467,6 +473,64 @@ A chain of four ownership links, each through one rewrite and joined by the tran
 - With the rule rows certain, using the rewrite's validity again at each link takes a rewrite at P 0.95 down by 0.02 over seven applications. The rewriter keeps such an answer at the rewrite's P.
 - SNARS's modus ponens gives a conclusion whose premises fail the probability that keeps the conclusion's marginal at the rule row's base rate, one half, so a rewrite at P 0.24 still gives its conclusion 0.57. The chain's one-link answers match the ends of SNARS's range on Leonardo's question: Leonardo's lowest answer, at 0.239 by the rewriter, gets 0.566 from SNARS, and its highest, at 0.978, gets 0.923, below the 0.949 the structural truth leaves a certain rewrite.
 
+## Can a judge tell what typically follows?
+
+Yes, when it is asked that. The judges above are asked whether the conclusion must hold, and a knowledge base of everyday actions asks something else: nothing entails that someone who watches TV wastes time, so nli-deberta-large calls that pair neutral, and scrolling social media and reading a book with it. What such a question needs is what typically follows: what most people would expect knowing only the premise, though it need not hold, as a bird typically flies and a penguin does not. `typical-qwen3-4b` asks exactly that. Qwen3-4B-Instruct-2507 answers Yes, No or Unsure, and its probabilities of the three answers are the opinion's belief, disbelief and uncertainty. Its question was chosen among three phrasings on dev rows alone, by log loss; asking instead how often the conclusion holds left the model unsure on most rows.
+
+### On labelled typical implications
+
+Two public sets label what typically follows. δ-ATOMIC (Rudinger et al. 2020) gives an everyday event about PersonX, an update written to strengthen or defeat a typical inference from it, and the inference; a row's premise is the event and the update, its conclusion the inference, and it holds for a strengthener. Balanced COPA (Kavumba et al. 2019) asks which of two alternatives is the more plausible cause or effect of a premise; each alternative makes a cause ⇒ effect row, which holds for the more plausible one, and every alternative of its dev questions holds under one premise and fails under another. Each judge is scored on the test rows at the trust fitted on the same set's dev rows and at its base rate. The ROC AUC of P reads disbelief as well as belief, which separates an NLI judge's no from its don't-know.
+
+<!-- BEGIN GENERATED: typical -->
+delta-ATOMIC's dev rows hold at the base rate 0.504; answering every test row with it scores log loss 0.693 and Brier 0.250. Balanced COPA's dev rows hold at the base rate 0.500; answering every test row with it scores log loss 0.693 and Brier 0.250.
+
+| judge | pair set | test rows | trust | ROC AUC of beliefs | ROC AUC of P | log loss | Brier |
+|---|---|---|---|---|---|---|---|
+| typical-qwen3-4b | delta-ATOMIC | 4,138 | 0.559 | 0.751 | 0.777 | 0.588 | 0.200 |
+| nli-deberta-large-wanli | delta-ATOMIC | 4,138 | 0.798 | 0.635 | 0.755 | 0.642 | 0.227 |
+| reranker-qwen3 | delta-ATOMIC | 4,138 | 0.394 | 0.668 | 0.668 | 0.652 | 0.230 |
+| nli-deberta-base | delta-ATOMIC | 4,138 | 0.653 | 0.635 | 0.713 | 0.658 | 0.234 |
+| nli-deberta-large | delta-ATOMIC | 4,138 | 0.690 | 0.621 | 0.724 | 0.661 | 0.235 |
+| cosine-bge | delta-ATOMIC | 4,138 | 0.021 | 0.603 | 0.603 | 0.693 | 0.250 |
+| cosine-qwen3 | delta-ATOMIC | 4,138 | 0.016 | 0.643 | 0.643 | 0.693 | 0.250 |
+| typical-qwen3-4b | Balanced COPA | 1,000 | 0.639 | 0.860 | 0.870 | 0.485 | 0.156 |
+| nli-deberta-large-wanli | Balanced COPA | 1,000 | 0.810 | 0.587 | 0.801 | 0.624 | 0.220 |
+| nli-deberta-large | Balanced COPA | 1,000 | 0.551 | 0.644 | 0.784 | 0.637 | 0.224 |
+| nli-deberta-base | Balanced COPA | 1,000 | 0.526 | 0.671 | 0.756 | 0.647 | 0.228 |
+| reranker-qwen3 | Balanced COPA | 1,000 | 0.224 | 0.671 | 0.671 | 0.670 | 0.238 |
+| cosine-bge | Balanced COPA | 1,000 | 0.032 | 0.604 | 0.604 | 0.693 | 0.250 |
+| cosine-qwen3 | Balanced COPA | 1,000 | 0.021 | 0.638 | 0.638 | 0.693 | 0.250 |
+
+Not measured on these sets: jev.
+<!-- END GENERATED: typical -->
+
+The typicality judge has the lowest log loss on both sets, 0.588 on δ-ATOMIC and 0.485 on Balanced COPA, against nli-deberta-large's 0.661 and 0.637 and the base rate's 0.693. On COPA it picks the more plausible alternative for 450 of the 500 test questions, by belief minus disbelief, against 405 for nli-deberta-large and 419 for the WANLI model. The NLI judges' beliefs rank the rows only a little better than chance, at 0.62 to 0.67, because they call most typical implications neutral; what they know is mostly in their disbelief. Jev was not asked: these are new questions, and answering them needs a TypeSafe key.
+
+On the entailment sets the same judge reads direction as well as the NLI cross-encoders on Wikidata, at 0.873 against their 0.790 to 0.871, and worse on Levy/Holt, at 0.709 against 0.770 to 0.834. It also says yes to what only typically holds. In the hand-picked cases it scores parent ⇒ mother, legal guardian ⇒ parent, stepmother ⇒ parent, employs ⇒ manages and causes ⇒ correlated all at 1.00. So it is the judge for a knowledge base whose questions are what typically follows, and its defaults come from δ-ATOMIC's dev rows, as the trust table shows.
+
+### What wastes time?
+
+<!-- BEGIN GENERATED: typical-actions -->
+| action | wastes time | nli-deberta-large P | nli-deberta-large b / d / u | typical-qwen3-4b P | typical-qwen3-4b b / d / u |
+|---|---|---|---|---|---|
+| watches TV | yes | 0.42 | 0.26 / 0.00 / 0.74 * | 0.78 | 0.56 / 0.00 / 0.44 * |
+| plays games | yes | 0.22 | 0.01 / 0.00 / 0.99 | 0.78 | 0.56 / 0.00 / 0.44 * |
+| reads a book | no | 0.22 | 0.00 / 0.00 / 1.00 | 0.61 | 0.21 / 0.00 / 0.79 * |
+| scrolls social media | yes | 0.21 | 0.00 / 0.00 / 1.00 | 0.78 | 0.56 / 0.00 / 0.44 * |
+| goes for a run | no | 0.21 | 0.00 / 0.01 / 0.99 | 0.37 | 0.15 / 0.41 / 0.44 * |
+| goes to bed early | no | 0.20 | 0.01 / 0.10 / 0.90 | 0.29 | 0.07 / 0.49 / 0.44 |
+| studies for an exam | no | 0.14 | 0.00 / 0.34 / 0.66 | 0.24 | 0.02 / 0.54 / 0.44 |
+| pays the bills | no | 0.14 | 0.00 / 0.35 / 0.65 | 0.26 | 0.03 / 0.53 / 0.44 |
+
+nli-deberta-large: ROC AUC 0.933 against the gold lines. At its threshold 0.659, trust 0.348 and base rate 0.214, it admits 1 rewrite, and the rewriter answers sam (0.42), highest P first, where the gold lines give kim, raj, sam: average precision 0.333.
+
+typical-qwen3-4b: ROC AUC 1.000 against the gold lines. At its threshold 0.269, trust 0.559 and base rate 0.504, it admits 13 rewrites, and the rewriter answers kim (0.89), raj (0.87), sam (0.78), eve (0.61), max (0.54), lee (0.44), ana (0.37), highest P first, where the gold lines give kim, raj, sam: average precision 1.000.
+<!-- END GENERATED: typical-actions -->
+
+The actions example, `examples/actions.kb`, states eight people each doing one thing and asks `wastes_time(X)`; its gold lines say that watching TV, playing games and scrolling social media typically waste time. Each action's opinion above is the one the rewriter weighs, at the judge's default trust and base rate, and a star marks a rewrite admitted at its default threshold.
+
+Asked what is entailed, nli-deberta-large is sure only at the ends: it believes watching TV wastes time at 0.26 and disbelieves studying and paying the bills at 0.34 and 0.35, and calls everything between neutral, so scrolling social media ties with reading a book. It admits watching TV alone, and the rewriter answers sam. Asked what typically follows, typical-qwen3-4b separates the eight actions completely: the three that waste time at P 0.78, reading a book at 0.61, the other four at 0.37 or less. Its δ-ATOMIC threshold, 0.269, favours recall, as every pair-set threshold does, so it admits reading and running too, and rewrites between actions, such as studying ⇒ reading a book and paying the bills ⇒ scrolling social media. The rewriter then answers seven of the eight people, but ranks the three that waste time first, at P 0.78 to 0.89 against 0.61 or less, so an answer threshold between them, or a rewrite threshold calibrated on such knowledge bases, keeps exactly them. Typical implications do not chain as entailments do: the judge is sure that studying for an exam means reading a book, and believes at 0.38 that reading a book wastes time, yet studying does not. The answer's P falls along such a chain, to 0.44 for lee, who studies, without reaching the base rate.
+
 ## Is pymetta stable enough?
 
 Yes, for this experiment. Everything the rewriter needs from upstream pymetta 0.9.4 worked, and every defect it hit has a workaround in the engine. These held throughout:
@@ -510,15 +574,17 @@ Three things caught me out, but they're MeTTa semantics rather than defects:
 
 ## Reproduce
 
-Every file under `results/` comes from this release's code on the PyMeTTa engine, and these commands regenerate them. The Levy/Holt pairs are fetched first, as the README says:
+Every file under `results/` comes from this release's code on the PyMeTTa engine, and these commands regenerate them. The Levy/Holt and Balanced COPA pairs are fetched first, as the README says:
 
 ```sh
 uv sync
 .venv/bin/python -m pytest tests/
 .venv/bin/python -m pytest tests/test_termination.py --hypothesis-show-statistics -q > results/termination.txt
 .venv/bin/python -m semrewrite.pairs fetch levyholt
-.venv/bin/python -m semrewrite.pairs build levyholt
+.venv/bin/python -m semrewrite.pairs fetch copa
+.venv/bin/python -m semrewrite.pairs build levyholt copa
 .venv/bin/python experiments/judge_eval.py
+.venv/bin/python experiments/typical_actions.py
 .venv/bin/python examples/wikidata/evaluate.py --beliefs
 .venv/bin/python experiments/impl_eval.py --judges oracle --budget 500000 --tag oracle
 for spec in "judges-1 jev" "judges-2 nli-deberta-base" "judges-3 nli-deberta-large" "judges-4 nli-deberta-large-wanli" \
@@ -540,6 +606,7 @@ What each step produces:
 
 - `pytest` runs the engine tests, the termination properties and the judge tests. The second `pytest` line writes the termination statistics this file quotes; Hypothesis draws new catalogues on each run, so the shares it reports move a little from run to run.
 - `judge_eval.py` writes `results/judges.json` and the calibrated thresholds and trusts in `semrewrite/judges/calibration.json`. Jev's answers are cached on disk, so a rerun sends no requests unless it asks something new, which needs a TypeSafe key; this repository does not include the experiment's cache.
+- `typical_actions.py` asks the actions example, `examples/actions.kb`, what wastes time with nli-deberta-large and with typical-qwen3-4b, and writes each action's opinion and the answers to `results/typical_actions.json`.
 - `evaluate.py --beliefs` answers the three Wikidata questions with Jev admitting at two rewrite thresholds and nli-deberta-large at its own, gives every answer its opinion, and writes how well they rank Wikidata's answer to `results/wikidata_beliefs.json`. It loads nli-deberta-large for the retrieval cascade and reads Jev's answer cache.
 - `impl_eval.py` writes `results/implementations.<tag>.json` and `.jsonl`. Each judge run takes a process of its own: pymetta keeps about 25 KB for every context that imports `lib_tabling` (see the pymetta section), and three judges in one process outgrew 4 GiB.
 - `direction_policy.py` writes `results/direction_policy.<tag>.json`, and `blowup.py` writes `results/blowup.json`.

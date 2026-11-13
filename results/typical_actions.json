@@ -1,0 +1,384 @@
+{
+ "provenance": {
+  "at": "2026-11-13T23:54:00+1100",
+  "command": "python experiments/typical_actions.py ",
+  "commit": "d14d564c786648bb061d8752225707a778b7c894",
+  "inputs_uncommitted": []
+ },
+ "kb": "examples/actions.kb",
+ "query": "wastes_time(X)",
+ "judges": {
+  "nli-deberta-large": {
+   "threshold": 0.6592527778093171,
+   "trust": 0.34785897737458393,
+   "base_rate": 0.21394395078605605,
+   "data_trust": 0.4074871375823756,
+   "auc": 0.9333333333333333,
+   "actions": [
+    {
+     "action": "watch_tv",
+     "sentence": "A watches TV",
+     "doer": "sam",
+     "gold": true,
+     "belief": 0.26282580458663424,
+     "disbelief": 0.00021447399735391649,
+     "uncertainty": 0.7369597214160118,
+     "projection": 0.4204938789565671,
+     "score": 0.7555527431555009,
+     "admitted": true
+    },
+    {
+     "action": "play_games",
+     "sentence": "A plays games",
+     "doer": "kim",
+     "gold": true,
+     "belief": 0.01364123687307479,
+     "disbelief": 0.001144593885451607,
+     "uncertainty": 0.9852141692414736,
+     "projection": 0.2244218486109977,
+     "score": 0.03921484785596187,
+     "admitted": false
+    },
+    {
+     "action": "read_book",
+     "sentence": "A reads a book",
+     "doer": "eve",
+     "gold": false,
+     "belief": 0.0033649798420299394,
+     "disbelief": 0.0016234684554603286,
+     "uncertainty": 0.9950115517025098,
+     "projection": 0.21624168229102894,
+     "score": 0.009673402329376822,
+     "admitted": false
+    },
+    {
+     "action": "scroll_feed",
+     "sentence": "A scrolls social media",
+     "doer": "raj",
+     "gold": true,
+     "belief": 0.0009543009623363654,
+     "disbelief": 0.000853112918077315,
+     "uncertainty": 0.9981925861195864,
+     "projection": 0.21451156648211117,
+     "score": 0.002743355855119267,
+     "admitted": false
+    },
+    {
+     "action": "exercise",
+     "sentence": "A goes for a run",
+     "doer": "ana",
+     "gold": false,
+     "belief": 0.001782220427446759,
+     "disbelief": 0.009283713501561463,
+     "uncertainty": 0.9889340660709918,
+     "projection": 0.2133586815895933,
+     "score": 0.005123399260521645,
+     "admitted": false
+    },
+    {
+     "action": "sleep_early",
+     "sentence": "A goes to bed early",
+     "doer": "joe",
+     "gold": false,
+     "belief": 0.00848697500582439,
+     "disbelief": 0.0951343088531133,
+     "uncertainty": 0.8963787161410623,
+     "projection": 0.20026177893757596,
+     "score": 0.024397746092047486,
+     "admitted": false
+    },
+    {
+     "action": "study",
+     "sentence": "A studies for an exam",
+     "doer": "lee",
+     "gold": false,
+     "belief": 0.00020060658784920032,
+     "disbelief": 0.34310875317987033,
+     "uncertainty": 0.6566906402322805,
+     "projection": 0.14069559660336786,
+     "score": 0.0005766894083437201,
+     "admitted": false
+    },
+    {
+     "action": "pay_bills",
+     "sentence": "A pays the bills",
+     "doer": "max",
+     "gold": false,
+     "belief": 4.671228344433632e-05,
+     "disbelief": 0.34760268303818964,
+     "uncertainty": 0.652350604678366,
+     "projection": 0.13961317794600658,
+     "score": 0.00013428511690826732,
+     "admitted": false
+    }
+   ],
+   "status": "ok",
+   "answers": [
+    {
+     "answer": "sam",
+     "projection": 0.4204938789565671,
+     "belief": 0.2628258045866343,
+     "disbelief": 0.00021447399735408101,
+     "uncertainty": 0.7369597214160116
+    }
+   ],
+   "gold_answers": [
+    "kim",
+    "raj",
+    "sam"
+   ],
+   "average_precision": 0.3333333333333333,
+   "rewrites": [
+    {
+     "premise": "watch_tv",
+     "conclusion": "wastes_time",
+     "score": 0.7555527431555009,
+     "projection": 0.4204938789565671
+    }
+   ]
+  },
+  "typical-qwen3-4b": {
+   "threshold": 0.2688319140417118,
+   "trust": 0.5591332022607642,
+   "base_rate": 0.5044270833333333,
+   "data_trust": 0.422960652020163,
+   "auc": 1.0,
+   "actions": [
+    {
+     "action": "watch_tv",
+     "sentence": "A watches TV",
+     "doer": "sam",
+     "gold": true,
+     "belief": 0.5591315794167531,
+     "disbelief": 6.501718500505888e-11,
+     "uncertainty": 0.44086842051822983,
+     "projection": 0.7815175509125372,
+     "score": 0.9999970975717332,
+     "admitted": true
+    },
+    {
+     "action": "scroll_feed",
+     "sentence": "A scrolls social media",
+     "doer": "raj",
+     "gold": true,
+     "belief": 0.5562144553206335,
+     "disbelief": 1.8901671383070276e-09,
+     "uncertainty": 0.44378554278919935,
+     "projection": 0.7800719022952896,
+     "score": 0.9947798719011333,
+     "admitted": true
+    },
+    {
+     "action": "play_games",
+     "sentence": "A plays games",
+     "doer": "kim",
+     "gold": true,
+     "belief": 0.5553909941169194,
+     "disbelief": 1.2307171798827816e-08,
+     "uncertainty": 0.44460899357590883,
+     "projection": 0.7796638119701838,
+     "score": 0.9933071258714133,
+     "admitted": true
+    },
+    {
+     "action": "read_book",
+     "sentence": "A reads a book",
+     "doer": "eve",
+     "gold": false,
+     "belief": 0.21097580258199877,
+     "disbelief": 0.00031718929037167587,
+     "uncertainty": 0.7887070081276295,
+     "projection": 0.6088209782963785,
+     "score": 0.377326550684081,
+     "admitted": true
+    },
+    {
+     "action": "exercise",
+     "sentence": "A goes for a run",
+     "doer": "ana",
+     "gold": false,
+     "belief": 0.1503517137402021,
+     "disbelief": 0.4086983313376675,
+     "uncertainty": 0.4409499549221304,
+     "projection": 0.37277881339753716,
+     "score": 0.2689014230102583,
+     "admitted": true
+    },
+    {
+     "action": "sleep_early",
+     "sentence": "A goes to bed early",
+     "doer": "joe",
+     "gold": false,
+     "belief": 0.06665026094429882,
+     "disbelief": 0.4924825318029135,
+     "uncertainty": 0.44086720725278766,
+     "projection": 0.2890356204361347,
+     "score": 0.11920283158791023,
+     "admitted": false
+    },
+    {
+     "action": "pay_bills",
+     "sentence": "A pays the bills",
+     "doer": "max",
+     "gold": false,
+     "belief": 0.03359254351341391,
+     "disbelief": 0.5254758098518562,
+     "uncertainty": 0.44093164663473,
+     "projection": 0.25601040797473473,
+     "score": 0.060079679363679216,
+     "admitted": false
+    },
+    {
+     "action": "study",
+     "sentence": "A studies for an exam",
+     "doer": "lee",
+     "gold": false,
+     "belief": 0.016389434310719462,
+     "disbelief": 0.5427434942186168,
+     "uncertainty": 0.44086707147066373,
+     "projection": 0.23877472531037455,
+     "score": 0.029312217991082353,
+     "admitted": false
+    }
+   ],
+   "status": "ok",
+   "answers": [
+    {
+     "answer": "kim",
+     "projection": 0.8852896323617068,
+     "belief": 0.7000836476724218,
+     "disbelief": 0.020168323210370334,
+     "uncertainty": 0.2797480291172078
+    },
+    {
+     "answer": "raj",
+     "projection": 0.8675321660809963,
+     "belief": 0.6781821688775813,
+     "disbelief": 0.02151204283636189,
+     "uncertainty": 0.30030578828605686
+    },
+    {
+     "answer": "sam",
+     "projection": 0.7815175509125372,
+     "belief": 0.5591315794167531,
+     "disbelief": 6.501724159058142e-11,
+     "uncertainty": 0.44086842051822966
+    },
+    {
+     "answer": "eve",
+     "projection": 0.6088209782963785,
+     "belief": 0.21097580258199855,
+     "disbelief": 0.00031718929037161114,
+     "uncertainty": 0.7887070081276298
+    },
+    {
+     "answer": "max",
+     "projection": 0.5432766673493609,
+     "belief": 0.40120383733029397,
+     "disbelief": 0.15210122034316098,
+     "uncertainty": 0.44669494232654505
+    },
+    {
+     "answer": "lee",
+     "projection": 0.44366863094374154,
+     "belief": 0.31265110920600675,
+     "disbelief": 0.17243739538026726,
+     "uncertainty": 0.514911495413726
+    },
+    {
+     "answer": "ana",
+     "projection": 0.37277881339753716,
+     "belief": 0.15035171374020212,
+     "disbelief": 0.4086983313376675,
+     "uncertainty": 0.4409499549221304
+    }
+   ],
+   "gold_answers": [
+    "kim",
+    "raj",
+    "sam"
+   ],
+   "average_precision": 1.0,
+   "rewrites": [
+    {
+     "premise": "watch_tv",
+     "conclusion": "wastes_time",
+     "score": 0.9999970975717332,
+     "projection": 0.7815175509125372
+    },
+    {
+     "premise": "scroll_feed",
+     "conclusion": "wastes_time",
+     "score": 0.9947798719011333,
+     "projection": 0.7800719022952896
+    },
+    {
+     "premise": "play_games",
+     "conclusion": "wastes_time",
+     "score": 0.9933071258714133,
+     "projection": 0.7796638119701838
+    },
+    {
+     "premise": "wastes_time",
+     "conclusion": "watch_tv",
+     "score": 0.962670751731392,
+     "projection": 0.7711740508784952
+    },
+    {
+     "premise": "wastes_time",
+     "conclusion": "scroll_feed",
+     "score": 0.9241413449532555,
+     "projection": 0.7604984350153936
+    },
+    {
+     "premise": "study",
+     "conclusion": "read_book",
+     "score": 0.9998415545483738,
+     "projection": 0.72873413821125
+    },
+    {
+     "premise": "wastes_time",
+     "conclusion": "play_games",
+     "score": 0.77674933803898,
+     "projection": 0.7194577739722786
+    },
+    {
+     "premise": "scroll_feed",
+     "conclusion": "read_book",
+     "score": 0.8338453491306383,
+     "projection": 0.6531913975516288
+    },
+    {
+     "premise": "pay_bills",
+     "conclusion": "scroll_feed",
+     "score": 0.6752111842066366,
+     "projection": 0.6262323042194131
+    },
+    {
+     "premise": "read_book",
+     "conclusion": "wastes_time",
+     "score": 0.377326550684081,
+     "projection": 0.6088209782963785
+    },
+    {
+     "premise": "read_book",
+     "conclusion": "study",
+     "score": 0.49998870988254834,
+     "projection": 0.5749771837785954
+    },
+    {
+     "premise": "play_games",
+     "conclusion": "scroll_feed",
+     "score": 0.4683105866604471,
+     "projection": 0.5525844724846978
+    },
+    {
+     "premise": "exercise",
+     "conclusion": "wastes_time",
+     "score": 0.2689014230102583,
+     "projection": 0.37277881339753716
+    }
+   ]
+  }
+ }
+}

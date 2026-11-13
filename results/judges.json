@@ -1,20 +1,17 @@
 {
  "provenance": {
-  "at": "2026-11-13T20:40:38+1100",
-  "command": "python experiments/judge_eval.py ",
-  "commit": "c141ca62b87068cacc45179edd2beb623516a944",
+  "at": "2026-11-13T23:50:44+1100",
+  "command": "python experiments/judge_eval.py --judges cosine-bge,cosine-qwen3,nli-deberta-base,nli-deberta-large,nli-deberta-large-wanli,reranker-qwen3,typical-qwen3-4b --scores SCORES",
+  "commit": "d14d564c786648bb061d8752225707a778b7c894",
   "inputs_uncommitted": [
-   "experiments/judge_eval.py",
-   "semrewrite/judges/__init__.py",
-   "semrewrite/judges/base.py",
-   "semrewrite/judges/calibration.json",
-   "semrewrite/judges/metrics.py",
-   "semrewrite/judges/oracle.py"
+   "semrewrite/judges/calibration.json"
   ],
   "pairs": {
    "levyholt": "bdabc781b3c407fe9d3874cf733a3626b6eefe21eb5b98dc294fee245407af2e",
    "wikidata": "71b6501ea8e54e68e425bdcf580543f3d3706e01e8f680abe96ed0173dd76dc5",
-   "hard": "36295cc3b04ddc0fbca9f9e0d4d8528c64dfe07a2a30585e51c6d03476295155"
+   "hard": "36295cc3b04ddc0fbca9f9e0d4d8528c64dfe07a2a30585e51c6d03476295155",
+   "delta-atomic": "4628a116f6ec56fa6be5e9c3915ae87110fd4845dcb705eb51a5dbac164fd37d",
+   "copa": "3c2e38f66796c882fa74c8902ed7c425d388db7f8f553de832a60fe7a4946c3d"
   },
   "jev_ledger": {
    "requests": 162,
@@ -27,72 +24,80 @@
  },
  "calibration": {
   "rule": "maximum dev balanced accuracy of admitting scores at or above the threshold, middle of the optimal plateau",
-  "default": "wikidata dev rows under each variant's fillers",
+  "default": "the dev rows of each judge's set, wikidata's unless its kind of question needs another, under each variant's fillers",
   "engine_variant": "letters",
   "trust": "maximum dev likelihood of the labels under each opinion's projection at its set's base rate after discounting by the trust (Josang 2016, Eq. 14.6)",
+  "own_trust": "at_own_trust scores a set's test rows at the trust fitted on that set's own dev rows and that set's own base rate",
   "base_rates": {
    "levyholt": 0.5,
-   "wikidata": 0.21394395078605605
+   "wikidata": 0.21394395078605605,
+   "delta-atomic": 0.5044270833333333,
+   "copa": 0.5
   },
   "base_rate": "each set's share of dev rows that hold: the projection of an opinion that says nothing",
-  "data_trust": "maximum likelihood on wikidata dev rows with statements on both sides in victoria.metta, leonardo.metta, alphabet.metta, of the judge's trusted opinion fused with the knowledge base's evidence discounted by the data trust"
+  "data_trust": "maximum likelihood on wikidata dev rows with statements on both sides in victoria.metta, leonardo.metta, alphabet.metta, of the judge's opinion at its wikidata calibration fused with the knowledge base's evidence discounted by the data trust"
  },
  "judges": {
   "cosine-bge": {
    "judge": "CosineJudge",
+   "set": "wikidata",
    "model": "BAAI/bge-small-en-v1.5",
    "usage": {
-    "pairs": 17106,
+    "pairs": 39062,
     "calls": 3,
-    "encoded": 9400
+    "encoded": 38670
    },
    "seconds": {
-    "load": 5.26,
-    "letters": 1.58,
-    "typed": 1.2,
-    "instances": 0.51
+    "load": 9.23,
+    "letters": 8.78,
+    "typed": 8.66,
+    "instances": 0.82
    },
-   "gpu_peak_gib": 0.148,
+   "gpu_peak_gib": 0.154,
    "variants": {
     "letters": {
      "thresholds": {
-      "default": 0.9571969956159592,
+      "default": 0.957196980714798,
       "by_set": {
        "levyholt": 0.914429783821106,
-       "wikidata": 0.9571969956159592
+       "wikidata": 0.957196980714798,
+       "delta-atomic": 0.8813843727111816,
+       "copa": 0.8590667247772217
       }
      },
      "trust": {
-      "default": 0.0015405690415950957,
+      "default": 0.001540569060717999,
       "by_set": {
        "levyholt": 0.0,
-       "wikidata": 0.0015405690415950957
+       "wikidata": 0.001540569060717999,
+       "delta-atomic": 0.021089426086040253,
+       "copa": 0.03238124425762533
       }
      },
      "data": {
-      "trust": 0.1712337126529756,
+      "trust": 0.17123371371455878,
       "dev": {
        "judge": {
         "rows": 501,
-        "log_loss": 0.5470852556367041,
-        "brier": 0.18047411769155106
+        "log_loss": 0.5470852556326865,
+        "brier": 0.18047411769019478
        },
        "fused": {
         "rows": 501,
-        "log_loss": 0.5441955404048975,
-        "brier": 0.17954112718398121
+        "log_loss": 0.5441955403978437,
+        "brier": 0.17954112718183893
        }
       },
       "test": {
        "judge": {
         "rows": 933,
-        "log_loss": 0.5529835915810097,
-        "brier": 0.1830705056098372
+        "log_loss": 0.5529835915785483,
+        "brier": 0.18307050560900615
        },
        "fused": {
         "rows": 933,
-        "log_loss": 0.5513254004729389,
-        "brier": 0.18237703009609485
+        "log_loss": 0.5513254004796782,
+        "brier": 0.18237703009646755
        }
       }
      },
@@ -108,7 +113,7 @@
          "ties": 0.7365079365079366
         },
         "at_default": {
-         "threshold": 0.9571969956159592,
+         "threshold": 0.957196980714798,
          "rows": 630,
          "admitted": 47,
          "accuracy": 0.4984126984126984,
@@ -118,8 +123,8 @@
         },
         "at_default_trust": {
          "rows": 630,
-         "log_loss": 0.8895702897328438,
-         "brier": 0.33121685722630295
+         "log_loss": 0.8895702897097063,
+         "brier": 0.3312168572184931
         }
        },
        "test": {
@@ -132,7 +137,7 @@
          "ties": 0.7522421524663677
         },
         "at_default": {
-         "threshold": 0.9571969956159592,
+         "threshold": 0.957196980714798,
          "rows": 1784,
          "admitted": 81,
          "accuracy": 0.4971973094170404,
@@ -151,8 +156,14 @@
         },
         "at_default_trust": {
          "rows": 1784,
-         "log_loss": 0.8895791730293451,
-         "brier": 0.3312198562062068
+         "log_loss": 0.8895791730016785,
+         "brier": 0.3312198561968677
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25,
+         "auc": 0.5
         }
        }
       },
@@ -167,7 +178,7 @@
          "ties": 0.6209677419354839
         },
         "at_default": {
-         "threshold": 0.9571969956159592,
+         "threshold": 0.957196980714798,
          "rows": 1463,
          "admitted": 120,
          "accuracy": 0.7737525632262474,
@@ -177,21 +188,21 @@
         },
         "at_default_trust": {
          "rows": 1463,
-         "log_loss": 0.519132031798391,
-         "brier": 0.16817078275945463
+         "log_loss": 0.5191320317982776,
+         "brier": 0.1681707827594162
         }
        },
        "test": {
         "rows": 3329,
         "positives": 677,
-        "auc": 0.5306340522801554,
+        "auc": 0.5306346092578607,
         "direction": {
          "pairs": 552,
          "accuracy": 0.46195652173913043,
          "ties": 0.677536231884058
         },
         "at_default": {
-         "threshold": 0.9571969956159592,
+         "threshold": 0.957196980714798,
          "rows": 3329,
          "admitted": 255,
          "accuracy": 0.7680985280865125,
@@ -200,7 +211,7 @@
          "recall": 0.11816838995568685
         },
         "at_own_dev": {
-         "threshold": 0.9571969956159592,
+         "threshold": 0.957196980714798,
          "rows": 3329,
          "admitted": 255,
          "accuracy": 0.7680985280865125,
@@ -210,8 +221,14 @@
         },
         "at_default_trust": {
          "rows": 3329,
-         "log_loss": 0.5054303689724103,
-         "brier": 0.1621402126780048
+         "log_loss": 0.5054303689697658,
+         "brier": 0.1621402126771119
+        },
+        "at_own_trust": {
+         "rows": 3329,
+         "log_loss": 0.5054303689697658,
+         "brier": 0.1621402126771119,
+         "auc": 0.5306346092578607
         }
        }
       },
@@ -226,7 +243,7 @@
          "ties": 0.9655172413793104
         },
         "at_default": {
-         "threshold": 0.9571969956159592,
+         "threshold": 0.957196980714798,
          "rows": 140,
          "admitted": 56,
          "accuracy": 0.6142857142857143,
@@ -236,8 +253,138 @@
         },
         "at_default_trust": {
          "rows": 140,
-         "log_loss": 0.7599831742083745,
-         "brier": 0.2741889891508308
+         "log_loss": 0.7599831741984994,
+         "brier": 0.2741889891474959
+        }
+       }
+      },
+      "delta-atomic": {
+       "dev": {
+        "rows": 3840,
+        "positives": 1937,
+        "auc": 0.601689287164711,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.957196980714798,
+         "rows": 3840,
+         "admitted": 5,
+         "accuracy": 0.49635416666666665,
+         "balanced_accuracy": 0.500769781485148,
+         "precision": 0.8,
+         "recall": 0.002065049044914817
+        },
+        "at_default_trust": {
+         "rows": 3840,
+         "log_loss": 0.8953655282643794,
+         "brier": 0.33376121004985754
+        }
+       },
+       "test": {
+        "rows": 4138,
+        "positives": 2091,
+        "auc": 0.6029497623635106,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.957196980714798,
+         "rows": 4138,
+         "admitted": 9,
+         "accuracy": 0.4954084098598357,
+         "balanced_accuracy": 0.5007019405519783,
+         "precision": 0.6666666666666666,
+         "recall": 0.0028694404591104736
+        },
+        "at_own_dev": {
+         "threshold": 0.8813843727111816,
+         "rows": 4138,
+         "admitted": 1806,
+         "accuracy": 0.5763653939101016,
+         "balanced_accuracy": 0.5770499199000438,
+         "precision": 0.593576965669989,
+         "recall": 0.5126733620277379
+        },
+        "at_default_trust": {
+         "rows": 4138,
+         "log_loss": 0.8965197538630099,
+         "brier": 0.33426899483676653
+        },
+        "at_own_trust": {
+         "rows": 4138,
+         "log_loss": 0.6929483852112596,
+         "brier": 0.24990065413651147,
+         "auc": 0.6029497623635106
+        }
+       }
+      },
+      "copa": {
+       "dev": {
+        "rows": 2000,
+        "positives": 1000,
+        "auc": 0.5990635,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.957196980714798,
+         "rows": 2000,
+         "admitted": 3,
+         "accuracy": 0.5005,
+         "balanced_accuracy": 0.5005,
+         "precision": 0.6666666666666666,
+         "recall": 0.002
+        },
+        "at_default_trust": {
+         "rows": 2000,
+         "log_loss": 0.8897095753058913,
+         "brier": 0.33126386681646225
+        }
+       },
+       "test": {
+        "rows": 1000,
+        "positives": 500,
+        "auc": 0.603844,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.957196980714798,
+         "rows": 1000,
+         "admitted": 2,
+         "accuracy": 0.502,
+         "balanced_accuracy": 0.502,
+         "precision": 1.0,
+         "recall": 0.004
+        },
+        "at_own_dev": {
+         "threshold": 0.8590667247772217,
+         "rows": 1000,
+         "admitted": 327,
+         "accuracy": 0.565,
+         "balanced_accuracy": 0.565,
+         "precision": 0.599388379204893,
+         "recall": 0.392
+        },
+        "at_default_trust": {
+         "rows": 1000,
+         "log_loss": 0.8897112584030415,
+         "brier": 0.33126443483668594
+        },
+        "at_own_trust": {
+         "rows": 1000,
+         "log_loss": 0.6928701925282499,
+         "brier": 0.24986160418997858,
+         "auc": 0.603844
         }
        }
       }
@@ -247,41 +394,45 @@
      "thresholds": {
       "default": 0.9749725759029388,
       "by_set": {
-       "levyholt": 0.9631116688251495,
-       "wikidata": 0.9749725759029388
+       "levyholt": 0.9631116837263107,
+       "wikidata": 0.9749725759029388,
+       "delta-atomic": 0.8813843727111816,
+       "copa": 0.8590667396783829
       }
      },
      "trust": {
-      "default": 2.875111225988193e-06,
+      "default": 2.876547075447109e-06,
       "by_set": {
        "levyholt": 0.0,
-       "wikidata": 2.875111225988193e-06
+       "wikidata": 2.876547075447109e-06,
+       "delta-atomic": 0.021089425115552105,
+       "copa": 0.03238124612310532
       }
      },
      "data": {
-      "trust": 0.16708236599603846,
+      "trust": 0.16708232456217584,
       "dev": {
        "judge": {
         "rows": 501,
-        "log_loss": 0.5472240287630501,
-        "brier": 0.1805208812724887
+        "log_loss": 0.5472240286292235,
+        "brier": 0.18052088122747662
        },
        "fused": {
         "rows": 501,
-        "log_loss": 0.5444788611407414,
-        "brier": 0.17963554895420838
+        "log_loss": 0.5444788608673478,
+        "brier": 0.17963554885713995
        }
       },
       "test": {
        "judge": {
         "rows": 933,
-        "log_loss": 0.5531537957476959,
-        "brier": 0.1831278616113058
+        "log_loss": 0.5531537955817185,
+        "brier": 0.18312786155547991
        },
        "fused": {
         "rows": 933,
-        "log_loss": 0.5515921453493202,
-        "brier": 0.182471635645
+        "log_loss": 0.551592144582221,
+        "brier": 0.1824716354658458
        }
       }
      },
@@ -307,8 +458,8 @@
         },
         "at_default_trust": {
          "rows": 630,
-         "log_loss": 0.8913806383796264,
-         "brier": 0.33182686701614267
+         "log_loss": 0.8913806366034001,
+         "brier": 0.3318268664187156
         }
        },
        "test": {
@@ -330,7 +481,7 @@
          "recall": 0.08071748878923767
         },
         "at_own_dev": {
-         "threshold": 0.9631116688251495,
+         "threshold": 0.9631116837263107,
          "rows": 1784,
          "admitted": 391,
          "accuracy": 0.500560538116592,
@@ -340,8 +491,14 @@
         },
         "at_default_trust": {
          "rows": 1784,
-         "log_loss": 0.8913806350409557,
-         "brier": 0.3318268658931934
+         "log_loss": 0.8913806332630665,
+         "brier": 0.331826865295207
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25,
+         "auc": 0.5
         }
        }
       },
@@ -366,14 +523,14 @@
         },
         "at_default_trust": {
          "rows": 1463,
-         "log_loss": 0.5191354446161642,
-         "brier": 0.16817193670373135
+         "log_loss": 0.5191354446161511,
+         "brier": 0.168171936703727
         }
        },
        "test": {
         "rows": 3329,
         "positives": 677,
-        "auc": 0.5096137136822687,
+        "auc": 0.509614270659974,
         "direction": {
          "pairs": 552,
          "accuracy": 0.49184782608695654,
@@ -399,8 +556,14 @@
         },
         "at_default_trust": {
          "rows": 3329,
-         "log_loss": 0.5053682191845629,
-         "brier": 0.16211927525966455
+         "log_loss": 0.505368219247831,
+         "brier": 0.16211927528094455
+        },
+        "at_own_trust": {
+         "rows": 3329,
+         "log_loss": 0.505368219247831,
+         "brier": 0.16211927528094455,
+         "auc": 0.509614270659974
         }
        }
       },
@@ -425,8 +588,138 @@
         },
         "at_default_trust": {
          "rows": 140,
-         "log_loss": 0.7612503338781962,
-         "brier": 0.274616026675238
+         "log_loss": 0.7612503326505904,
+         "brier": 0.27461602626233717
+        }
+       }
+      },
+      "delta-atomic": {
+       "dev": {
+        "rows": 3840,
+        "positives": 1937,
+        "auc": 0.601689287164711,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.9749725759029388,
+         "rows": 3840,
+         "admitted": 0,
+         "accuracy": 0.49557291666666664,
+         "balanced_accuracy": 0.5,
+         "precision": null,
+         "recall": 0.0
+        },
+        "at_default_trust": {
+         "rows": 3840,
+         "log_loss": 0.8971418860969457,
+         "brier": 0.33435972964099947
+        }
+       },
+       "test": {
+        "rows": 4138,
+        "positives": 2091,
+        "auc": 0.602949645548641,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.9749725759029388,
+         "rows": 4138,
+         "admitted": 0,
+         "accuracy": 0.4946834219429676,
+         "balanced_accuracy": 0.5,
+         "precision": null,
+         "recall": 0.0
+        },
+        "at_own_dev": {
+         "threshold": 0.8813843727111816,
+         "rows": 4138,
+         "admitted": 1806,
+         "accuracy": 0.5763653939101016,
+         "balanced_accuracy": 0.5770499199000438,
+         "precision": 0.593576965669989,
+         "recall": 0.5126733620277379
+        },
+        "at_default_trust": {
+         "rows": 4138,
+         "log_loss": 0.8982993919308684,
+         "brier": 0.3348686182720029
+        },
+        "at_own_trust": {
+         "rows": 4138,
+         "log_loss": 0.6929483851900732,
+         "brier": 0.24990065412592058,
+         "auc": 0.602949645548641
+        }
+       }
+      },
+      "copa": {
+       "dev": {
+        "rows": 2000,
+        "positives": 1000,
+        "auc": 0.5990635,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.9749725759029388,
+         "rows": 2000,
+         "admitted": 1,
+         "accuracy": 0.4995,
+         "balanced_accuracy": 0.4995,
+         "precision": 0.0,
+         "recall": 0.0
+        },
+        "at_default_trust": {
+         "rows": 2000,
+         "log_loss": 0.8913810577613945,
+         "brier": 0.331827008073566
+        }
+       },
+       "test": {
+        "rows": 1000,
+        "positives": 500,
+        "auc": 0.603844,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.9749725759029388,
+         "rows": 1000,
+         "admitted": 0,
+         "accuracy": 0.5,
+         "balanced_accuracy": 0.5,
+         "precision": null,
+         "recall": 0.0
+        },
+        "at_own_dev": {
+         "threshold": 0.8590667396783829,
+         "rows": 1000,
+         "admitted": 327,
+         "accuracy": 0.565,
+         "balanced_accuracy": 0.565,
+         "precision": 0.599388379204893,
+         "recall": 0.392
+        },
+        "at_default_trust": {
+         "rows": 1000,
+         "log_loss": 0.8913810609377779,
+         "brier": 0.3318270091419299
+        },
+        "at_own_trust": {
+         "rows": 1000,
+         "log_loss": 0.6928701925009478,
+         "brier": 0.24986160417634315,
+         "auc": 0.603844
         }
        }
       }
@@ -475,70 +768,83 @@
          "balanced_accuracy": 0.5,
          "precision": 0.5,
          "recall": 0.5145739910313901
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25,
+         "auc": 0.5
         }
        }
       },
       "wikidata": {},
-      "hard": {}
+      "hard": {},
+      "delta-atomic": {},
+      "copa": {}
      }
     }
    }
   },
   "cosine-qwen3": {
    "judge": "CosineJudge",
+   "set": "wikidata",
    "model": "Qwen/Qwen3-Embedding-0.6B",
    "usage": {
-    "pairs": 17106,
+    "pairs": 39062,
     "calls": 3,
-    "encoded": 9400
+    "encoded": 38670
    },
    "seconds": {
-    "load": 10.92,
-    "letters": 3.35,
-    "typed": 6.39,
-    "instances": 2.84
+    "load": 17.79,
+    "letters": 26.63,
+    "typed": 36.85,
+    "instances": 3.45
    },
-   "gpu_peak_gib": 1.147,
+   "gpu_peak_gib": 1.159,
    "variants": {
     "letters": {
      "thresholds": {
       "default": 0.9751224517822266,
       "by_set": {
        "levyholt": 0.9468457251787186,
-       "wikidata": 0.9751224517822266
+       "wikidata": 0.9751224517822266,
+       "delta-atomic": 0.9092516750097275,
+       "copa": 0.907937616109848
       }
      },
      "trust": {
-      "default": 0.0005580773307898176,
+      "default": 0.0005621496889577945,
       "by_set": {
-       "levyholt": 0.0008249410227665914,
-       "wikidata": 0.0005580773307898176
+       "levyholt": 0.0008104850002929622,
+       "wikidata": 0.0005621496889577945,
+       "delta-atomic": 0.01603904615056006,
+       "copa": 0.02133683907737928
       }
      },
      "data": {
-      "trust": 0.16869232681763607,
+      "trust": 0.16870426496085067,
       "dev": {
        "judge": {
         "rows": 501,
-        "log_loss": 0.547169953185857,
-        "brier": 0.18050268003233694
+        "log_loss": 0.5471695408972983,
+        "brier": 0.18050254115929804
        },
        "fused": {
         "rows": 501,
-        "log_loss": 0.5443689694746527,
-        "brier": 0.17959897651532858
+        "log_loss": 0.5443681429163615,
+        "brier": 0.17959870187860633
        }
       },
       "test": {
        "judge": {
         "rows": 933,
-        "log_loss": 0.5530887965278478,
-        "brier": 0.1831059837213958
+        "log_loss": 0.5530883153581679,
+        "brier": 0.1831058216488139
        },
        "fused": {
         "rows": 933,
-        "log_loss": 0.5514896704100073,
-        "brier": 0.18243533867221953
+        "log_loss": 0.5514889130183438,
+        "brier": 0.1824350700772377
        }
       }
      },
@@ -547,7 +853,7 @@
        "dev": {
         "rows": 630,
         "positives": 315,
-        "auc": 0.5074930713025951,
+        "auc": 0.5073015873015873,
         "direction": {
          "pairs": 315,
          "accuracy": 0.526984126984127,
@@ -564,14 +870,14 @@
         },
         "at_default_trust": {
          "rows": 630,
-         "log_loss": 0.8906922670052089,
-         "brier": 0.3315951762921401
+         "log_loss": 0.8906872196097206,
+         "brier": 0.3315934762704013
         }
        },
        "test": {
         "rows": 1784,
         "positives": 892,
-        "auc": 0.5020115274789358,
+        "auc": 0.5019989593597297,
         "direction": {
          "pairs": 892,
          "accuracy": 0.49495515695067266,
@@ -589,16 +895,22 @@
         "at_own_dev": {
          "threshold": 0.9468457251787186,
          "rows": 1784,
-         "admitted": 719,
+         "admitted": 717,
          "accuracy": 0.5016816143497758,
          "balanced_accuracy": 0.5016816143497758,
-         "precision": 0.502086230876217,
-         "recall": 0.4047085201793722
+         "precision": 0.502092050209205,
+         "recall": 0.40358744394618834
         },
         "at_default_trust": {
          "rows": 1784,
-         "log_loss": 0.8906945586374436,
-         "brier": 0.3315959481479681
+         "log_loss": 0.8906895763707686,
+         "brier": 0.33159427006986736
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.6931473839098801,
+         "brier": 0.2500001016749505,
+         "auc": 0.5019989593597297
         }
        }
       },
@@ -606,7 +918,7 @@
        "dev": {
         "rows": 1463,
         "positives": 313,
-        "auc": 0.5231809973607445,
+        "auc": 0.5234754827059314,
         "direction": {
          "pairs": 248,
          "accuracy": 0.46774193548387094,
@@ -623,14 +935,14 @@
         },
         "at_default_trust": {
          "rows": 1463,
-         "log_loss": 0.5191349330453904,
-         "brier": 0.16817176431152006
+         "log_loss": 0.5191349255273441,
+         "brier": 0.16817176177561918
         }
        },
        "test": {
         "rows": 3329,
         "positives": 677,
-        "auc": 0.5320234331660172,
+        "auc": 0.5322125270969653,
         "direction": {
          "pairs": 552,
          "accuracy": 0.49094202898550726,
@@ -656,8 +968,14 @@
         },
         "at_default_trust": {
          "rows": 3329,
-         "log_loss": 0.5053932696134393,
-         "brier": 0.16212770649885122
+         "log_loss": 0.5053934530659295,
+         "brier": 0.1621277682844874
+        },
+        "at_own_trust": {
+         "rows": 3329,
+         "log_loss": 0.5053934530659295,
+         "brier": 0.1621277682844874,
+         "auc": 0.5322125270969653
         }
        }
       },
@@ -682,8 +1000,138 @@
         },
         "at_default_trust": {
          "rows": 140,
-         "log_loss": 0.7607771255980202,
-         "brier": 0.27445674889259813
+         "log_loss": 0.7607736506085141,
+         "brier": 0.2744555783838536
+        }
+       }
+      },
+      "delta-atomic": {
+       "dev": {
+        "rows": 3840,
+        "positives": 1937,
+        "auc": 0.6381359649777232,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.9751224517822266,
+         "rows": 3840,
+         "admitted": 3,
+         "accuracy": 0.49583333333333335,
+         "balanced_accuracy": 0.5002535192239193,
+         "precision": 0.6666666666666666,
+         "recall": 0.0010325245224574084
+        },
+        "at_default_trust": {
+         "rows": 3840,
+         "log_loss": 0.8964602569802674,
+         "brier": 0.3341303122768569
+        }
+       },
+       "test": {
+        "rows": 4138,
+        "positives": 2091,
+        "auc": 0.6429240444017992,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.9751224517822266,
+         "rows": 4138,
+         "admitted": 1,
+         "accuracy": 0.49492508458192364,
+         "balanced_accuracy": 0.5002391200382592,
+         "precision": 1.0,
+         "recall": 0.00047824007651841227
+        },
+        "at_own_dev": {
+         "threshold": 0.9092516750097275,
+         "rows": 4138,
+         "admitted": 2220,
+         "accuracy": 0.6053649105848236,
+         "balanced_accuracy": 0.6049887659139818,
+         "precision": 0.6031531531531531,
+         "recall": 0.640363462458154
+        },
+        "at_default_trust": {
+         "rows": 4138,
+         "log_loss": 0.8976158230562238,
+         "brier": 0.33463854808796234
+        },
+        "at_own_trust": {
+         "rows": 4138,
+         "log_loss": 0.6929926694927034,
+         "brier": 0.24992277303659569,
+         "auc": 0.6429240444017992
+        }
+       }
+      },
+      "copa": {
+       "dev": {
+        "rows": 2000,
+        "positives": 1000,
+        "auc": 0.6446825,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.9751224517822266,
+         "rows": 2000,
+         "admitted": 5,
+         "accuracy": 0.5005,
+         "balanced_accuracy": 0.5005,
+         "precision": 0.6,
+         "recall": 0.003
+        },
+        "at_default_trust": {
+         "rows": 2000,
+         "log_loss": 0.8907172692810247,
+         "brier": 0.33160359702988434
+        }
+       },
+       "test": {
+        "rows": 1000,
+        "positives": 500,
+        "auc": 0.638396,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.9751224517822266,
+         "rows": 1000,
+         "admitted": 0,
+         "accuracy": 0.5,
+         "balanced_accuracy": 0.5,
+         "precision": null,
+         "recall": 0.0
+        },
+        "at_own_dev": {
+         "threshold": 0.907937616109848,
+         "rows": 1000,
+         "admitted": 416,
+         "accuracy": 0.598,
+         "balanced_accuracy": 0.5980000000000001,
+         "precision": 0.6177884615384616,
+         "recall": 0.514
+        },
+        "at_default_trust": {
+         "rows": 1000,
+         "log_loss": 0.8907165922778715,
+         "brier": 0.3316033689981124
+        },
+        "at_own_trust": {
+         "rows": 1000,
+         "log_loss": 0.6930147987259254,
+         "brier": 0.2499338398148277,
+         "auc": 0.638396
         }
        }
       }
@@ -694,14 +1142,18 @@
       "default": 0.9761264026165009,
       "by_set": {
        "levyholt": 0.950287401676178,
-       "wikidata": 0.9761264026165009
+       "wikidata": 0.9761264026165009,
+       "delta-atomic": 0.9092516750097275,
+       "copa": 0.907937616109848
       }
      },
      "trust": {
       "default": 0.00018665456630194684,
       "by_set": {
-       "levyholt": 0.0002950674932073134,
-       "wikidata": 0.00018665456630194684
+       "levyholt": 0.00029504850482250434,
+       "wikidata": 0.00018665456630194684,
+       "delta-atomic": 0.01603904615056006,
+       "copa": 0.02133683907737928
       }
      },
      "data": {
@@ -736,7 +1188,7 @@
        "dev": {
         "rows": 630,
         "positives": 315,
-        "auc": 0.5020408163265306,
+        "auc": 0.5020508944318468,
         "direction": {
          "pairs": 315,
          "accuracy": 0.5174603174603175,
@@ -745,22 +1197,22 @@
         "at_default": {
          "threshold": 0.9761264026165009,
          "rows": 630,
-         "admitted": 118,
+         "admitted": 120,
          "accuracy": 0.5031746031746032,
          "balanced_accuracy": 0.5031746031746032,
-         "precision": 0.5084745762711864,
-         "recall": 0.19047619047619047
+         "precision": 0.5083333333333333,
+         "recall": 0.19365079365079366
         },
         "at_default_trust": {
          "rows": 630,
-         "log_loss": 0.8911473276753205,
-         "brier": 0.33174837551158937
+         "log_loss": 0.8911473228559675,
+         "brier": 0.3317483738898731
         }
        },
        "test": {
         "rows": 1784,
         "positives": 892,
-        "auc": 0.5016030636047377,
+        "auc": 0.5015917522974522,
         "direction": {
          "pairs": 892,
          "accuracy": 0.5050448430493274,
@@ -786,8 +1238,14 @@
         },
         "at_default_trust": {
          "rows": 1784,
-         "log_loss": 0.8911476667911602,
-         "brier": 0.3317484896243962
+         "log_loss": 0.8911476663688177,
+         "brier": 0.3317484894822766
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.693147187672454,
+         "brier": 0.2500000035562547,
+         "auc": 0.5015917522974522
         }
        }
       },
@@ -847,6 +1305,12 @@
          "rows": 3329,
          "log_loss": 0.5053767016672756,
          "brier": 0.16212212896138486
+        },
+        "at_own_trust": {
+         "rows": 3329,
+         "log_loss": 0.5053767016672756,
+         "brier": 0.16212212896138486,
+         "auc": 0.506246783453752
         }
        }
       },
@@ -873,6 +1337,136 @@
          "rows": 140,
          "log_loss": 0.7610940509098147,
          "brier": 0.27456344882348444
+        }
+       }
+      },
+      "delta-atomic": {
+       "dev": {
+        "rows": 3840,
+        "positives": 1937,
+        "auc": 0.6381359649777232,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.9761264026165009,
+         "rows": 3840,
+         "admitted": 2,
+         "accuracy": 0.49609375,
+         "balanced_accuracy": 0.5005162622612287,
+         "precision": 1.0,
+         "recall": 0.0010325245224574084
+        },
+        "at_default_trust": {
+         "rows": 3840,
+         "log_loss": 0.896917583419386,
+         "brier": 0.3342842696339431
+        }
+       },
+       "test": {
+        "rows": 4138,
+        "positives": 2091,
+        "auc": 0.6429240444017992,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.9761264026165009,
+         "rows": 4138,
+         "admitted": 1,
+         "accuracy": 0.49492508458192364,
+         "balanced_accuracy": 0.5002391200382592,
+         "precision": 1.0,
+         "recall": 0.00047824007651841227
+        },
+        "at_own_dev": {
+         "threshold": 0.9092516750097275,
+         "rows": 4138,
+         "admitted": 2220,
+         "accuracy": 0.6053649105848236,
+         "balanced_accuracy": 0.6049887659139818,
+         "precision": 0.6031531531531531,
+         "recall": 0.640363462458154
+        },
+        "at_default_trust": {
+         "rows": 4138,
+         "log_loss": 0.8980744489255743,
+         "brier": 0.33479294285113326
+        },
+        "at_own_trust": {
+         "rows": 4138,
+         "log_loss": 0.6929926694927034,
+         "brier": 0.24992277303659569,
+         "auc": 0.6429240444017992
+        }
+       }
+      },
+      "copa": {
+       "dev": {
+        "rows": 2000,
+        "positives": 1000,
+        "auc": 0.6446825,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.9761264026165009,
+         "rows": 2000,
+         "admitted": 3,
+         "accuracy": 0.5005,
+         "balanced_accuracy": 0.5005,
+         "precision": 0.6666666666666666,
+         "recall": 0.002
+        },
+        "at_default_trust": {
+         "rows": 2000,
+         "log_loss": 0.8911625538715544,
+         "brier": 0.3317534990859993
+        }
+       },
+       "test": {
+        "rows": 1000,
+        "positives": 500,
+        "auc": 0.638396,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.9761264026165009,
+         "rows": 1000,
+         "admitted": 0,
+         "accuracy": 0.5,
+         "balanced_accuracy": 0.5,
+         "precision": null,
+         "recall": 0.0
+        },
+        "at_own_dev": {
+         "threshold": 0.907937616109848,
+         "rows": 1000,
+         "admitted": 416,
+         "accuracy": 0.598,
+         "balanced_accuracy": 0.5980000000000001,
+         "precision": 0.6177884615384616,
+         "recall": 0.514
+        },
+        "at_default_trust": {
+         "rows": 1000,
+         "log_loss": 0.891162328505342,
+         "brier": 0.3317534232494183
+        },
+        "at_own_trust": {
+         "rows": 1000,
+         "log_loss": 0.6930147987259254,
+         "brier": 0.2499338398148277,
+         "auc": 0.638396
         }
        }
       }
@@ -921,11 +1515,19 @@
          "balanced_accuracy": 0.5,
          "precision": 0.5,
          "recall": 0.4786995515695067
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.6931471805599453,
+         "brier": 0.25,
+         "auc": 0.5
         }
        }
       },
       "wikidata": {},
-      "hard": {}
+      "hard": {},
+      "delta-atomic": {},
+      "copa": {}
      }
     }
    }
@@ -1382,58 +1984,63 @@
   },
   "nli-deberta-base": {
    "judge": "NLIJudge",
+   "set": "wikidata",
    "model": "cross-encoder/nli-deberta-v3-base",
    "usage": {
-    "pairs": 17106,
+    "pairs": 39062,
     "calls": 3
    },
    "seconds": {
-    "load": 7.54,
-    "letters": 6.53,
-    "typed": 6.39,
-    "instances": 2.01
+    "load": 17.42,
+    "letters": 23.04,
+    "typed": 18.9,
+    "instances": 2.13
    },
-   "gpu_peak_gib": 0.892,
+   "gpu_peak_gib": 0.92,
    "variants": {
     "letters": {
      "thresholds": {
       "default": 0.2221469032721426,
       "by_set": {
        "levyholt": 0.969776144155973,
-       "wikidata": 0.2221469032721426
+       "wikidata": 0.2221469032721426,
+       "delta-atomic": 0.00216466167772765,
+       "copa": 0.0003034441203363374
       }
      },
      "trust": {
-      "default": 0.31142980545519916,
+      "default": 0.3114297961631095,
       "by_set": {
-       "levyholt": 0.3203255683232329,
-       "wikidata": 0.31142980545519916
+       "levyholt": 0.32032559079703926,
+       "wikidata": 0.3114297961631095,
+       "delta-atomic": 0.6526757867267186,
+       "copa": 0.5263379615902921
       }
      },
      "data": {
-      "trust": 0.3635013542521893,
+      "trust": 0.36350127004188687,
       "dev": {
        "judge": {
         "rows": 501,
-        "log_loss": 0.4752723217092716,
-        "brier": 0.15151447791324166
+        "log_loss": 0.4752723192793763,
+        "brier": 0.15151447761665238
        },
        "fused": {
         "rows": 501,
-        "log_loss": 0.4620442576204214,
-        "brier": 0.1490483191826413
+        "log_loss": 0.4620442558952136,
+        "brier": 0.14904831796345747
        }
       },
       "test": {
        "judge": {
         "rows": 933,
-        "log_loss": 0.49169903391859804,
-        "brier": 0.15876938930621828
+        "log_loss": 0.491699028927106,
+        "brier": 0.15876938634296855
        },
        "fused": {
         "rows": 933,
-        "log_loss": 0.48205230763714824,
-        "brier": 0.1572393297760317
+        "log_loss": 0.4820523028737939,
+        "brier": 0.15723932661540824
        }
       }
      },
@@ -1442,7 +2049,7 @@
        "dev": {
         "rows": 630,
         "positives": 315,
-        "auc": 0.7039304610733182,
+        "auc": 0.7039002267573696,
         "direction": {
          "pairs": 315,
          "accuracy": 0.7682539682539683,
@@ -1459,14 +2066,14 @@
         },
         "at_default_trust": {
          "rows": 630,
-         "log_loss": 0.7098254167407985,
-         "brier": 0.2556256830125672
+         "log_loss": 0.7098254044788326,
+         "brier": 0.255625677778984
         }
        },
        "test": {
         "rows": 1784,
         "positives": 892,
-        "auc": 0.7398782651973698,
+        "auc": 0.7398795220092903,
         "direction": {
          "pairs": 892,
          "accuracy": 0.8038116591928252,
@@ -1492,8 +2099,14 @@
         },
         "at_default_trust": {
          "rows": 1784,
-         "log_loss": 0.70624178559497,
-         "brier": 0.25360370046708863
+         "log_loss": 0.706241787203457,
+         "brier": 0.253603701326729
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.6576274825272046,
+         "brier": 0.23263604894492776,
+         "auc": 0.7091228206881297
         }
        }
       },
@@ -1518,8 +2131,8 @@
         },
         "at_default_trust": {
          "rows": 1463,
-         "log_loss": 0.4743319407293606,
-         "brier": 0.1511286027349516
+         "log_loss": 0.47433194204518414,
+         "brier": 0.15112860324688354
         }
        },
        "test": {
@@ -1551,8 +2164,14 @@
         },
         "at_default_trust": {
          "rows": 3329,
-         "log_loss": 0.4637321795099134,
-         "brier": 0.14651225319382877
+         "log_loss": 0.4637321806280962,
+         "brier": 0.14651225258176395
+        },
+        "at_own_trust": {
+         "rows": 3329,
+         "log_loss": 0.4637321806280962,
+         "brier": 0.14651225258176395,
+         "auc": 0.7311607860960542
         }
        }
       },
@@ -1577,8 +2196,138 @@
         },
         "at_default_trust": {
          "rows": 140,
-         "log_loss": 0.5471405085040548,
-         "brier": 0.18522048831280966
+         "log_loss": 0.5471405199088016,
+         "brier": 0.1852204933193279
+        }
+       }
+      },
+      "delta-atomic": {
+       "dev": {
+        "rows": 3840,
+        "positives": 1937,
+        "auc": 0.6191118498601914,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.2221469032721426,
+         "rows": 3840,
+         "admitted": 242,
+         "accuracy": 0.52421875,
+         "balanced_accuracy": 0.5280900385256982,
+         "precision": 0.7272727272727273,
+         "recall": 0.09086215797625194
+        },
+        "at_default_trust": {
+         "rows": 3840,
+         "log_loss": 0.8672331658434103,
+         "brier": 0.322177523100737
+        }
+       },
+       "test": {
+        "rows": 4138,
+        "positives": 2091,
+        "auc": 0.6347822816140171,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.2221469032721426,
+         "rows": 4138,
+         "admitted": 326,
+         "accuracy": 0.5318994683421943,
+         "balanced_accuracy": 0.5363824584250038,
+         "precision": 0.7361963190184049,
+         "recall": 0.11477761836441894
+        },
+        "at_own_dev": {
+         "threshold": 0.00216466167772765,
+         "rows": 4138,
+         "admitted": 2042,
+         "accuracy": 0.5894151764137264,
+         "balanced_accuracy": 0.5894946752277949,
+         "precision": 0.5959843290891284,
+         "recall": 0.5820181731229077
+        },
+        "at_default_trust": {
+         "rows": 4138,
+         "log_loss": 0.859064755147035,
+         "brier": 0.31902034194779444
+        },
+        "at_own_trust": {
+         "rows": 4138,
+         "log_loss": 0.6578278363814423,
+         "brier": 0.23359145562981964,
+         "auc": 0.7127606460983716
+        }
+       }
+      },
+      "copa": {
+       "dev": {
+        "rows": 2000,
+        "positives": 1000,
+        "auc": 0.650671,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.2221469032721426,
+         "rows": 2000,
+         "admitted": 64,
+         "accuracy": 0.517,
+         "balanced_accuracy": 0.517,
+         "precision": 0.765625,
+         "recall": 0.049
+        },
+        "at_default_trust": {
+         "rows": 2000,
+         "log_loss": 0.8832263007198893,
+         "brier": 0.32746999167192503
+        }
+       },
+       "test": {
+        "rows": 1000,
+        "positives": 500,
+        "auc": 0.670612,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.2221469032721426,
+         "rows": 1000,
+         "admitted": 30,
+         "accuracy": 0.518,
+         "balanced_accuracy": 0.518,
+         "precision": 0.8,
+         "recall": 0.048
+        },
+        "at_own_dev": {
+         "threshold": 0.0003034441203363374,
+         "rows": 1000,
+         "admitted": 543,
+         "accuracy": 0.611,
+         "balanced_accuracy": 0.611,
+         "precision": 0.6022099447513812,
+         "recall": 0.654
+        },
+        "at_default_trust": {
+         "rows": 1000,
+         "log_loss": 0.8800158185734004,
+         "brier": 0.3265235171844596
+        },
+        "at_own_trust": {
+         "rows": 1000,
+         "log_loss": 0.6466302636743497,
+         "brier": 0.22795638249839303,
+         "auc": 0.756232
         }
        }
       }
@@ -1586,43 +2335,47 @@
     },
     "typed": {
      "thresholds": {
-      "default": 0.03611599015998278,
+      "default": 0.036115839285725135,
       "by_set": {
-       "levyholt": 0.9063650713955855,
-       "wikidata": 0.03611599015998278
+       "levyholt": 0.9063652207045452,
+       "wikidata": 0.036115839285725135,
+       "delta-atomic": 0.00216466167772765,
+       "copa": 0.0003034432338472442
       }
      },
      "trust": {
-      "default": 0.21181216292503263,
+      "default": 0.2118121574406478,
       "by_set": {
-       "levyholt": 0.2872082286306842,
-       "wikidata": 0.21181216292503263
+       "levyholt": 0.28720813586246563,
+       "wikidata": 0.2118121574406478,
+       "delta-atomic": 0.6526757866941757,
+       "copa": 0.526338033838843
       }
      },
      "data": {
-      "trust": 0.35313049591518336,
+      "trust": 0.35313049938879637,
       "dev": {
        "judge": {
         "rows": 501,
-        "log_loss": 0.5068054089231288,
-        "brier": 0.1650069805277979
+        "log_loss": 0.5068054091549004,
+        "brier": 0.16500698058058158
        },
        "fused": {
         "rows": 501,
-        "log_loss": 0.4934737679238082,
-        "brier": 0.16197157497853876
+        "log_loss": 0.49347376872070464,
+        "brier": 0.16197157529887968
        }
       },
       "test": {
        "judge": {
         "rows": 933,
-        "log_loss": 0.5184840435419799,
-        "brier": 0.16971015983400306
+        "log_loss": 0.5184840425247105,
+        "brier": 0.1697101592064836
        },
        "fused": {
         "rows": 933,
-        "log_loss": 0.5091709054325039,
-        "brier": 0.16746009808470433
+        "log_loss": 0.5091709040273021,
+        "brier": 0.1674600976115118
        }
       }
      },
@@ -1631,14 +2384,14 @@
        "dev": {
         "rows": 630,
         "positives": 315,
-        "auc": 0.7021415973796926,
+        "auc": 0.7021315192743764,
         "direction": {
          "pairs": 315,
          "accuracy": 0.7936507936507936,
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.03611599015998278,
+         "threshold": 0.036115839285725135,
          "rows": 630,
          "admitted": 444,
          "accuracy": 0.6428571428571429,
@@ -1648,8 +2401,8 @@
         },
         "at_default_trust": {
          "rows": 630,
-         "log_loss": 0.7279632011021813,
-         "brier": 0.2659006914252128
+         "log_loss": 0.7279632219064491,
+         "brier": 0.26590070010056743
         }
        },
        "test": {
@@ -1662,7 +2415,7 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.03611599015998278,
+         "threshold": 0.036115839285725135,
          "rows": 1784,
          "admitted": 1173,
          "accuracy": 0.6709641255605381,
@@ -1671,7 +2424,7 @@
          "recall": 0.82847533632287
         },
         "at_own_dev": {
-         "threshold": 0.9063650713955855,
+         "threshold": 0.9063652207045452,
          "rows": 1784,
          "admitted": 788,
          "accuracy": 0.6849775784753364,
@@ -1681,8 +2434,14 @@
         },
         "at_default_trust": {
          "rows": 1784,
-         "log_loss": 0.7335852859795855,
-         "brier": 0.2680238058077765
+         "log_loss": 0.7335852761475239,
+         "brier": 0.26802380182288177
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.6588613421849575,
+         "brier": 0.23319010721240052,
+         "auc": 0.7091347604013755
         }
        }
       },
@@ -1697,7 +2456,7 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.03611599015998278,
+         "threshold": 0.036115839285725135,
          "rows": 1463,
          "admitted": 737,
          "accuracy": 0.6103896103896104,
@@ -1707,8 +2466,8 @@
         },
         "at_default_trust": {
          "rows": 1463,
-         "log_loss": 0.4944988093026008,
-         "brier": 0.15910570043197753
+         "log_loss": 0.49449881065990137,
+         "brier": 0.15910570079155428
         }
        },
        "test": {
@@ -1721,7 +2480,7 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.03611599015998278,
+         "threshold": 0.036115839285725135,
          "rows": 3329,
          "admitted": 1683,
          "accuracy": 0.5914689095824572,
@@ -1730,7 +2489,7 @@
          "recall": 0.7385524372230429
         },
         "at_own_dev": {
-         "threshold": 0.03611599015998278,
+         "threshold": 0.036115839285725135,
          "rows": 3329,
          "admitted": 1683,
          "accuracy": 0.5914689095824572,
@@ -1740,8 +2499,14 @@
         },
         "at_default_trust": {
          "rows": 3329,
-         "log_loss": 0.4881549525078541,
-         "brier": 0.15594061193742298
+         "log_loss": 0.4881549520406211,
+         "brier": 0.15594061169195197
+        },
+        "at_own_trust": {
+         "rows": 3329,
+         "log_loss": 0.4881549520406211,
+         "brier": 0.15594061169195197,
+         "auc": 0.6755877785723993
         }
        }
       },
@@ -1756,7 +2521,7 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.03611599015998278,
+         "threshold": 0.036115839285725135,
          "rows": 140,
          "admitted": 80,
          "accuracy": 0.7428571428571429,
@@ -1766,8 +2531,138 @@
         },
         "at_default_trust": {
          "rows": 140,
-         "log_loss": 0.6089514898934558,
-         "brier": 0.2132052171821113
+         "log_loss": 0.6089514935857302,
+         "brier": 0.21320521914559937
+        }
+       }
+      },
+      "delta-atomic": {
+       "dev": {
+        "rows": 3840,
+        "positives": 1937,
+        "auc": 0.6191118498601914,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.036115839285725135,
+         "rows": 3840,
+         "admitted": 425,
+         "accuracy": 0.5369791666666667,
+         "balanced_accuracy": 0.5404294661772258,
+         "precision": 0.6870588235294117,
+         "recall": 0.15074858027878163
+        },
+        "at_default_trust": {
+         "rows": 3840,
+         "log_loss": 0.8742973125106795,
+         "brier": 0.32540937983820417
+        }
+       },
+       "test": {
+        "rows": 4138,
+        "positives": 2091,
+        "auc": 0.6347822816140171,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.036115839285725135,
+         "rows": 4138,
+         "admitted": 530,
+         "accuracy": 0.5473658772353794,
+         "balanced_accuracy": 0.5513263510749421,
+         "precision": 0.7056603773584905,
+         "recall": 0.17886178861788618
+        },
+        "at_own_dev": {
+         "threshold": 0.00216466167772765,
+         "rows": 4138,
+         "admitted": 2042,
+         "accuracy": 0.5894151764137264,
+         "balanced_accuracy": 0.5894946752277949,
+         "precision": 0.5959843290891284,
+         "recall": 0.5820181731229077
+        },
+        "at_default_trust": {
+         "rows": 4138,
+         "log_loss": 0.8685149663241001,
+         "brier": 0.32325473895359613
+        },
+        "at_own_trust": {
+         "rows": 4138,
+         "log_loss": 0.6578278366656128,
+         "brier": 0.23359145576462534,
+         "auc": 0.7127606460983716
+        }
+       }
+      },
+      "copa": {
+       "dev": {
+        "rows": 2000,
+        "positives": 1000,
+        "auc": 0.650671,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.036115839285725135,
+         "rows": 2000,
+         "admitted": 121,
+         "accuracy": 0.5275,
+         "balanced_accuracy": 0.5275,
+         "precision": 0.7272727272727273,
+         "recall": 0.088
+        },
+        "at_default_trust": {
+         "rows": 2000,
+         "log_loss": 0.8834646868012361,
+         "brier": 0.32829647758254665
+        }
+       },
+       "test": {
+        "rows": 1000,
+        "positives": 500,
+        "auc": 0.670612,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.036115839285725135,
+         "rows": 1000,
+         "admitted": 51,
+         "accuracy": 0.527,
+         "balanced_accuracy": 0.527,
+         "precision": 0.7647058823529411,
+         "recall": 0.078
+        },
+        "at_own_dev": {
+         "threshold": 0.0003034432338472442,
+         "rows": 1000,
+         "admitted": 543,
+         "accuracy": 0.611,
+         "balanced_accuracy": 0.611,
+         "precision": 0.6022099447513812,
+         "recall": 0.654
+        },
+        "at_default_trust": {
+         "rows": 1000,
+         "log_loss": 0.8815571964073188,
+         "brier": 0.3277274445802387
+        },
+        "at_own_trust": {
+         "rows": 1000,
+         "log_loss": 0.6466302589446752,
+         "brier": 0.22795638040213292,
+         "auc": 0.756232
         }
        }
       }
@@ -1816,69 +2711,82 @@
          "balanced_accuracy": 0.6900224215246638,
          "precision": 0.677115987460815,
          "recall": 0.726457399103139
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.6613737581157115,
+         "brier": 0.23441625348142564,
+         "auc": 0.7276400591204327
         }
        }
       },
       "wikidata": {},
-      "hard": {}
+      "hard": {},
+      "delta-atomic": {},
+      "copa": {}
      }
     }
    }
   },
   "nli-deberta-large": {
    "judge": "NLIJudge",
+   "set": "wikidata",
    "model": "cross-encoder/nli-deberta-v3-large",
    "usage": {
-    "pairs": 17106,
+    "pairs": 39062,
     "calls": 3
    },
    "seconds": {
-    "load": 13.54,
-    "letters": 16.63,
-    "typed": 18.39,
-    "instances": 5.44
+    "load": 20.31,
+    "letters": 54.96,
+    "typed": 59.71,
+    "instances": 6.53
    },
-   "gpu_peak_gib": 1.946,
+   "gpu_peak_gib": 2.005,
    "variants": {
     "letters": {
      "thresholds": {
       "default": 0.6592527778093171,
       "by_set": {
        "levyholt": 0.052514349387895676,
-       "wikidata": 0.6592527778093171
+       "wikidata": 0.6592527778093171,
+       "delta-atomic": 0.0001262252774059026,
+       "copa": 0.00017249086715728134
       }
      },
      "trust": {
-      "default": 0.3478589585846057,
+      "default": 0.34785897737458393,
       "by_set": {
-       "levyholt": 0.3432623977409788,
-       "wikidata": 0.3478589585846057
+       "levyholt": 0.3432624406871895,
+       "wikidata": 0.34785897737458393,
+       "delta-atomic": 0.6895822438973029,
+       "copa": 0.5505766036249717
       }
      },
      "data": {
-      "trust": 0.40748712686605404,
+      "trust": 0.4074871375823756,
       "dev": {
        "judge": {
         "rows": 501,
-        "log_loss": 0.4880833320449187,
-        "brier": 0.15733693849993638
+        "log_loss": 0.4880833217844237,
+        "brier": 0.15733693597536996
        },
        "fused": {
         "rows": 501,
-        "log_loss": 0.471498007922732,
-        "brier": 0.15228299600033182
+        "log_loss": 0.47149799859141445,
+        "brier": 0.1522829936917845
        }
       },
       "test": {
        "judge": {
         "rows": 933,
-        "log_loss": 0.48759317563144533,
-        "brier": 0.15725784692469325
+        "log_loss": 0.4875931842113038,
+        "brier": 0.15725784965522158
        },
        "fused": {
         "rows": 933,
-        "log_loss": 0.4814734946204897,
-        "brier": 0.1572452675690052
+        "log_loss": 0.481473496570079,
+        "brier": 0.15724526719078238
        }
       }
      },
@@ -1904,14 +2812,14 @@
         },
         "at_default_trust": {
          "rows": 630,
-         "log_loss": 0.7128756466009852,
-         "brier": 0.2551030878773357
+         "log_loss": 0.7128756393653072,
+         "brier": 0.2551030860594657
         }
        },
        "test": {
         "rows": 1784,
         "positives": 892,
-        "auc": 0.7199691075629914,
+        "auc": 0.719970364374912,
         "direction": {
          "pairs": 892,
          "accuracy": 0.7701793721973094,
@@ -1937,8 +2845,14 @@
         },
         "at_default_trust": {
          "rows": 1784,
-         "log_loss": 0.7178971273730143,
-         "brier": 0.25635704213712673
+         "log_loss": 0.7178971155575999,
+         "brier": 0.25635703712177477
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.6627588571980509,
+         "brier": 0.23510124431806967,
+         "auc": 0.6796053359206902
         }
        }
       },
@@ -1963,8 +2877,8 @@
         },
         "at_default_trust": {
          "rows": 1463,
-         "log_loss": 0.46588591137423513,
-         "brier": 0.14782862084637916
+         "log_loss": 0.46588590590875606,
+         "brier": 0.14782861936781871
         }
        },
        "test": {
@@ -1996,8 +2910,14 @@
         },
         "at_default_trust": {
          "rows": 3329,
-         "log_loss": 0.4538208417411884,
-         "brier": 0.14314744455249345
+         "log_loss": 0.45382084461475164,
+         "brier": 0.14314744575201474
+        },
+        "at_own_trust": {
+         "rows": 3329,
+         "log_loss": 0.45382084461475164,
+         "brier": 0.14314744575201474,
+         "auc": 0.7436019970992601
         }
        }
       },
@@ -2022,8 +2942,138 @@
         },
         "at_default_trust": {
          "rows": 140,
-         "log_loss": 0.558607576203521,
-         "brier": 0.18824599242937132
+         "log_loss": 0.5586075649366635,
+         "brier": 0.1882459867066455
+        }
+       }
+      },
+      "delta-atomic": {
+       "dev": {
+        "rows": 3840,
+        "positives": 1937,
+        "auc": 0.6037715630375754,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.6592527778093171,
+         "rows": 3840,
+         "admitted": 192,
+         "accuracy": 0.52265625,
+         "balanced_accuracy": 0.5266427136893056,
+         "precision": 0.7708333333333334,
+         "recall": 0.07640681466184822
+        },
+        "at_default_trust": {
+         "rows": 3840,
+         "log_loss": 0.8664448429311028,
+         "brier": 0.3215863271793827
+        }
+       },
+       "test": {
+        "rows": 4138,
+        "positives": 2091,
+        "auc": 0.6211541916562877,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.6592527778093171,
+         "rows": 4138,
+         "admitted": 221,
+         "accuracy": 0.5219913001449976,
+         "balanced_accuracy": 0.5267430121929024,
+         "precision": 0.755656108597285,
+         "recall": 0.07986609277857484
+        },
+        "at_own_dev": {
+         "threshold": 0.0001262252774059026,
+         "rows": 4138,
+         "admitted": 2521,
+         "accuracy": 0.5799903334944417,
+         "balanced_accuracy": 0.5788377714806776,
+         "precision": 0.5700119000396668,
+         "recall": 0.6872309899569584
+        },
+        "at_default_trust": {
+         "rows": 4138,
+         "log_loss": 0.8657384169437615,
+         "brier": 0.32146582919208677
+        },
+        "at_own_trust": {
+         "rows": 4138,
+         "log_loss": 0.6606957241866616,
+         "brier": 0.23498959851635828,
+         "auc": 0.7240543077001792
+        }
+       }
+      },
+      "copa": {
+       "dev": {
+        "rows": 2000,
+        "positives": 1000,
+        "auc": 0.601377,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.6592527778093171,
+         "rows": 2000,
+         "admitted": 70,
+         "accuracy": 0.512,
+         "balanced_accuracy": 0.512,
+         "precision": 0.6714285714285714,
+         "recall": 0.047
+        },
+        "at_default_trust": {
+         "rows": 2000,
+         "log_loss": 0.881865694373463,
+         "brier": 0.3269379174455425
+        }
+       },
+       "test": {
+        "rows": 1000,
+        "positives": 500,
+        "auc": 0.643844,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.6592527778093171,
+         "rows": 1000,
+         "admitted": 28,
+         "accuracy": 0.522,
+         "balanced_accuracy": 0.522,
+         "precision": 0.8928571428571429,
+         "recall": 0.05
+        },
+        "at_own_dev": {
+         "threshold": 0.00017249086715728134,
+         "rows": 1000,
+         "admitted": 438,
+         "accuracy": 0.584,
+         "balanced_accuracy": 0.5840000000000001,
+         "precision": 0.5958904109589042,
+         "recall": 0.522
+        },
+        "at_default_trust": {
+         "rows": 1000,
+         "log_loss": 0.8729535351597635,
+         "brier": 0.32366903675887027
+        },
+        "at_own_trust": {
+         "rows": 1000,
+         "log_loss": 0.6371899637016575,
+         "brier": 0.22391324393142886,
+         "auc": 0.78432
         }
        }
       }
@@ -2034,14 +3084,18 @@
       "default": 0.08323643861485541,
       "by_set": {
        "levyholt": 0.966408111415497,
-       "wikidata": 0.08323643861485541
+       "wikidata": 0.08323643861485541,
+       "delta-atomic": 0.0001262252774059026,
+       "copa": 0.00017249086715728134
       }
      },
      "trust": {
       "default": 0.2531494024796761,
       "by_set": {
-       "levyholt": 0.28751898686322086,
-       "wikidata": 0.2531494024796761
+       "levyholt": 0.28751902906214777,
+       "wikidata": 0.2531494024796761,
+       "delta-atomic": 0.6895822438973029,
+       "copa": 0.5505766119890101
       }
      },
      "data": {
@@ -2061,13 +3115,13 @@
       "test": {
        "judge": {
         "rows": 933,
-        "log_loss": 0.5067538499778007,
-        "brier": 0.16492100275765642
+        "log_loss": 0.5067538499788732,
+        "brier": 0.1649210027581763
        },
        "fused": {
         "rows": 933,
-        "log_loss": 0.4980246443458826,
-        "brier": 0.16332808906840737
+        "log_loss": 0.4980246443467489,
+        "brier": 0.16332808906879298
        }
       }
      },
@@ -2093,8 +3147,8 @@
         },
         "at_default_trust": {
          "rows": 630,
-         "log_loss": 0.7117307854732753,
-         "brier": 0.25763583553090863
+         "log_loss": 0.7117307775661991,
+         "brier": 0.2576358321034044
         }
        },
        "test": {
@@ -2126,8 +3180,14 @@
         },
         "at_default_trust": {
          "rows": 1784,
-         "log_loss": 0.7188416612845265,
-         "brier": 0.2600584904839032
+         "log_loss": 0.7188416712012476,
+         "brier": 0.2600584945927029
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.6622681365111817,
+         "brier": 0.23485151103213392,
+         "auc": 0.7002465864988237
         }
        }
       },
@@ -2185,8 +3245,14 @@
         },
         "at_default_trust": {
          "rows": 3329,
-         "log_loss": 0.47605533365741437,
-         "brier": 0.15144062139597547
+         "log_loss": 0.4760553336577149,
+         "brier": 0.1514406213961212
+        },
+        "at_own_trust": {
+         "rows": 3329,
+         "log_loss": 0.4760553336577149,
+         "brier": 0.1514406213961212,
+         "auc": 0.7041217464147345
         }
        }
       },
@@ -2211,8 +3277,138 @@
         },
         "at_default_trust": {
          "rows": 140,
-         "log_loss": 0.5818293669277058,
-         "brier": 0.201069233277659
+         "log_loss": 0.5818293497311775,
+         "brier": 0.20106922591552862
+        }
+       }
+      },
+      "delta-atomic": {
+       "dev": {
+        "rows": 3840,
+        "positives": 1937,
+        "auc": 0.6037715630375754,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.08323643861485541,
+         "rows": 3840,
+         "admitted": 231,
+         "accuracy": 0.5296875,
+         "balanced_accuracy": 0.5335845827757222,
+         "precision": 0.7835497835497836,
+         "recall": 0.09344346928239546
+        },
+        "at_default_trust": {
+         "rows": 3840,
+         "log_loss": 0.8721672968937516,
+         "brier": 0.32429750915258454
+        }
+       },
+       "test": {
+        "rows": 4138,
+        "positives": 2091,
+        "auc": 0.6211541916562877,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.08323643861485541,
+         "rows": 4138,
+         "admitted": 280,
+         "accuracy": 0.527066215563074,
+         "balanced_accuracy": 0.5316668757652834,
+         "precision": 0.7392857142857143,
+         "recall": 0.09899569583931134
+        },
+        "at_own_dev": {
+         "threshold": 0.0001262252774059026,
+         "rows": 4138,
+         "admitted": 2521,
+         "accuracy": 0.5799903334944417,
+         "balanced_accuracy": 0.5788377714806776,
+         "precision": 0.5700119000396668,
+         "recall": 0.6872309899569584
+        },
+        "at_default_trust": {
+         "rows": 4138,
+         "log_loss": 0.8718450973733591,
+         "brier": 0.324294242678675
+        },
+        "at_own_trust": {
+         "rows": 4138,
+         "log_loss": 0.6606957241866616,
+         "brier": 0.23498959851635828,
+         "auc": 0.7240543077001792
+        }
+       }
+      },
+      "copa": {
+       "dev": {
+        "rows": 2000,
+        "positives": 1000,
+        "auc": 0.601377,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.08323643861485541,
+         "rows": 2000,
+         "admitted": 90,
+         "accuracy": 0.516,
+         "balanced_accuracy": 0.516,
+         "precision": 0.6777777777777778,
+         "recall": 0.061
+        },
+        "at_default_trust": {
+         "rows": 2000,
+         "log_loss": 0.8816549276634195,
+         "brier": 0.3275042421234068
+        }
+       },
+       "test": {
+        "rows": 1000,
+        "positives": 500,
+        "auc": 0.643844,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.08323643861485541,
+         "rows": 1000,
+         "admitted": 37,
+         "accuracy": 0.523,
+         "balanced_accuracy": 0.523,
+         "precision": 0.8108108108108109,
+         "recall": 0.06
+        },
+        "at_own_dev": {
+         "threshold": 0.00017249086715728134,
+         "rows": 1000,
+         "admitted": 438,
+         "accuracy": 0.584,
+         "balanced_accuracy": 0.5840000000000001,
+         "precision": 0.5958904109589042,
+         "recall": 0.522
+        },
+        "at_default_trust": {
+         "rows": 1000,
+         "log_loss": 0.8755001047450445,
+         "brier": 0.3252382446944568
+        },
+        "at_own_trust": {
+         "rows": 1000,
+         "log_loss": 0.6371899626663263,
+         "brier": 0.22391324326594744,
+         "auc": 0.78432
         }
        }
       }
@@ -2261,69 +3457,82 @@
          "balanced_accuracy": 0.6967488789237668,
          "precision": 0.6620498614958449,
          "recall": 0.8038116591928252
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.6625896379854657,
+         "brier": 0.2350033712906922,
+         "auc": 0.7264523718554565
         }
        }
       },
       "wikidata": {},
-      "hard": {}
+      "hard": {},
+      "delta-atomic": {},
+      "copa": {}
      }
     }
    }
   },
   "nli-deberta-large-wanli": {
    "judge": "NLIJudge",
+   "set": "wikidata",
    "model": "MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli",
    "usage": {
-    "pairs": 17106,
+    "pairs": 39062,
     "calls": 3
    },
    "seconds": {
-    "load": 8.13,
-    "letters": 6.2,
-    "typed": 6.29,
-    "instances": 2.04
+    "load": 8.94,
+    "letters": 18.16,
+    "typed": 22.21,
+    "instances": 2.2
    },
-   "gpu_peak_gib": 0.981,
+   "gpu_peak_gib": 1.007,
    "variants": {
     "letters": {
      "thresholds": {
       "default": 0.05405977550547415,
       "by_set": {
        "levyholt": 0.11583818670626532,
-       "wikidata": 0.05405977550547415
+       "wikidata": 0.05405977550547415,
+       "delta-atomic": 0.001523670403404457,
+       "copa": 0.0015729540484876832
       }
      },
      "trust": {
-      "default": 0.5238106237293019,
+      "default": 0.5238079757330589,
       "by_set": {
-       "levyholt": 0.3911296304481313,
-       "wikidata": 0.5238106237293019
+       "levyholt": 0.39112989842765455,
+       "wikidata": 0.5238079757330589,
+       "delta-atomic": 0.7979447738459766,
+       "copa": 0.8102027277047776
       }
      },
      "data": {
-      "trust": 0.4209902339069071,
+      "trust": 0.420989332262417,
       "dev": {
        "judge": {
         "rows": 501,
-        "log_loss": 0.45130396759310887,
-        "brier": 0.14094838758235365
+        "log_loss": 0.4513042740223119,
+        "brier": 0.14094849983053
        },
        "fused": {
         "rows": 501,
-        "log_loss": 0.4340349024420415,
-        "brier": 0.13684270004415955
+        "log_loss": 0.43403520804456347,
+        "brier": 0.13684283799635952
        }
       },
       "test": {
        "judge": {
         "rows": 933,
-        "log_loss": 0.4645404993535982,
-        "brier": 0.14722958675333783
+        "log_loss": 0.46453880216320603,
+        "brier": 0.14722904483888993
        },
        "fused": {
         "rows": 933,
-        "log_loss": 0.4531701866150327,
-        "brier": 0.14502981102605556
+        "log_loss": 0.45316965534773473,
+        "brier": 0.14502990456080292
        }
       }
      },
@@ -2332,7 +3541,7 @@
        "dev": {
         "rows": 630,
         "positives": 315,
-        "auc": 0.7439455782312925,
+        "auc": 0.7439556563366088,
         "direction": {
          "pairs": 315,
          "accuracy": 0.8253968253968254,
@@ -2349,14 +3558,14 @@
         },
         "at_default_trust": {
          "rows": 630,
-         "log_loss": 0.6482202203264406,
-         "brier": 0.2238944696082001
+         "log_loss": 0.6482204345006748,
+         "brier": 0.22389461959752804
         }
        },
        "test": {
         "rows": 1784,
         "positives": 892,
-        "auc": 0.7791492388747009,
+        "auc": 0.7791567797462245,
         "direction": {
          "pairs": 892,
          "accuracy": 0.8340807174887892,
@@ -2382,8 +3591,14 @@
         },
         "at_default_trust": {
          "rows": 1784,
-         "log_loss": 0.6271894017112503,
-         "brier": 0.2158700275842025
+         "log_loss": 0.6271887681537502,
+         "brier": 0.21586978259444087
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.6429266573650925,
+         "brier": 0.2257528631742951,
+         "auc": 0.7435047959942891
         }
        }
       },
@@ -2391,7 +3606,7 @@
        "dev": {
         "rows": 1463,
         "positives": 313,
-        "auc": 0.8058341436310599,
+        "auc": 0.8058313654674261,
         "direction": {
          "pairs": 248,
          "accuracy": 0.8669354838709677,
@@ -2408,14 +3623,14 @@
         },
         "at_default_trust": {
          "rows": 1463,
-         "log_loss": 0.4406703176452113,
-         "brier": 0.13706513640613358
+         "log_loss": 0.44067120510999125,
+         "brier": 0.13706545530627032
         }
        },
        "test": {
         "rows": 3329,
         "positives": 677,
-        "auc": 0.8015449447589512,
+        "auc": 0.8015404889373088,
         "direction": {
          "pairs": 552,
          "accuracy": 0.8713768115942029,
@@ -2441,8 +3656,14 @@
         },
         "at_default_trust": {
          "rows": 3329,
-         "log_loss": 0.43153112922738857,
-         "brier": 0.1335116274279716
+         "log_loss": 0.43153313137409893,
+         "brier": 0.13351221410852385
+        },
+        "at_own_trust": {
+         "rows": 3329,
+         "log_loss": 0.43153313137409893,
+         "brier": 0.13351221410852385,
+         "auc": 0.7893237399493374
         }
        }
       },
@@ -2467,8 +3688,138 @@
         },
         "at_default_trust": {
          "rows": 140,
-         "log_loss": 0.4157473812635189,
-         "brier": 0.1269781375318428
+         "log_loss": 0.41574751624108125,
+         "brier": 0.12697820486551092
+        }
+       }
+      },
+      "delta-atomic": {
+       "dev": {
+        "rows": 3840,
+        "positives": 1937,
+        "auc": 0.6098941404640283,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.05405977550547415,
+         "rows": 3840,
+         "admitted": 448,
+         "accuracy": 0.5549479166666667,
+         "balanced_accuracy": 0.5583465880436048,
+         "precision": 0.7544642857142857,
+         "recall": 0.174496644295302
+        },
+        "at_default_trust": {
+         "rows": 3840,
+         "log_loss": 0.8332654171427067,
+         "brier": 0.30760032653162733
+        }
+       },
+       "test": {
+        "rows": 4138,
+        "positives": 2091,
+        "auc": 0.6349265479780865,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.05405977550547415,
+         "rows": 4138,
+         "admitted": 553,
+         "accuracy": 0.569840502658289,
+         "balanced_accuracy": 0.5737444095323737,
+         "precision": 0.7811934900542495,
+         "recall": 0.2065997130559541
+        },
+        "at_own_dev": {
+         "threshold": 0.001523670403404457,
+         "rows": 4138,
+         "admitted": 1578,
+         "accuracy": 0.6000483325277912,
+         "balanced_accuracy": 0.6013214798948759,
+         "precision": 0.638149556400507,
+         "recall": 0.4815877570540411
+        },
+        "at_default_trust": {
+         "rows": 4138,
+         "log_loss": 0.8232791499719283,
+         "brier": 0.3033122491216263
+        },
+        "at_own_trust": {
+         "rows": 4138,
+         "log_loss": 0.6424749695798313,
+         "brier": 0.226609398344061,
+         "auc": 0.7552115201889971
+        }
+       }
+      },
+      "copa": {
+       "dev": {
+        "rows": 2000,
+        "positives": 1000,
+        "auc": 0.585642,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.05405977550547415,
+         "rows": 2000,
+         "admitted": 96,
+         "accuracy": 0.526,
+         "balanced_accuracy": 0.526,
+         "precision": 0.7708333333333334,
+         "recall": 0.074
+        },
+        "at_default_trust": {
+         "rows": 2000,
+         "log_loss": 0.8661047787462514,
+         "brier": 0.32177649184240104
+        }
+       },
+       "test": {
+        "rows": 1000,
+        "positives": 500,
+        "auc": 0.586552,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.05405977550547415,
+         "rows": 1000,
+         "admitted": 45,
+         "accuracy": 0.535,
+         "balanced_accuracy": 0.535,
+         "precision": 0.8888888888888888,
+         "recall": 0.08
+        },
+        "at_own_dev": {
+         "threshold": 0.0015729540484876832,
+         "rows": 1000,
+         "admitted": 336,
+         "accuracy": 0.574,
+         "balanced_accuracy": 0.574,
+         "precision": 0.6101190476190477,
+         "recall": 0.41
+        },
+        "at_default_trust": {
+         "rows": 1000,
+         "log_loss": 0.8556643957263198,
+         "brier": 0.31830404517914923
+        },
+        "at_own_trust": {
+         "rows": 1000,
+         "log_loss": 0.6244521733425906,
+         "brier": 0.2202459001052079,
+         "auc": 0.800948
         }
        }
       }
@@ -2476,43 +3827,47 @@
     },
     "typed": {
      "thresholds": {
-      "default": 0.3111717890174641,
+      "default": 0.31360891571737926,
       "by_set": {
-       "levyholt": 0.0439654719934794,
-       "wikidata": 0.3111717890174641
+       "levyholt": 0.04393522820486344,
+       "wikidata": 0.31360891571737926,
+       "delta-atomic": 0.001552412935353735,
+       "copa": 0.0015729540484876832
       }
      },
      "trust": {
-      "default": 0.4634419807107162,
+      "default": 0.4633904666872808,
       "by_set": {
-       "levyholt": 0.5203646660663139,
-       "wikidata": 0.4634419807107162
+       "levyholt": 0.5203447955356109,
+       "wikidata": 0.4633904666872808,
+       "delta-atomic": 0.7980023965247045,
+       "copa": 0.8101868995494466
       }
      },
      "data": {
-      "trust": 0.4036095104209559,
+      "trust": 0.4036324686447486,
       "dev": {
        "judge": {
         "rows": 501,
-        "log_loss": 0.46839395707689296,
-        "brier": 0.14719255786288735
+        "log_loss": 0.4684874613735294,
+        "brier": 0.14722983231019868
        },
        "fused": {
         "rows": 501,
-        "log_loss": 0.45149762725602505,
-        "brier": 0.14369069452383626
+        "log_loss": 0.4515832200321453,
+        "brier": 0.14372160600164383
        }
       },
       "test": {
        "judge": {
         "rows": 933,
-        "log_loss": 0.49005288043088596,
-        "brier": 0.15794308671550691
+        "log_loss": 0.4900566943857491,
+        "brier": 0.1579460240362016
        },
        "fused": {
         "rows": 933,
-        "log_loss": 0.4786531315681466,
-        "brier": 0.15537874635627397
+        "log_loss": 0.4786615821453567,
+        "brier": 0.1553832447252166
        }
       }
      },
@@ -2521,14 +3876,14 @@
        "dev": {
         "rows": 630,
         "positives": 315,
-        "auc": 0.7833812043335853,
+        "auc": 0.7833560090702948,
         "direction": {
          "pairs": 315,
          "accuracy": 0.8222222222222222,
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.3111717890174641,
+         "threshold": 0.31360891571737926,
          "rows": 630,
          "admitted": 295,
          "accuracy": 0.7238095238095238,
@@ -2538,21 +3893,21 @@
         },
         "at_default_trust": {
          "rows": 630,
-         "log_loss": 0.6323238389013124,
-         "brier": 0.21909021187403274
+         "log_loss": 0.6323415136585925,
+         "brier": 0.2190980314122803
         }
        },
        "test": {
         "rows": 1784,
         "positives": 892,
-        "auc": 0.8037060869914939,
+        "auc": 0.8037155130808985,
         "direction": {
          "pairs": 892,
          "accuracy": 0.8295964125560538,
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.3111717890174641,
+         "threshold": 0.31360891571737926,
          "rows": 1784,
          "admitted": 776,
          "accuracy": 0.7331838565022422,
@@ -2561,7 +3916,7 @@
          "recall": 0.6681614349775785
         },
         "at_own_dev": {
-         "threshold": 0.0439654719934794,
+         "threshold": 0.04393522820486344,
          "rows": 1784,
          "admitted": 1013,
          "accuracy": 0.7315022421524664,
@@ -2571,8 +3926,14 @@
         },
         "at_default_trust": {
          "rows": 1784,
-         "log_loss": 0.6350207108501973,
-         "brier": 0.21960351756010127
+         "log_loss": 0.6350212081020363,
+         "brier": 0.2196042311626134
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.6268690307962599,
+         "brier": 0.21874686467096738,
+         "auc": 0.7668130014679563
         }
        }
       },
@@ -2580,58 +3941,64 @@
        "dev": {
         "rows": 1463,
         "positives": 313,
-        "auc": 0.7924545075704958,
+        "auc": 0.7924322822614251,
         "direction": {
          "pairs": 248,
          "accuracy": 0.875,
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.3111717890174641,
+         "threshold": 0.31360891571737926,
          "rows": 1463,
-         "admitted": 386,
-         "accuracy": 0.7819548872180451,
-         "balanced_accuracy": 0.7182969856924573,
-         "precision": 0.49222797927461137,
+         "admitted": 385,
+         "accuracy": 0.7826384142173616,
+         "balanced_accuracy": 0.7187317683011529,
+         "precision": 0.4935064935064935,
          "recall": 0.6070287539936102
         },
         "at_default_trust": {
          "rows": 1463,
-         "log_loss": 0.45820942784845375,
-         "brier": 0.1431837424820766
+         "log_loss": 0.45822957521041535,
+         "brier": 0.14319187764596675
         }
        },
        "test": {
         "rows": 3329,
         "positives": 677,
-        "auc": 0.7747972044175016,
+        "auc": 0.7747654566882997,
         "direction": {
          "pairs": 552,
          "accuracy": 0.894927536231884,
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.3111717890174641,
+         "threshold": 0.31360891571737926,
          "rows": 3329,
-         "admitted": 907,
-         "accuracy": 0.7542805647341544,
-         "balanced_accuracy": 0.6840722199571796,
-         "precision": 0.422271223814774,
-         "recall": 0.5657311669128509
+         "admitted": 904,
+         "accuracy": 0.7539801742264944,
+         "balanced_accuracy": 0.6827836520359762,
+         "precision": 0.42146017699115046,
+         "recall": 0.5627769571639586
         },
         "at_own_dev": {
-         "threshold": 0.3111717890174641,
+         "threshold": 0.31360891571737926,
          "rows": 3329,
-         "admitted": 907,
-         "accuracy": 0.7542805647341544,
-         "balanced_accuracy": 0.6840722199571796,
-         "precision": 0.422271223814774,
-         "recall": 0.5657311669128509
+         "admitted": 904,
+         "accuracy": 0.7539801742264944,
+         "balanced_accuracy": 0.6827836520359762,
+         "precision": 0.42146017699115046,
+         "recall": 0.5627769571639586
         },
         "at_default_trust": {
          "rows": 3329,
-         "log_loss": 0.464315327846224,
-         "brier": 0.1470209120507951
+         "log_loss": 0.46431896697806685,
+         "brier": 0.1470226191969144
+        },
+        "at_own_trust": {
+         "rows": 3329,
+         "log_loss": 0.46431896697806685,
+         "brier": 0.1470226191969144,
+         "auc": 0.750689538399157
         }
        }
       },
@@ -2646,7 +4013,7 @@
          "ties": 0.0
         },
         "at_default": {
-         "threshold": 0.3111717890174641,
+         "threshold": 0.31360891571737926,
          "rows": 140,
          "admitted": 68,
          "accuracy": 0.9,
@@ -2656,8 +4023,138 @@
         },
         "at_default_trust": {
          "rows": 140,
-         "log_loss": 0.4128213493786357,
-         "brier": 0.12395013528413093
+         "log_loss": 0.41286490329146674,
+         "brier": 0.12397192140340729
+        }
+       }
+      },
+      "delta-atomic": {
+       "dev": {
+        "rows": 3840,
+        "positives": 1937,
+        "auc": 0.6098742007497875,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.31360891571737926,
+         "rows": 3840,
+         "admitted": 330,
+         "accuracy": 0.5440104166666667,
+         "balanced_accuracy": 0.547680333012218,
+         "precision": 0.7818181818181819,
+         "recall": 0.13319566339700567
+        },
+        "at_default_trust": {
+         "rows": 3840,
+         "log_loss": 0.8374717445256089,
+         "brier": 0.3094839736406019
+        }
+       },
+       "test": {
+        "rows": 4138,
+        "positives": 2091,
+        "auc": 0.6349420843557555,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.31360891571737926,
+         "rows": 4138,
+         "admitted": 410,
+         "accuracy": 0.5536491058482359,
+         "balanced_accuracy": 0.5579186814311317,
+         "precision": 0.7975609756097561,
+         "recall": 0.1563845050215208
+        },
+        "at_own_dev": {
+         "threshold": 0.001552412935353735,
+         "rows": 4138,
+         "admitted": 1567,
+         "accuracy": 0.6002899951667472,
+         "balanced_accuracy": 0.6015914390587338,
+         "precision": 0.6394384173580089,
+         "recall": 0.47919655667144906
+        },
+        "at_default_trust": {
+         "rows": 4138,
+         "log_loss": 0.8281903173449142,
+         "brier": 0.30556335658945966
+        },
+        "at_own_trust": {
+         "rows": 4138,
+         "log_loss": 0.6424838455844389,
+         "brier": 0.22661183471681223,
+         "auc": 0.7553455068445336
+        }
+       }
+      },
+      "copa": {
+       "dev": {
+        "rows": 2000,
+        "positives": 1000,
+        "auc": 0.5856435,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.31360891571737926,
+         "rows": 2000,
+         "admitted": 53,
+         "accuracy": 0.5165,
+         "balanced_accuracy": 0.5165,
+         "precision": 0.8113207547169812,
+         "recall": 0.043
+        },
+        "at_default_trust": {
+         "rows": 2000,
+         "log_loss": 0.8676955047064552,
+         "brier": 0.32251399397510266
+        }
+       },
+       "test": {
+        "rows": 1000,
+        "positives": 500,
+        "auc": 0.586524,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.31360891571737926,
+         "rows": 1000,
+         "admitted": 24,
+         "accuracy": 0.52,
+         "balanced_accuracy": 0.52,
+         "precision": 0.9166666666666666,
+         "recall": 0.044
+        },
+        "at_own_dev": {
+         "threshold": 0.0015729540484876832,
+         "rows": 1000,
+         "admitted": 336,
+         "accuracy": 0.574,
+         "balanced_accuracy": 0.574,
+         "precision": 0.6101190476190477,
+         "recall": 0.41
+        },
+        "at_default_trust": {
+         "rows": 1000,
+         "log_loss": 0.8587308618947923,
+         "brier": 0.3194548869679838
+        },
+        "at_own_trust": {
+         "rows": 1000,
+         "log_loss": 0.6244534622790215,
+         "brier": 0.22024616717489792,
+         "auc": 0.80094
         }
        }
       }
@@ -2706,69 +4203,82 @@
          "balanced_accuracy": 0.7449551569506727,
          "precision": 0.7694204685573366,
          "recall": 0.6995515695067265
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.6374770146061144,
+         "brier": 0.22327642357553265,
+         "auc": 0.8151883206981841
         }
        }
       },
       "wikidata": {},
-      "hard": {}
+      "hard": {},
+      "delta-atomic": {},
+      "copa": {}
      }
     }
    }
   },
   "reranker-qwen3": {
    "judge": "RerankerJudge",
+   "set": "wikidata",
    "model": "Qwen/Qwen3-Reranker-0.6B",
    "usage": {
-    "pairs": 17106,
+    "pairs": 39062,
     "calls": 3
    },
    "seconds": {
-    "load": 9.29,
-    "letters": 28.76,
-    "typed": 28.64,
-    "instances": 8.98
+    "load": 21.06,
+    "letters": 80.72,
+    "typed": 83.74,
+    "instances": 9.44
    },
-   "gpu_peak_gib": 1.227,
+   "gpu_peak_gib": 1.229,
    "variants": {
     "letters": {
      "thresholds": {
       "default": 0.8078806102275848,
       "by_set": {
        "levyholt": 0.8594942986965179,
-       "wikidata": 0.8078806102275848
+       "wikidata": 0.8078806102275848,
+       "delta-atomic": 0.4533070772886276,
+       "copa": 0.04338429681956768
       }
      },
      "trust": {
-      "default": 0.0775305415967679,
+      "default": 0.07735878821260883,
       "by_set": {
-       "levyholt": 0.1525066169748775,
-       "wikidata": 0.0775305415967679
+       "levyholt": 0.15240387812919143,
+       "wikidata": 0.07735878821260883,
+       "delta-atomic": 0.39421153601131853,
+       "copa": 0.22431635434114072
       }
      },
      "data": {
-      "trust": 0.26276143121521167,
+      "trust": 0.2628940374353752,
       "dev": {
        "judge": {
         "rows": 501,
-        "log_loss": 0.5350003997748147,
-        "brier": 0.1760640565275592
+        "log_loss": 0.5351780566745655,
+        "brier": 0.1761285828993578
        },
        "fused": {
         "rows": 501,
-        "log_loss": 0.5283123716738929,
-        "brier": 0.17415989558292433
+        "log_loss": 0.5284783325740653,
+        "brier": 0.17421378549679695
        }
       },
       "test": {
        "judge": {
         "rows": 933,
-        "log_loss": 0.5388795938153476,
-        "brier": 0.177947924324966
+        "log_loss": 0.5388210246545863,
+        "brier": 0.17792788963576678
        },
        "fused": {
         "rows": 933,
-        "log_loss": 0.5346679679676263,
-        "brier": 0.17679020462879472
+        "log_loss": 0.5346311990597916,
+        "brier": 0.1767807923647028
        }
       }
      },
@@ -2777,58 +4287,64 @@
        "dev": {
         "rows": 630,
         "positives": 315,
-        "auc": 0.6058755353993449,
+        "auc": 0.6060166288737717,
         "direction": {
          "pairs": 315,
-         "accuracy": 0.6873015873015873,
+         "accuracy": 0.6904761904761905,
          "ties": 0.02857142857142857
         },
         "at_default": {
          "threshold": 0.8078806102275848,
          "rows": 630,
-         "admitted": 336,
-         "accuracy": 0.5761904761904761,
-         "balanced_accuracy": 0.5761904761904761,
-         "precision": 0.5714285714285714,
-         "recall": 0.6095238095238096
+         "admitted": 337,
+         "accuracy": 0.5714285714285714,
+         "balanced_accuracy": 0.5714285714285714,
+         "precision": 0.5667655786350149,
+         "recall": 0.6063492063492063
         },
         "at_default_trust": {
          "rows": 630,
-         "log_loss": 0.8241595111895288,
-         "brier": 0.3074189061142958
+         "log_loss": 0.8241757623427178,
+         "brier": 0.3074287105640978
         }
        },
        "test": {
         "rows": 1784,
         "positives": 892,
-        "auc": 0.6557365923304309,
+        "auc": 0.656190301433771,
         "direction": {
          "pairs": 892,
-         "accuracy": 0.6939461883408071,
-         "ties": 0.02466367713004484
+         "accuracy": 0.6922645739910314,
+         "ties": 0.021300448430493273
         },
         "at_default": {
          "threshold": 0.8078806102275848,
          "rows": 1784,
-         "admitted": 868,
-         "accuracy": 0.6278026905829597,
-         "balanced_accuracy": 0.6278026905829597,
-         "precision": 0.631336405529954,
-         "recall": 0.6143497757847534
+         "admitted": 865,
+         "accuracy": 0.6283632286995515,
+         "balanced_accuracy": 0.6283632286995515,
+         "precision": 0.6323699421965318,
+         "recall": 0.6132286995515696
         },
         "at_own_dev": {
          "threshold": 0.8594942986965179,
          "rows": 1784,
-         "admitted": 736,
-         "accuracy": 0.6233183856502242,
-         "balanced_accuracy": 0.6233183856502242,
-         "precision": 0.6494565217391305,
-         "recall": 0.5358744394618834
+         "admitted": 733,
+         "accuracy": 0.6227578475336323,
+         "balanced_accuracy": 0.6227578475336323,
+         "precision": 0.6493860845839018,
+         "recall": 0.5336322869955157
         },
         "at_default_trust": {
          "rows": 1784,
-         "log_loss": 0.8209500506033064,
-         "brier": 0.3062381804621122
+         "log_loss": 0.8210181380199489,
+         "brier": 0.30626583863993323
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.680565834995427,
+         "brier": 0.24374897767882714,
+         "auc": 0.656190301433771
         }
        }
       },
@@ -2836,7 +4352,7 @@
        "dev": {
         "rows": 1463,
         "positives": 313,
-        "auc": 0.61895402139186,
+        "auc": 0.6188915127100987,
         "direction": {
          "pairs": 248,
          "accuracy": 0.7157258064516129,
@@ -2853,41 +4369,47 @@
         },
         "at_default_trust": {
          "rows": 1463,
-         "log_loss": 0.5148786489258952,
-         "brier": 0.1666177801937854
+         "log_loss": 0.5148974865700745,
+         "brier": 0.16662493389359626
         }
        },
        "test": {
         "rows": 3329,
         "positives": 677,
-        "auc": 0.668290813655311,
+        "auc": 0.6691062290158649,
         "direction": {
          "pairs": 552,
-         "accuracy": 0.7617753623188406,
+         "accuracy": 0.7635869565217391,
          "ties": 0.019927536231884056
         },
         "at_default": {
          "threshold": 0.8078806102275848,
          "rows": 3329,
-         "admitted": 1108,
-         "accuracy": 0.6812856713727846,
-         "balanced_accuracy": 0.6267074151555861,
-         "precision": 0.3267148014440433,
+         "admitted": 1110,
+         "accuracy": 0.6806848903574647,
+         "balanced_accuracy": 0.6263303412491005,
+         "precision": 0.3261261261261261,
          "recall": 0.534711964549483
         },
         "at_own_dev": {
          "threshold": 0.8078806102275848,
          "rows": 3329,
-         "admitted": 1108,
-         "accuracy": 0.6812856713727846,
-         "balanced_accuracy": 0.6267074151555861,
-         "precision": 0.3267148014440433,
+         "admitted": 1110,
+         "accuracy": 0.6806848903574647,
+         "balanced_accuracy": 0.6263303412491005,
+         "precision": 0.3261261261261261,
          "recall": 0.534711964549483
         },
         "at_default_trust": {
          "rows": 3329,
-         "log_loss": 0.49911807408847353,
-         "brier": 0.15984116716846059
+         "log_loss": 0.4990551406711831,
+         "brier": 0.15981871719872695
+        },
+        "at_own_trust": {
+         "rows": 3329,
+         "log_loss": 0.4990551406711831,
+         "brier": 0.15981871719872695,
+         "auc": 0.6691062290158649
         }
        }
       },
@@ -2895,7 +4417,7 @@
        "test": {
         "rows": 140,
         "positives": 56,
-        "auc": 0.7781675170068028,
+        "auc": 0.7774234693877551,
         "direction": {
          "pairs": 29,
          "accuracy": 0.8275862068965517,
@@ -2912,8 +4434,138 @@
         },
         "at_default_trust": {
          "rows": 140,
-         "log_loss": 0.7027112166955435,
-         "brier": 0.2531676861072281
+         "log_loss": 0.7028393107809958,
+         "brier": 0.25321870486248754
+        }
+       }
+      },
+      "delta-atomic": {
+       "dev": {
+        "rows": 3840,
+        "positives": 1937,
+        "auc": 0.6655873900704564,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.8078806102275848,
+         "rows": 3840,
+         "admitted": 1042,
+         "accuracy": 0.58984375,
+         "balanced_accuracy": 0.5918754210060413,
+         "precision": 0.6737044145873321,
+         "recall": 0.3624161073825503
+        },
+        "at_default_trust": {
+         "rows": 3840,
+         "log_loss": 0.8476672679344226,
+         "brier": 0.31639527731611755
+        }
+       },
+       "test": {
+        "rows": 4138,
+        "positives": 2091,
+        "auc": 0.6682224071012226,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.8078806102275848,
+         "rows": 4138,
+         "admitted": 1152,
+         "accuracy": 0.6043982600289995,
+         "balanced_accuracy": 0.6067666882306917,
+         "precision": 0.6970486111111112,
+         "recall": 0.38402678144428504
+        },
+        "at_own_dev": {
+         "threshold": 0.4533070772886276,
+         "rows": 4138,
+         "admitted": 2058,
+         "accuracy": 0.6188980183663606,
+         "balanced_accuracy": 0.6189397321715393,
+         "precision": 0.6248785228377065,
+         "recall": 0.6150167384026781
+        },
+        "at_default_trust": {
+         "rows": 4138,
+         "log_loss": 0.8475895322343171,
+         "brier": 0.3164326965182337
+        },
+        "at_own_trust": {
+         "rows": 4138,
+         "log_loss": 0.6521600490790463,
+         "brier": 0.23006238462865453,
+         "auc": 0.6682224071012226
+        }
+       }
+      },
+      "copa": {
+       "dev": {
+        "rows": 2000,
+        "positives": 1000,
+        "auc": 0.659792,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.8078806102275848,
+         "rows": 2000,
+         "admitted": 165,
+         "accuracy": 0.5465,
+         "balanced_accuracy": 0.5465,
+         "precision": 0.7818181818181819,
+         "recall": 0.129
+        },
+        "at_default_trust": {
+         "rows": 2000,
+         "log_loss": 0.8779911424369541,
+         "brier": 0.3266742949773812
+        }
+       },
+       "test": {
+        "rows": 1000,
+        "positives": 500,
+        "auc": 0.67066,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.8078806102275848,
+         "rows": 1000,
+         "admitted": 113,
+         "accuracy": 0.565,
+         "balanced_accuracy": 0.565,
+         "precision": 0.7876106194690266,
+         "recall": 0.178
+        },
+        "at_own_dev": {
+         "threshold": 0.04338429681956768,
+         "rows": 1000,
+         "admitted": 535,
+         "accuracy": 0.621,
+         "balanced_accuracy": 0.621,
+         "precision": 0.6130841121495327,
+         "recall": 0.656
+        },
+        "at_default_trust": {
+         "rows": 1000,
+         "log_loss": 0.8719230865212467,
+         "brier": 0.32448781520722647
+        },
+        "at_own_trust": {
+         "rows": 1000,
+         "log_loss": 0.6698296972621853,
+         "brier": 0.2384648174998057,
+         "auc": 0.67066
         }
        }
       }
@@ -2923,41 +4575,45 @@
      "thresholds": {
       "default": 0.8739163875579834,
       "by_set": {
-       "levyholt": 0.963764101266861,
-       "wikidata": 0.8739163875579834
+       "levyholt": 0.9481330215930939,
+       "wikidata": 0.8739163875579834,
+       "delta-atomic": 0.4533070772886276,
+       "copa": 0.04338429681956768
       }
      },
      "trust": {
-      "default": 0.03974359520075099,
+      "default": 0.03936506885171781,
       "by_set": {
-       "levyholt": 0.15011256741959905,
-       "wikidata": 0.03974359520075099
+       "levyholt": 0.15057745821894186,
+       "wikidata": 0.03936506885171781,
+       "delta-atomic": 0.3956177203561718,
+       "copa": 0.2246747245916732
       }
      },
      "data": {
-      "trust": 0.241213881533882,
+      "trust": 0.2406043017573263,
       "dev": {
        "judge": {
         "rows": 501,
-        "log_loss": 0.5414035696594512,
-        "brier": 0.1784701267193862
+        "log_loss": 0.54147692071382,
+        "brier": 0.17849673403460398
        },
        "fused": {
         "rows": 501,
-        "log_loss": 0.5355381923346288,
-        "brier": 0.17669892492391032
+        "log_loss": 0.5356422021667085,
+        "brier": 0.1767336153264456
        }
       },
       "test": {
        "judge": {
         "rows": 933,
-        "log_loss": 0.5461934001929598,
-        "brier": 0.18068127234139136
+        "log_loss": 0.5461938167329532,
+        "brier": 0.18068247290934789
        },
        "fused": {
         "rows": 933,
-        "log_loss": 0.5424014749290735,
-        "brier": 0.17939287566729578
+        "log_loss": 0.5424332047671031,
+        "brier": 0.17940568635309836
        }
       }
      },
@@ -2966,58 +4622,64 @@
        "dev": {
         "rows": 630,
         "positives": 315,
-        "auc": 0.6603527336860671,
+        "auc": 0.6603930461073318,
         "direction": {
          "pairs": 315,
-         "accuracy": 0.7158730158730159,
-         "ties": 0.015873015873015872
+         "accuracy": 0.7206349206349206,
+         "ties": 0.012698412698412698
         },
         "at_default": {
          "threshold": 0.8739163875579834,
          "rows": 630,
-         "admitted": 465,
-         "accuracy": 0.6158730158730159,
-         "balanced_accuracy": 0.6158730158730159,
-         "precision": 0.578494623655914,
-         "recall": 0.8539682539682539
+         "admitted": 458,
+         "accuracy": 0.6206349206349207,
+         "balanced_accuracy": 0.6206349206349207,
+         "precision": 0.5829694323144105,
+         "recall": 0.8476190476190476
         },
         "at_default_trust": {
          "rows": 630,
-         "log_loss": 0.8444577794380669,
-         "brier": 0.3152935473681137
+         "log_loss": 0.8448887117272944,
+         "brier": 0.3154522170732527
         }
        },
        "test": {
         "rows": 1784,
         "positives": 892,
-        "auc": 0.6355591053510025,
+        "auc": 0.6360888515755394,
         "direction": {
          "pairs": 892,
-         "accuracy": 0.7085201793721974,
-         "ties": 0.02466367713004484
+         "accuracy": 0.7073991031390134,
+         "ties": 0.017937219730941704
         },
         "at_default": {
          "threshold": 0.8739163875579834,
          "rows": 1784,
-         "admitted": 1265,
-         "accuracy": 0.5812780269058296,
-         "balanced_accuracy": 0.5812780269058296,
-         "precision": 0.5573122529644269,
-         "recall": 0.7903587443946188
+         "admitted": 1270,
+         "accuracy": 0.5818385650224215,
+         "balanced_accuracy": 0.5818385650224215,
+         "precision": 0.5574803149606299,
+         "recall": 0.7937219730941704
         },
         "at_own_dev": {
-         "threshold": 0.963764101266861,
+         "threshold": 0.9481330215930939,
          "rows": 1784,
-         "admitted": 801,
-         "accuracy": 0.5947309417040358,
-         "balanced_accuracy": 0.5947309417040358,
-         "precision": 0.6054931335830213,
-         "recall": 0.5437219730941704
+         "admitted": 951,
+         "accuracy": 0.593609865470852,
+         "balanced_accuracy": 0.5936098654708519,
+         "precision": 0.5878023133543638,
+         "recall": 0.6266816143497758
         },
         "at_default_trust": {
          "rows": 1784,
-         "log_loss": 0.8467463506116419,
-         "brier": 0.3161120232013355
+         "log_loss": 0.8471234948756695,
+         "brier": 0.3162506515007275
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.6909767314933397,
+         "brier": 0.24892260146471099,
+         "auc": 0.6360888515755394
         }
        }
       },
@@ -3025,58 +4687,64 @@
        "dev": {
         "rows": 1463,
         "positives": 313,
-        "auc": 0.6211779413807473,
+        "auc": 0.6204486734268648,
         "direction": {
          "pairs": 248,
-         "accuracy": 0.782258064516129,
+         "accuracy": 0.7903225806451613,
          "ties": 0.016129032258064516
         },
         "at_default": {
          "threshold": 0.8739163875579834,
          "rows": 1463,
-         "admitted": 799,
-         "accuracy": 0.5352016404647983,
-         "balanced_accuracy": 0.5915696624531185,
-         "precision": 0.27033792240300375,
+         "admitted": 797,
+         "accuracy": 0.5365686944634313,
+         "balanced_accuracy": 0.5924392276705097,
+         "precision": 0.2710163111668758,
          "recall": 0.6900958466453674
         },
         "at_default_trust": {
          "rows": 1463,
-         "log_loss": 0.5173670576475201,
-         "brier": 0.1675475315595116
+         "log_loss": 0.5173998186862141,
+         "brier": 0.16755910958771905
         }
        },
        "test": {
         "rows": 3329,
         "positives": 677,
-        "auc": 0.6373546009700324,
+        "auc": 0.636686784701382,
         "direction": {
          "pairs": 552,
-         "accuracy": 0.7916666666666666,
-         "ties": 0.018115942028985508
+         "accuracy": 0.7907608695652174,
+         "ties": 0.019927536231884056
         },
         "at_default": {
          "threshold": 0.8739163875579834,
          "rows": 3329,
-         "admitted": 1764,
-         "accuracy": 0.5485130669870832,
-         "balanced_accuracy": 0.602225738608135,
-         "precision": 0.26587301587301587,
-         "recall": 0.6927621861152142
+         "admitted": 1761,
+         "accuracy": 0.5488134574947432,
+         "balanced_accuracy": 0.6018642600773976,
+         "precision": 0.2657580919931857,
+         "recall": 0.691285081240768
         },
         "at_own_dev": {
          "threshold": 0.8739163875579834,
          "rows": 3329,
-         "admitted": 1764,
-         "accuracy": 0.5485130669870832,
-         "balanced_accuracy": 0.602225738608135,
-         "precision": 0.26587301587301587,
-         "recall": 0.6927621861152142
+         "admitted": 1761,
+         "accuracy": 0.5488134574947432,
+         "balanced_accuracy": 0.6018642600773976,
+         "precision": 0.2657580919931857,
+         "recall": 0.691285081240768
         },
         "at_default_trust": {
          "rows": 3329,
-         "log_loss": 0.5044494443029267,
-         "brier": 0.16179249361582348
+         "log_loss": 0.504464984056824,
+         "brier": 0.16179805051753635
+        },
+        "at_own_trust": {
+         "rows": 3329,
+         "log_loss": 0.504464984056824,
+         "brier": 0.16179805051753635,
+         "auc": 0.636686784701382
         }
        }
       },
@@ -3084,25 +4752,155 @@
        "test": {
         "rows": 140,
         "positives": 56,
-        "auc": 0.7857142857142857,
+        "auc": 0.7841198979591837,
         "direction": {
          "pairs": 29,
-         "accuracy": 0.9137931034482759,
-         "ties": 0.034482758620689655
+         "accuracy": 0.896551724137931,
+         "ties": 0.0
         },
         "at_default": {
          "threshold": 0.8739163875579834,
          "rows": 140,
-         "admitted": 90,
-         "accuracy": 0.6714285714285714,
-         "balanced_accuracy": 0.7083333333333334,
-         "precision": 0.5555555555555556,
+         "admitted": 89,
+         "accuracy": 0.6785714285714286,
+         "balanced_accuracy": 0.7142857142857143,
+         "precision": 0.5617977528089888,
          "recall": 0.8928571428571429
         },
         "at_default_trust": {
          "rows": 140,
-         "log_loss": 0.7271262837417872,
-         "brier": 0.26257356909973995
+         "log_loss": 0.7275124209767861,
+         "brier": 0.2627137309916659
+        }
+       }
+      },
+      "delta-atomic": {
+       "dev": {
+        "rows": 3840,
+        "positives": 1937,
+        "auc": 0.6660705551189315,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.8739163875579834,
+         "rows": 3840,
+         "admitted": 831,
+         "accuracy": 0.5817708333333333,
+         "balanced_accuracy": 0.5842884275595608,
+         "precision": 0.6991576413959085,
+         "recall": 0.2999483737738771
+        },
+        "at_default_trust": {
+         "rows": 3840,
+         "log_loss": 0.8702102699538858,
+         "brier": 0.3249162104872186
+        }
+       },
+       "test": {
+        "rows": 4138,
+        "positives": 2091,
+        "auc": 0.6687547324624084,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.8739163875579834,
+         "rows": 4138,
+         "admitted": 919,
+         "accuracy": 0.5920734654422426,
+         "balanced_accuracy": 0.5950392930177182,
+         "precision": 0.719260065288357,
+         "recall": 0.3161166905786705
+        },
+        "at_own_dev": {
+         "threshold": 0.4533070772886276,
+         "rows": 4138,
+         "admitted": 2070,
+         "accuracy": 0.6198646689221846,
+         "balanced_accuracy": 0.6198756529075105,
+         "precision": 0.6251207729468599,
+         "recall": 0.6188426590148255
+        },
+        "at_default_trust": {
+         "rows": 4138,
+         "log_loss": 0.8707160072917892,
+         "brier": 0.3251904890755733
+        },
+        "at_own_trust": {
+         "rows": 4138,
+         "log_loss": 0.6518599592072375,
+         "brier": 0.2299184715827569,
+         "auc": 0.6687547324624084
+        }
+       }
+      },
+      "copa": {
+       "dev": {
+        "rows": 2000,
+        "positives": 1000,
+        "auc": 0.659769,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.8739163875579834,
+         "rows": 2000,
+         "admitted": 122,
+         "accuracy": 0.541,
+         "balanced_accuracy": 0.541,
+         "precision": 0.8360655737704918,
+         "recall": 0.102
+        },
+        "at_default_trust": {
+         "rows": 2000,
+         "log_loss": 0.8837339269690782,
+         "brier": 0.32907238310540543
+        }
+       },
+       "test": {
+        "rows": 1000,
+        "positives": 500,
+        "auc": 0.670176,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.8739163875579834,
+         "rows": 1000,
+         "admitted": 85,
+         "accuracy": 0.553,
+         "balanced_accuracy": 0.5529999999999999,
+         "precision": 0.8117647058823529,
+         "recall": 0.138
+        },
+        "at_own_dev": {
+         "threshold": 0.04338429681956768,
+         "rows": 1000,
+         "admitted": 535,
+         "accuracy": 0.623,
+         "balanced_accuracy": 0.623,
+         "precision": 0.6149532710280374,
+         "recall": 0.658
+        },
+        "at_default_trust": {
+         "rows": 1000,
+         "log_loss": 0.8805897977271363,
+         "brier": 0.3279726744550526
+        },
+        "at_own_trust": {
+         "rows": 1000,
+         "log_loss": 0.6700040194798881,
+         "brier": 0.23855224704752886,
+         "auc": 0.670176
         }
        }
       }
@@ -3151,11 +4949,765 @@
          "balanced_accuracy": 0.5947309417040358,
          "precision": 0.5729076790336497,
          "recall": 0.7443946188340808
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.6914006468298926,
+         "brier": 0.24912727204292484,
+         "auc": 0.6332120090892638
         }
        }
       },
       "wikidata": {},
-      "hard": {}
+      "hard": {},
+      "delta-atomic": {},
+      "copa": {}
+     }
+    }
+   }
+  },
+  "typical-qwen3-4b": {
+   "judge": "TypicalJudge",
+   "set": "delta-atomic",
+   "model": "Qwen/Qwen3-4B-Instruct-2507",
+   "usage": {
+    "pairs": 39062,
+    "calls": 3
+   },
+   "seconds": {
+    "load": 70.99,
+    "letters": 478.06,
+    "typed": 531.77,
+    "instances": 62.99
+   },
+   "gpu_peak_gib": 8.365,
+   "variants": {
+    "letters": {
+     "thresholds": {
+      "default": 0.2688319140417118,
+      "by_set": {
+       "levyholt": 0.9999761579800045,
+       "wikidata": 0.9907193774669139,
+       "delta-atomic": 0.2688319140417118,
+       "copa": 0.04738343067548377
+      }
+     },
+     "trust": {
+      "default": 0.5591332022607642,
+      "by_set": {
+       "levyholt": 0.14070900122228036,
+       "wikidata": 0.25338125608435,
+       "delta-atomic": 0.5591332022607642,
+       "copa": 0.639041973068526
+      }
+     },
+     "data": {
+      "trust": 0.422960652020163,
+      "dev": {
+       "judge": {
+        "rows": 501,
+        "log_loss": 0.4801931591278634,
+        "brier": 0.15464252162067502
+       },
+       "fused": {
+        "rows": 501,
+        "log_loss": 0.46228751145329483,
+        "brier": 0.15102403715868154
+       }
+      },
+      "test": {
+       "judge": {
+        "rows": 933,
+        "log_loss": 0.49126862512374,
+        "brier": 0.1595771180358883
+       },
+       "fused": {
+        "rows": 933,
+        "log_loss": 0.4765979698269816,
+        "brier": 0.1565788785541181
+       }
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.7055076845553035,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.7396825396825397,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.2688319140417118,
+         "rows": 630,
+         "admitted": 542,
+         "accuracy": 0.5412698412698412,
+         "balanced_accuracy": 0.5412698412698412,
+         "precision": 0.5239852398523985,
+         "recall": 0.9015873015873016
+        },
+        "at_default_trust": {
+         "rows": 630,
+         "log_loss": 0.7743351368188357,
+         "brier": 0.28264173944148396
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.6931217197208872,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.7085201793721974,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.2688319140417118,
+         "rows": 1784,
+         "admitted": 1520,
+         "accuracy": 0.5717488789237668,
+         "balanced_accuracy": 0.5717488789237668,
+         "precision": 0.5421052631578948,
+         "recall": 0.9237668161434978
+        },
+        "at_own_dev": {
+         "threshold": 0.9999761579800045,
+         "rows": 1784,
+         "admitted": 699,
+         "accuracy": 0.6350896860986547,
+         "balanced_accuracy": 0.6350896860986547,
+         "precision": 0.6723891273247496,
+         "recall": 0.5269058295964125
+        },
+        "at_default_trust": {
+         "rows": 1784,
+         "log_loss": 0.7535454624219109,
+         "brier": 0.27364603978410307
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.6806638036561138,
+         "brier": 0.2437901535646497,
+         "auc": 0.6931719921977116
+        }
+       }
+      },
+      "wikidata": {
+       "dev": {
+        "rows": 1463,
+        "positives": 313,
+        "auc": 0.8335310459786082,
+        "direction": {
+         "pairs": 248,
+         "accuracy": 0.8790322580645161,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.2688319140417118,
+         "rows": 1463,
+         "admitted": 847,
+         "accuracy": 0.5844155844155844,
+         "balanced_accuracy": 0.6926336991248785,
+         "precision": 0.32585596221959856,
+         "recall": 0.8817891373801917
+        },
+        "at_default_trust": {
+         "rows": 1463,
+         "log_loss": 0.7015128594648602,
+         "brier": 0.2502876207374425
+        }
+       },
+       "test": {
+        "rows": 3329,
+        "positives": 677,
+        "auc": 0.847911389302909,
+        "direction": {
+         "pairs": 552,
+         "accuracy": 0.8731884057971014,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.2688319140417118,
+         "rows": 3329,
+         "admitted": 1882,
+         "accuracy": 0.600180234304596,
+         "balanced_accuracy": 0.7144063397430328,
+         "precision": 0.32624867162592985,
+         "recall": 0.9069423929098966
+        },
+        "at_own_dev": {
+         "threshold": 0.9907193774669139,
+         "rows": 3329,
+         "admitted": 1142,
+         "accuracy": 0.7744067287473716,
+         "balanced_accuracy": 0.7797565339054608,
+         "precision": 0.46760070052539404,
+         "recall": 0.7887740029542097
+        },
+        "at_default_trust": {
+         "rows": 3329,
+         "log_loss": 0.6904598342777484,
+         "brier": 0.2453191317898061
+        },
+        "at_own_trust": {
+         "rows": 3329,
+         "log_loss": 0.4596700172037316,
+         "brier": 0.14555343019555006,
+         "auc": 0.8469221968983025
+        }
+       }
+      },
+      "hard": {
+       "test": {
+        "rows": 140,
+        "positives": 56,
+        "auc": 0.9715136054421769,
+        "direction": {
+         "pairs": 29,
+         "accuracy": 0.9655172413793104,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.2688319140417118,
+         "rows": 140,
+         "admitted": 108,
+         "accuracy": 0.6285714285714286,
+         "balanced_accuracy": 0.6904761904761905,
+         "precision": 0.5185185185185185,
+         "recall": 1.0
+        },
+        "at_default_trust": {
+         "rows": 140,
+         "log_loss": 0.6597032266666406,
+         "brier": 0.23144720733007754
+        }
+       }
+      },
+      "delta-atomic": {
+       "dev": {
+        "rows": 3840,
+        "positives": 1937,
+        "auc": 0.7488051770551674,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.2688319140417118,
+         "rows": 3840,
+         "admitted": 1962,
+         "accuracy": 0.6815104166666667,
+         "balanced_accuracy": 0.681427797480868,
+         "precision": 0.6819571865443425,
+         "recall": 0.6907589055240062
+        },
+        "at_default_trust": {
+         "rows": 3840,
+         "log_loss": 0.5876310551226731,
+         "brier": 0.20004210989935717
+        }
+       },
+       "test": {
+        "rows": 4138,
+        "positives": 2091,
+        "auc": 0.7511337467177942,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.2688319140417118,
+         "rows": 4138,
+         "admitted": 2186,
+         "accuracy": 0.6735137747704205,
+         "balanced_accuracy": 0.6732327136771756,
+         "precision": 0.6692589204025617,
+         "recall": 0.6996652319464371
+        },
+        "at_own_dev": {
+         "threshold": 0.2688319140417118,
+         "rows": 4138,
+         "admitted": 2186,
+         "accuracy": 0.6735137747704205,
+         "balanced_accuracy": 0.6732327136771756,
+         "precision": 0.6692589204025617,
+         "recall": 0.6996652319464371
+        },
+        "at_default_trust": {
+         "rows": 4138,
+         "log_loss": 0.5875027065153519,
+         "brier": 0.2000683090178613
+        },
+        "at_own_trust": {
+         "rows": 4138,
+         "log_loss": 0.5875027065153519,
+         "brier": 0.2000683090178613,
+         "auc": 0.7772933854514555
+        }
+       }
+      },
+      "copa": {
+       "dev": {
+        "rows": 2000,
+        "positives": 1000,
+        "auc": 0.7938415,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.2688319140417118,
+         "rows": 2000,
+         "admitted": 880,
+         "accuracy": 0.712,
+         "balanced_accuracy": 0.712,
+         "precision": 0.740909090909091,
+         "recall": 0.652
+        },
+        "at_default_trust": {
+         "rows": 2000,
+         "log_loss": 0.5504799617496133,
+         "brier": 0.18343238628194639
+        }
+       },
+       "test": {
+        "rows": 1000,
+        "positives": 500,
+        "auc": 0.859662,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.2688319140417118,
+         "rows": 1000,
+         "admitted": 485,
+         "accuracy": 0.773,
+         "balanced_accuracy": 0.773,
+         "precision": 0.7814432989690722,
+         "recall": 0.758
+        },
+        "at_own_dev": {
+         "threshold": 0.04738343067548377,
+         "rows": 1000,
+         "admitted": 624,
+         "accuracy": 0.76,
+         "balanced_accuracy": 0.76,
+         "precision": 0.7083333333333334,
+         "recall": 0.884
+        },
+        "at_default_trust": {
+         "rows": 1000,
+         "log_loss": 0.4982781274985731,
+         "brier": 0.1599807974910121
+        },
+        "at_own_trust": {
+         "rows": 1000,
+         "log_loss": 0.4853314080749826,
+         "brier": 0.1556788096652762,
+         "auc": 0.870392
+        }
+       }
+      }
+     }
+    },
+    "typed": {
+     "thresholds": {
+      "default": 0.1824003532847155,
+      "by_set": {
+       "levyholt": 0.9999999990772932,
+       "wikidata": 0.9997387317036008,
+       "delta-atomic": 0.1824003532847155,
+       "copa": 0.04738343067548377
+      }
+     },
+     "trust": {
+      "default": 0.5590474562471053,
+      "by_set": {
+       "levyholt": 0.17798905552453587,
+       "wikidata": 0.22441105837701403,
+       "delta-atomic": 0.5590474562471053,
+       "copa": 0.6386738116497135
+      }
+     },
+     "data": {
+      "trust": 0.4030794947202517,
+      "dev": {
+       "judge": {
+        "rows": 501,
+        "log_loss": 0.4948111072045043,
+        "brier": 0.16094602338392816
+       },
+       "fused": {
+        "rows": 501,
+        "log_loss": 0.4783245437219887,
+        "brier": 0.1573222505063548
+       }
+      },
+      "test": {
+       "judge": {
+        "rows": 933,
+        "log_loss": 0.4996895477928394,
+        "brier": 0.16334807119366584
+       },
+       "fused": {
+        "rows": 933,
+        "log_loss": 0.4858008031839134,
+        "brier": 0.16040610407478437
+       }
+      }
+     },
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.7118014613252709,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.7555555555555555,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.1824003532847155,
+         "rows": 630,
+         "admitted": 554,
+         "accuracy": 0.5825396825396826,
+         "balanced_accuracy": 0.5825396825396826,
+         "precision": 0.5469314079422383,
+         "recall": 0.9619047619047619
+        },
+        "at_default_trust": {
+         "rows": 630,
+         "log_loss": 0.7602023238681088,
+         "brier": 0.2758617406679997
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.6890703864948018,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.7320627802690582,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.1824003532847155,
+         "rows": 1784,
+         "admitted": 1489,
+         "accuracy": 0.5644618834080718,
+         "balanced_accuracy": 0.5644618834080718,
+         "precision": 0.5386165211551377,
+         "recall": 0.899103139013453
+        },
+        "at_own_dev": {
+         "threshold": 0.9999999990772932,
+         "rows": 1784,
+         "admitted": 558,
+         "accuracy": 0.6457399103139013,
+         "balanced_accuracy": 0.6457399103139013,
+         "precision": 0.7329749103942652,
+         "recall": 0.4585201793721973
+        },
+        "at_default_trust": {
+         "rows": 1784,
+         "log_loss": 0.7560521812283216,
+         "brier": 0.2748405630715156
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.681077783289703,
+         "brier": 0.2440070351193868,
+         "auc": 0.6879254308351264
+        }
+       }
+      },
+      "wikidata": {
+       "dev": {
+        "rows": 1463,
+        "positives": 313,
+        "auc": 0.801955827198222,
+        "direction": {
+         "pairs": 248,
+         "accuracy": 0.875,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.1824003532847155,
+         "rows": 1463,
+         "admitted": 865,
+         "accuracy": 0.5775803144224196,
+         "balanced_accuracy": 0.6929365189609668,
+         "precision": 0.3236994219653179,
+         "recall": 0.8945686900958466
+        },
+        "at_default_trust": {
+         "rows": 1463,
+         "log_loss": 0.7389948417844452,
+         "brier": 0.2666171765559449
+        }
+       },
+       "test": {
+        "rows": 3329,
+        "positives": 677,
+        "auc": 0.8024792748595859,
+        "direction": {
+         "pairs": 552,
+         "accuracy": 0.8894927536231884,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.1824003532847155,
+         "rows": 3329,
+         "admitted": 1974,
+         "accuracy": 0.578552117753079,
+         "balanced_accuracy": 0.7063318339493506,
+         "precision": 0.3161094224924012,
+         "recall": 0.9217134416543574
+        },
+        "at_own_dev": {
+         "threshold": 0.9997387317036008,
+         "rows": 3329,
+         "admitted": 1066,
+         "accuracy": 0.7467708020426554,
+         "balanced_accuracy": 0.7162098335527826,
+         "precision": 0.42213883677298314,
+         "recall": 0.6646971935007385
+        },
+        "at_default_trust": {
+         "rows": 3329,
+         "log_loss": 0.7408608978872612,
+         "brier": 0.26736196329155315
+        },
+        "at_own_trust": {
+         "rows": 3329,
+         "log_loss": 0.46934647380912636,
+         "brier": 0.14951106698843689,
+         "auc": 0.8009386745267361
+        }
+       }
+      },
+      "hard": {
+       "test": {
+        "rows": 140,
+        "positives": 56,
+        "auc": 0.9453656462585034,
+        "direction": {
+         "pairs": 29,
+         "accuracy": 1.0,
+         "ties": 0.0
+        },
+        "at_default": {
+         "threshold": 0.1824003532847155,
+         "rows": 140,
+         "admitted": 106,
+         "accuracy": 0.6428571428571429,
+         "balanced_accuracy": 0.7023809523809523,
+         "precision": 0.5283018867924528,
+         "recall": 1.0
+        },
+        "at_default_trust": {
+         "rows": 140,
+         "log_loss": 0.6312738539888775,
+         "brier": 0.21964634049733991
+        }
+       }
+      },
+      "delta-atomic": {
+       "dev": {
+        "rows": 3840,
+        "positives": 1937,
+        "auc": 0.7487844234750392,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.1824003532847155,
+         "rows": 3840,
+         "admitted": 2089,
+         "accuracy": 0.6822916666666666,
+         "balanced_accuracy": 0.6819162526576112,
+         "precision": 0.6716132120631881,
+         "recall": 0.7243159525038719
+        },
+        "at_default_trust": {
+         "rows": 3840,
+         "log_loss": 0.5876301733957648,
+         "brier": 0.20004072333143672
+        }
+       },
+       "test": {
+        "rows": 4138,
+        "positives": 2091,
+        "auc": 0.751052326753619,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.1824003532847155,
+         "rows": 4138,
+         "admitted": 2321,
+         "accuracy": 0.6689221846302562,
+         "balanced_accuracy": 0.6682936641717347,
+         "precision": 0.6553209823352003,
+         "recall": 0.727403156384505
+        },
+        "at_own_dev": {
+         "threshold": 0.1824003532847155,
+         "rows": 4138,
+         "admitted": 2321,
+         "accuracy": 0.6689221846302562,
+         "balanced_accuracy": 0.6682936641717347,
+         "precision": 0.6553209823352003,
+         "recall": 0.727403156384505
+        },
+        "at_default_trust": {
+         "rows": 4138,
+         "log_loss": 0.5875368202527227,
+         "brier": 0.20008060564996893
+        },
+        "at_own_trust": {
+         "rows": 4138,
+         "log_loss": 0.5875368202527227,
+         "brier": 0.20008060564996893,
+         "auc": 0.7773329856922812
+        }
+       }
+      },
+      "copa": {
+       "dev": {
+        "rows": 2000,
+        "positives": 1000,
+        "auc": 0.7937895,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.1824003532847155,
+         "rows": 2000,
+         "admitted": 924,
+         "accuracy": 0.71,
+         "balanced_accuracy": 0.71,
+         "precision": 0.7272727272727273,
+         "recall": 0.672
+        },
+        "at_default_trust": {
+         "rows": 2000,
+         "log_loss": 0.5505513255022237,
+         "brier": 0.18345402769453187
+        }
+       },
+       "test": {
+        "rows": 1000,
+        "positives": 500,
+        "auc": 0.859732,
+        "direction": {
+         "pairs": 0,
+         "accuracy": null,
+         "ties": null
+        },
+        "at_default": {
+         "threshold": 0.1824003532847155,
+         "rows": 1000,
+         "admitted": 512,
+         "accuracy": 0.78,
+         "balanced_accuracy": 0.78,
+         "precision": 0.7734375,
+         "recall": 0.792
+        },
+        "at_own_dev": {
+         "threshold": 0.04738343067548377,
+         "rows": 1000,
+         "admitted": 625,
+         "accuracy": 0.761,
+         "balanced_accuracy": 0.761,
+         "precision": 0.7088,
+         "recall": 0.886
+        },
+        "at_default_trust": {
+         "rows": 1000,
+         "log_loss": 0.49810082607977263,
+         "brier": 0.15990342273470423
+        },
+        "at_own_trust": {
+         "rows": 1000,
+         "log_loss": 0.48515084329164615,
+         "brier": 0.155599643101825,
+         "auc": 0.87036
+        }
+       }
+      }
+     }
+    },
+    "instances": {
+     "thresholds": {
+      "default": null,
+      "by_set": {
+       "levyholt": 0.9999999950536306
+      }
+     },
+     "trust": {
+      "default": null,
+      "by_set": {
+       "levyholt": 0.1598997537853048
+      }
+     },
+     "data": {},
+     "sets": {
+      "levyholt": {
+       "dev": {
+        "rows": 630,
+        "positives": 315,
+        "auc": 0.7352330561854371,
+        "direction": {
+         "pairs": 315,
+         "accuracy": 0.8,
+         "ties": 0.0
+        }
+       },
+       "test": {
+        "rows": 1784,
+        "positives": 892,
+        "auc": 0.7533921353737256,
+        "direction": {
+         "pairs": 892,
+         "accuracy": 0.8167040358744395,
+         "ties": 0.0033632286995515697
+        },
+        "at_own_dev": {
+         "threshold": 0.9999999950536306,
+         "rows": 1784,
+         "admitted": 1065,
+         "accuracy": 0.6911434977578476,
+         "balanced_accuracy": 0.6911434977578476,
+         "precision": 0.6600938967136151,
+         "recall": 0.7881165919282511
+        },
+        "at_own_trust": {
+         "rows": 1784,
+         "log_loss": 0.6811564050034854,
+         "brier": 0.24403645599040977,
+         "auc": 0.7521057883729816
+        }
+       }
+      },
+      "wikidata": {},
+      "hard": {},
+      "delta-atomic": {},
+      "copa": {}
      }
     }
    }
@@ -3197,6 +5749,10 @@
     "reranker-qwen3": {
      "letters": 0.9883,
      "typed": 0.9951
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -3234,7 +5790,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.3775,
-     "typed": 0.982
+     "typed": 0.9859
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9968,
+     "typed": 0.9622
     }
    }
   },
@@ -3273,6 +5833,10 @@
     "reranker-qwen3": {
      "letters": 0.9978,
      "typed": 0.9977
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -3310,7 +5874,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.9933,
-     "typed": 0.9951
+     "typed": 0.9948
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9922,
+     "typed": 0.8352
     }
    }
   },
@@ -3349,6 +5917,10 @@
     "reranker-qwen3": {
      "letters": 0.9399,
      "typed": 0.977
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -3386,7 +5958,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.9897,
-     "typed": 0.974
+     "typed": 0.977
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -3424,7 +6000,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.5927,
-     "typed": 0.2227
+     "typed": 0.2018
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0052,
+     "typed": 0.0032
     }
    }
   },
@@ -3463,6 +6043,10 @@
     "reranker-qwen3": {
      "letters": 0.2689,
      "typed": 0.7311
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0019,
+     "typed": 0.0002
     }
    }
   },
@@ -3500,7 +6084,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.9897,
-     "typed": 0.9937
+     "typed": 0.9933
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -3539,6 +6127,10 @@
     "reranker-qwen3": {
      "letters": 0.7058,
      "typed": 0.6514
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9623,
+     "typed": 0.0948
     }
    }
   },
@@ -3576,7 +6168,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.9919,
-     "typed": 0.9897
+     "typed": 0.9914
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -3614,7 +6210,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.867,
-     "typed": 0.4378
+     "typed": 0.4073
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9993,
+     "typed": 0.7361
     }
    }
   },
@@ -3651,8 +6251,12 @@
      "typed": 0.9941
     },
     "reranker-qwen3": {
-     "letters": 0.997,
+     "letters": 0.9968,
      "typed": 0.9948
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -3689,8 +6293,12 @@
      "typed": 0.0013
     },
     "reranker-qwen3": {
-     "letters": 0.982,
-     "typed": 0.9924
+     "letters": 0.977,
+     "typed": 0.9929
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9999,
+     "typed": 0.9996
     }
    }
   },
@@ -3728,7 +6336,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.9914,
-     "typed": 0.9914
+     "typed": 0.9909
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 0.7773
     }
    }
   },
@@ -3766,7 +6378,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.7058,
-     "typed": 0.9149
+     "typed": 0.9047
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0373,
+     "typed": 0.011
     }
    }
   },
@@ -3805,6 +6421,10 @@
     "reranker-qwen3": {
      "letters": 0.9983,
      "typed": 0.9959
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -3841,8 +6461,12 @@
      "typed": 0.0022
     },
     "reranker-qwen3": {
-     "letters": 0.5,
+     "letters": 0.4688,
      "typed": 0.7549
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0141,
+     "typed": 0.0052
     }
    }
   },
@@ -3880,7 +6504,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.985,
-     "typed": 0.9627
+     "typed": 0.9579
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -3917,8 +6545,12 @@
      "typed": 0.996
     },
     "reranker-qwen3": {
-     "letters": 0.9868,
-     "typed": 0.9909
+     "letters": 0.9876,
+     "typed": 0.9903
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -3956,7 +6588,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.9979,
-     "typed": 0.9985
+     "typed": 0.9984
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -3995,6 +6631,10 @@
     "reranker-qwen3": {
      "letters": 0.9707,
      "typed": 0.9919
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9525,
+     "typed": 0.3733
     }
    }
   },
@@ -4032,7 +6672,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.9975,
-     "typed": 0.9975
+     "typed": 0.9974
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -4071,6 +6715,10 @@
     "reranker-qwen3": {
      "letters": 0.8355,
      "typed": 0.9526
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9997,
+     "typed": 0.9769
     }
    }
   },
@@ -4108,7 +6756,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.6225,
-     "typed": 0.9149
+     "typed": 0.9047
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -4142,11 +6794,15 @@
     },
     "nli-deberta-large-wanli": {
      "letters": 0.0016,
-     "typed": 0.019
+     "typed": 0.0188
     },
     "reranker-qwen3": {
      "letters": 0.018,
      "typed": 0.5
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0025,
+     "typed": 0.0019
     }
    }
   },
@@ -4184,7 +6840,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.0421,
-     "typed": 0.2451
+     "typed": 0.2018
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -4223,6 +6883,10 @@
     "reranker-qwen3": {
      "letters": 0.9924,
      "typed": 0.9983
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -4259,8 +6923,12 @@
      "typed": 0.9762
     },
     "reranker-qwen3": {
-     "letters": 0.9968,
+     "letters": 0.9964,
      "typed": 0.9972
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -4299,6 +6967,10 @@
     "reranker-qwen3": {
      "letters": 0.9944,
      "typed": 0.997
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -4335,8 +7007,12 @@
      "typed": 0.3547
     },
     "reranker-qwen3": {
-     "letters": 0.9809,
-     "typed": 0.9941
+     "letters": 0.9797,
+     "typed": 0.9937
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -4375,6 +7051,10 @@
     "reranker-qwen3": {
      "letters": 0.9968,
      "typed": 0.997
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -4413,6 +7093,10 @@
     "reranker-qwen3": {
      "letters": 0.8933,
      "typed": 0.982
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 0.7773
     }
    }
   },
@@ -4446,11 +7130,15 @@
     },
     "nli-deberta-large-wanli": {
      "letters": 0.9895,
-     "typed": 0.9562
+     "typed": 0.956
     },
     "reranker-qwen3": {
      "letters": 0.1824,
      "typed": 0.6225
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -4484,11 +7172,15 @@
     },
     "nli-deberta-large-wanli": {
      "letters": 0.9819,
-     "typed": 0.6476
+     "typed": 0.6507
     },
     "reranker-qwen3": {
      "letters": 0.0716,
-     "typed": 0.8808
+     "typed": 0.867
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -4527,6 +7219,10 @@
     "reranker-qwen3": {
      "letters": 0.9689,
      "typed": 0.9897
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9981,
+     "typed": 0.7306
     }
    }
   },
@@ -4560,11 +7256,15 @@
     },
     "nli-deberta-large-wanli": {
      "letters": 0.0155,
-     "typed": 0.0178
+     "typed": 0.0177
     },
     "reranker-qwen3": {
      "letters": 0.977,
      "typed": 0.9868
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9879,
+     "typed": 0.9858
     }
    }
   },
@@ -4598,11 +7298,15 @@
     },
     "nli-deberta-large-wanli": {
      "letters": 0.9505,
-     "typed": 0.9175
+     "typed": 0.9173
     },
     "reranker-qwen3": {
      "letters": 0.9399,
-     "typed": 0.9399
+     "typed": 0.9466
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -4641,6 +7345,10 @@
     "reranker-qwen3": {
      "letters": 0.2689,
      "typed": 0.852
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0004,
+     "typed": 0.0009
     }
    }
   },
@@ -4679,6 +7387,10 @@
     "reranker-qwen3": {
      "letters": 0.9627,
      "typed": 0.9797
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.1192,
+     "typed": 0.0293
     }
    }
   },
@@ -4716,7 +7428,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.9627,
-     "typed": 0.9929
+     "typed": 0.9933
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0009,
+     "typed": 0.0032
     }
    }
   },
@@ -4754,7 +7470,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.9909,
-     "typed": 0.9944
+     "typed": 0.9941
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9988,
+     "typed": 0.9241
     }
    }
   },
@@ -4792,7 +7512,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.6225,
-     "typed": 0.9526
+     "typed": 0.9579
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.011,
+     "typed": 0.0041
     }
    }
   },
@@ -4829,8 +7553,12 @@
      "typed": 0.9832
     },
     "reranker-qwen3": {
-     "letters": 0.9944,
-     "typed": 0.9959
+     "letters": 0.9948,
+     "typed": 0.9957
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -4868,7 +7596,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.867,
-     "typed": 0.9707
+     "typed": 0.974
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9999,
+     "typed": 0.9998
     }
    }
   },
@@ -4902,11 +7634,15 @@
     },
     "nli-deberta-large-wanli": {
      "letters": 0.9703,
-     "typed": 0.9796
+     "typed": 0.9794
     },
     "reranker-qwen3": {
-     "letters": 0.9883,
-     "typed": 0.9909
+     "letters": 0.9897,
+     "typed": 0.9897
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -4945,6 +7681,10 @@
     "reranker-qwen3": {
      "letters": 0.5622,
      "typed": 0.977
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.3775,
+     "typed": 0.622
     }
    }
   },
@@ -4983,6 +7723,10 @@
     "reranker-qwen3": {
      "letters": 0.9876,
      "typed": 0.9627
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -5021,6 +7765,10 @@
     "reranker-qwen3": {
      "letters": 0.4073,
      "typed": 0.5927
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.7767,
+     "typed": 0.0474
     }
    }
   },
@@ -5058,7 +7806,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.9933,
-     "typed": 0.9951
+     "typed": 0.9944
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -5097,6 +7849,10 @@
     "reranker-qwen3": {
      "letters": 0.6225,
      "typed": 0.8355
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.7773,
+     "typed": 0.148
     }
    }
   },
@@ -5134,7 +7890,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.9914,
-     "typed": 0.9944
+     "typed": 0.9948
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -5173,6 +7933,10 @@
     "reranker-qwen3": {
      "letters": 0.4688,
      "typed": 0.6792
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.3631,
+     "typed": 0.2537
     }
    }
   },
@@ -5209,8 +7973,12 @@
      "typed": 0.9954
     },
     "reranker-qwen3": {
-     "letters": 0.1192,
+     "letters": 0.1009,
      "typed": 0.2451
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -5244,11 +8012,15 @@
     },
     "nli-deberta-large-wanli": {
      "letters": 0.0005,
-     "typed": 0.0003
+     "typed": 0.0004
     },
     "reranker-qwen3": {
      "letters": 0.9526,
      "typed": 0.9876
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.011,
+     "typed": 0.0019
     }
    }
   },
@@ -5286,7 +8058,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.5622,
-     "typed": 0.7982
+     "typed": 0.8176
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0009,
+     "typed": 0.0003
     }
    }
   },
@@ -5323,8 +8099,12 @@
      "typed": 0.0007
     },
     "reranker-qwen3": {
-     "letters": 0.5927,
-     "typed": 0.9579
+     "letters": 0.5622,
+     "typed": 0.9526
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0019,
+     "typed": 0.0019
     }
    }
   },
@@ -5361,8 +8141,12 @@
      "typed": 0.0023
     },
     "reranker-qwen3": {
-     "letters": 0.7311,
-     "typed": 0.9325
+     "letters": 0.7058,
+     "typed": 0.9466
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0009,
+     "typed": 0.0293
     }
    }
   },
@@ -5399,8 +8183,12 @@
      "typed": 0.0004
     },
     "reranker-qwen3": {
-     "letters": 0.0351,
-     "typed": 0.1824
+     "letters": 0.0373,
+     "typed": 0.2018
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.023,
+     "typed": 0.0067
     }
    }
   },
@@ -5439,6 +8227,10 @@
     "reranker-qwen3": {
      "letters": 0.0293,
      "typed": 0.1067
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0474,
+     "typed": 0.0953
     }
    }
   },
@@ -5477,6 +8269,10 @@
     "reranker-qwen3": {
      "letters": 0.3208,
      "typed": 0.9876
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -5515,6 +8311,10 @@
     "reranker-qwen3": {
      "letters": 0.5,
      "typed": 0.9929
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -5551,8 +8351,12 @@
      "typed": 0.9967
     },
     "reranker-qwen3": {
-     "letters": 0.9941,
+     "letters": 0.9951,
      "typed": 0.9975
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -5589,8 +8393,12 @@
      "typed": 0.9965
     },
     "reranker-qwen3": {
-     "letters": 0.9909,
+     "letters": 0.9914,
      "typed": 0.9968
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -5629,6 +8437,10 @@
     "reranker-qwen3": {
      "letters": 0.5312,
      "typed": 0.9924
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -5666,7 +8478,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.6514,
-     "typed": 0.9941
+     "typed": 0.9944
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -5705,6 +8521,10 @@
     "reranker-qwen3": {
      "letters": 0.997,
      "typed": 0.9977
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -5741,8 +8561,12 @@
      "typed": 0.9972
     },
     "reranker-qwen3": {
-     "letters": 0.9968,
+     "letters": 0.997,
      "typed": 0.9977
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -5776,11 +8600,15 @@
     },
     "nli-deberta-large-wanli": {
      "letters": 0.9751,
-     "typed": 0.9284
+     "typed": 0.9287
     },
     "reranker-qwen3": {
      "letters": 0.9241,
      "typed": 0.9707
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 0.9991
     }
    }
   },
@@ -5814,11 +8642,15 @@
     },
     "nli-deberta-large-wanli": {
      "letters": 0.9639,
-     "typed": 0.691
+     "typed": 0.6916
     },
     "reranker-qwen3": {
-     "letters": 0.982,
+     "letters": 0.9831,
      "typed": 0.9883
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9859,
+     "typed": 0.9985
     }
    }
   },
@@ -5855,8 +8687,12 @@
      "typed": 0.9991
     },
     "reranker-qwen3": {
-     "letters": 0.9883,
-     "typed": 0.9954
+     "letters": 0.9876,
+     "typed": 0.9951
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -5893,8 +8729,12 @@
      "typed": 0.999
     },
     "reranker-qwen3": {
-     "letters": 0.9466,
+     "letters": 0.9526,
      "typed": 0.9797
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -5928,11 +8768,15 @@
     },
     "nli-deberta-large-wanli": {
      "letters": 0.9621,
-     "typed": 0.8536
+     "typed": 0.8523
     },
     "reranker-qwen3": {
-     "letters": 0.9466,
-     "typed": 0.9868
+     "letters": 0.9399,
+     "typed": 0.9883
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -5969,8 +8813,12 @@
      "typed": 0.0053
     },
     "reranker-qwen3": {
-     "letters": 0.5,
-     "typed": 0.2451
+     "letters": 0.4688,
+     "typed": 0.2227
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0052,
+     "typed": 0.0004
     }
    }
   },
@@ -6007,8 +8855,12 @@
      "typed": 0.0168
     },
     "reranker-qwen3": {
-     "letters": 0.7311,
-     "typed": 0.6225
+     "letters": 0.7549,
+     "typed": 0.5927
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9207,
+     "typed": 1.0
     }
    }
   },
@@ -6045,8 +8897,12 @@
      "typed": 0.009
     },
     "reranker-qwen3": {
-     "letters": 0.5927,
-     "typed": 0.2942
+     "letters": 0.5622,
+     "typed": 0.3208
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9936,
+     "typed": 0.622
     }
    }
   },
@@ -6085,6 +8941,10 @@
     "reranker-qwen3": {
      "letters": 0.2689,
      "typed": 0.9047
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9043,
+     "typed": 0.7772
     }
    }
   },
@@ -6122,7 +8982,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.8355,
-     "typed": 0.4688
+     "typed": 0.5
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -6160,7 +9024,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.011,
-     "typed": 0.0203
+     "typed": 0.0216
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.1824,
+     "typed": 0.6792
     }
    }
   },
@@ -6198,7 +9066,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.0132,
-     "typed": 0.0086
+     "typed": 0.0091
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0067,
+     "typed": 0.0004
     }
    }
   },
@@ -6237,6 +9109,10 @@
     "reranker-qwen3": {
      "letters": 0.0244,
      "typed": 0.3486
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -6274,7 +9150,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.0601,
-     "typed": 0.0373
+     "typed": 0.0421
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0141,
+     "typed": 0.0041
     }
    }
   },
@@ -6313,6 +9193,10 @@
     "reranker-qwen3": {
      "letters": 0.9627,
      "typed": 0.9962
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9627,
+     "typed": 1.0
     }
    }
   },
@@ -6351,6 +9235,10 @@
     "reranker-qwen3": {
      "letters": 0.9841,
      "typed": 0.9883
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -6387,8 +9275,12 @@
      "typed": 0.0005
     },
     "reranker-qwen3": {
-     "letters": 0.2337,
+     "letters": 0.2451,
      "typed": 0.3208
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0025,
+     "typed": 0.0006
     }
    }
   },
@@ -6426,7 +9318,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.0567,
-     "typed": 0.0421
+     "typed": 0.0474
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0002,
+     "typed": 0.0
     }
    }
   },
@@ -6465,6 +9361,10 @@
     "reranker-qwen3": {
      "letters": 0.1824,
      "typed": 0.852
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.018,
+     "typed": 0.3775
     }
    }
   },
@@ -6502,7 +9402,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.8176,
-     "typed": 0.9831
+     "typed": 0.9841
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -6541,6 +9445,10 @@
     "reranker-qwen3": {
      "letters": 0.6225,
      "typed": 0.9466
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -6579,6 +9487,10 @@
     "reranker-qwen3": {
      "letters": 0.5312,
      "typed": 0.9876
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -6616,7 +9528,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.1192,
-     "typed": 0.9868
+     "typed": 0.985
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9859,
+     "typed": 0.6225
     }
    }
   },
@@ -6654,7 +9570,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.9627,
-     "typed": 0.9985
+     "typed": 0.9984
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -6693,6 +9613,10 @@
     "reranker-qwen3": {
      "letters": 0.985,
      "typed": 0.9981
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -6731,6 +9655,10 @@
     "reranker-qwen3": {
      "letters": 0.7773,
      "typed": 0.9975
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -6769,6 +9697,10 @@
     "reranker-qwen3": {
      "letters": 0.5927,
      "typed": 0.9914
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -6806,7 +9738,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.4073,
-     "typed": 0.1259
+     "typed": 0.133
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0601,
+     "typed": 0.0052
     }
    }
   },
@@ -6844,7 +9780,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.8933,
-     "typed": 0.4073
+     "typed": 0.4688
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0759,
+     "typed": 0.0007
     }
    }
   },
@@ -6881,8 +9821,12 @@
      "typed": 0.5922
     },
     "reranker-qwen3": {
-     "letters": 0.9399,
+     "letters": 0.9466,
      "typed": 0.9978
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -6921,6 +9865,10 @@
     "reranker-qwen3": {
      "letters": 0.9914,
      "typed": 0.9957
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -6957,8 +9905,12 @@
      "typed": 0.9731
     },
     "reranker-qwen3": {
-     "letters": 0.852,
+     "letters": 0.8355,
      "typed": 0.9975
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -6996,7 +9948,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.4378,
-     "typed": 0.9903
+     "typed": 0.9914
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.4378,
+     "typed": 1.0
     }
    }
   },
@@ -7035,6 +9991,10 @@
     "reranker-qwen3": {
      "letters": 0.7773,
      "typed": 0.9924
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.6788,
+     "typed": 1.0
     }
    }
   },
@@ -7073,6 +10033,10 @@
     "reranker-qwen3": {
      "letters": 0.3486,
      "typed": 0.7773
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.1824,
+     "typed": 0.011
     }
    }
   },
@@ -7109,8 +10073,12 @@
      "typed": 0.9188
     },
     "reranker-qwen3": {
-     "letters": 0.977,
-     "typed": 0.9047
+     "letters": 0.9756,
+     "typed": 0.9241
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -7147,8 +10115,12 @@
      "typed": 0.0006
     },
     "reranker-qwen3": {
-     "letters": 0.3775,
+     "letters": 0.3486,
      "typed": 0.0601
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.4999,
+     "typed": 0.0003
     }
    }
   },
@@ -7186,7 +10158,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.8808,
-     "typed": 0.9579
+     "typed": 0.9627
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -7223,8 +10199,12 @@
      "typed": 0.0007
     },
     "reranker-qwen3": {
-     "letters": 0.1733,
+     "letters": 0.1645,
      "typed": 0.0293
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.023,
+     "typed": 0.0001
     }
    }
   },
@@ -7262,7 +10242,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.5927,
-     "typed": 0.2942
+     "typed": 0.2689
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9914,
+     "typed": 0.3773
     }
    }
   },
@@ -7301,6 +10285,10 @@
     "reranker-qwen3": {
      "letters": 0.7982,
      "typed": 0.2227
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9962,
+     "typed": 0.8081
     }
    }
   },
@@ -7338,7 +10326,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.9669,
-     "typed": 0.9627
+     "typed": 0.9604
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -7375,8 +10367,12 @@
      "typed": 0.9901
     },
     "reranker-qwen3": {
-     "letters": 0.9399,
-     "typed": 0.982
+     "letters": 0.9325,
+     "typed": 0.9809
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -7413,8 +10409,12 @@
      "typed": 0.9961
     },
     "reranker-qwen3": {
-     "letters": 0.9975,
-     "typed": 0.9989
+     "letters": 0.9979,
+     "typed": 0.999
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -7451,8 +10451,12 @@
      "typed": 0.9964
     },
     "reranker-qwen3": {
-     "letters": 0.997,
-     "typed": 0.999
+     "letters": 0.9972,
+     "typed": 0.9991
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -7490,7 +10494,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.0503,
-     "typed": 0.8808
+     "typed": 0.8933
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.018,
+     "typed": 0.9998
     }
    }
   },
@@ -7529,6 +10537,10 @@
     "reranker-qwen3": {
      "letters": 0.4073,
      "typed": 0.3208
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -7567,6 +10579,10 @@
     "reranker-qwen3": {
      "letters": 0.9466,
      "typed": 0.148
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -7605,6 +10621,10 @@
     "reranker-qwen3": {
      "letters": 0.9929,
      "typed": 0.974
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -7643,6 +10663,10 @@
     "reranker-qwen3": {
      "letters": 0.6792,
      "typed": 0.5927
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.7294,
+     "typed": 0.8172
     }
    }
   },
@@ -7681,6 +10705,10 @@
     "reranker-qwen3": {
      "letters": 0.9497,
      "typed": 0.8176
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.8808,
+     "typed": 0.8518
     }
    }
   },
@@ -7718,7 +10746,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.7058,
-     "typed": 0.5
+     "typed": 0.5312
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.7311,
+     "typed": 0.475
     }
    }
   },
@@ -7757,6 +10789,10 @@
     "reranker-qwen3": {
      "letters": 0.1824,
      "typed": 0.0759
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0086,
+     "typed": 0.0052
     }
    }
   },
@@ -7795,6 +10831,10 @@
     "reranker-qwen3": {
      "letters": 0.2942,
      "typed": 0.1561
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0086,
+     "typed": 0.0012
     }
    }
   },
@@ -7833,6 +10873,10 @@
     "reranker-qwen3": {
      "letters": 0.8176,
      "typed": 0.7773
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.4223,
+     "typed": 0.8306
     }
    }
   },
@@ -7871,6 +10915,10 @@
     "reranker-qwen3": {
      "letters": 0.9149,
      "typed": 0.9669
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.7297,
+     "typed": 0.8516
     }
    }
   },
@@ -7909,6 +10957,10 @@
     "reranker-qwen3": {
      "letters": 0.3208,
      "typed": 0.2689
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.7311,
+     "typed": 0.148
     }
    }
   },
@@ -7946,7 +10998,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.8808,
-     "typed": 0.4378
+     "typed": 0.4688
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9756,
+     "typed": 0.9047
     }
    }
   },
@@ -7963,7 +11019,7 @@
      "typed": 0.9853
     },
     "cosine-qwen3": {
-     "letters": 0.9482,
+     "letters": 0.949,
      "typed": 0.9715
     },
     "jev": {
@@ -7985,6 +11041,10 @@
     "reranker-qwen3": {
      "letters": 0.8355,
      "typed": 0.9876
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -8001,7 +11061,7 @@
      "typed": 0.9853
     },
     "cosine-qwen3": {
-     "letters": 0.9482,
+     "letters": 0.949,
      "typed": 0.9715
     },
     "jev": {
@@ -8022,7 +11082,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.7773,
-     "typed": 0.6792
+     "typed": 0.6514
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0474,
+     "typed": 0.0019
     }
    }
   },
@@ -8060,7 +11124,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.9897,
-     "typed": 0.9962
+     "typed": 0.9957
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -8098,7 +11166,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.9914,
-     "typed": 0.9966
+     "typed": 0.9962
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -8137,6 +11209,10 @@
     "reranker-qwen3": {
      "letters": 0.985,
      "typed": 0.974
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -8169,12 +11245,16 @@
      "typed": 0.393
     },
     "nli-deberta-large-wanli": {
-     "letters": 0.2248,
+     "letters": 0.2246,
      "typed": 0.0114
     },
     "reranker-qwen3": {
      "letters": 0.7773,
-     "typed": 0.7549
+     "typed": 0.7773
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.9231,
+     "typed": 0.9991
     }
    }
   },
@@ -8213,6 +11293,10 @@
     "reranker-qwen3": {
      "letters": 0.9325,
      "typed": 0.0716
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.6225,
+     "typed": 0.0004
     }
    }
   },
@@ -8249,8 +11333,12 @@
      "typed": 0.0064
     },
     "reranker-qwen3": {
-     "letters": 0.133,
+     "letters": 0.1259,
      "typed": 0.0421
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.1824,
+     "typed": 0.0003
     }
    }
   },
@@ -8287,8 +11375,12 @@
      "typed": 0.9558
     },
     "reranker-qwen3": {
-     "letters": 0.9149,
+     "letters": 0.9047,
      "typed": 0.9241
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -8325,8 +11417,12 @@
      "typed": 0.9267
     },
     "reranker-qwen3": {
-     "letters": 0.867,
+     "letters": 0.852,
      "typed": 0.5622
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -8364,7 +11460,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.9831,
-     "typed": 0.9929
+     "typed": 0.9919
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -8402,7 +11502,11 @@
     },
     "reranker-qwen3": {
      "letters": 0.9962,
-     "typed": 0.9929
+     "typed": 0.9933
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -8441,6 +11545,10 @@
     "reranker-qwen3": {
      "letters": 0.8808,
      "typed": 0.9841
+    },
+    "typical-qwen3-4b": {
+     "letters": 1.0,
+     "typed": 1.0
     }
    }
   },
@@ -8479,6 +11587,10 @@
     "reranker-qwen3": {
      "letters": 0.5622,
      "typed": 0.4073
+    },
+    "typical-qwen3-4b": {
+     "letters": 0.0373,
+     "typed": 0.6777
     }
    }
   }
