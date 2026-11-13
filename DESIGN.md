@@ -122,6 +122,7 @@ class Judge(Protocol):
     @property
     def usage(self) -> dict[str, int]: ...
     def opinions(self, proposals: Sequence[Proposal]) -> list[Opinion]: ...
+    def close(self) -> None: ...         # releases a model's memory, if it holds one
 ```
 
 It returns one opinion per proposal, in input order, whose belief, the score, estimates the probability that the premise sentence entails the conclusion sentence. An NLI cross-encoder gives its entailment, contradiction and neutral probabilities as belief, disbelief and uncertainty, since neutral is SNLI's class for a conclusion that might be true given the premise; the other reference judges give a probability. A judge must read direction: it must be able to score `mother ⇒ parent` high and `parent ⇒ mother` low. Embedding similarity cannot do this by construction, since the two sentences of a pair are the same distance apart in both directions. `usage` counts the model work spent, under units the judge names, such as pairs and calls.

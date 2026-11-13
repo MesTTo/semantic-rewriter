@@ -26,3 +26,6 @@ class TableJudge:
     def opinions(self, proposals: Sequence[Proposal]) -> list[Opinion]:
         self.usage["pairs"] += len(proposals)
         return [Opinion(s, 1.0 - s, 0.0) for s in (self.table.get(p.key, 0.0) for p in proposals)]
+
+    def close(self) -> None:
+        """The table holds nothing to release."""

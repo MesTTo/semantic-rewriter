@@ -213,6 +213,10 @@ class Judge(Protocol):
 
     def opinions(self, proposals: Sequence[Proposal]) -> list[Opinion]: ...
 
+    def close(self) -> None:
+        """Release what the judge holds, such as a model's memory; a judge holding nothing does nothing."""
+        ...
+
 
 @runtime_checkable
 class Admission(Protocol):

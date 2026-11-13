@@ -108,6 +108,9 @@ class _StubJudge:
         self.scored += len(proposals)
         return [Opinion(s, 1.0 - s, 0.0) for s in (_JUDGED.get((p.premise.name, p.mapping), 0.0) for p in proposals)]
 
+    def close(self) -> None:
+        """The stub holds nothing to release."""
+
 
 def test_the_judge_retriever_ranks_by_the_best_mapping_and_scores_each_candidate_once() -> None:
     judge = _StubJudge()

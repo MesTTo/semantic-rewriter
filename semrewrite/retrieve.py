@@ -135,9 +135,7 @@ class JudgeRetriever:
 
     def close(self) -> None:
         """Release the ranking judge's model, as EmbeddingRetriever.close releases its own."""
-        close = getattr(self.scorer.judge, "close", None)
-        if callable(close):
-            close()
+        self.scorer.judge.close()
 
     def __enter__(self) -> Self:
         return self

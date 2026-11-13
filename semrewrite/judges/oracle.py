@@ -32,3 +32,6 @@ class OracleJudge:
         """(1, 0, 0) for a gold implication and (0, 1, 0) otherwise."""
         self.usage["pairs"] += len(proposals)
         return [Opinion(1.0, 0.0, 0.0) if p.key in self.gold else Opinion(0.0, 1.0, 0.0) for p in proposals]
+
+    def close(self) -> None:
+        """The oracle holds no model, so closing it releases nothing."""
