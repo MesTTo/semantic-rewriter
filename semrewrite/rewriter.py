@@ -27,7 +27,8 @@ from typing import get_args
 
 from semrewrite.discovery import Discoverer, ScoreCache
 from semrewrite.kb import KB
-from semrewrite.model import Atom, Key, Mapping, Rewrite, Rule, compose, identity, inverse, parse_atom
+from semrewrite.lineage import lineages, probability
+from semrewrite.model import Atom, Key, Mapping, Proposal, Rewrite, Rule, compose, identity, inverse, parse_atom
 from semrewrite.protocols import Admission, Budget, DepthCounts, Engine, Judge, Program, Proof, Retriever, Solution
 from semrewrite.trace import Solved, Solving, Tracer
 
@@ -119,7 +120,8 @@ class Outcome:
 
     `admitted` holds the keys of the rewrites the judge admitted while
     answering, as discovery saw them (before any alias renaming); `proofs`
-    holds a derivation per answer when the engine provides them.
+    holds a derivation per answer when the engine provides them; `beliefs`, when the rewriter was asked for them,
+    holds each answer's probability that some derivation's rewrites are all valid, each valid at its score.
     """
 
     kb: str
@@ -140,6 +142,7 @@ class Outcome:
     tables: int = 0
     seconds: float = 0.0
     proofs: dict[tuple[str, ...], Proof] | None = None
+    beliefs: dict[tuple[str, ...], float] | None = None
 
     @property
     def finished(self) -> bool:
@@ -162,6 +165,7 @@ class Rewriter:
         admission: Admission | None = None,
         proofs: bool = False,
         trace: Tracer | None = None,
+        beliefs: int = 0,
     ) -> None:
         self.kb = kb
         self.catalogue = kb.catalogue()
@@ -175,6 +179,9 @@ class Rewriter:
         self.proofs = proofs
         # Receives each solve's start and stop, and is given to every discoverer this rewriter makes.
         self.trace = trace
+        # With beliefs = k > 0, each finished ask gives every answer a belief from its lineage, keeping the k most
+        # probable rewrite sets per row (semrewrite.lineage says why the bound).
+        self.beliefs = beliefs
         self._rules_by_head: dict[str, list[Rule]] = defaultdict(list)
         for rule in kb.rules:
             self._rules_by_head[rule.head.pred].append(rule)
@@ -196,6 +203,9 @@ class Rewriter:
             raise CapabilityError(msg)
         if self.proofs and strategy.canonical:
             msg = f"{strategy.name} answers over predicates merged into one per alias class, so it has no derivations"
+            raise CapabilityError(msg)
+        if self.beliefs and strategy.canonical:
+            msg = f"{strategy.name} answers over predicates merged into one per alias class, so it has no lineage"
             raise CapabilityError(msg)
 
     def ask(self, query: Atom | str, strategy: Strategy | str = "lazy-tabled", discoverer: Discoverer | None = None) -> Outcome:
@@ -224,6 +234,8 @@ class Rewriter:
             Timing.ROUNDS: self._rounds,
         }[strategy.timing]
         run(strategy, query, disc, out)
+        if self.beliefs and out.finished:
+            self._believe(query, out)
         out.seconds = time.perf_counter() - started
         out.expansions = disc.stats.expansions - before[0]
         out.proposals = disc.stats.proposals - before[1]
@@ -231,6 +243,29 @@ class Rewriter:
         return out
 
     # -- timings -------------------------------------------------------------
+
+    def _believe(self, query: Atom, out: Outcome) -> None:
+        """Each answer's belief: the probability that the rewrites of some derivation are all valid, each valid at the
+        score it was admitted with, over the knowledge base and every admitted rewrite with no depth bound, since a
+        bound limits search and not what the admitted rewrites imply. A lineage the work budget stops leaves the run
+        at work_limit with no answers, as an engine's would."""
+        cat = self.catalogue
+        # The scores come from the score cache, which holds every proposal discovery asked, so no judge is asked again.
+        rewrites = tuple(Rewrite(c, p, m, self.scorer.score([Proposal(cat[p], cat[c], m)])[0])
+                         for p, c, m in sorted(out.admitted))
+        weights = {rw.key: rw.score for rw in rewrites}
+        found = lineages(Program(facts=self.kb.facts, rules=self.kb.rules, rewrites=rewrites), query, weights,
+                         self.beliefs, self.budget.work)
+        out.work += found.work
+        if not found.finished:
+            out.status, out.detail = "work_limit", f"lineage stopped after {found.work:,} work"
+            out.answers, out.beliefs = set(), None
+            return
+        missing = sorted(row for row in out.answers if row not in found.answers)
+        if missing:
+            msg = f"the lineage of {query} lacks the engine's answers {missing[:3]}"
+            raise RuntimeError(msg)
+        out.beliefs = {row: probability(found.answers[row], weights) for row in out.answers}
 
     def _program(self, rewrites: Iterable[Rewrite] = (), *, kb: KB | None = None, tabled: bool = True, depth: int = 0,
                  depth_counts: DepthCounts = "steps") -> Program:

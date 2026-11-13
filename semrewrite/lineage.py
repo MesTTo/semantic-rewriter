@@ -32,6 +32,10 @@ FALSE: Lineage = frozenset()
 
 Row = tuple[str, ...]
 
+# The sets a row's lineage keeps by default: on Victoria's question with 184 chained Wikidata rewrites, 16 sets a row
+# kept every belief inside Wikidata's answer above every belief outside it, where an unbounded lineage passed 11 GiB.
+SETS = 16
+
 
 def minimise(sets: Iterable[frozenset[Key]]) -> Lineage:
     """The minimal sets among `sets`, by absorption: x + xy = x."""

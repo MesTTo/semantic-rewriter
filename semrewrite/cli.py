@@ -24,6 +24,7 @@ from semrewrite.engines import REGISTRY as ENGINES
 from semrewrite.engines import available
 from semrewrite.engines import make as make_engine
 from semrewrite.kb import KB
+from semrewrite.lineage import SETS
 from semrewrite.model import Rewrite, parse_atom
 from semrewrite.protocols import Budget
 from semrewrite.rewriter import STRATEGIES, CapabilityError, Rewriter
@@ -68,7 +69,8 @@ def _rewriter(args: argparse.Namespace, kb: KB) -> Rewriter:
     admission = Directional(args.directional) if args.directional is not None else Threshold()
     return Rewriter(kb, _judge(args, kb), make_engine(args.engine), _retriever(args), k=args.k,
                     budget=Budget(work=args.work, seconds=args.seconds), admission=admission,
-                    proofs=getattr(args, "explain", False), trace=TextTrace() if getattr(args, "trace", False) else None)
+                    proofs=getattr(args, "explain", False), trace=TextTrace() if getattr(args, "trace", False) else None,
+                    beliefs=SETS if getattr(args, "beliefs", False) else 0)
 
 
 def cmd_ask(args: argparse.Namespace) -> int:
@@ -77,17 +79,24 @@ def cmd_ask(args: argparse.Namespace) -> int:
     rw = _rewriter(args, kb)
     strategy = STRATEGIES[args.strategy]
     out = rw.ask(query, strategy if args.depth is None else replace(strategy, depth=args.depth))
+    rows = sorted(out.answers)
+    beliefs = out.beliefs
+    if beliefs is not None:
+        # Ranked by belief, strongest first; --min-belief drops the answers below it.
+        rows = sorted((r for r in rows if beliefs[r] >= args.min_belief), key=lambda r: (-beliefs[r], r))
     if args.json:
         print(json.dumps({
             "query": str(query), "status": out.status, "detail": out.detail,
-            "answers": sorted(list(a) for a in out.answers),
+            "answers": [list(a) for a in rows],
+            **({"beliefs": [round(out.beliefs[r], 6) for r in rows]} if out.beliefs is not None else {}),
             "rewrites": sorted([p, c, list(m)] for p, c, m in out.admitted),
             "cost": {"work": out.work, "seconds": round(out.seconds, 3), "expansions": out.expansions,
                      "proposals": out.proposals, "tables": out.tables},
         }, indent=1))
     else:
-        for row in sorted(out.answers):
-            print(f"{query.pred}({', '.join(row)})")
+        for row in rows:
+            belief = f"    belief {out.beliefs[row]:.3f}" if out.beliefs is not None else ""
+            print(f"{query.pred}({', '.join(row)}){belief}")
             if args.explain and out.proofs and row in out.proofs:
                 print("\n".join("    " + line for line in out.proofs[row].lines()))
         if args.explain:
@@ -180,6 +189,11 @@ def parser() -> argparse.ArgumentParser:
                      help="print each step on standard error as it happens: the engine starting and stopping, "
                           "evaluation reaching a predicate, the candidates retrieved, the judge's verdicts and the "
                           "rewrites admitted")
+    ask.add_argument("--beliefs", action="store_true",
+                     help="give each answer the probability that some derivation's rewrites are all valid, each at "
+                          "its score, and rank the answers by it")
+    ask.add_argument("--min-belief", type=float, default=0.0, metavar="P",
+                     help="with --beliefs, print only the answers whose belief is at least P")
     ask.add_argument("--json", action="store_true")
     ask.set_defaults(run=cmd_ask)
 
