@@ -177,10 +177,13 @@ def pairs_table() -> str:
 
 
 def trust_table() -> str:
-    """Each judge's trust and data trust as judge_eval.py fitted them on Wikidata dev pairs, with Wikidata test pairs'
-    ROC AUC and the log loss and Brier score of its trusted opinions, and on the test pairs the knowledge base has
-    evidence on, its log loss alone and fused with that evidence."""
-    judges = _load("judges.json")["judges"]
+    """The base rate every judge's opinions take, and each judge's trust and data trust as judge_eval.py fitted them
+    on Wikidata dev pairs, with Wikidata test pairs' ROC AUC and the log loss and Brier score of its calibrated
+    opinions, and on the test pairs the knowledge base has evidence on, its log loss alone and fused with that
+    evidence."""
+    measured = _load("judges.json")
+    judges = measured["judges"]
+    rate = measured["calibration"]["base_rates"]["wikidata"]
     rows = []
     for name, j in sorted(judges.items(), key=lambda nj: -nj[1]["variants"]["letters"]["trust"]["default"]):
         variant = j["variants"]["letters"]
@@ -189,8 +192,10 @@ def trust_table() -> str:
         rows.append([name, variant["trust"]["default"], test["auc"], test["at_default_trust"]["log_loss"],
                      test["at_default_trust"]["brier"], data["trust"], data["test"]["judge"]["rows"],
                      data["test"]["judge"]["log_loss"], data["test"]["fused"]["log_loss"]])
-    return _table(["judge", "trust", "test ROC AUC", "test log loss", "test Brier", "data trust", "test pairs with data",
-                   "their log loss, judge alone", "fused with the data"], rows)
+    return (f"Every judge's opinions are taken at the base rate {rate:.3f}, the share of the Wikidata dev pairs that "
+            "hold.\n\n"
+            + _table(["judge", "trust", "test ROC AUC", "test log loss", "test Brier", "data trust",
+                      "test pairs with data", "their log loss, judge alone", "fused with the data"], rows))
 
 
 def beliefs_table() -> str:

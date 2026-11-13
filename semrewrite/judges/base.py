@@ -54,13 +54,15 @@ class SentenceJudge:
     `usage["pairs"]` counts every proposal judged and `usage["calls"]` every
     non-empty `opinions` call; nothing is memoised, so a caller asking twice is
     charged twice, which is what the engine's call counts measure. `trust` is
-    complete, 1, until the judge factory sets the calibrated one.
+    complete, 1, and `base_rate` one half, until the judge factory sets the
+    calibrated ones.
     """
 
     def __init__(self, name: str, threshold: float, fillers: Fillers = LETTERS) -> None:
         self.name = name
         self.threshold = threshold
         self.trust = 1.0
+        self.base_rate = 0.5
         self.fillers = fillers
         self.usage: dict[str, int] = {"pairs": 0, "calls": 0}
 

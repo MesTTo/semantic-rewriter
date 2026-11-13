@@ -164,23 +164,23 @@ Embedding similarity scores how alike two sentences are, whichever way they run.
 
 ### How sure is each answer?
 
-`--beliefs` gives every answer an opinion that it holds, in subjective logic's terms: a probability P, and the belief b, disbelief d and uncertainty u it comes from. A rewrite is one claim, right or wrong for every use of it, so an answer is as probable as the chance that every rewrite of one of its derivations is right. Each rewrite is right as Jev's opinion of it says, discounted by how far Jev proved right on labelled pairs; [DESIGN.md](DESIGN.md#answer-beliefs) says how the probabilities combine.
+`--beliefs` gives every answer an opinion that it holds, in subjective logic's terms: a probability P, and the belief b, disbelief d and uncertainty u it comes from. A rewrite is one claim, right or wrong for every use of it, so an answer is as probable as the chance that every rewrite of one of its derivations is right. Each rewrite is right as Jev's opinion of it says, drawn toward the rate at which labelled pairs hold by how far Jev proved right on them; [DESIGN.md](DESIGN.md#answer-beliefs) says how the probabilities combine.
 
 That makes a low rewrite threshold cheap. At 0.1 instead of 0.65, Jev admits 110 rewrites into Victoria's descendants instead of 18, and 21 of the answers they add are not in Wikidata's record. Each of those 21 ranks below each of Wikidata's 1,164, so an answer threshold anywhere between them keeps exactly Wikidata's answer:
 
 <!-- BEGIN GENERATED: wikidata-placed -->
 | answer | rank | in Wikidata's answer | P | b | d | u |
 |---|---|---|---|---|---|---|
-| `sophia_hermann` | 1,160 of 1,185 | yes | 0.958 | 0.945 | 0.029 | 0.026 |
-| `sophia_wise_glossinger` | 1,161 of 1,185 | yes | 0.958 | 0.945 | 0.029 | 0.026 |
-| `stephan_albert_bernadotte_count_bernadotte` | 1,162 of 1,185 | yes | 0.958 | 0.945 | 0.029 | 0.026 |
-| `stephan_straehl` | 1,163 of 1,185 | yes | 0.958 | 0.945 | 0.029 | 0.026 |
-| `victoria_bayard_romanov_ilyinsky` | 1,164 of 1,185 | yes | 0.958 | 0.945 | 0.029 | 0.026 |
-| `british_army` | 1,165 of 1,185 | no | 0.334 | 0.324 | 0.649 | 0.026 |
-| `hellenic_armed_forces` | 1,166 of 1,185 | no | 0.334 | 0.324 | 0.649 | 0.026 |
-| `imperial_german_army` | 1,167 of 1,185 | no | 0.334 | 0.324 | 0.649 | 0.026 |
-| `luftwaffe` | 1,168 of 1,185 | no | 0.334 | 0.324 | 0.649 | 0.026 |
-| `royal_air_force` | 1,169 of 1,185 | no | 0.334 | 0.324 | 0.649 | 0.026 |
+| `sophia_hermann` | 1,160 of 1,185 | yes | 0.938 | 0.929 | 0.029 | 0.042 |
+| `sophia_wise_glossinger` | 1,161 of 1,185 | yes | 0.938 | 0.929 | 0.029 | 0.042 |
+| `stephan_albert_bernadotte_count_bernadotte` | 1,162 of 1,185 | yes | 0.938 | 0.929 | 0.029 | 0.042 |
+| `stephan_straehl` | 1,163 of 1,185 | yes | 0.938 | 0.929 | 0.029 | 0.042 |
+| `victoria_bayard_romanov_ilyinsky` | 1,164 of 1,185 | yes | 0.938 | 0.929 | 0.029 | 0.042 |
+| `british_army` | 1,165 of 1,185 | no | 0.324 | 0.321 | 0.637 | 0.042 |
+| `hellenic_armed_forces` | 1,166 of 1,185 | no | 0.324 | 0.321 | 0.637 | 0.042 |
+| `imperial_german_army` | 1,167 of 1,185 | no | 0.324 | 0.321 | 0.637 | 0.042 |
+| `luftwaffe` | 1,168 of 1,185 | no | 0.324 | 0.321 | 0.637 | 0.042 |
+| `royal_air_force` | 1,169 of 1,185 | no | 0.324 | 0.321 | 0.637 | 0.042 |
 <!-- END GENERATED: wikidata-placed -->
 
 Asked about one of them, the rewriter shows where its doubt comes from:
@@ -188,13 +188,13 @@ Asked about one of them, the rewriter shows where its doubt comes from:
 <!-- BEGIN GENERATED: wikidata-graded -->
 ```text
 $ semrewrite ask examples/wikidata/victoria.metta 'descendant_of(british_army, queen_victoria)' --judge jev --threshold 0.1 --strategy rewrite-depth-tabled --depth 1 --retriever judge --k 50 --engine pymetta --work 50000000 --seconds inf --beliefs --explain 2>/dev/null
-descendant_of(british_army, queen_victoria)    P 0.334  b 0.324  d 0.649  u 0.026
+descendant_of(british_army, queen_victoria)    P 0.324  b 0.321  d 0.637  u 0.042
     descendant_of(british_army, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-      parent_of(prince_arthur_duke_of_connaught_and_strathearn, british_army)    [by parent_of(X0, X1) ⇐ military_branch_p241(X0, X1), score 0.330]
-        military_branch_p241(prince_arthur_duke_of_connaught_and_strathearn, british_army)    [fact]
-      descendant_of(prince_arthur_duke_of_connaught_and_strathearn, queen_victoria)    [by descendant_of(X, Y) :- parent_of(Y, X)]
-        parent_of(queen_victoria, prince_arthur_duke_of_connaught_and_strathearn)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
-          mother_p25(prince_arthur_duke_of_connaught_and_strathearn, queen_victoria)    [fact]
+      parent_of(edward_vii, british_army)    [by parent_of(X0, X1) ⇐ military_branch_p241(X0, X1), score 0.330]
+        military_branch_p241(edward_vii, british_army)    [fact]
+      descendant_of(edward_vii, queen_victoria)    [by descendant_of(X, Y) :- parent_of(Y, X)]
+        parent_of(queen_victoria, edward_vii)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
+          mother_p25(edward_vii, queen_victoria)    [fact]
 ```
 <!-- END GENERATED: wikidata-graded -->
 
@@ -376,7 +376,7 @@ An engine is anything with a `solve(program, query, budget, expand)` method and 
 | `cosine-bge`, `cosine-qwen3` | embedding similarity, the baseline that cannot tell direction | `models` |
 | `oracle` | admits exactly a given set of implications | nothing |
 
-Each judge's default threshold and trust in `semrewrite/judges/calibration.json` were calibrated on labelled predicate pairs. For the rewriter, calibrate it on your own knowledge bases instead (see RESULTS.md): the pair-set thresholds favour recall, and the rewriter needs precision because it applies every admitted rule everywhere. A judge is anything with `name`, `threshold`, `trust`, `usage` and `opinions(proposals)`, which DESIGN.md describes.
+Each judge's default threshold, trust and base rate in `semrewrite/judges/calibration.json` were calibrated on labelled predicate pairs. For the rewriter, calibrate it on your own knowledge bases instead (see RESULTS.md): the pair-set thresholds favour recall, and the rewriter needs precision because it applies every admitted rule everywhere. A judge is anything with `name`, `threshold`, `trust`, `base_rate`, `usage` and `opinions(proposals)`, which DESIGN.md describes.
 
 ## Data
 

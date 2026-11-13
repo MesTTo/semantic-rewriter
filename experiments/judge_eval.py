@@ -44,6 +44,7 @@ import sys
 import time
 from collections import defaultdict
 from collections.abc import Sequence
+from dataclasses import replace
 from typing import Any
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -100,8 +101,9 @@ def one_way(rows: Sequence[pairs.PairRow], scores: dict[str, float]) -> tuple[li
 
 
 def measure(rows: Sequence[pairs.PairRow], opinions: dict[str, Opinion], default: float | None, own: float | None,
-            trust: float | None) -> dict[str, Any]:
-    """One pair set's measurements under one judge and variant, by split; a row's score is its opinion's belief."""
+            calibration: tuple[float, float] | None) -> dict[str, Any]:
+    """One pair set's measurements under one judge and variant, by split; a row's score is its opinion's belief, and
+    its probability its opinion's projection at the calibrated base rate after discounting by the calibrated trust."""
     scores = {key: o.belief for key, o in opinions.items()}
     out: dict[str, Any] = {}
     for split in SPLITS:
@@ -120,10 +122,17 @@ def measure(rows: Sequence[pairs.PairRow], opinions: dict[str, Opinion], default
             entry["at_default"] = at_threshold(s, y, default)
         if own is not None and split == "test":
             entry["at_own_dev"] = at_threshold(s, y, own)
-        if trust is not None:
-            entry["at_default_trust"] = probability_scores([opinions[r.id].discount(trust).projection for r in part], y)
+        if calibration is not None:
+            entry["at_default_trust"] = probability_scores([calibrated(opinions[r.id], calibration).projection
+                                                            for r in part], y)
         out[split] = entry
     return out
+
+
+def calibrated(o: Opinion, calibration: tuple[float, float]) -> Opinion:
+    """A judge's opinion at a calibrated (trust, base rate), as the score cache gives it to the rewriter."""
+    trust, rate = calibration
+    return replace(o, base_rate=rate).discount(trust)
 
 
 def thresholds_for(rows: Sequence[pairs.PairRow], scores: dict[str, float]) -> dict[str, float]:
@@ -136,13 +145,27 @@ def thresholds_for(rows: Sequence[pairs.PairRow], scores: dict[str, float]) -> d
     return out
 
 
-def trusts_for(rows: Sequence[pairs.PairRow], opinions: dict[str, Opinion]) -> dict[str, float]:
-    """Each pair set's dev-fitted trust under these opinions, for sets with judged dev rows."""
+def base_rates(rows: Sequence[pairs.PairRow]) -> dict[str, float]:
+    """Each pair set's base rate: the share of its dev rows that hold, the prior every judge's opinions project to
+    where they say nothing."""
+    out = {}
+    for name in pairs.SETS:
+        dev = [r.label for r in rows if r.set == name and r.split == "dev"]
+        if dev:
+            out[name] = sum(dev) / len(dev)
+    return out
+
+
+def calibrations_for(rows: Sequence[pairs.PairRow], opinions: dict[str, Opinion], rates: dict[str, float]
+                     ) -> dict[str, tuple[float, float]]:
+    """Each pair set's (trust, base rate) under these opinions, for sets with judged dev rows: the trust fitted on
+    the dev rows to the opinions at the set's base rate."""
     out = {}
     for name in pairs.SETS:
         dev = [r for r in rows if r.set == name and r.split == "dev" and r.id in opinions]
         if dev:
-            out[name] = fit_trust([opinions[r.id] for r in dev], [r.label for r in dev])
+            at = [replace(opinions[r.id], base_rate=rates[name]) for r in dev]
+            out[name] = (fit_trust(at, [r.label for r in dev]), rates[name])
     return out
 
 
@@ -173,29 +196,34 @@ def data_opinions(rows: Sequence[pairs.PairRow]) -> dict[str, Opinion]:
 
 
 def data_measure(rows: Sequence[pairs.PairRow], opinions: dict[str, Opinion], data: dict[str, Opinion],
-                 trust: float | None) -> dict[str, Any]:
-    """The data trust fitted on dev rows with data jointly with the judge's opinions at its trust, and on each split
-    the scores of the judge alone and fused with the data at that trust, over the same rows."""
-    if trust is None:
+                 calibration: tuple[float, float] | None) -> dict[str, Any]:
+    """The data trust fitted on dev rows with data jointly with the judge's opinions at its calibration, and on each
+    split the scores of the judge alone and fused with the data at that trust, over the same rows. The data's
+    opinions take the judge's base rate, being of the same proposition, as the rewriter gives them."""
+    if calibration is None:
         return {}
     part = {split: [r for r in rows if r.split == split and r.id in data and r.id in opinions] for split in SPLITS}
     if not part["dev"]:
         return {}
-    alone = {r.id: opinions[r.id].discount(trust) for split in SPLITS for r in part[split]}
-    t = fit_data_trust([alone[r.id] for r in part["dev"]], [data[r.id] for r in part["dev"]], [r.label for r in part["dev"]])
+    rate = calibration[1]
+    alone = {r.id: calibrated(opinions[r.id], calibration) for split in SPLITS for r in part[split]}
+    source = {r.id: replace(data[r.id], base_rate=rate) for split in SPLITS for r in part[split]}
+    t = fit_data_trust([alone[r.id] for r in part["dev"]], [source[r.id] for r in part["dev"]],
+                       [r.label for r in part["dev"]])
     out: dict[str, Any] = {"trust": t}
     for split in SPLITS:
         y = [r.label for r in part[split]]
         if y:
             out[split] = {
                 "judge": probability_scores([alone[r.id].projection for r in part[split]], y),
-                "fused": probability_scores([alone[r.id].fuse(data[r.id].discount(t)).projection for r in part[split]], y),
+                "fused": probability_scores([alone[r.id].fuse(source[r.id].discount(t)).projection
+                                             for r in part[split]], y),
             }
     return out
 
 
-def run_judge(name: str, rows: Sequence[pairs.PairRow], data: dict[str, Opinion], dump: pathlib.Path | None
-              ) -> tuple[dict[str, Any], dict[str, Any]]:
+def run_judge(name: str, rows: Sequence[pairs.PairRow], data: dict[str, Opinion], rates: dict[str, float],
+              dump: pathlib.Path | None) -> tuple[dict[str, Any], dict[str, Any]]:
     """Judge every row and variant with one judge, then release it; returns its results, and its scores, thresholds
     and trusts by variant; `data` is the knowledge base's opinion of the rows it has evidence on."""
     import torch
@@ -204,7 +232,7 @@ def run_judge(name: str, rows: Sequence[pairs.PairRow], data: dict[str, Opinion]
     if gpu:
         torch.cuda.reset_peak_memory_stats()
     started = time.monotonic()
-    judge = make(name, threshold=0.5, trust=1.0)  # provisional; the calibrated values are written below
+    judge = make(name, threshold=0.5, trust=1.0, base_rate=0.5)  # provisional; the calibrated values are written below
     seconds: dict[str, float] = {"load": round(time.monotonic() - started, 2)}
     by_variant: dict[str, dict[str, Opinion]] = {}
     try:
@@ -226,27 +254,27 @@ def run_judge(name: str, rows: Sequence[pairs.PairRow], data: dict[str, Opinion]
                                              "opinion": [o.belief, o.disbelief, o.uncertainty]}) + "\n")
 
     variants: dict[str, Any] = {}
-    calibrated: dict[str, dict[str, float]] = {}
-    trusted: dict[str, dict[str, float]] = {}
+    thresholds: dict[str, dict[str, float]] = {}
+    calibrations: dict[str, dict[str, tuple[float, float]]] = {}
     data_trusted: dict[str, float | None] = {}
     scored: dict[str, dict[str, float]] = {}
     for variant, opinions in by_variant.items():
         scores = {key: o.belief for key, o in opinions.items()}
         own = thresholds_for(rows, scores)
-        trusts = trusts_for(rows, opinions)
-        calibrated[variant] = own
-        trusted[variant] = trusts
+        fits = calibrations_for(rows, opinions, rates)
+        thresholds[variant] = own
+        calibrations[variant] = fits
         scored[variant] = scores
         default = own.get(DEFAULT_SET)
-        trust = trusts.get(DEFAULT_SET)
-        with_data = data_measure([r for r in rows if r.set == DEFAULT_SET], opinions, data, trust)
+        fit = fits.get(DEFAULT_SET)
+        with_data = data_measure([r for r in rows if r.set == DEFAULT_SET], opinions, data, fit)
         data_trusted[variant] = with_data.get("trust")
         variants[variant] = {
             "thresholds": {"default": default, "by_set": own},
-            "trust": {"default": trust, "by_set": trusts},
+            "trust": {"default": fit and fit[0], "by_set": {k: t for k, (t, _) in fits.items()}},
             "data": with_data,
             "sets": {
-                name_: measure([r for r in rows if r.set == name_], opinions, default, own.get(name_), trust)
+                name_: measure([r for r in rows if r.set == name_], opinions, default, own.get(name_), fit)
                 for name_ in pairs.SETS
             },
         }
@@ -258,7 +286,8 @@ def run_judge(name: str, rows: Sequence[pairs.PairRow], data: dict[str, Opinion]
         "gpu_peak_gib": round(torch.cuda.max_memory_allocated() / 2**30, 3) if gpu else None,
         "variants": variants,
     }
-    return result, {"scores": scored, "thresholds": calibrated, "trusts": trusted, "data_trusts": data_trusted}
+    return result, {"scores": scored, "thresholds": thresholds, "calibrations": calibrations,
+                    "data_trusts": data_trusted}
 
 
 def hard_table(rows: Sequence[pairs.PairRow], scored: dict[str, dict[str, dict[str, float]]], previous: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -316,17 +345,19 @@ def main(argv: Sequence[str] | None = None) -> None:
     rows = pairs.load()
     pairs.check(rows)
     data = data_opinions(rows)
+    rates = base_rates(rows)
     results = json.loads(RESULTS.read_text()) if RESULTS.is_file() else {}
     table = json.loads(CALIBRATION.read_text()) if CALIBRATION.is_file() else {}
     judged: dict[str, Any] = {k: v for k, v in results.get("judges", {}).items() if k in NAMES}
     calibration: dict[str, Any] = {k: v for k, v in table.get("judges", {}).items() if k in NAMES}
     scored: dict[str, dict[str, dict[str, float]]] = {}
     for name in names:
-        judged[name], details = run_judge(name, rows, data, args.scores)
+        judged[name], details = run_judge(name, rows, data, rates, args.scores)
         scored[name] = details["scores"]
         engine = details["thresholds"][ENGINE_VARIANT]
+        trust, _ = details["calibrations"][ENGINE_VARIANT][DEFAULT_SET]
         calibration[name] = {"default": engine[DEFAULT_SET], "by_set": engine,
-                             "trust": details["trusts"][ENGINE_VARIANT][DEFAULT_SET],
+                             "trust": trust,
                              "data_trust": details["data_trusts"][ENGINE_VARIANT]}
 
     results = {
@@ -335,8 +366,10 @@ def main(argv: Sequence[str] | None = None) -> None:
             "rule": "maximum dev balanced accuracy of admitting scores at or above the threshold, middle of the optimal plateau",
             "default": f"{DEFAULT_SET} dev rows under each variant's fillers",
             "engine_variant": ENGINE_VARIANT,
-            "trust": "maximum dev likelihood of the labels under each opinion's projection after discounting by the "
-                     "trust (Josang 2016, Eq. 14.6)",
+            "trust": "maximum dev likelihood of the labels under each opinion's projection at its set's base rate "
+                     "after discounting by the trust (Josang 2016, Eq. 14.6)",
+            "base_rates": rates,
+            "base_rate": "each set's share of dev rows that hold: the projection of an opinion that says nothing",
             "data_trust": f"maximum likelihood on {DEFAULT_SET} dev rows with statements on both sides in "
                           f"{', '.join(p.name for p in EXAMPLES)}, of the judge's trusted opinion fused with the "
                           "knowledge base's evidence discounted by the data trust",
@@ -347,8 +380,10 @@ def main(argv: Sequence[str] | None = None) -> None:
     RESULTS.parent.mkdir(parents=True, exist_ok=True)
     RESULTS.write_text(json.dumps(results, indent=1, sort_keys=False) + "\n")
     CALIBRATION.write_text(json.dumps({
-        "about": f"written by experiments/judge_eval.py: the default threshold and the trust calibrated on "
-                 f"{DEFAULT_SET} dev rows with {ENGINE_VARIANT} fillers; by_set thresholds on each set's dev rows",
+        "about": f"written by experiments/judge_eval.py: the default threshold, and the trust and base rate, "
+                 f"calibrated on {DEFAULT_SET} dev rows with {ENGINE_VARIANT} fillers; by_set thresholds on each "
+                 "set's dev rows",
+        "base_rate": rates[DEFAULT_SET],
         "judges": dict(sorted(calibration.items())),
     }, indent=1) + "\n")
     print(f"wrote {RESULTS.relative_to(ROOT)} and {CALIBRATION.relative_to(ROOT)} for {', '.join(names)}")

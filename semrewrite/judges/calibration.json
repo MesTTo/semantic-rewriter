@@ -1,5 +1,6 @@
 {
- "about": "written by experiments/judge_eval.py: the default threshold and the trust calibrated on wikidata dev rows with letters fillers; by_set thresholds on each set's dev rows",
+ "about": "written by experiments/judge_eval.py: the default threshold, and the trust and base rate, calibrated on wikidata dev rows with letters fillers; by_set thresholds on each set's dev rows",
+ "base_rate": 0.21394395078605605,
  "judges": {
   "cosine-bge": {
    "default": 0.9571969956159592,
@@ -7,8 +8,8 @@
     "levyholt": 0.914429783821106,
     "wikidata": 0.9571969956159592
    },
-   "trust": 0.0,
-   "data_trust": 0.7003302255291408
+   "trust": 0.0015405690415950957,
+   "data_trust": 0.1712337126529756
   },
   "cosine-qwen3": {
    "default": 0.9751224517822266,
@@ -16,8 +17,8 @@
     "levyholt": 0.9468457251787186,
     "wikidata": 0.9751224517822266
    },
-   "trust": 0.0,
-   "data_trust": 0.7003302255291408
+   "trust": 0.0005580773307898176,
+   "data_trust": 0.16869232681763607
   },
   "jev": {
    "default": 0.165,
@@ -25,8 +26,8 @@
     "levyholt": 0.185,
     "wikidata": 0.165
    },
-   "trust": 0.9737370746599263,
-   "data_trust": 0.0
+   "trust": 0.9577107549078472,
+   "data_trust": 2.181545143210663e-13
   },
   "nli-deberta-base": {
    "default": 0.2221469032721426,
@@ -34,8 +35,8 @@
     "levyholt": 0.969776144155973,
     "wikidata": 0.2221469032721426
    },
-   "trust": 0.31013465083045644,
-   "data_trust": 0.7450492567208999
+   "trust": 0.31142980545519916,
+   "data_trust": 0.3635013542521893
   },
   "nli-deberta-large": {
    "default": 0.6592527778093171,
@@ -43,8 +44,8 @@
     "levyholt": 0.052514349387895676,
     "wikidata": 0.6592527778093171
    },
-   "trust": 0.41110153045595166,
-   "data_trust": 0.7691592696494101
+   "trust": 0.3478589585846057,
+   "data_trust": 0.40748712686605404
   },
   "nli-deberta-large-wanli": {
    "default": 0.05405977550547415,
@@ -52,8 +53,8 @@
     "levyholt": 0.11583818670626532,
     "wikidata": 0.05405977550547415
    },
-   "trust": 0.5886015562316702,
-   "data_trust": 0.773657185187064
+   "trust": 0.5238106237293019,
+   "data_trust": 0.4209902339069071
   },
   "reranker-qwen3": {
    "default": 0.8078806102275848,
@@ -61,8 +62,8 @@
     "levyholt": 0.8594942986965179,
     "wikidata": 0.8078806102275848
    },
-   "trust": 0.0,
-   "data_trust": 0.7003302255291408
+   "trust": 0.0775305415967679,
+   "data_trust": 0.26276143121521167
   }
  }
 }

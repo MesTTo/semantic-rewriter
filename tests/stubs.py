@@ -20,6 +20,7 @@ class TableJudge:
     name: str = "stub"
     threshold: float = 0.5
     trust: float = 1.0
+    base_rate: float = 0.5
     usage: dict[str, int] = field(default_factory=lambda: {"pairs": 0})
 
     def opinions(self, proposals: Sequence[Proposal]) -> list[Opinion]:

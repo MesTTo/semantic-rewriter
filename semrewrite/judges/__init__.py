@@ -81,6 +81,18 @@ def default_trust(name: str, path: pathlib.Path | None = None) -> float:
     return _calibrated(name, "trust", "trust", path)
 
 
+def default_base_rate(path: pathlib.Path | None = None) -> float:
+    """The rate at which the labelled dev proposals hold, every judge's base rate: what an opinion projects to where
+    it says nothing. It belongs to the proposals, not to a judge, so the calibration file holds it once; raises when
+    none was calibrated."""
+    path = CALIBRATION if path is None else path
+    table = json.loads(path.read_text()) if path.is_file() else {}
+    if "base_rate" not in table:
+        msg = f"no calibrated base_rate in {path}; run experiments/judge_eval.py or pass base_rate="
+        raise LookupError(msg)
+    return float(table["base_rate"])
+
+
 def default_data_trust(name: str, path: pathlib.Path | None = None) -> float:
     """The trust in the knowledge base's evidence on a rewrite, calibrated on dev rows jointly with judge `name`'s
     opinions, which it is fused with; the oracle needs none, being right by construction, so it gets 0."""
@@ -88,15 +100,16 @@ def default_data_trust(name: str, path: pathlib.Path | None = None) -> float:
 
 
 def make(
-    name: str, *, threshold: float | None = None, trust: float | None = None,
+    name: str, *, threshold: float | None = None, trust: float | None = None, base_rate: float | None = None,
     gold: Iterable[tuple[str, str, Any]] | None = None, **options: Any,
 ) -> Judge:
-    """The judge called `name`, at `threshold` and `trust` or their calibrated defaults.
+    """The judge called `name`, at `threshold`, `trust` and `base_rate` or their calibrated defaults.
 
     `options` reach the judge's constructor: `fillers=("X", "Y")` for any judge,
     `budget=` or `cache=` for Jev. "oracle" needs `gold`, the (premise,
     conclusion, mapping) triples that hold; a bool stands for a binary swap. The
-    oracle is right by construction, so its trust is complete unless given.
+    oracle is right by construction, so its trust is complete unless given, and
+    its opinions are certain, so its base rate never shows.
     """
     if name == "oracle":
         if gold is None:
@@ -107,6 +120,8 @@ def make(
             oracle.threshold = threshold
         if trust is not None:
             oracle.trust = trust
+        if base_rate is not None:
+            oracle.base_rate = base_rate
         return oracle
     if name not in REGISTRY:
         msg = f"unknown judge {name!r}; known: {', '.join(NAMES)}, oracle"
@@ -115,4 +130,5 @@ def make(
     chosen = default_threshold(name) if threshold is None else threshold
     judge = cls(name, chosen, **{**defaults, **options})
     judge.trust = default_trust(name) if trust is None else trust
+    judge.base_rate = default_base_rate() if base_rate is None else base_rate
     return judge

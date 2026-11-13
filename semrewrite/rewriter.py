@@ -264,7 +264,8 @@ class Rewriter:
         opinion = {rw.key: o for rw, o in zip(rewrites, self.scorer.opinions(proposals), strict=True)}
         if self.data_trust:
             evidence = rewrite_evidence(statements(self.kb.facts), rewrites)
-            opinion = {key: o.fuse(Opinion.from_evidence(*evidence[key]).discount(self.data_trust))
+            # Both sources are of one proposition, the rewrite, so the evidence takes the judge's base rate (SLN 3.1).
+            opinion = {key: o.fuse(Opinion.from_evidence(*evidence[key], o.base_rate).discount(self.data_trust))
                        for key, o in opinion.items()}
         return rewrites, opinion
 

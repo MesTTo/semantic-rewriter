@@ -1,7 +1,8 @@
 """Purpose: the measurements a judge evaluation reports over labelled rows:
 ROC AUC, direction accuracy over one-way pairs, the dev-calibrated threshold,
 accuracy, balanced accuracy, precision and recall at a threshold, the trust
-fitted to a judge's opinions, and the log loss and Brier score of probabilities.
+fitted to a judge's opinions and to a second source, and the log loss and Brier
+score of probabilities.
 
 Scores and labels are parallel sequences; a row is admitted when its score
 reaches the threshold, as the engine admits a rewrite. Unequal lengths raise

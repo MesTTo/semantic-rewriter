@@ -1,6 +1,7 @@
 """Purpose: tests of the direction judges behind semrewrite.judges.make: the
-factory's threshold and trust contract, the shared checks on opinions, the
-evaluation metrics and the trust fit against brute-force definitions, and each
+factory's threshold, trust and base-rate contract, the shared checks on opinions,
+the evaluation metrics, the base rate and the trust fit against brute-force
+definitions, and each
 model judge on the mother/parent case. Jev runs only from the experiment's
 answer cache, in a checkout that has data/raw/jev, with a request budget of
 zero, so these tests send no request.
@@ -19,9 +20,16 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from semrewrite import judges, pairs
-from semrewrite.judges import JEV_ANSWERS, NAMES, default_threshold, default_trust, make
+from semrewrite.judges import JEV_ANSWERS, NAMES, default_base_rate, default_threshold, default_trust, make
 from semrewrite.judges.base import SentenceJudge, sentence_pairs
-from semrewrite.judges.metrics import at_threshold, calibrate, direction, fit_trust, probability_scores, roc_auc
+from semrewrite.judges.metrics import (
+    at_threshold,
+    calibrate,
+    direction,
+    fit_trust,
+    probability_scores,
+    roc_auc,
+)
 from semrewrite.judges.oracle import OracleJudge
 from semrewrite.model import Predicate, Proposal
 from semrewrite.opinion import Opinion
@@ -79,17 +87,24 @@ def test_fillers_reach_the_sentences_per_proposal() -> None:
 
 def test_factory_reads_calibrated_thresholds_and_trusts(tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch) -> None:
     table = tmp_path / "calibration.json"
-    table.write_text(json.dumps({"judges": {"jev": {"default": 0.42, "trust": 0.8}, "cosine-qwen3": {"default": 0.9}}}))
+    table.write_text(json.dumps({"base_rate": 0.2, "judges": {"jev": {"default": 0.42, "trust": 0.8},
+                                                              "cosine-qwen3": {"default": 0.9}}}))
     monkeypatch.setattr(judges, "CALIBRATION", table)
     assert default_threshold("jev", table) == 0.42
     assert make("jev", budget=0).threshold == 0.42
     assert make("jev", threshold=0.7, budget=0).threshold == 0.7
     assert default_trust("jev", table) == make("jev", budget=0).trust == 0.8
     assert make("jev", trust=1.0, budget=0).trust == 1.0
+    assert default_base_rate(table) == make("jev", budget=0).base_rate == 0.2
+    assert make("jev", base_rate=0.5, budget=0).base_rate == 0.5
     with pytest.raises(LookupError):
         default_threshold("cosine-bge", table)
     with pytest.raises(LookupError, match="no calibrated trust"):
         default_trust("cosine-qwen3", table)
+    empty = tmp_path / "empty.json"
+    empty.write_text("{}")
+    with pytest.raises(LookupError, match="no calibrated base_rate"):
+        default_base_rate(empty)
     with pytest.raises(ValueError):
         make("no-such-judge", threshold=0.5)
 
@@ -98,6 +113,7 @@ def test_committed_calibration_covers_every_judge() -> None:
     for name in NAMES:
         assert 0.0 <= default_threshold(name) <= 1.0
         assert 0.0 <= default_trust(name) <= 1.0
+    assert 0.0 < default_base_rate() < 1.0
 
 
 def test_factory_builds_the_oracle_from_gold() -> None:
@@ -236,9 +252,24 @@ def test_evaluation_compares_only_one_way_pairs() -> None:
     scores = {"r1": 0.7, "f1": 0.2, "a": 0.9, "b": 0.8}
     assert judge_eval.one_way(rows, scores) == ([0.2], [0.7])
     opinions = {key: Opinion(s, 1.0 - s, 0.0) for key, s in scores.items()}
-    measured = judge_eval.measure(rows, opinions, default=0.5, own=None, trust=1.0)
+    measured = judge_eval.measure(rows, opinions, default=0.5, own=None, calibration=(1.0, 0.5))
     assert set(measured) == {"test"}
     assert measured["test"]["direction"] == {"pairs": 1, "accuracy": 0.0, "ties": 0.0}
     assert measured["test"]["at_default"]["admitted"] == 3
     # At complete trust each row holds with its score: Brier ((0.7 - 0)^2 + (0.2 - 1)^2 + (0.9 - 1)^2 + (0.8 - 1)^2) / 4.
     assert measured["test"]["at_default_trust"]["brier"] == pytest.approx((0.49 + 0.64 + 0.01 + 0.04) / 4)
+
+
+def test_evaluation_takes_a_set_s_base_rate_from_its_dev_rows_and_fits_trust_there() -> None:
+    """One of four dev rows holds, so the set's base rate is 1/4. A judge sure of the true row and silent on the
+    others is right wherever it speaks, so it is trusted fully, and its silence projects to 1/4, not one half."""
+    spec = importlib.util.spec_from_file_location("judge_eval", pathlib.Path(__file__).parents[1] / "experiments" / "judge_eval.py")
+    judge_eval = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(judge_eval)
+    rows = [pairs.PairRow(id=str(i), set="hard", split="dev", pair=str(i), kind="k", premise=MOTHER, conclusion=PARENT,
+                          swapped=False, label=i == 0, types=("person", "person")) for i in range(4)]
+    assert judge_eval.base_rates(rows) == {"hard": 0.25}
+    opinions = {"0": Opinion(1.0, 0.0, 0.0), **{str(i): Opinion(0.0, 0.0, 1.0) for i in range(1, 4)}}
+    ((trust, rate),) = judge_eval.calibrations_for(rows, opinions, {"hard": 0.25}).values()
+    assert (trust, rate) == (pytest.approx(1.0), 0.25)
+    assert judge_eval.calibrated(opinions["1"], (trust, rate)).projection == pytest.approx(0.25)

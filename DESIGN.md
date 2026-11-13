@@ -116,6 +116,7 @@ Reference implementations: `EmbeddingRetriever` embeds each gloss with its place
 class Judge(Protocol):
     threshold: float                      # calibration may set it
     trust: float                          # calibration may set it
+    base_rate: float                      # calibration may set it
     @property
     def name(self) -> str: ...
     @property
@@ -127,7 +128,7 @@ It returns one opinion per proposal, in input order, whose belief, the score, es
 
 `threshold` is the score at or above which the default admission policy admits a proposal. It is calibrated, never guessed (see Calibration).
 
-`trust` is the probability that the judge's opinions are right. Where answers are weighed, each of the judge's opinions is discounted by it (Jøsang 2016, Eq. 14.6): belief and disbelief are scaled by the trust and the rest becomes uncertainty, so a probability p from a judge trusted at t projects to a + t(p − a), its score drawn toward the base rate. It is calibrated with the threshold.
+`trust` is the probability that the judge's opinions are right. Where answers are weighed, each of the judge's opinions is discounted by it (Jøsang 2016, Eq. 14.6): belief and disbelief are scaled by the trust and the rest becomes uncertainty, so a probability p from a judge trusted at t projects to a + t(p − a), its score drawn toward the base rate a. `base_rate` is that a, the probability an opinion projects to where it says nothing: the rate at which the proposals a judge is asked about hold, not one half. It belongs to the proposals, so every judge calibrated on the same pairs has the same one, 0.214 on the Wikidata pairs, and an NLI judge's neutral answer projects there. Trust is calibrated with the threshold, at that base rate.
 
 Reference implementations: three NLI cross-encoders (DeBERTa-v3 base and large, and a DeBERTa-v3-large checkpoint trained on WANLI among other sets), a yes/no reranker (Qwen3-Reranker-0.6B), Jev (TypeSafe's hosted System One model, asked one yes/no question per proposal, with its answers cached on disk), two cosine judges kept as the similarity baseline, and an oracle judge that admits exactly a given set of implications, used by tests and to separate engine behaviour from judge error.
 
@@ -242,7 +243,7 @@ The rewriter refuses a strategy the engine's capabilities cannot run, rather tha
 A judge's threshold and a direction-aware policy's slack are frozen guesses unless they are fitted to data, so the reference implementation fits them:
 
 - On labelled predicate pairs, a threshold maximising balanced accuracy, and the slack that maximises balanced accuracy of the direction-aware policy.
-- On the same labelled pairs, each judge's trust: the trust maximising the labels' likelihood when each pair holds with the projection of the judge's opinion discounted by it. The projection is linear in the trust, so the log-likelihood is concave and its maximum is found by bisecting its derivative.
+- On the same labelled pairs, the base rate, the share of the dev pairs that hold, and each judge's trust: the trust maximising the labels' likelihood when each pair holds with the projection of the judge's opinion at the base rate discounted by it. The projection is linear in the trust, so the log-likelihood is concave and its maximum is found by bisecting its derivative.
 - On the labelled Wikidata pairs whose two properties both have statements in the examples' knowledge bases, each judge's data trust: the trust in the knowledge base's evidence that maximises the labels' likelihood once that evidence, discounted by it, is fused with the judge's trusted opinion. Fusion weighs each opinion by the other's uncertainty, so this likelihood need not be concave; a grid finds its best cell and golden-section search refines it.
 - On knowledge bases with gold answers, the threshold maximising answer F1 of a given strategy, chosen leave-one-knowledge-base-out: for each knowledge base, the threshold that is best on the others is scored on it.
 
@@ -284,7 +285,7 @@ These defaults come from the experiment in `RESULTS.md`: four generated knowledg
 - Discovery never invents predicates and never reads facts from text. Both would unfreeze the catalogue or the constants.
 - The rewriter admits rewrites and then reasons exactly. Answer beliefs come after evaluation, from each answer's lineage, and never steer unification, search or the stopping condition, as soft-unification systems' proof scores do.
 - Answer beliefs assume the admitted rewrites are valid independently of one another and of the knowledge base, which is taken as true. Two rewrites a judge misreads for one shared reason, such as two glosses that both mention ownership, are correlated: the belief of an answer needing both is then too low, and of an answer reachable through either too high.
-- Trust only shrinks a judge's opinions toward the base rate; it cannot recalibrate them. A judge that ranks pairs well but states miscalibrated probabilities gets little trust: reranker-qwen3 ranks Wikidata test pairs at ROC AUC 0.67, and its trust fits to 0.
+- Trust only shrinks a judge's opinions toward the base rate; it cannot recalibrate them. A judge that ranks pairs well but states miscalibrated probabilities gets little trust: reranker-qwen3 ranks Wikidata test pairs at ROC AUC 0.67, and its trust fits to 0.08.
 - A question asked in its own words states none of its predicates, so the knowledge base gives no evidence on its rewrites and the judge's opinions stand alone. What the other admitted rewrites derive could corroborate a rewrite, but reading it needs each rewrite's coverage of the relation: counted as if the others covered all of it, a valid rewrite deriving much that they miss reads as wrong, as `creator` did for Leonardo, 818 of the 858 works it states counted against it.
 - Beliefs need a lineage over named predicates, so a strategy that answers over merged alias classes refuses them, as it refuses proofs.
 - Admission decides each rewrite on its own. Choosing the rewrite set jointly under transitivity, as entailment-graph methods do, needs every pair's score before admitting anything, so it cannot run goal by goal.

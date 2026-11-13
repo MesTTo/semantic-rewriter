@@ -195,12 +195,15 @@ class Judge(Protocol):
     calibrated score at which the default admission policy admits, and
     calibration may set it; `trust` is the probability that the judge's
     opinions are right, which discounts them (Jøsang 2016, Eq. 14.6) where
-    answers are weighed; `usage` counts the model work spent, under units the
-    judge names.
+    answers are weighed; `base_rate` is the probability an opinion projects
+    to where it says nothing, the rate at which proposed rewrites hold, set
+    on its opinions before trust discounts them; `usage` counts the model
+    work spent, under units the judge names.
     """
 
     threshold: float
     trust: float
+    base_rate: float
 
     @property
     def name(self) -> str: ...
