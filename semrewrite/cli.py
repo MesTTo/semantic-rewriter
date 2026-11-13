@@ -192,6 +192,42 @@ def cmd_convert(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_judge(args: argparse.Namespace) -> int:
+    """Judge sentence pairs read from standard input, one JSON object per line with a premise and a conclusion, and
+    write each pair's opinion as a JSON line in the same order, calibrated as answers weigh opinions: at the judge's
+    base rate, discounted by its trust, either of which --base-rate and --trust replace for another population of
+    pairs. A line not holding a premise and a conclusion that are both strings is refused, naming the line."""
+    from semrewrite.judges import make
+    from semrewrite.judges.base import SentenceJudge
+    from semrewrite.protocols import calibrated
+
+    pairs: list[tuple[str, str]] = []
+    for number, line in enumerate(sys.stdin, start=1):
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError as e:
+            msg = f"line {number} is not JSON: {e}"
+            raise ValueError(msg) from e
+        if not (isinstance(row, dict) and all(isinstance(row.get(k), str) for k in ("premise", "conclusion"))):
+            msg = f"line {number} is not a JSON object holding a premise and a conclusion, both strings"
+            raise ValueError(msg)  # noqa: TRY004 - bad input, which main() reports as an error, not a programming fault
+        pairs.append((row["premise"], row["conclusion"]))
+    overrides = {k: v for k, v in (("trust", args.trust), ("base_rate", args.base_rate)) if v is not None}
+    judge = make(args.judge, **overrides)
+    try:
+        if not isinstance(judge, SentenceJudge):
+            msg = f"judge {args.judge} does not read sentences"
+            raise ValueError(msg)  # noqa: TRY004 - a judge name it cannot use, which main() reports as others
+        opinions = calibrated(judge, judge.sentence_opinions(pairs))
+    finally:
+        judge.close()
+    for (premise, conclusion), o in zip(pairs, opinions, strict=True):
+        print(json.dumps({"premise": premise, "conclusion": conclusion, **_opinion_json(o)}))
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     top = argparse.ArgumentParser(prog="semrewrite", description="Semantic rewriting over logic engines.")
     sub = top.add_subparsers(dest="command", required=True)
@@ -250,6 +286,12 @@ def parser() -> argparse.ArgumentParser:
     convert.add_argument("source")
     convert.add_argument("target")
     convert.set_defaults(run=cmd_convert)
+
+    judge = sub.add_parser("judge", help="judge sentence pairs read as JSON lines on standard input")
+    judge.add_argument("--judge", default="nli-deberta-large", help="judge name")
+    judge.add_argument("--trust", type=float, help="the trust to discount by, in place of the calibrated one")
+    judge.add_argument("--base-rate", type=float, help="the base rate to set, in place of the calibrated one")
+    judge.set_defaults(run=cmd_judge)
     return top
 
 

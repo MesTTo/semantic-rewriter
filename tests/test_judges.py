@@ -294,3 +294,37 @@ def test_evaluation_takes_a_set_s_base_rate_from_its_dev_rows_and_fits_trust_the
     ((trust, rate),) = judge_eval.calibrations_for(rows, opinions, {"hard": 0.25}).values()
     assert (trust, rate) == (pytest.approx(1.0), 0.25)
     assert judge_eval.calibrated(opinions["1"], (trust, rate)).projection == pytest.approx(0.25)
+
+
+def test_the_judge_command_writes_each_pair_s_calibrated_opinion_in_order(monkeypatch, capsys) -> None:
+    """Two pairs in, two JSON lines out in the same order, at the trust and base rate given on the command line."""
+    import io
+
+    from semrewrite.cli import main
+
+    def factory(name, **overrides):
+        judge = Constant(lambda p, c: 0.8 if "emails" in p else 0.2)
+        judge.trust, judge.base_rate = overrides.get("trust", 1.0), overrides.get("base_rate", 0.5)
+        return judge
+
+    monkeypatch.setattr(judges, "make", factory)
+    lines = [json.dumps({"premise": p, "conclusion": "The data is personal."}) for p in ("Logs hold emails.", "All green.")]
+    monkeypatch.setattr("sys.stdin", io.StringIO("\n".join(lines) + "\n\n"))
+    assert main(["judge", "--trust", "0.5", "--base-rate", "0.2"]) == 0
+    out = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    assert [r["premise"] for r in out] == ["Logs hold emails.", "All green."]
+    assert (out[0]["belief"], out[0]["uncertainty"], out[0]["base_rate"]) == pytest.approx((0.4, 0.5, 0.2))
+    assert out[1]["projection"] == pytest.approx(0.1 + 0.2 * 0.5)
+
+
+def test_the_judge_command_refuses_a_line_without_two_sentences_naming_it(monkeypatch, capsys) -> None:
+    import io
+
+    from semrewrite.cli import main
+
+    monkeypatch.setattr(judges, "make", lambda name, **o: Constant(lambda p, c: 0.5))
+    for text, said in (('{"premise": "a"}\n', "line 1 is not a JSON object"), ('\n{"premise": "a", "conclusion"\n',
+                                                                                     "line 2 is not JSON")):
+        monkeypatch.setattr("sys.stdin", io.StringIO(text))
+        assert main(["judge"]) == 1
+        assert said in capsys.readouterr().err
