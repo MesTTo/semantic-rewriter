@@ -44,7 +44,6 @@ import sys
 import time
 from collections import defaultdict
 from collections.abc import Sequence
-from dataclasses import replace
 from typing import Any
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -132,7 +131,7 @@ def measure(rows: Sequence[pairs.PairRow], opinions: dict[str, Opinion], default
 def calibrated(o: Opinion, calibration: tuple[float, float]) -> Opinion:
     """A judge's opinion at a calibrated (trust, base rate), as the score cache gives it to the rewriter."""
     trust, rate = calibration
-    return replace(o, base_rate=rate).discount(trust)
+    return o.with_base_rate(rate).discount(trust)
 
 
 def thresholds_for(rows: Sequence[pairs.PairRow], scores: dict[str, float]) -> dict[str, float]:
@@ -164,7 +163,7 @@ def calibrations_for(rows: Sequence[pairs.PairRow], opinions: dict[str, Opinion]
     for name in pairs.SETS:
         dev = [r for r in rows if r.set == name and r.split == "dev" and r.id in opinions]
         if dev:
-            at = [replace(opinions[r.id], base_rate=rates[name]) for r in dev]
+            at = [opinions[r.id].with_base_rate(rates[name]) for r in dev]
             out[name] = (fit_trust(at, [r.label for r in dev]), rates[name])
     return out
 
@@ -207,7 +206,7 @@ def data_measure(rows: Sequence[pairs.PairRow], opinions: dict[str, Opinion], da
         return {}
     rate = calibration[1]
     alone = {r.id: calibrated(opinions[r.id], calibration) for split in SPLITS for r in part[split]}
-    source = {r.id: replace(data[r.id], base_rate=rate) for split in SPLITS for r in part[split]}
+    source = {r.id: data[r.id].with_base_rate(rate) for split in SPLITS for r in part[split]}
     t = fit_data_trust([alone[r.id] for r in part["dev"]], [source[r.id] for r in part["dev"]],
                        [r.label for r in part["dev"]])
     out: dict[str, Any] = {"trust": t}

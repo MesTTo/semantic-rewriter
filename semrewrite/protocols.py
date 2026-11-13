@@ -218,6 +218,12 @@ class Judge(Protocol):
         ...
 
 
+def calibrated(judge: Judge, opinions: Iterable[Opinion]) -> list[Opinion]:
+    """`judge`'s opinions as an answer weighs them: at the judge's base rate, discounted by its trust (Jøsang 2016,
+    Eq. 14.6)."""
+    return [o.with_base_rate(judge.base_rate).discount(judge.trust) for o in opinions]
+
+
 @runtime_checkable
 class Admission(Protocol):
     """Decides which scored proposals become rewrites.

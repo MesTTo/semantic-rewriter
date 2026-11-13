@@ -222,6 +222,12 @@ class Opinion:
             rate,
         )
 
+    def with_base_rate(self, base_rate: float) -> Opinion:
+        """The same belief, disbelief and uncertainty at `base_rate`: the prior the opinion projects to where it says
+        nothing, which belongs to the population its proposition is drawn from (J 3.5), as a judge's calibration sets
+        it for the proposals it judges."""
+        return Opinion(self.belief, self.disbelief, self.uncertainty, base_rate)
+
     def discount(self, trust: float) -> Opinion:
         """The opinion as relayed by a source trusted with probability `trust` (J Def 14.6, SNARS `sn discount-op`).
 

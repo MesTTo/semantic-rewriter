@@ -14,12 +14,12 @@ proposals, 2k + 1 for binary goals.
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 
 from semrewrite.admission import Threshold
 from semrewrite.model import Key, Predicate, Proposal, Rewrite, identity, mappings
 from semrewrite.opinion import Opinion
-from semrewrite.protocols import Admission, Judge, Retriever
+from semrewrite.protocols import Admission, Judge, Retriever, calibrated
 from semrewrite.trace import Expanded, Remembered, Tracer
 
 
@@ -73,8 +73,7 @@ class ScoreCache:
     def opinions(self, proposals: Sequence[Proposal]) -> list[Opinion]:
         """The judge's opinion of each proposal at the judge's base rate, discounted by the judge's trust (Jøsang
         2016, Eq. 14.6), the opinion an answer's belief weighs."""
-        trust, rate = self.judge.trust, self.judge.base_rate
-        return [replace(o, base_rate=rate).discount(trust) for o in self._judged(proposals)]
+        return calibrated(self.judge, self._judged(proposals))
 
 
 @dataclass

@@ -51,8 +51,8 @@ def sentence_pairs(proposals: Sequence[Proposal], fillers: Sequence[Fillers]) ->
 class SentenceJudge:
     """A judge giving opinions of proposals through the sentences they state.
 
-    `usage["pairs"]` counts every proposal judged and `usage["calls"]` every
-    non-empty `opinions` call; nothing is memoised, so a caller asking twice is
+    `usage["pairs"]` counts every pair of sentences judged and `usage["calls"]`
+    every non-empty call; nothing is memoised, so a caller asking twice is
     charged twice, which is what the engine's call counts measure. `trust` is
     complete, 1, and `base_rate` one half, until the judge factory sets the
     calibrated ones.
@@ -73,12 +73,18 @@ class SentenceJudge:
         evaluation can fill each row's arguments with its typed nouns or instances.
         """
         chosen = fillers if fillers is not None else [self.fillers] * len(proposals)
-        pairs = sentence_pairs(proposals, chosen)
+        return self.sentence_opinions(sentence_pairs(proposals, chosen))
+
+    def sentence_opinions(self, pairs: Sequence[tuple[str, str]]) -> list[Opinion]:
+        """An opinion per (premise, conclusion) pair of sentences, in order, that the premise entails the conclusion:
+        the judge applied to sentences written directly, such as a request's text and a statement it may support,
+        rather than read from predicate glosses. The opinions are the judge's own; semrewrite.protocols.calibrated
+        gives them as the rewriter weighs them."""
         if not pairs:
             return []
         opinions = list(self._opinions(pairs))
         if len(opinions) != len(pairs):
-            msg = f"{self.name} returned {len(opinions)} opinions for {len(pairs)} proposals"
+            msg = f"{self.name} returned {len(opinions)} opinions for {len(pairs)} pairs"
             raise RuntimeError(msg)
         self.usage["pairs"] += len(pairs)
         self.usage["calls"] += 1

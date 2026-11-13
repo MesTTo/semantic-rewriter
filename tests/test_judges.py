@@ -33,7 +33,7 @@ from semrewrite.judges.metrics import (
 from semrewrite.judges.oracle import OracleJudge
 from semrewrite.model import Predicate, Proposal
 from semrewrite.opinion import Opinion
-from semrewrite.protocols import Judge
+from semrewrite.protocols import Judge, calibrated
 
 MOTHER = Predicate("mother", "{x} is the mother of {y}")
 PARENT = Predicate("parent", "{x} is a parent of {y}")
@@ -66,6 +66,27 @@ def test_base_scores_in_order_and_counts_usage() -> None:
     assert judge.usage == {"pairs": 4, "calls": 2}
     assert judge.trust == 1.0
     assert isinstance(judge, Judge)
+
+
+def test_sentences_written_directly_are_judged_as_written_and_counted() -> None:
+    """A request's text against a statement it may support reaches the model unchanged, one pair per opinion, and
+    counts as proposals do."""
+    judge = Constant(lambda p, c: 0.8 if "emails" in p else 0.2)
+    pairs = [("Raw logs include customer emails.", "The data contains personal information."),
+             ("The build is green.", "The data contains personal information.")]
+    assert judge.sentence_opinions([]) == [] and judge.usage == {"pairs": 0, "calls": 0}
+    got = judge.sentence_opinions(pairs)
+    assert judge.seen == pairs and judge.usage == {"pairs": 2, "calls": 1}
+    assert [o.belief for o in got] == pytest.approx([0.8, 0.2])
+
+
+def test_calibration_sets_the_base_rate_then_discounts_by_trust() -> None:
+    """At trust 0.5 and base rate 0.2, (0.8, 0.2, 0) becomes (0.4, 0.1, 0.5) at 0.2, projecting to 0.5."""
+    judge = Constant(lambda p, c: 0.8)
+    judge.trust, judge.base_rate = 0.5, 0.2
+    (o,) = calibrated(judge, judge.sentence_opinions([("a", "b")]))
+    assert (o.belief, o.disbelief, o.uncertainty, o.base_rate) == pytest.approx((0.4, 0.1, 0.5, 0.2))
+    assert o.projection == pytest.approx(0.5)
 
 
 def test_base_refuses_scores_that_are_not_probabilities() -> None:
