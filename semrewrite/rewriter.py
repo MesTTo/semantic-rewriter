@@ -12,8 +12,11 @@ implementing semrewrite.protocols.Engine, and alias canonicalisation.
 
 The rewriter owns discovery and hands the engine either every rewrite up
 front (eager, saturate, rounds) or a callback it calls while it evaluates
-(lazy). It refuses a strategy whose needs the engine's capabilities do not
-cover, rather than running something else under its name.
+(lazy). Every rewrite discovery admits is checked against what the knowledge
+base states (semrewrite.claims): one a statement clearly contradicts is
+withdrawn before the engine sees it. It refuses a strategy whose needs the
+engine's capabilities do not cover, rather than running something else under
+its name.
 """
 
 from __future__ import annotations
@@ -25,7 +28,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, get_args
 
-from semrewrite.claims import weigh
+from semrewrite.claims import default_check, weigh
 from semrewrite.discovery import Discoverer, ScoreCache
 from semrewrite.evidence import rewrite_evidence, statements
 from semrewrite.kb import KB
@@ -125,11 +128,13 @@ class Outcome:
     """One query's answers under one strategy, judge and engine, with what they cost and how the run ended.
 
     `admitted` holds the keys of the rewrites the judge admitted while
-    answering, as discovery saw them (before any alias renaming); `proofs`
+    answering, as discovery saw them (before any alias renaming), and
+    `defeated` those the claim check withdrew, each with the readings of the
+    statements that clearly contradict it; `proofs`
     holds a derivation per answer when the engine provides them; `beliefs`, when the rewriter was asked for them,
     holds each answer's opinion that some derivation's rewrites are all valid, and `rewrite_beliefs` each admitted
-    rewrite's opinion that it is valid, which those answers' opinions are computed from; `readings`, when the
-    rewriter has a claim check, holds the statements read against each admitted rewrite (semrewrite.claims).
+    rewrite's opinion that it is valid, which those answers' opinions are computed from; `readings`, with beliefs and
+    a claim check, holds the statements read against each admitted rewrite (semrewrite.claims).
     """
 
     kb: str
@@ -145,6 +150,7 @@ class Outcome:
     proposals: int = 0
     retrievals: int = 0
     admitted: set[Key] = field(default_factory=set)
+    defeated: dict[Key, tuple[Reading, ...]] = field(default_factory=dict)
     rounds: int = 0
     work: int = 0
     tables: int = 0
@@ -200,9 +206,11 @@ class Rewriter:
             msg = f"data trust is a probability, not {data_trust}"
             raise ValueError(msg)
         self.data_trust = data_trust
-        # Reads each admitted rewrite against the knowledge base's statements by meaning (semrewrite.claims); its
-        # readings fuse into the rewrite's opinion after the knowledge base's evidence does.
-        self.claims = claims
+        # Reads each admitted rewrite against the knowledge base's statements by meaning (semrewrite.claims): a clear
+        # contradiction withdraws it in discovery, and the other readings fuse into its opinion after the knowledge
+        # base's evidence does. Unless given one, the run's judge reads and the run's retriever chooses what it reads;
+        # None only where the judge reads no sentences and the knowledge base states nothing to read.
+        self.claims = claims if claims is not None else default_check(kb, self.scorer.judge, retriever)
         self._rules_by_head: dict[str, list[Rule]] = defaultdict(list)
         for rule in kb.rules:
             self._rules_by_head[rule.head.pred].append(rule)
@@ -210,7 +218,7 @@ class Rewriter:
     def discoverer(self, memo: bool = True) -> Discoverer:
         """A fresh discoverer over this knowledge base's catalogue; share one across asks to share its memo."""
         return Discoverer(self.catalogue, self.retriever, self.scorer, k=self.k, memo=memo, admission=self.admission,
-                          trace=self.trace)
+                          trace=self.trace, check=self.claims)
 
     def check(self, strategy: Strategy) -> None:
         """Raise CapabilityError naming every capability `strategy`, and proofs when asked for, needs that the
@@ -266,8 +274,9 @@ class Rewriter:
     def rewrite_opinions(self, keys: Iterable[Key]) -> tuple[tuple[Rewrite, ...], dict[Key, Opinion]]:
         """The rewrites with these (premise, conclusion, mapping) keys, each at its score, and the opinion that each is
         valid: its judge's opinion discounted by the judge's trust, fused by cumulative fusion (Jøsang 2016,
-        Def. 12.5) with the knowledge base's evidence on it (semrewrite.evidence) discounted by the data trust, and,
-        with a claim check, with the readings of the statements that bear on its claim (semrewrite.claims.weigh).
+        Def. 12.5) with the knowledge base's evidence on it (semrewrite.evidence) discounted by the data trust, and
+        with the readings of the statements that bear on its claim, discounted by the judge's check trust
+        (semrewrite.claims.weigh).
         Both read only the knowledge base, so a rewrite's opinion does not depend on which other rewrites the keys
         hold. The score cache holds every proposal discovery asked, so no judge is asked again about a proposal, and
         the check reads each claim once."""
@@ -352,8 +361,9 @@ class Rewriter:
     def _exact(self, strategy: Strategy, query: Atom, disc: Discoverer, out: Outcome) -> None:
         self._solve(self._program(), query, out)
 
-    def _worklist(self, start: str, disc: Discoverer) -> list[Rewrite]:
-        """Rewrites reachable from `start`: each expanded predicate's premises and rule bodies join the worklist."""
+    def _worklist(self, start: str, disc: Discoverer) -> tuple[list[Rewrite], set[str]]:
+        """Rewrites reachable from `start`, and the predicates expanded to reach them: each expanded predicate's
+        premises and rule bodies join the worklist."""
         pending, seen, found = [start], set(), {}
         while pending:
             p = pending.pop()
@@ -365,11 +375,12 @@ class Rewriter:
                 pending.append(rw.premise)
             for rule in self._rules_by_head.get(p, ()):
                 pending.extend(a.pred for a in rule.body)
-        return list(found.values())
+        return list(found.values()), seen
 
     def _eager(self, strategy: Strategy, query: Atom, disc: Discoverer, out: Outcome) -> None:
-        rewrites = self._worklist(query.pred, disc)
+        rewrites, goals = self._worklist(query.pred, disc)
         out.admitted = {rw.key for rw in rewrites}
+        out.defeated = _defeated(disc, goals)
         if not strategy.canonical:
             self._solve(self._program(rewrites), query, out)
             return
@@ -386,14 +397,17 @@ class Rewriter:
             for rw in disc.rewrites(p):
                 found.setdefault(rw.key, rw)
         out.admitted = set(found)
+        out.defeated = _defeated(disc, self.catalogue)
         self._solve(self._program(found.values()), query, out)
 
     def _lazy(self, strategy: Strategy, query: Atom, disc: Discoverer, out: Outcome) -> None:
         admitted: set[Key] = set()
+        goals: set[str] = set()
 
         def expand(p: str) -> Iterator[Rewrite]:
             if p not in self.catalogue:
                 return
+            goals.add(p)
             for rw in disc.rewrites(p):
                 admitted.add(rw.key)
                 yield rw
@@ -401,6 +415,7 @@ class Rewriter:
         self._solve(self._program(tabled=strategy.tabled, depth=strategy.depth, depth_counts=strategy.depth_counts),
                     query, out, expand)
         out.admitted = admitted
+        out.defeated = _defeated(disc, goals)
 
     def _rounds(self, strategy: Strategy, query: Atom, disc: Discoverer, out: Outcome) -> None:
         """Evaluate, expand every predicate the evaluation reached, add the rewrites and evaluate again,
@@ -432,6 +447,12 @@ class Rewriter:
             if len(added) == before:
                 break
         out.admitted = set(added)
+        out.defeated = _defeated(disc, expanded)
+
+
+def _defeated(disc: Discoverer, goals: Iterable[str]) -> dict[Key, tuple[Reading, ...]]:
+    """The rewrites concluding `goals` that the claim check withdrew in `disc`, each with the readings defeating it."""
+    return {key: readings for key, (_, readings) in disc.defeats(goals).items()}
 
 
 class GroupUnionFind:

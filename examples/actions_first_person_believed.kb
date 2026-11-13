@@ -1,0 +1,27 @@
+% The same eight actions stated in the first person, with no arguments, and asked whether I waste time: a statement
+% with no holes is a predicate with no arguments, and a rewrite between two of them is a plain semantic match.
+% This is examples/actions_first_person.kb with "I consider gaming to be productive" stated.
+gloss watch_tv "I watch TV".
+gloss play_games "I play video games".
+gloss scroll_feed "I scroll social media".
+gloss study "I study for an exam".
+gloss exercise "I go for a run".
+gloss sleep_early "I go to bed early".
+gloss pay_bills "I pay the bills".
+gloss read_book "I read a book".
+gloss wastes_time "I waste time".
+
+watch_tv.
+play_games.
+scroll_feed.
+study.
+exercise.
+sleep_early.
+pay_bills.
+read_book.
+
+% The belief, stated as a gloss and a fact with no arguments, which the claim check reads against each rewrite.
+gloss gaming_productive "I consider gaming to be productive".
+gaming_productive.
+
+query wastes_time.

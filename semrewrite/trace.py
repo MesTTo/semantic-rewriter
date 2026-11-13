@@ -3,8 +3,9 @@ them as they happen. `semrewrite ask --trace` passes a TextTrace to the rewriter
 
 The engine starts (Solving), evaluation reaches a predicate and the discoverer
 expands it, retrieving candidates and asking the judge about each (Expanded),
-later asks for the same predicate's rewrites come from the memo (Remembered),
-and the engine stops (Solved). With lazy discovery the expansions happen
+the claim check withdraws an admitted rewrite that a statement clearly
+contradicts (Defeated), later asks for the same predicate's rewrites come from
+the memo (Remembered), and the engine stops (Solved). With lazy discovery the expansions happen
 between Solving and Solved, inside evaluation; the other timings expand before
 the engine starts.
 """
@@ -58,13 +59,24 @@ class Expanded:
 
 
 @dataclass(frozen=True, slots=True)
+class Defeated:
+    """The claim check withdrew `rewrite`, which the admission policy took: the judge reads each of `statements`, with
+    the disbelief beside it, as contradicting `claim` at or above `threshold`."""
+
+    rewrite: Rewrite
+    claim: str
+    statements: tuple[tuple[str, float], ...]
+    threshold: float
+
+
+@dataclass(frozen=True, slots=True)
 class Remembered:
     """An ask for the rewrites concluding `goal`, answered from the discoverer's memo without asking the judge."""
 
     goal: str
 
 
-Event = Solving | Solved | Expanded | Remembered
+Event = Solving | Solved | Expanded | Defeated | Remembered
 Tracer = Callable[[Event], None]
 """Receives each event as it happens."""
 
@@ -110,6 +122,10 @@ class TextTrace:
                             f"{plural(len(program.rules), 'rule')}, with {known}")
             case Expanded():
                 self._expanded_event(event)
+            case Defeated(rewrite, claim, statements, threshold):
+                for statement, disbelief in statements:
+                    self._print(f'  withdrawn: {rewrite}, since "{statement}" contradicts "{claim}" '
+                                f"(d {disbelief:.3f}, threshold {threshold:.3f})")
             case Remembered(goal):
                 self._remembered[goal] += 1
             case Solved(engine, solution):

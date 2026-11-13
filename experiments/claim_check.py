@@ -1,9 +1,10 @@
 """Purpose: show what the claim check does to the actions example: examples/actions.kb, eight people each
 doing one thing and asked who wastes time, and examples/actions_first_person.kb, the same actions stated in the first
-person with no arguments and asked whether I waste time. Each is asked with the check on, without and with "I consider
-gaming to be productive" stated, at the judge's calibrated rewrite threshold and at LOW, and it records each answer's
-opinion, each admitted rewrite's opinion, the statements read against each and the check's cost in judge pairs and
-seconds.
+person with no arguments and asked whether I waste time. Each is asked as the rewriter always asks, checking every
+rewrite it admits, without and with "I consider gaming to be productive" stated, at the judge's calibrated rewrite
+threshold and at LOW, and it records each answer's opinion, each admitted rewrite's opinion with the statements read
+against it, each rewrite the check withdrew with the statements contradicting it, the judge's check trust and the
+check's cost in judge pairs and seconds.
 
 Run from the repository root: python experiments/claim_check.py [--judge NAME ...]. It writes
 results/claim_check_actions.json, which RESULTS.md's table reads, keeping the runs of judges it was not asked for.
@@ -50,8 +51,9 @@ def believing(kb: KB) -> KB:
 
 
 def run(judge, form: str, believed: bool, threshold: float, embedder: EmbeddingRetriever) -> dict:
-    """One ask of `form` with the check on, `judge` admitting at `threshold`: its answers, its matches and the
-    statements read against each."""
+    """One ask of `form`, `judge` admitting at `threshold`: its answers, its matches with the statements read against
+    each, and the matches the check withdrew with the statements contradicting each. The check is the rewriter's
+    default one, given the run's embedding model so the runs share it."""
     kb = formats.load(FORMS[form])
     kb = believing(kb) if believed else kb
     judge.threshold = threshold
@@ -66,23 +68,32 @@ def run(judge, form: str, believed: bool, threshold: float, embedder: EmbeddingR
     def opinion(o) -> dict[str, float]:
         return {"P": o.projection, "b": o.belief, "d": o.disbelief, "u": o.uncertainty}
 
+    def score(premise: str, conclusion: str, m) -> float:
+        return rewriter.scorer.score([Proposal(rewriter.catalogue[premise], rewriter.catalogue[conclusion], m)])[0]
+
+    def statement(r) -> dict:
+        return {"statement": r.statement, "similarity": r.similarity, "side": r.side, **opinion(r.opinion),
+                "stance": opinion(r.stance)}
+
     return {
-        "judge": judge.name, "form": form, "believed": believed, "threshold": threshold,
+        "judge": judge.name, "form": form, "believed": believed, "threshold": threshold, "check_trust": check.trust,
         "answers": {",".join(row) or "()": opinion(o) for row, o in sorted(out.beliefs.items())},
         "matches": {f"{premise} => {conclusion}": {
             **opinion(out.rewrite_beliefs[(premise, conclusion, m)]), "mapping": list(m),
-            "score": rewriter.scorer.score([Proposal(rewriter.catalogue[premise], rewriter.catalogue[conclusion], m)])[0],
-            "claim": check.claim((premise, conclusion, m)),
-            "read": [{"statement": r.statement, "similarity": r.similarity, "side": r.side, **opinion(r.opinion)}
-                     for r in out.readings[(premise, conclusion, m)]]}
+            "score": score(premise, conclusion, m), "claim": check.claim((premise, conclusion, m)),
+            "read": [statement(r) for r in out.readings[(premise, conclusion, m)]]}
             for premise, conclusion, m in sorted(out.admitted)},
+        "withdrawn": {f"{premise} => {conclusion}": {
+            "mapping": list(m), "score": score(premise, conclusion, m), "claim": check.claim((premise, conclusion, m)),
+            "contradicted_by": [statement(r) for r in out.defeated[(premise, conclusion, m)]]}
+            for premise, conclusion, m in sorted(out.defeated)},
         "cost": {"claims": check.usage["claims"], "pairs": check.usage["pairs"], "statements": check.usage["statements"],
                  "seconds": check.seconds},
     }
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Ask the actions example with the claim check on.")
+    parser = argparse.ArgumentParser(description="Ask the actions example, without and with the gaming belief.")
     parser.add_argument("--judge", nargs="+", default=["nli-deberta-large"])
     args = parser.parse_args()
     kept = [r for r in json.loads(OUT.read_text()) if r["judge"] not in args.judge] if OUT.is_file() else []

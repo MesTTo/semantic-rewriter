@@ -58,7 +58,7 @@ sys.path.insert(0, str(ROOT))
 from examples.wikidata.questions import property_id
 from semrewrite import formats, pairs
 from semrewrite.evidence import rewrite_evidence
-from semrewrite.judges import CALIBRATION, DEFAULT_SET, JEV_REQUESTS, NAMES, REGISTRY, make
+from semrewrite.judges import CALIBRATION, CHECK_SET, DEFAULT_SET, JEV_REQUESTS, NAMES, REGISTRY, make
 from semrewrite.judges.metrics import (
     at_threshold,
     calibrate,
@@ -307,18 +307,23 @@ def run_judge(name: str, rows: Sequence[pairs.PairRow], data: dict[str, Opinion]
 
 def calibration_file(entries: dict[str, dict[str, Any]], rates: dict[str, float]) -> dict[str, Any]:
     """What calibration.json holds: each judge's entry, naming its set unless that is Wikidata's, and the base rate of
-    every set some entry is calibrated on, once.
+    every set some entry is calibrated on, once, the check trust's set among them where an entry holds one.
 
     >>> calibration_file({"a": {"trust": 0.5}, "b": {"set": "copa", "trust": 0.6}}, {"wikidata": 0.2, "copa": 0.5,
     ...                  "hard": 0.3})["sets"]
     {'copa': {'base_rate': 0.5}, 'wikidata': {'base_rate': 0.2}}
+    >>> sorted(calibration_file({"a": {"trust": 0.5, "check_trust": 0.7}}, {"wikidata": 0.2, CHECK_SET: 0.5})["sets"])
+    ['delta-atomic', 'wikidata']
     """
-    homes = sorted({entry.get("set", DEFAULT_SET) for entry in entries.values()})
+    checked = {CHECK_SET} if any("check_trust" in entry for entry in entries.values()) else set()
+    homes = sorted({entry.get("set", DEFAULT_SET) for entry in entries.values()} | checked)
     return {
         "about": f"written by experiments/judge_eval.py: each judge's default threshold and trust, calibrated with "
                  f"{ENGINE_VARIANT} fillers on the dev rows of the set its entry names, {DEFAULT_SET}'s where it "
                  "names none, and each such set's base rate, the share of its dev rows that hold; by_set thresholds "
-                 "on each set's dev rows",
+                 f"on each set's dev rows; check_trust, where an entry holds one, is written by "
+                 f"experiments/check_trust.py: the claim check's trust in the judge's reading of a statement against a "
+                 f"claim, fitted on {CHECK_SET}'s dev updates read against their inferences",
         "sets": {home: {"base_rate": rates[home]} for home in homes},
         "judges": dict(sorted(entries.items())),
     }
@@ -397,8 +402,11 @@ def main(argv: Sequence[str] | None = None) -> None:
         engine = details["thresholds"][ENGINE_VARIANT]
         home = details["set"]
         trust, _ = details["calibrations"][ENGINE_VARIANT][home]
+        # The check trust is experiments/check_trust.py's to fit, so a judge's entry keeps the one it holds.
+        kept = {k: v for k, v in calibration.get(name, {}).items() if k == "check_trust"}
         calibration[name] = {**({"set": home} if home != DEFAULT_SET else {}), "default": engine[home],
-                             "by_set": engine, "trust": trust, "data_trust": details["data_trusts"][ENGINE_VARIANT]}
+                             "by_set": engine, "trust": trust, "data_trust": details["data_trusts"][ENGINE_VARIANT],
+                             **kept}
 
     results = {
         "provenance": {**state, "jev_ledger": jev_ledger()},

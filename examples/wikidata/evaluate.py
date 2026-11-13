@@ -6,8 +6,9 @@ nli-deberta-large ranks all 1,790 properties and the judge decides on the top K.
 question, then the rewrites each judge admitted into the question's own predicates and some of the answers each run
 got wrong; summary() puts the runs allowed one rewrite on a path in one table across the questions; beliefs() ranks
 each question's answers by the opinion each gets from its lineage, with Jev admitting at two rewrite thresholds and
-nli-deberta-large at its own, the last also with the claim check reading each admitted rewrite against the knowledge
-base's statements (semrewrite.claims), and scores the ranking against Wikidata's answer.
+nli-deberta-large at its own, each run checking its rewrites against the knowledge base's statements as the rewriter
+always does (semrewrite.claims), the last also reading every statement rather than those naming no individual, and
+scores the ranking against Wikidata's answer.
 
 Run from the repository root: python examples/wikidata/evaluate.py [NAME ...]; with --beliefs first it
 prints the beliefs table and writes results/wikidata_beliefs.json, which RESULTS.md's table reads.
@@ -73,11 +74,11 @@ STOPPED = {"work_limit": "the work budget stopped it", "time_limit": "the time b
 # threshold RESULTS.md calibrated for answer F1 and at a low one that admits more true rewrites with the false, leaving
 # the answer threshold to sort their answers; and nli-deberta-large, a model that runs locally, beside Jev's hosted one.
 BELIEF_RUNS = (("jev", 0.65), ("jev", 0.1), ("nli-deberta-large", None))
-# The belief runs repeated with the claim check on, reading the statements that name no individual, as it does by
-# default, and reading every statement, which shows why it does not. Its judge is the run's, asked about new sentence
-# pairs, so it runs with the locally run nli-deberta-large; Jev would need a TypeSafe key for every pair its cache
-# lacks.
-CHECK_RUNS = (("nli-deberta-large", None, "general"), ("nli-deberta-large", None, "every"))
+# Every belief run checks its rewrites as the rewriter does, reading the statements that name no individual, of which
+# these knowledge bases state none. This run repeats nli-deberta-large's reading every statement instead, which shows
+# why the check does not. Its judge is the run's, asked about new sentence pairs, so it runs with the locally run
+# nli-deberta-large; Jev would need a TypeSafe key for every pair its cache lacks.
+CHECK_RUNS = (("nli-deberta-large", None, "every"),)
 
 
 @cache
@@ -227,30 +228,32 @@ def summary(names: list[str]) -> str:
 # Time: one cascade ranking and one solve, then the lineage of every answer, and with the check one reading of each
 # admitted rewrite against the statements that stand out from it.
 @cache
-def _believed(name: str, judge_name: str, threshold: float | None, check: str | None = None
+def _believed(name: str, judge_name: str, threshold: float | None, check: str = "general"
               ) -> tuple[Outcome, dict | None]:
     """The question answered with `judge_name` admitting at `threshold`, its calibrated default when None, one rewrite
     on a path, each answer with its opinion as `semrewrite ask --beliefs` gives it: from the judge's opinions fused
-    with the knowledge base's evidence at the judge's calibrated data trust, and with `check`, as `--check` gives it,
-    with the statements the judge reads against each rewrite's claim fused in too: "general" reads the statements
-    that name no individual, as --check does, and "every" reads every statement. With the check comes its cost: the
-    claims it read, the judge pairs it asked, the statements it embedded and its seconds."""
+    with the knowledge base's evidence at the judge's calibrated data trust and with the statements the judge reads
+    against each rewrite's claim, as the rewriter checks every rewrite: "general" reads the statements that name no
+    individual, as the rewriter does, and "every" reads every statement. With the check comes its cost: the claims it
+    read, the judge pairs it asked, the statements it embedded, the rewrites it moved and withdrew, and its seconds;
+    None for a judge that reads no sentences, which has no check here."""
     _, kb, _, _ = _question(name)
     engine, retriever = _tools()
     judge = make_judge(judge_name) if threshold is None else make_judge(judge_name, threshold=threshold)
-    if check and not isinstance(judge, SentenceJudge):
+    if check == "every" and not isinstance(judge, SentenceJudge):
         msg = f"judge {judge_name} does not read sentences, so it cannot check claims"
         raise TypeError(msg)
-    claims = (ClaimCheck(kb, judge, _embedder(), with_arguments=check == "every")
-              if check and isinstance(judge, SentenceJudge) else None)
+    claims = ClaimCheck(kb, judge, _embedder(), with_arguments=True) if check == "every" and isinstance(
+        judge, SentenceJudge) else None
     rewriter = Rewriter(kb, judge, engine, retriever, k=K, budget=Budget(work=WORK, seconds=math.inf), beliefs=SETS,
                         data_trust=default_data_trust(judge_name), claims=claims)
     out = rewriter.ask(kb.queries[0], replace(STRATEGY, depth=1), rewriter.discoverer())
     judge.close()
-    if claims is None:
+    if rewriter.claims is None:
         return out, None
     weighed = sum(any(r.opinion.belief or r.opinion.disbelief for r in rs) for rs in (out.readings or {}).values())
-    return out, {**claims.usage, "seconds": claims.seconds, "rewrites_weighed": weighed, "reads": check}
+    return out, {**rewriter.claims.usage, "seconds": rewriter.claims.seconds, "rewrites_weighed": weighed,
+                 "withdrawn": len(out.defeated), "reads": check}
 
 
 def ranking(question: Question, truth: set[str], out: Outcome) -> dict[str, float | None]:
@@ -285,7 +288,7 @@ def belief_rows(names: list[str]) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
     for name in names or list(QUESTIONS):
         question, _, truth, _ = _question(name)
-        runs = [(judge, chosen, None) for judge, chosen in BELIEF_RUNS] + list(CHECK_RUNS)
+        runs = [(judge, chosen, "general") for judge, chosen in BELIEF_RUNS] + list(CHECK_RUNS)
         for judge_name, chosen, check in runs:
             out, cost = _believed(name, judge_name, chosen, check)
             got = question.answers_of(out.answers)
@@ -303,10 +306,10 @@ def beliefs(rows: list[dict[str, object]]) -> str:
 
     def checked(cost: object) -> str:
         if not isinstance(cost, dict):
-            return "off"
+            return "none: the judge reads no sentences"
         read = {"general": "statements naming no individual", "every": "every statement"}[str(cost["reads"])]
-        return (f"{read}: {cost['rewrites_weighed']} of {cost['claims']} rewrites moved; {cost['pairs']:,} judge "
-                f"pairs, {cost['seconds']:.1f} s")
+        return (f"{read}: {cost['rewrites_weighed']} of {cost['claims']} rewrites moved, {cost['withdrawn']} "
+                f"withdrawn; {cost['pairs']:,} judge pairs, {cost['seconds']:.1f} s")
 
     head = ["question", "judge", "rewrite threshold", "claim check", "answers", "not in Wikidata's",
             "F1 of all answers", "average precision by P", "best F1 by P (at P)", "lowest P inside",

@@ -1,10 +1,11 @@
 """Purpose: the judge factory, which builds judges by name for the command
 line and the experiments. make(name) builds a direction judge, its threshold,
-trust and base rate read from semrewrite/judges/calibration.json, where
-experiments/judge_eval.py writes each judge's threshold and trust calibrated on
-the dev rows of the labelled set its entry names, and each such set's base rate
-once; make("oracle", gold=...) builds the OracleJudge of
-semrewrite/judges/oracle.py.
+trust, base rate and check trust read from semrewrite/judges/calibration.json,
+where experiments/judge_eval.py writes each judge's threshold and trust
+calibrated on the dev rows of the labelled set its entry names, and each such
+set's base rate once, and experiments/check_trust.py writes the trust the claim
+check puts in the judge's reading of a statement against a claim;
+make("oracle", gold=...) builds the OracleJudge of semrewrite/judges/oracle.py.
 
     from semrewrite.judges import make
     judge = make("nli-deberta-large")
@@ -115,17 +116,32 @@ def default_data_trust(name: str, path: pathlib.Path | None = None) -> float:
     return 0.0 if name == "oracle" else _calibrated(name, "data_trust", "data_trust", path)
 
 
+# The labelled set the claim check's trust is fitted on: delta-ATOMIC's updates, each a statement, read against the
+# inference it strengthens or weakens, the claim. Its base rate sits in the calibration file's sets table with the
+# others'.
+CHECK_SET = "delta-atomic"
+
+
+def default_check_trust(name: str, path: pathlib.Path | None = None) -> float:
+    """The trust the claim check puts in judge `name`'s reading of a statement against a rewrite's claim, fitted by
+    experiments/check_trust.py on CHECK_SET's dev updates read against their inferences; raises when none was
+    fitted."""
+    return _calibrated(name, "check_trust", "check_trust", path)
+
+
 def make(
     name: str, *, threshold: float | None = None, trust: float | None = None, base_rate: float | None = None,
-    gold: Iterable[tuple[str, str, Any]] | None = None, **options: Any,
+    check_trust: float | None = None, gold: Iterable[tuple[str, str, Any]] | None = None, **options: Any,
 ) -> Judge:
-    """The judge called `name`, at `threshold`, `trust` and `base_rate` or their calibrated defaults.
+    """The judge called `name`, at `threshold`, `trust`, `base_rate` and `check_trust` or their calibrated defaults.
 
     `options` reach the judge's constructor: `fillers=("X", "Y")` for any judge,
     `budget=` or `cache=` for Jev. "oracle" needs `gold`, the (premise,
     conclusion, mapping) triples that hold; a bool stands for a binary swap. The
     oracle is right by construction, so its trust is complete unless given, and
-    its opinions are certain, so its base rate never shows.
+    its opinions are certain, so its base rate never shows; it reads no
+    sentences, so it has no check trust. A judge with no calibrated check trust
+    gets None, which the claim check refuses only when it has something to read.
     """
     if name == "oracle":
         if gold is None:
@@ -147,4 +163,18 @@ def make(
     judge = cls(name, chosen, **{**defaults, **options})
     judge.trust = default_trust(name) if trust is None else trust
     judge.base_rate = default_base_rate(name) if base_rate is None else base_rate
+    if check_trust is None:
+        try:
+            check_trust = default_check_trust(name)
+        except LookupError:
+            check_trust = None
+    judge.check_trust = check_trust
+    # The bar the claim check defeats a rewrite at, which a run admitting at another threshold does not move.
+    judge.calibrated_threshold = default_threshold(name) if _has(name, "default") else chosen
     return judge
+
+
+def _has(name: str, field: str, path: pathlib.Path | None = None) -> bool:
+    """Whether the calibration file holds `field` for judge `name`."""
+    _, table = _table(path)
+    return field in table.get("judges", {}).get(name, {})

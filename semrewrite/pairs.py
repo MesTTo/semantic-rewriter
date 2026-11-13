@@ -514,22 +514,28 @@ def _joined(*sentences: str) -> str:
     return " ".join(s if s[-1:] in ".!?" else f"{s}." for s in (s.strip() for s in sentences))
 
 
-def delta_atomic_rows(raw: pathlib.Path = RAW / "delta-atomic") -> list[PairRow]:
-    """delta-ATOMIC's dev and test updates as typical implications, one row each, labelled by the update.
+@dataclass(frozen=True, slots=True)
+class DefeasibleItem:
+    """One line of delta-ATOMIC with the row id and split its pair row takes: an ATOMIC event about PersonX
+    (`premise`), an inference that typically follows it (`hypothesis`), and an `update` written to make the inference
+    more likely, a strengthener, or less likely, a weakener."""
 
-    Each line of Rudinger et al.'s files (Findings of EMNLP 2020) gives an
-    ATOMIC event about PersonX (Premise), an inference that typically follows
-    it (Hypothesis), and an update written to make that inference more likely,
-    a strengthener, or less likely, a weakener. A row's premise states the
-    event and then the update, its conclusion the inference, and it holds
-    exactly for a strengthener: a weakener is a context that defeats the
-    typical inference. Lines whose writers found no such update
-    (UpdateTypeImpossible) are left out, as the paper leaves them out. The
-    sentences are the source's own, so they have no arguments to fill, and
-    each row is its own pair, since the source labels no reverse.
-    """
+    id: str
+    split: str
+    kind: str
+    premise: str
+    update: str
+    hypothesis: str
+    strengthens: bool
+    source: str
+
+
+def delta_atomic_items(raw: pathlib.Path = RAW / "delta-atomic") -> list[DefeasibleItem]:
+    """The lines of Rudinger et al.'s dev and test files (Findings of EMNLP 2020), in file order. Lines whose writers
+    found no update (UpdateTypeImpossible) are left out, as the paper leaves them out; an update type other than
+    strengthener or weakener is refused, naming its line."""
     _require("delta-atomic", raw)
-    rows: list[PairRow] = []
+    items: list[DefeasibleItem] = []
     for split in ("dev", "test"):
         for n, line in enumerate((raw / f"{split}.jsonl").read_text().splitlines(), 1):
             if not line.strip():
@@ -541,14 +547,28 @@ def delta_atomic_rows(raw: pathlib.Path = RAW / "delta-atomic") -> list[PairRow]
                 raise ValueError(msg)
             if item["UpdateTypeImpossible"]:
                 continue
-            row = f"delta-atomic:{split}:{n:05d}"
-            rows.append(PairRow(
-                id=row, set="delta-atomic", split=split, pair=row, kind=str(item["AtomicRelationType"]),
-                premise=_statement(f"{row}:premise", _joined(item["Premise"], item["Update"])),
-                conclusion=_statement(f"{row}:conclusion", item["Hypothesis"]), swapped=False,
-                label=item["UpdateType"] == "strengthener", types=(),
+            items.append(DefeasibleItem(
+                id=f"delta-atomic:{split}:{n:05d}", split=split, kind=str(item["AtomicRelationType"]),
+                premise=item["Premise"], update=item["Update"], hypothesis=item["Hypothesis"],
+                strengthens=item["UpdateType"] == "strengthener",
                 source=f"defeasible-nli@c675ffc1 data/defeasible-nli/defeasible-atomic/{where}"))
-    return rows
+    return items
+
+
+def delta_atomic_rows(raw: pathlib.Path = RAW / "delta-atomic") -> list[PairRow]:
+    """delta-ATOMIC's dev and test updates as typical implications, one row each, labelled by the update.
+
+    A row's premise states the event and then the update, its conclusion the
+    inference, and it holds exactly for a strengthener: a weakener is a
+    context that defeats the typical inference. The sentences are the
+    source's own, so they have no arguments to fill, and each row is its own
+    pair, since the source labels no reverse.
+    """
+    return [PairRow(id=i.id, set="delta-atomic", split=i.split, pair=i.id, kind=i.kind,
+                    premise=_statement(f"{i.id}:premise", _joined(i.premise, i.update)),
+                    conclusion=_statement(f"{i.id}:conclusion", i.hypothesis), swapped=False,
+                    label=i.strengthens, types=(), source=i.source)
+            for i in delta_atomic_items(raw)]
 
 
 def copa_rows(raw: pathlib.Path = RAW / "copa") -> list[PairRow]:

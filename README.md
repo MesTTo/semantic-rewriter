@@ -202,20 +202,45 @@ The British Army descends from Victoria because one of her sons served in it, re
 
 ### Does what the knowledge base states change the answer?
 
-`--check` reads each rewrite the judge admitted against what the knowledge base states, so a belief you state can withdraw a match it contradicts. `examples/actions_first_person.kb` states eight things I do, such as "I watch TV" and "I play video games", and asks whether I waste time. nli-deberta-large matches two of them:
+The rewriter reads each rewrite the judge admits against what the knowledge base states, so a belief you state can withdraw a match it contradicts. `examples/actions_first_person.kb` states eight things I do, such as "I watch TV" and "I play video games", and asks whether I waste time. nli-deberta-large matches two of them:
 
 ```sh
-semrewrite rewrites examples/actions_first_person.kb wastes_time --retriever all --check
+semrewrite rewrites examples/actions_first_person.kb wastes_time --retriever all
 ```
 
-Add the belief to the file, as a gloss and a fact with no arguments, and ask again:
+`examples/actions_first_person_believed.kb` is the same file with the belief added, as a gloss and a fact with no arguments:
 
 ```text
 gloss gaming_productive "I consider gaming to be productive".
 gaming_productive.
 ```
 
-The judge reads the belief as contradicting the gaming match, "If I play video games, I waste time.", and as saying nothing about watching TV's, so the gaming match falls from P 0.456 to 0.334, below watching TV's 0.478, which does not move. `--explain` names the statement that weighed and how the judge read it. The check reads rewrites, not answers: the same model reads the belief as contradicting "sam wastes time." as surely as "kim wastes time.", though only kim plays games. It reads only statements with no arguments, like the belief above: a fact about named things, such as "kim plays games", bears on a rewrite through the rows it states, which the knowledge base's evidence already counts. And it reads only those that stand out in similarity to a rewrite, because the judge reads most unrelated statements as contradictions too; [DESIGN.md](DESIGN.md#the-claim-check) says how, and [RESULTS.md](RESULTS.md#what-the-knowledge-base-states) gives the measurements.
+Asked again, the rewriter withdraws the gaming match:
+
+<!-- BEGIN GENERATED: actions-defeat -->
+```text
+$ semrewrite rewrites examples/actions_first_person_believed.kb wastes_time --retriever all
+admit   0.968  wastes_time() ⇐ watch_tv()
+defeat  0.887  wastes_time() ⇐ play_games()
+          contradicts  d 1.000 >= 0.659  "I consider gaming to be productive."  similarity 0.764
+9 judge questions at threshold 0.659
+
+$ semrewrite ask examples/actions_first_person_believed.kb wastes_time --retriever all --beliefs --explain
+wastes_time()    P 0.478  b 0.337  d 0.000  u 0.663
+    wastes_time()    [by wastes_time() ⇐ watch_tv(), score 0.968]
+      watch_tv()    [fact]
+
+rewrites admitted (1):
+  wastes_time() ⇐ watch_tv()    P 0.478  b 0.337  d 0.000  u 0.663
+
+rewrites withdrawn by what the knowledge base states (1):
+  wastes_time() ⇐ play_games()
+    contradicts  d 1.000 >= 0.659  "I consider gaming to be productive."  similarity 0.764
+ok: 1 answer, 4 work, 18 judge questions, 1 pair reading 2 claims in 1.66 s, 1 rewrite withdrawn, 2.86 s
+```
+<!-- END GENERATED: actions-defeat -->
+
+The judge reads the belief as contradicting the gaming match's claim, "If I play video games, I waste time.", more surely than it was calibrated to read a match to admit it, so the match is withdrawn: `ask` no longer answers through it, and "I waste time" stands on watching TV alone. A statement the judge reads as contradicting a claim less surely than that only lowers the match's P, discounted by the trust the judge earned reading delta-ATOMIC's updates against the inferences they weaken or strengthen. `ask --explain` names the statements that withdrew or weighed on each match. Where a knowledge base states nothing without arguments, as in the Wikidata examples, the check reads nothing, asks the judge nothing and loads no model. The check reads rewrites, not answers: the same model reads the belief as contradicting "sam wastes time." as surely as "kim wastes time.", though only kim plays games. It reads only statements with no arguments, like the belief above: a fact about named things, such as "kim plays games", bears on a rewrite through the rows it states, which the knowledge base's evidence already counts. And it reads only those that stand out in similarity to a rewrite, because the judge reads most unrelated statements as contradictions too; [DESIGN.md](DESIGN.md#the-claim-check) says how, and [RESULTS.md](RESULTS.md#what-the-knowledge-base-states) gives the measurements.
 
 ## A small example: choosing the threshold
 
@@ -348,9 +373,7 @@ The core runs on Python 3.11 or later; the PyMeTTa engine needs 3.12 or later. `
 ```sh
 semrewrite ask KB QUERY [--judge NAME] [--engine python|pymetta] [--strategy NAME] [--depth N] [--explain] [--trace] [--json]
 semrewrite ask KB QUERY --beliefs [--answer-threshold P]  # each answer with its opinion, ranked by P
-semrewrite ask KB QUERY --check [--explain]               # opinions after weighing each rewrite against what KB states
-semrewrite rewrites KB PREDICATE [--judge NAME] [--all]   # what discovery admits, and with --all what it rejects
-semrewrite rewrites KB PREDICATE --check                  # each admitted rewrite's opinion and the statements read
+semrewrite rewrites KB PREDICATE [--judge NAME] [--all]   # what discovery admits, what KB's statements withdraw, and with --all what it rejects
 semrewrite rewrites KB PREDICATE --snars                  # the admitted rewrites as SNARS beliefs and rules for GoalChainer
 semrewrite judge [--judge NAME] [--trust T] [--base-rate A] < PAIRS  # each sentence pair's opinion, as JSON lines
 semrewrite engines                                       # installed engines and their capabilities
@@ -359,7 +382,7 @@ semrewrite conformance --engine NAME                     # check an engine again
 semrewrite convert family.metta family.kb                # between the text, JSON and MeTTa formats
 ```
 
-`--judge oracle` uses the `gold` lines of the knowledge base instead of a model, which is how tests and the experiment separate engine behaviour from judge error. `--retriever all` judges every predicate of the right arity instead of the 8 nearest by gloss embedding, which suits small catalogues and loads no embedding model. `--retriever judge` ranks every predicate with the `--prefilter` judge, the cross-encoder nli-deberta-large by default, and the admitting judge sees only the `--k` it ranks highest, which suits a catalogue too large to judge whole, such as Wikidata's 1,790 properties above. `--depth N` replaces the strategy's depth bound, counted the way the strategy counts it, and `--depth 0` removes it. `--explain` prints each answer's derivation and the rewrites admitted, and `--trace` prints each step on standard error as it happens, as in the Alphabet example above. `--beliefs` prints each answer with its opinion, highest P first, as in the Victoria example above, and `--answer-threshold P` drops the answers below P. `--check` weighs each admitted rewrite against the knowledge base's statements read by meaning before the answers are weighed, and turns `--beliefs` on; with `--explain` it lists under each admitted rewrite the statements read against it and how the judge read each, and `--json` writes them with the check's cost. `rewrites --check` prints each admitted rewrite's opinion after the check, and `rewrites --snars --check` exports that opinion. The check needs a judge that reads sentences, so `--judge oracle` refuses it, and it uses the run's embedding model, loading the default one when `--retriever` is `all` or `judge`. `rewrites --snars` prints each admitted rewrite as two lines of the live world of mettabase's SNARS, the subjective-logic reasoner GoalChainer uses: its validity, a statement `(valid rw-owns-owned_by_p127-10)` believed with the rewrite's opinion as evidence, and a row of SNARS's rule kit deriving `owns(X0, X1)` from `owned_by_p127(X1, X0)` and that statement. SNARS's `sn prove` then applies the rewrite by subjective-logic deduction, and every application of it shares the one validity statement, as every answer through it does here. `judge` reads sentence pairs from standard input, one JSON object a line with a `premise` and a `conclusion`, and writes each pair's opinion as a JSON line, calibrated at the judge's trust and base rate unless `--trust` and `--base-rate` give others, for pairs drawn from another population; GoalChainer uses it to ask whether a request states an element of a problem. The exit status is 0 when the query finished, 2 when a budget stopped it and 1 on an error.
+`--judge oracle` uses the `gold` lines of the knowledge base instead of a model, which is how tests and the experiment separate engine behaviour from judge error. `--retriever all` judges every predicate of the right arity instead of the 8 nearest by gloss embedding, which suits small catalogues and loads no embedding model. `--retriever judge` ranks every predicate with the `--prefilter` judge, the cross-encoder nli-deberta-large by default, and the admitting judge sees only the `--k` it ranks highest, which suits a catalogue too large to judge whole, such as Wikidata's 1,790 properties above. `--depth N` replaces the strategy's depth bound, counted the way the strategy counts it, and `--depth 0` removes it. `--explain` prints each answer's derivation and the rewrites admitted, and `--trace` prints each step on standard error as it happens, as in the Alphabet example above. `--beliefs` prints each answer with its opinion, highest P first, as in the Victoria example above, and `--answer-threshold P` drops the answers below P. Every run checks each rewrite the judge admits against the knowledge base's statements read by meaning: a statement the judge reads as contradicting the rewrite's claim at its calibrated threshold, which `--threshold` does not move, withdraws the rewrite, and vaguer readings weigh on its opinion. `--explain` lists under each admitted rewrite the statements read against it and then the rewrites withdrawn, each with the statements that withdrew it; `--json` writes both with the check's cost; `rewrites` prints each withdrawn rewrite as a `defeat` line and each admitted one's opinion after the check where something was read against it; and `rewrites --snars` exports that opinion. The check needs a judge that reads sentences, so `--judge oracle` refuses a knowledge base that states something without arguments, and it uses the run's embedding model, loading the default one, only once there is something to read, when `--retriever` is `all` or `judge`. `rewrites --snars` prints each admitted rewrite as two lines of the live world of mettabase's SNARS, the subjective-logic reasoner GoalChainer uses: its validity, a statement `(valid rw-owns-owned_by_p127-10)` believed with the rewrite's opinion as evidence, and a row of SNARS's rule kit deriving `owns(X0, X1)` from `owned_by_p127(X1, X0)` and that statement. SNARS's `sn prove` then applies the rewrite by subjective-logic deduction, and every application of it shares the one validity statement, as every answer through it does here. `judge` reads sentence pairs from standard input, one JSON object a line with a `premise` and a `conclusion`, and writes each pair's opinion as a JSON line, calibrated at the judge's trust and base rate unless `--trust` and `--base-rate` give others, for pairs drawn from another population; GoalChainer uses it to ask whether a request states an element of a problem. The exit status is 0 when the query finished, 2 when a budget stopped it and 1 on an error.
 
 ## Python
 
@@ -375,7 +398,7 @@ print(outcome.answers)        # {('carol', 'tom'), ('dave', 'tom')}
 print(outcome.admitted)       # the rewrites admitted, as (premise, conclusion, argument mapping)
 ```
 
-`Rewriter(kb, judge, engine, beliefs=16, claims=ClaimCheck(kb, judge, EmbeddingRetriever()))` gives answers beliefs after the claim check, `ClaimCheck` from `semrewrite` and `EmbeddingRetriever` from `semrewrite.retrieve`; `outcome.readings` then holds the statements read against each admitted rewrite.
+`Rewriter` checks every rewrite it admits with its judge, and `outcome.defeated` holds the rewrites the knowledge base's statements withdrew, each with the readings that withdrew it; with `beliefs=16`, `outcome.readings` holds the statements read against each admitted rewrite. `claims=ClaimCheck(kb, judge, embedder)`, `ClaimCheck` from `semrewrite`, gives the check its embedding model or other settings.
 
 A knowledge base can also be built in code with `KB`, `atom` and `Rule`, and predicates may have any arity: `gave(x, y, z)` with the gloss `{x} gave {y} to {z}` implies `received(z, y, x)`, and discovery proposes every argument mapping.
 

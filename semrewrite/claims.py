@@ -1,16 +1,19 @@
 """Purpose: the claim check, which weighs each rewrite the rewriter admits against what the knowledge base states, read
 by meaning. A rewrite claims the conditional its proposal states, "If A plays games, A wastes time."; each fact is a
 statement, its predicate's gloss filled with its arguments' names as words, "kim plays games." The run's judge reads
-against a claim the statements that name no individual and stand out in similarity to it: what it reads as following
-from a statement counts for the claim, what it reads as contradicted counts against, and statements it reads as
-saying the same are one source. The sources' opinions fuse with the rewrite's own, so an answer moves through its lineage: with "I
-consider gaming to be productive." stated, the match from playing games loses belief, and an answer that also comes
-through watching TV keeps that derivation.
+against a claim the statements that name no individual and stand out in similarity to it. A statement it reads as
+contradicting the claim at the threshold it was calibrated to admit at defeats the rewrite, which is withdrawn before
+the engine uses it, as a fact added in ASP blocks a default: with "I consider gaming to be productive." stated, the match from playing games is
+withdrawn and the one from watching TV stays. A vaguer reading only weighs on the rewrite's opinion: what the judge
+reads as following from a statement counts for the claim, what it reads as contradicted counts against, each
+discounted by the judge's check trust, and statements it reads as saying the same are one source.
 
 A rewrite is checked rather than an answer because an answer's sentence does not say which match it came through:
 nli-deberta-large reads that belief as contradicting "kim wastes time." and "sam wastes time." alike, though only
 kim's answer comes through playing games, and as contradicting "If A plays games, A wastes time." but not "If A
-watches TV, A wastes time.". DESIGN.md, under "The claim check", gives the measurements and the prior art.
+watches TV, A wastes time.". The rewriter checks every rewrite it admits; the check reads nothing, asks no judge pair
+and loads no model where the knowledge base states nothing that names no individual. DESIGN.md, under "The claim
+check", gives the measurements and the prior art.
 """
 
 from __future__ import annotations
@@ -20,11 +23,10 @@ import statistics
 import time
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from semrewrite.model import Key, Predicate, Proposal, Rewrite
 from semrewrite.opinion import Opinion, average
-from semrewrite.protocols import calibrated
 
 if TYPE_CHECKING:
     from semrewrite.judges.base import SentenceJudge
@@ -34,7 +36,9 @@ if TYPE_CHECKING:
 # claim must lie above their median for the claim to be read against it: the modified z-score 0.6745 (x - median)/MAD
 # of Iglewicz and Hoaglin (1993), whose rule of thumb for an outlier is 3.5. This value is the smallest spread that kept
 # nli-deberta-large's spurious contradictions to one per hundred claims on delta-ATOMIC's dev updates, at every
-# knowledge base size from 8 statements to all 3,748 (experiments/claim_gate.py, results/claim_gate.json).
+# knowledge base size from 8 statements to all 3,748 (experiments/claim_gate.py, results/claim_gate.json). The spurious
+# defeats, contradictions read at the judge's threshold, which withdraw a rewrite, stay within that budget at it on the
+# test updates for nli-deberta-large (0.0059 a claim at most) and typical-qwen3-4b (0.0088).
 SPREAD = 3.75
 
 
@@ -109,14 +113,38 @@ def stance(reading: Opinion, negation: Opinion | None) -> Opinion:
     return Opinion(belief, disbelief, 1.0 - belief - disbelief)
 
 
+# Time: one judge call over n pairs, 2n for a judge that does not read contradiction, n = len(asked).
+def read(judge: SentenceJudge, asked: Sequence[tuple[str, str, str]]) -> list[Opinion]:
+    """The judge's own stance on each claim given a statement, as the check reads it: for each (statement, premise,
+    conclusion), its opinion that the statement bears out "If premise, conclusion.", the claim's negation asked as
+    well where the judge does not read contradiction (stance). The stances are the judge's own; the check discounts
+    them by the judge's check trust before they weigh on a rewrite, and experiments/check_trust.py fits that trust on
+    stances read so.
+
+    >>> from semrewrite.judges.base import SentenceJudge
+    >>> class Asked(SentenceJudge):
+    ...     def _score_sentences(self, pairs):
+    ...         return [0.25 if claim.startswith("It is not") else 0.75 for _, claim in pairs]
+    >>> read(Asked("asked", 0.5), [("kim plays chess.", "A plays games", "A thinks")])
+    [Opinion(belief=0.5625, disbelief=0.0625, uncertainty=0.375, base_rate=0.5)]
+    """
+    pairs = [(s, conditional(p, c)) for s, p, c in asked]
+    if not judge.reads_contradiction:
+        pairs += [(s, negated(p, c)) for s, p, c in asked]
+    opinions = judge.sentence_opinions(pairs) if pairs else []
+    n = len(asked)
+    return [stance(o, None if judge.reads_contradiction else opinions[n + i]) for i, o in enumerate(opinions[:n])]
+
+
 @dataclass(frozen=True, slots=True)
 class Reading:
-    """One statement's weight on a claim: the statement, its cosine to the claim, the judge's opinion of the claim given
-    the statement, calibrated as answers weigh the judge's opinions, and its source, the statement nearest the claim
-    among those the judge reads as saying the same as it."""
+    """One statement's weight on a claim: the statement, its cosine to the claim, the judge's own stance on the claim
+    given the statement (read), the opinion it weighs on the rewrite with, that stance discounted by the judge's check
+    trust, and its source, the statement nearest the claim among those the judge reads as saying the same as it."""
 
     statement: str
     similarity: float
+    stance: Opinion
     opinion: Opinion
     source: str
 
@@ -146,6 +174,7 @@ def weigh(opinion: Opinion, readings: Iterable[Reading]) -> Opinion:
     return out
 
 
+@runtime_checkable
 class Embedder(Protocol):
     """What the check needs of an embedding model: each anchor's cosine to each sentence, a row per anchor, as
     semrewrite.retrieve.EmbeddingRetriever gives them."""
@@ -183,29 +212,38 @@ def standing_out(similarities: Sequence[float], spread: float = SPREAD) -> list[
 
 
 class ClaimCheck:
-    """Weighs rewrites against one knowledge base's statements with one sentence judge, whose opinions are calibrated
-    as answers weigh them (protocols.calibrated), and one embedding model, whose cosines choose the statements each
-    claim is read against.
+    """Weighs rewrites against one knowledge base's statements with one sentence judge, and one embedding model whose
+    cosines choose the statements each claim is read against.
 
     A claim is read against the statements that name no individual, unless `with_arguments` reads every statement. A
     fact with arguments states something about the individuals it names, and bears on a rule through its rows, which
     the knowledge base's evidence on the rewrite reads (semrewrite.evidence), as an assertion about individuals bears
     on a terminological axiom through its instances (Baader et al., The Description Logic Handbook, 2003); read by
     meaning against a rule written with letters, the judge reads it as noise. On Alphabet's Wikidata question,
-    reading every statement asked 39,429 judge pairs, moved 54 of 62 rewrites and lowered the lowest P inside
-    Wikidata's answer from 0.237 to 0.081, with no gain in average precision (RESULTS.md). Every statement still sets
+    reading every statement asked 39,429 judge pairs and withdrew 31 of 62 rewrites, which left the question no
+    answer (RESULTS.md). Every statement still sets
     the background a statement must stand out from. A rewrite's own predicates' statements are left out of both: the
     knowledge base's evidence on the rewrite reads them as rows, and the judge would read a statement of the premise
-    against the rule as its own opinion of the rule again. Each claim is read once; `usage` counts the claims read,
-    the judge pairs asked and the statements embedded, and `seconds` the time spent."""
+    against the rule as its own opinion of the rule again.
 
-    def __init__(self, kb: KB, judge: SentenceJudge, embedder: Embedder, spread: float = SPREAD,
-                 with_arguments: bool = False) -> None:
+    A stance whose disbelief reaches the judge's calibrated threshold, the score at which it was calibrated to admit a
+    rewrite, is a clear contradiction: it defeats the rewrite (defeats), whose discoverer then withdraws it. Every other reading weighs on
+    the rewrite's opinion at `trust`, the judge's check trust unless given, fitted on delta-ATOMIC's updates read
+    against their inferences (experiments/check_trust.py). The embedding model is `embedder`, or the default one,
+    loaded when a claim first has a statement to be read against. Each claim is read once; `usage` counts the claims
+    read, the judge pairs asked and the statements embedded, and `seconds` the time spent."""
+
+    def __init__(self, kb: KB, judge: SentenceJudge, embedder: Embedder | None = None, *, trust: float | None = None,
+                 spread: float = SPREAD, with_arguments: bool = False) -> None:
         self.catalogue: Mapping[str, Predicate] = kb.catalogue()
         self.judge = judge
-        self.embedder = embedder
+        self.trust = judge.check_trust if trust is None else trust
+        if self.trust is not None and not 0.0 <= self.trust <= 1.0:
+            msg = f"a check trust is a probability, not {self.trust}"
+            raise ValueError(msg)
         self.spread = spread
         self.with_arguments = with_arguments
+        self._embedder = embedder
         stated = statements(kb)
         self._sentences = sorted(stated)
         self._stated_by = [stated[text].predicates for text in self._sentences]
@@ -215,11 +253,35 @@ class ClaimCheck:
         self.usage: dict[str, int] = {"claims": 0, "pairs": 0, "statements": len(self._sentences)}
         self.seconds = 0.0
 
-    def claim(self, key: Key) -> str:
-        """The rewrite's claim, its proposal's premise and conclusion sentences under the judge's fillers."""
+    @property
+    def bar(self) -> float:
+        """The disbelief at which a stance defeats a rewrite: the threshold the judge was calibrated to admit at, the
+        run's own where it has none. A run admitting at 0.03 to let weak matches in does not let a reading as faint as
+        d 0.078 withdraw one, as it did with typical-qwen3-4b while the bar followed the run's threshold."""
+        return self.judge.calibrated_threshold if self.judge.calibrated_threshold is not None else self.judge.threshold
+
+    @property
+    def reads(self) -> bool:
+        """Whether the knowledge base states anything this check reads against a claim."""
+        return any(self._readable)
+
+    @property
+    def embedder(self) -> Embedder:
+        """The embedding model choosing statements: the one given, else the default, loaded on first use."""
+        if self._embedder is None:
+            from semrewrite.retrieve import EmbeddingRetriever
+
+            self._embedder = EmbeddingRetriever()
+        return self._embedder
+
+    def sentences(self, key: Key) -> tuple[str, str]:
+        """The rewrite's proposal's premise and conclusion sentences under the judge's fillers."""
         premise, conclusion, mapping = key
-        return conditional(*Proposal(self.catalogue[premise], self.catalogue[conclusion], mapping).sentences(
-            self.judge.fillers))
+        return Proposal(self.catalogue[premise], self.catalogue[conclusion], mapping).sentences(self.judge.fillers)
+
+    def claim(self, key: Key) -> str:
+        """The rewrite's claim, the conditional of its proposal's sentences."""
+        return conditional(*self.sentences(key))
 
     def readings(self, rewrites: Iterable[Rewrite]) -> dict[Key, tuple[Reading, ...]]:
         """Each rewrite's readings, nearest the claim first, reading in one batch the claims not read before."""
@@ -231,12 +293,21 @@ class ClaimCheck:
             self.seconds += time.perf_counter() - started
         return {key: self._read[key] for key in keys}
 
+    def defeats(self, rewrites: Iterable[Rewrite]) -> dict[Key, tuple[Reading, ...]]:
+        """Each of `rewrites` that a statement clearly contradicts, with the readings that do: those whose stance has
+        disbelief at or above `bar`, the score the judge was calibrated to admit a rewrite at, so the judge refutes the
+        claim as surely as it must affirm one. Stated beliefs are premises, firmer than any match, so one such
+        statement defeats the rewrite however strongly the judge admitted it."""
+        bar = self.bar
+        return {key: found for key, readings in self.readings(rewrites).items()
+                if (found := tuple(r for r in readings if r.stance.disbelief >= bar))}
+
     # Time: per call, k claims' cosines to N statements from the embedder, in batches of BATCH claims, a median and a
     # median deviation per claim, O(k N log N), one judge call over the m kept pairs (2m for a judge that does not
     # read contradiction) and one over the ordered pairs among each claim's kept statements not judged before.
     def _read_claims(self, keys: Sequence[Key]) -> None:
         self.usage["claims"] += len(keys)
-        if not any(self._readable):
+        if not self.reads:
             self._read.update({key: () for key in keys})
             return
         claims = [self.claim(key) for key in keys]
@@ -250,39 +321,35 @@ class ClaimCheck:
                 chosen = (j for j in (positions[i] for i in standing_out([row[j] for j in positions], self.spread))
                           if self._readable[j])
                 near.append(dict(sorted(((j, row[j]) for j in chosen), key=lambda jc: (-jc[1], jc[0]))))
-        kept = [list(js) for js in near]
-        contradiction = self.judge.reads_contradiction
-        pairs = [(self._sentences[j], claim) for claim, js in zip(claims, kept, strict=True) for j in js]
-        if not contradiction:
-            negations = [negated(*Proposal(self.catalogue[p], self.catalogue[c], m).sentences(self.judge.fillers))
-                         for p, c, m in keys]
-            pairs += [(self._sentences[j], negation) for negation, js in zip(negations, kept, strict=True) for j in js]
-        opinions = self._judge(pairs)
-        n = sum(len(js) for js in kept)
-        stances = [stance(o, None if contradiction else opinions[n + i]) for i, o in enumerate(opinions[:n])]
-        weighed = calibrated(self.judge, stances)
-        self._paraphrases(kept)
+        asked = [(self._sentences[j], *self.sentences(key)) for key, js in zip(keys, near, strict=True) for j in js]
+        if asked and self.trust is None:
+            msg = (f"no calibrated check trust for {self.judge.name!r}, which the claim check needs to weigh what it "
+                   "reads; run experiments/check_trust.py or pass trust=")
+            raise LookupError(msg)
+        self.usage["pairs"] += len(asked) * (1 if self.judge.reads_contradiction else 2)
+        stances = read(self.judge, asked)
+        trust = self.trust if self.trust is not None else 1.0
+        self._paraphrases([list(js) for js in near])
         at = 0
         for key, js in zip(keys, near, strict=True):
             sources = self._sources([self._sentences[j] for j in js])
             readings = []
             for j, similarity in js.items():
-                text = self._sentences[j]
-                readings.append(Reading(text, float(similarity), weighed[at], sources[text]))
+                text, mine = self._sentences[j], stances[at]
+                weighed = mine.with_base_rate(self.judge.base_rate).discount(trust)
+                readings.append(Reading(text, float(similarity), mine, weighed, sources[text]))
                 at += 1
             self._read[key] = tuple(readings)
-
-    def _judge(self, pairs: Sequence[tuple[str, str]]) -> list[Opinion]:
-        """The judge's own opinions of `pairs`, counted in `usage`."""
-        self.usage["pairs"] += len(pairs)
-        return self.judge.sentence_opinions(pairs) if pairs else []
 
     def _paraphrases(self, kept: Sequence[Sequence[int]]) -> None:
         """Judge, both ways, each pair of statements one claim keeps that has not been judged, so _sources can tell
         which say the same."""
         ordered = sorted({(self._sentences[a], self._sentences[b]) for js in kept for a in js for b in js if a != b
                           and (self._sentences[a], self._sentences[b]) not in self._same})
-        for pair, o in zip(ordered, self._judge(ordered), strict=True):
+        if not ordered:
+            return
+        self.usage["pairs"] += len(ordered)
+        for pair, o in zip(ordered, self.judge.sentence_opinions(ordered), strict=True):
             self._same[pair] = o.belief
 
     def _sources(self, texts: Sequence[str]) -> dict[str, str]:
@@ -299,3 +366,22 @@ class ClaimCheck:
                     source[text] = source[earlier]
                     break
         return source
+
+
+def default_check(kb: KB, judge: object, retriever: object = None) -> ClaimCheck | None:
+    """The check a rewriter runs unless given one: `judge`, the run's, reads the statements, and the run's retriever
+    chooses them when it embeds, else the default embedding model does, loaded only once a claim has a statement to
+    be read against. A judge that reads no sentences, as the oracle, which judges by predicate name, cannot read
+    them: with it there is no check where the knowledge base states nothing to read, and a ValueError where it does.
+    """
+    from semrewrite.judges.base import SentenceJudge
+
+    if isinstance(judge, SentenceJudge):
+        return ClaimCheck(kb, judge, retriever if isinstance(retriever, Embedder) else None)
+    general = sorted(text for text, stated in statements(kb).items() if stated.general)
+    if general:
+        name = getattr(judge, "name", type(judge).__name__)
+        msg = (f"{kb.name} states {len(general)} sentences naming no individual, such as {general[0]!r}, which the "
+               f"claim check reads against each rewrite with the run's judge, and {name} reads no sentences")
+        raise ValueError(msg)
+    return None

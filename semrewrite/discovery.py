@@ -13,14 +13,18 @@ proposals, 2k + 1 for binary goals.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from semrewrite.admission import Threshold
 from semrewrite.model import Key, Predicate, Proposal, Rewrite, identity, mappings
 from semrewrite.opinion import Opinion
 from semrewrite.protocols import Admission, Judge, Retriever, calibrated
-from semrewrite.trace import Expanded, Remembered, Tracer
+from semrewrite.trace import Defeated, Expanded, Remembered, Tracer
+
+if TYPE_CHECKING:
+    from semrewrite.claims import ClaimCheck, Reading
 
 
 class ScoreCache:
@@ -78,11 +82,13 @@ class ScoreCache:
 
 @dataclass
 class DiscoveryStats:
-    """Model work one discoverer spent: expansions run, proposals asked, retrievals made."""
+    """Model work one discoverer spent: expansions run, proposals asked, retrievals made, and the admitted rewrites the
+    claim check withdrew."""
 
     expansions: int = 0
     proposals: int = 0
     retrievals: int = 0
+    defeats: int = 0
     expanded: set[str] = field(default_factory=set)
 
 
@@ -108,6 +114,7 @@ class Discoverer:
         memo: bool = True,
         admission: Admission | None = None,
         trace: Tracer | None = None,
+        check: ClaimCheck | None = None,
     ) -> None:
         self.catalogue = dict(catalogue)
         self.retriever = retriever
@@ -115,8 +122,13 @@ class Discoverer:
         self.k = k
         self.memo = memo
         self.admission: Admission = admission if admission is not None else Threshold()
-        # Receives an Expanded event per expansion and a Remembered event per ask the memo answers.
+        # Receives an Expanded event per expansion, a Defeated event per rewrite the check withdraws, and a Remembered
+        # event per ask the memo answers.
         self.trace = trace
+        # Withdraws an admitted rewrite that a statement of the knowledge base clearly contradicts (semrewrite.claims);
+        # `defeated` keeps each withdrawn rewrite with the readings that defeat it.
+        self.check = check
+        self.defeated: dict[Key, tuple[Rewrite, tuple[Reading, ...]]] = {}
         self.stats = DiscoveryStats()
         self._memo: dict[tuple[str, float], tuple[Rewrite, ...]] = {}
 
@@ -150,9 +162,10 @@ class Discoverer:
         return out
 
     # Time: one retrieval plus one judge call over k·n! + n! - 1 proposals per expansion,
-    # twice that with a policy that needs converse scores.
+    # twice that with a policy that needs converse scores, then the claim check's reading of the admitted claims.
     def rewrites(self, goal: str) -> tuple[Rewrite, ...]:
-        """Admitted rewrites concluding `goal`, strongest first."""
+        """Admitted rewrites concluding `goal`, strongest first: those the admission policy takes, less those the
+        claim check defeats."""
         key = (goal, self.scorer.threshold)
         if self.memo and key in self._memo:
             if self.trace is not None:
@@ -174,14 +187,37 @@ class Discoverer:
             (p.rewrite(s) for p, s, ok in zip(proposals, scores, verdicts, strict=True) if ok),
             key=lambda r: (-r.score, r.premise, r.mapping),
         )
-        found = tuple(admitted)
+        withdrawn = self._defeat(admitted)
+        found = tuple(rw for rw in admitted if rw.key not in withdrawn)
         if self.memo:
             self._memo[key] = found
         if self.trace is not None:
             self.trace(Expanded(self.catalogue[goal], self.retriever.name if self.retriever is not None else None,
                                 len(among), tuple(kept), self.scorer.judge.name, self.scorer.threshold,
-                                tuple(proposals), tuple(scores), found))
+                                tuple(proposals), tuple(scores), tuple(admitted)))
+            assert self.check is not None or not withdrawn
+            for rw in admitted:
+                if rw.key in withdrawn:
+                    self.trace(Defeated(rw, self.check.claim(rw.key) if self.check is not None else "",
+                                        tuple((r.statement, r.stance.disbelief) for r in withdrawn[rw.key]),
+                                        self.check.bar if self.check is not None else self.scorer.threshold))
         return found
+
+    def _defeat(self, admitted: Sequence[Rewrite]) -> dict[Key, tuple[Reading, ...]]:
+        """The admitted rewrites the claim check defeats, with the readings that do, recorded in `defeated`."""
+        if self.check is None or not admitted:
+            return {}
+        found = self.check.defeats(admitted)
+        for rw in admitted:
+            if rw.key in found:
+                self.defeated[rw.key] = (rw, found[rw.key])
+        self.stats.defeats += len(found)
+        return found
+
+    def defeats(self, goals: Iterable[str]) -> dict[Key, tuple[Rewrite, tuple[Reading, ...]]]:
+        """The rewrites concluding one of `goals` that the claim check withdrew, each with the readings defeating it."""
+        wanted = set(goals)
+        return {key: held for key, held in self.defeated.items() if key[1] in wanted}
 
     def keys(self) -> set[Key]:
         """Every rewrite key this discoverer has admitted so far."""

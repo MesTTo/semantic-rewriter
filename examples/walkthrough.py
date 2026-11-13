@@ -94,6 +94,9 @@ def wikidata_placed() -> str:
 # Each generated block: the paths of the knowledge bases it shows, space separated, the commands whose transcripts it
 # holds, or a function writing it.
 BLOCKS: dict[str, str | list[list[str]] | Callable[[], str]] = {
+    "actions-defeat": [["rewrites", "examples/actions_first_person_believed.kb", "wastes_time", "--retriever", "all"],
+                       ["ask", "examples/actions_first_person_believed.kb", "wastes_time", "--retriever", "all",
+                        "--beliefs", "--explain"]],
     "tom-source": TOM,
     "tom-explain": [["ask", TOM, "parent(X, tom)", *NLI, "--explain"]],
     "tom-strict": [["ask", TOM, "parent(X, tom)", *NLI, "--threshold", "0.995"]],

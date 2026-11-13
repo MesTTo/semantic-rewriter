@@ -1,0 +1,406 @@
+{
+ "provenance": {
+  "at": "2026-11-14T04:57:22+1100",
+  "command": "python experiments/check_trust.py --judges cosine-qwen3 --stances STANCES",
+  "commit": "17c09e8bd3df2eb95f1abdec6a28fad4c207b351",
+  "inputs_uncommitted": [
+   "experiments/check_trust.py",
+   "semrewrite/claims.py",
+   "semrewrite/cli.py",
+   "semrewrite/discovery.py",
+   "semrewrite/judges/__init__.py",
+   "semrewrite/judges/base.py",
+   "semrewrite/judges/calibration.json",
+   "semrewrite/pairs.py",
+   "semrewrite/rewriter.py",
+   "semrewrite/trace.py"
+  ]
+ },
+ "set": "delta-atomic",
+ "base_rate": 0.5044270833333333,
+ "rule": "each update read against its inference written as the claim If premise, inference. as the claim check reads a statement against a rewrite's claim; a strengthener's claim holds, a weakener's does not; the check trust maximises the dev labels' likelihood under each stance's projection at the set's base rate after discounting by it (Josang 2016, Eq. 14.6); a stance whose disbelief reaches the judge's threshold defeats",
+ "others": {
+  "rows": 2000,
+  "seed": 20261114
+ },
+ "judges": {
+  "cosine-bge": {
+   "check_trust": 1.0,
+   "trust": 0.001540569060717999,
+   "threshold": 0.957196980714798,
+   "reads_contradiction": false,
+   "seconds": 4.3,
+   "dev": {
+    "rows": 3840,
+    "at_check_trust": {
+     "rows": 3840,
+     "log_loss": 0.6893550050326204,
+     "brier": 0.24810548730350415
+    },
+    "at_trust": {
+     "rows": 3840,
+     "log_loss": 0.6931016795214126,
+     "brier": 0.24997724998515747
+    },
+    "at_base_rate": {
+     "rows": 3840,
+     "log_loss": 0.6931079819140841,
+     "brier": 0.24998040093315974
+    },
+    "auc": 0.6441795974131002,
+    "defeat": {
+     "weakener": 0.0,
+     "strengthener": 0.0
+    }
+   },
+   "test": {
+    "rows": 4138,
+    "at_check_trust": {
+     "rows": 4138,
+     "log_loss": 0.6890680497693429,
+     "brier": 0.24796231584057354
+    },
+    "at_trust": {
+     "rows": 4138,
+     "log_loss": 0.6930854898650805,
+     "brier": 0.24996915538022518
+    },
+    "at_base_rate": {
+     "rows": 4138,
+     "log_loss": 0.6930922300333804,
+     "brier": 0.24997252519862698
+    },
+    "auc": 0.6531260710463365,
+    "defeat": {
+     "weakener": 0.0,
+     "strengthener": 0.0,
+     "other": 0.0
+    }
+   }
+  },
+  "cosine-qwen3": {
+   "check_trust": 1.0,
+   "trust": 0.0005621496889577945,
+   "threshold": 0.9751224517822266,
+   "reads_contradiction": false,
+   "seconds": 20.7,
+   "dev": {
+    "rows": 3840,
+    "at_check_trust": {
+     "rows": 3840,
+     "log_loss": 0.6890179022581806,
+     "brier": 0.24793646777363146
+    },
+    "at_trust": {
+     "rows": 3840,
+     "log_loss": 0.6931056129110204,
+     "brier": 0.2499792165246034
+    },
+    "at_base_rate": {
+     "rows": 3840,
+     "log_loss": 0.6931079819140841,
+     "brier": 0.24998040093315974
+    },
+    "auc": 0.6844875262844771,
+    "defeat": {
+     "weakener": 0.0,
+     "strengthener": 0.0
+    }
+   },
+   "test": {
+    "rows": 4138,
+    "at_check_trust": {
+     "rows": 4138,
+     "log_loss": 0.688959586216001,
+     "brier": 0.24790722989805833
+    },
+    "at_trust": {
+     "rows": 4138,
+     "log_loss": 0.6930898366697348,
+     "brier": 0.24997132861071913
+    },
+    "at_base_rate": {
+     "rows": 4138,
+     "log_loss": 0.6930922300333804,
+     "brier": 0.24997252519862698
+    },
+    "auc": 0.6804799081928576,
+    "defeat": {
+     "weakener": 0.0,
+     "strengthener": 0.0,
+     "other": 0.0
+    }
+   }
+  },
+  "nli-deberta-base": {
+   "check_trust": 0.702552660960317,
+   "trust": 0.3114297961631095,
+   "threshold": 0.2221469032721426,
+   "reads_contradiction": true,
+   "seconds": 11.1,
+   "dev": {
+    "rows": 3840,
+    "at_check_trust": {
+     "rows": 3840,
+     "log_loss": 0.6489432140492112,
+     "brier": 0.22953075622661698
+    },
+    "at_trust": {
+     "rows": 3840,
+     "log_loss": 0.6644253053571597,
+     "brier": 0.23596210059120673
+    },
+    "at_base_rate": {
+     "rows": 3840,
+     "log_loss": 0.6931079819140841,
+     "brier": 0.24998040093315974
+    },
+    "auc": 0.7161089288955216,
+    "defeat": {
+     "weakener": 0.3068838675775092,
+     "strengthener": 0.07692307692307693
+    }
+   },
+   "test": {
+    "rows": 4138,
+    "at_check_trust": {
+     "rows": 4138,
+     "log_loss": 0.6493456042771816,
+     "brier": 0.22956902344457936
+    },
+    "at_trust": {
+     "rows": 4138,
+     "log_loss": 0.6640990118742959,
+     "brier": 0.23580039127567445
+    },
+    "at_base_rate": {
+     "rows": 4138,
+     "log_loss": 0.6930922300333804,
+     "brier": 0.24997252519862698
+    },
+    "auc": 0.722078267364472,
+    "defeat": {
+     "weakener": 0.31167562286272593,
+     "strengthener": 0.08225729316116691,
+     "other": 0.2745
+    }
+   }
+  },
+  "nli-deberta-large": {
+   "check_trust": 0.698273436590954,
+   "trust": 0.34785897737458393,
+   "threshold": 0.6592527778093171,
+   "reads_contradiction": true,
+   "seconds": 32.4,
+   "dev": {
+    "rows": 3840,
+    "at_check_trust": {
+     "rows": 3840,
+     "log_loss": 0.6382699148010241,
+     "brier": 0.2247691811992574
+    },
+    "at_trust": {
+     "rows": 3840,
+     "log_loss": 0.6543727105860545,
+     "brier": 0.23119554285412128
+    },
+    "at_base_rate": {
+     "rows": 3840,
+     "log_loss": 0.6931079819140841,
+     "brier": 0.24998040093315974
+    },
+    "auc": 0.7513723813525963,
+    "defeat": {
+     "weakener": 0.32317393589069887,
+     "strengthener": 0.06504904491481672
+    }
+   },
+   "test": {
+    "rows": 4138,
+    "at_check_trust": {
+     "rows": 4138,
+     "log_loss": 0.6423974521818724,
+     "brier": 0.2263722261416328
+    },
+    "at_trust": {
+     "rows": 4138,
+     "log_loss": 0.6557535281048048,
+     "brier": 0.23185152162097108
+    },
+    "at_base_rate": {
+     "rows": 4138,
+     "log_loss": 0.6930922300333804,
+     "brier": 0.24997252519862698
+    },
+    "auc": 0.7524746646069869,
+    "defeat": {
+     "weakener": 0.32095749877870056,
+     "strengthener": 0.07269249163079866,
+     "other": 0.2675
+    }
+   }
+  },
+  "nli-deberta-large-wanli": {
+   "check_trust": 0.9033006495672349,
+   "trust": 0.5238079757330589,
+   "threshold": 0.05405977550547415,
+   "reads_contradiction": true,
+   "seconds": 11.1,
+   "dev": {
+    "rows": 3840,
+    "at_check_trust": {
+     "rows": 3840,
+     "log_loss": 0.6235820975610459,
+     "brier": 0.2191402727880337
+    },
+    "at_trust": {
+     "rows": 3840,
+     "log_loss": 0.6411661687056863,
+     "brier": 0.2254363237865632
+    },
+    "at_base_rate": {
+     "rows": 3840,
+     "log_loss": 0.6931079819140841,
+     "brier": 0.24998040093315974
+    },
+    "auc": 0.7768230528055178,
+    "defeat": {
+     "weakener": 0.41723594324750396,
+     "strengthener": 0.08828084667010841
+    }
+   },
+   "test": {
+    "rows": 4138,
+    "at_check_trust": {
+     "rows": 4138,
+     "log_loss": 0.6234445786795119,
+     "brier": 0.21897569743663964
+    },
+    "at_trust": {
+     "rows": 4138,
+     "log_loss": 0.6408922923725224,
+     "brier": 0.2252840719506591
+    },
+    "at_base_rate": {
+     "rows": 4138,
+     "log_loss": 0.6930922300333804,
+     "brier": 0.24997252519862698
+    },
+    "auc": 0.7777045737927709,
+    "defeat": {
+     "weakener": 0.43038593063019054,
+     "strengthener": 0.09995217599234815,
+     "other": 0.3905
+    }
+   }
+  },
+  "reranker-qwen3": {
+   "check_trust": 0.9733920988967133,
+   "trust": 0.07735878821260883,
+   "threshold": 0.8078806102275848,
+   "reads_contradiction": false,
+   "seconds": 89.3,
+   "dev": {
+    "rows": 3840,
+    "at_check_trust": {
+     "rows": 3840,
+     "log_loss": 0.6714718434213877,
+     "brier": 0.239375491495547
+    },
+    "at_trust": {
+     "rows": 3840,
+     "log_loss": 0.6899551589634636,
+     "brier": 0.24840489209828115
+    },
+    "at_base_rate": {
+     "rows": 3840,
+     "log_loss": 0.6931079819140841,
+     "brier": 0.24998040093315974
+    },
+    "auc": 0.6370539302804501,
+    "defeat": {
+     "weakener": 0.0,
+     "strengthener": 0.0
+    }
+   },
+   "test": {
+    "rows": 4138,
+    "at_check_trust": {
+     "rows": 4138,
+     "log_loss": 0.6671949081050509,
+     "brier": 0.23744681062803655
+    },
+    "at_trust": {
+     "rows": 4138,
+     "log_loss": 0.6896371336028375,
+     "brier": 0.2482459954551694
+    },
+    "at_base_rate": {
+     "rows": 4138,
+     "log_loss": 0.6930922300333804,
+     "brier": 0.24997252519862698
+    },
+    "auc": 0.6424154324591609,
+    "defeat": {
+     "weakener": 0.0,
+     "strengthener": 0.0,
+     "other": 0.0
+    }
+   }
+  },
+  "typical-qwen3-4b": {
+   "check_trust": 0.7380682659369042,
+   "trust": 0.5591332022607642,
+   "threshold": 0.2688319140417118,
+   "reads_contradiction": false,
+   "seconds": 492.7,
+   "dev": {
+    "rows": 3840,
+    "at_check_trust": {
+     "rows": 3840,
+     "log_loss": 0.6246928367123789,
+     "brier": 0.21801287767084418
+    },
+    "at_trust": {
+     "rows": 3840,
+     "log_loss": 0.6300282538971215,
+     "brier": 0.22012363762236423
+    },
+    "at_base_rate": {
+     "rows": 3840,
+     "log_loss": 0.6931079819140841,
+     "brier": 0.24998040093315974
+    },
+    "auc": 0.732549833686506,
+    "defeat": {
+     "weakener": 0.19968470835522859,
+     "strengthener": 0.041300980898296334
+    }
+   },
+   "test": {
+    "rows": 4138,
+    "at_check_trust": {
+     "rows": 4138,
+     "log_loss": 0.6258450464638265,
+     "brier": 0.21840934226709974
+    },
+    "at_trust": {
+     "rows": 4138,
+     "log_loss": 0.630739830452957,
+     "brier": 0.22041288208169565
+    },
+    "at_base_rate": {
+     "rows": 4138,
+     "log_loss": 0.6930922300333804,
+     "brier": 0.24997252519862698
+    },
+    "auc": 0.7350050008445715,
+    "defeat": {
+     "weakener": 0.2144601856375183,
+     "strengthener": 0.05117168818747011,
+     "other": 0.0415
+    }
+   }
+  }
+ }
+}

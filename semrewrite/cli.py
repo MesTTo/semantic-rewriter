@@ -3,7 +3,7 @@ show the rewrites discovery admits for a predicate, list engines and strategies,
 run the engine conformance kit, and convert between knowledge-base formats.
 
     semrewrite ask family.kb "parent(X, tom)" --judge nli-deberta-large --explain
-    semrewrite ask actions.kb "wastes_time(X)" --check --explain
+    semrewrite ask actions.kb "wastes_time(X)" --beliefs --explain
     semrewrite rewrites family.kb parent --judge jev --all
     semrewrite engines
     semrewrite conformance --engine pymetta
@@ -68,41 +68,17 @@ def _retriever(args: argparse.Namespace):
     return AllCandidates() if args.retriever == "all" else EmbeddingRetriever()
 
 
-def _embedder(retriever):
-    """The embedding model the claim check chooses statements with: the run's own when it retrieves by embedding, as
-    the default retriever does, else the default model."""
-    from semrewrite.retrieve import EmbeddingRetriever
-
-    return retriever if isinstance(retriever, EmbeddingRetriever) else EmbeddingRetriever()
-
-
-def _check(args: argparse.Namespace, kb: KB, judge, retriever):
-    """The claim check of --check: the run's judge reads the statements chosen by the embedding model against each
-    rewrite."""
-    from semrewrite.claims import ClaimCheck
-    from semrewrite.judges.base import SentenceJudge
-
-    if not isinstance(judge, SentenceJudge):
-        msg = f"judge {args.judge} does not read sentences, so it cannot check claims"
-        raise ValueError(msg)  # noqa: TRY004 - a judge name it cannot use, which main() reports as others
-    return ClaimCheck(kb, judge, _embedder(retriever))
-
-
 def _rewriter(args: argparse.Namespace, kb: KB) -> Rewriter:
+    """The run's rewriter, which checks every rewrite it admits against the knowledge base's statements with the run's
+    judge, the run's embedding retriever choosing the statements (semrewrite.claims.default_check)."""
     from semrewrite.judges import default_data_trust
 
     admission = Directional(args.directional) if args.directional is not None else Threshold()
-    check = getattr(args, "check", False)
-    # The claim check moves answers' opinions, so asking for it asks for them.
-    beliefs = getattr(args, "beliefs", False) or check
-    # Answer beliefs and the SNARS export both read each rewrite's opinion, which the data trust and the check enter.
-    weighed = beliefs or getattr(args, "snars", False)
-    judge, retriever = _judge(args, kb), _retriever(args)
-    return Rewriter(kb, judge, make_engine(args.engine), retriever, k=args.k,
+    beliefs = getattr(args, "beliefs", False)
+    return Rewriter(kb, _judge(args, kb), make_engine(args.engine), _retriever(args), k=args.k,
                     budget=Budget(work=args.work, seconds=args.seconds), admission=admission,
                     proofs=getattr(args, "explain", False), trace=TextTrace() if getattr(args, "trace", False) else None,
-                    beliefs=SETS if beliefs else 0, data_trust=default_data_trust(args.judge) if weighed else 0.0,
-                    claims=_check(args, kb, judge, retriever) if check else None)
+                    beliefs=SETS if beliefs else 0, data_trust=default_data_trust(args.judge))
 
 
 def _opinion_text(o: Opinion) -> str:
@@ -116,13 +92,26 @@ def _opinion_json(o: Opinion) -> dict[str, float]:
             "uncertainty": round(o.uncertainty, 6), "base_rate": round(o.base_rate, 6)}
 
 
+def _statement_json(r) -> dict:
+    """One statement read against a claim, as --json writes it: the judge's own stance and the opinion it weighs on
+    the rewrite with, at the judge's check trust."""
+    return {"statement": r.statement, "similarity": round(r.similarity, 6), "source": r.source, "side": r.side,
+            "stance": _opinion_json(r.stance), **_opinion_json(r.opinion)}
+
+
 def _readings_json(rw: Rewriter, out) -> list[dict]:
     """Each admitted rewrite's opinion with the statements read against its claim, as --json writes them."""
     assert out.rewrite_beliefs is not None and out.readings is not None and rw.claims is not None
     return [{"rewrite": [p, c, list(m)], "claim": rw.claims.claim((p, c, m)), **_opinion_json(out.rewrite_beliefs[(p, c, m)]),
-             "statements": [{"statement": r.statement, "similarity": round(r.similarity, 6), "source": r.source,
-                             "side": r.side, **_opinion_json(r.opinion)} for r in out.readings[(p, c, m)]]}
+             "statements": [_statement_json(r) for r in out.readings[(p, c, m)]]}
             for p, c, m in sorted(out.readings)]
+
+
+def _defeated_json(rw: Rewriter, defeated: dict) -> list[dict]:
+    """Each rewrite the claim check withdrew with the statements clearly contradicting it, as --json writes them."""
+    assert rw.claims is not None
+    return [{"rewrite": [p, c, list(m)], "claim": rw.claims.claim((p, c, m)),
+             "statements": [_statement_json(r) for r in defeated[(p, c, m)]]} for p, c, m in sorted(defeated)]
 
 
 def _reading_lines(readings) -> list[str]:
@@ -132,9 +121,17 @@ def _reading_lines(readings) -> list[str]:
             + ("" if r.source == r.statement else f"  (one source with {json.dumps(r.source)})") for r in readings]
 
 
-def _explain_rewrites(out) -> None:
+def _defeat_lines(readings, threshold: float) -> list[str]:
+    """Each statement clearly contradicting a claim, as a line: the judge's disbelief against the threshold it
+    reaches, the statement and its similarity to the claim."""
+    return [f"contradicts  d {r.stance.disbelief:.3f} >= {threshold:.3f}  {json.dumps(r.statement)}  "
+            f"similarity {r.similarity:.3f}" for r in readings]
+
+
+def _explain_rewrites(rw: Rewriter, out) -> None:
     """The admitted rewrites on standard error, with each one's opinion when answers were weighed, and under it each
-    statement read against its claim."""
+    statement read against its claim; then the rewrites the claim check withdrew, each with the statements clearly
+    contradicting it."""
     print(f"\nrewrites admitted ({len(out.admitted)}):", file=sys.stderr)
     for key in sorted(out.admitted, key=lambda k: (k[1], k[0], k[2])):
         p, c, m = key
@@ -142,6 +139,13 @@ def _explain_rewrites(out) -> None:
         print(f"  {Rewrite(c, p, m)}{opinion}", file=sys.stderr)
         for line in _reading_lines((out.readings or {}).get(key, ())):
             print(f"    {line}", file=sys.stderr)
+    if out.defeated:
+        print(f"\nrewrites withdrawn by what the knowledge base states ({len(out.defeated)}):", file=sys.stderr)
+        for key in sorted(out.defeated, key=lambda k: (k[1], k[0], k[2])):
+            p, c, m = key
+            print(f"  {Rewrite(c, p, m)}", file=sys.stderr)
+            for line in _defeat_lines(out.defeated[key], rw.claims.bar if rw.claims is not None else rw.scorer.threshold):
+                print(f"    {line}", file=sys.stderr)
 
 
 def cmd_ask(args: argparse.Namespace) -> int:
@@ -152,6 +156,8 @@ def cmd_ask(args: argparse.Namespace) -> int:
     out = rw.ask(query, strategy if args.depth is None else replace(strategy, depth=args.depth))
     rows = sorted(out.answers)
     beliefs = out.beliefs
+    # The check's readings and cost are shown where the knowledge base states something it reads.
+    checked = rw.claims is not None and rw.claims.reads
     if beliefs is not None:
         # Ranked by projected probability, highest first; --answer-threshold drops the answers below it.
         rows = sorted((r for r in rows if beliefs[r].projection >= args.answer_threshold),
@@ -162,11 +168,12 @@ def cmd_ask(args: argparse.Namespace) -> int:
             "answers": [list(a) for a in rows],
             **({"beliefs": [_opinion_json(beliefs[r]) for r in rows]} if beliefs is not None else {}),
             "rewrites": sorted([p, c, list(m)] for p, c, m in out.admitted),
-            **({"checks": _readings_json(rw, out)} if out.readings is not None else {}),
+            **({"defeated": _defeated_json(rw, out.defeated)} if checked else {}),
+            **({"checks": _readings_json(rw, out)} if checked and out.readings is not None else {}),
             "cost": {"work": out.work, "seconds": round(out.seconds, 3), "expansions": out.expansions,
                      "proposals": out.proposals, "tables": out.tables,
                      **({"check": {**rw.claims.usage, "seconds": round(rw.claims.seconds, 3)}}
-                        if rw.claims is not None else {})},
+                        if rw.claims is not None and checked else {})},
         }, indent=1))
     else:
         for row in rows:
@@ -175,11 +182,12 @@ def cmd_ask(args: argparse.Namespace) -> int:
             if args.explain and out.proofs and row in out.proofs:
                 print("\n".join("    " + line for line in out.proofs[row].lines()))
         if args.explain:
-            _explain_rewrites(out)
-        checked = "" if rw.claims is None else (f", {plural(rw.claims.usage['pairs'], 'pair')} reading "
-                                                f"{plural(rw.claims.usage['claims'], 'claim')} in {rw.claims.seconds:.2f} s")
+            _explain_rewrites(rw, out)
+        cost = "" if not checked or rw.claims is None else (
+            f", {plural(rw.claims.usage['pairs'], 'pair')} reading {plural(rw.claims.usage['claims'], 'claim')} in "
+            f"{rw.claims.seconds:.2f} s, {plural(len(out.defeated), 'rewrite')} withdrawn")
         print(f"{out.status}: {plural(len(out.answers), 'answer')}, {out.work:,} work, {out.proposals:,} judge questions"
-              f"{checked}, {out.seconds:.2f} s", file=sys.stderr)
+              f"{cost}, {out.seconds:.2f} s", file=sys.stderr)
     return 0 if out.finished else (2 if out.status in ("work_limit", "time_limit") else 1)
 
 
@@ -195,15 +203,22 @@ def cmd_rewrites(args: argparse.Namespace) -> int:
         return _snars(rw, admitted)
     proposals = disc.proposals(args.predicate) if args.all else []
     scores = rw.scorer.score(proposals) if proposals else []
-    # With the check, each admitted rewrite shows its opinion after it and the statements read against its claim.
-    opinion = rw.rewrite_opinions(admitted)[1] if rw.claims is not None else {}
-    readings = rw.claims.readings(admitted.values()) if rw.claims is not None else {}
+    defeated = disc.defeats([args.predicate])
+    # Where the knowledge base states something the check reads, each admitted rewrite shows its opinion after the
+    # check and the statements read against its claim, and each withdrawn one the statements contradicting it.
+    checked = rw.claims is not None and rw.claims.reads
+    opinion = rw.rewrite_opinions(admitted)[1] if checked else {}
+    readings = rw.claims.readings(admitted.values()) if checked and rw.claims is not None else {}
     for r in sorted(admitted.values(), key=lambda r: -r.score):
-        print(f"admit   {r.score:.3f}  {r}" + (f"    {_opinion_text(opinion[r.key])}" if r.key in opinion else ""))
+        print(f"admit   {r.score:.3f}  {r}" + (f"    {_opinion_text(opinion[r.key])}" if readings.get(r.key) else ""))
         for line in _reading_lines(readings.get(r.key, ())):
             print(f"          {line}")
+    for r, found in sorted(defeated.values(), key=lambda held: -held[0].score):
+        print(f"defeat  {r.score:.3f}  {r}")
+        for line in _defeat_lines(found, rw.claims.bar if rw.claims is not None else rw.scorer.threshold):
+            print(f"          {line}")
     for p, s in sorted(zip(proposals, scores, strict=True), key=lambda ps: -ps[1]):
-        if p.key not in admitted:
+        if p.key not in admitted and p.key not in defeated:
             print(f"reject  {s:.3f}  {p.rewrite(s)}")
     print(f"{disc.stats.proposals:,} judge questions at threshold {rw.scorer.threshold:.3f}", file=sys.stderr)
     return 0
@@ -211,8 +226,9 @@ def cmd_rewrites(args: argparse.Namespace) -> int:
 
 def _snars(rw: Rewriter, admitted: dict) -> int:
     """Print each admitted rewrite as the two lines putting it into SNARS's world, its validity believed at its opinion
-    and its rule-kit row, strongest first: the MeTTa S-expressions mettabase's reasoner and GoalChainer reason with
-    (semrewrite.snars). The judge is named as the evidence's source."""
+    after the claim check and its rule-kit row, strongest first: the MeTTa S-expressions mettabase's reasoner and
+    GoalChainer reason with (semrewrite.snars). A rewrite the check withdrew is not admitted, so it is not exported.
+    The judge is named as the evidence's source."""
     rewrites, opinion = rw.rewrite_opinions(admitted)
     source = f"semrewrite {rw.scorer.judge.name}"
     for r in sorted(rewrites, key=lambda r: (-opinion[r.key].projection, r.key)):
@@ -313,7 +329,9 @@ def parser() -> argparse.ArgumentParser:
     ask.add_argument("--strategy", default="lazy-tabled", choices=sorted(STRATEGIES))
     ask.add_argument("--depth", type=int, help="the most counted steps on any path, counted as the strategy counts "
                      "them, in place of its own bound; 0 removes the bound")
-    ask.add_argument("--explain", action="store_true", help="print each answer's derivation and the rewrites admitted")
+    ask.add_argument("--explain", action="store_true",
+                     help="print each answer's derivation, the rewrites admitted with the statements read against "
+                          "each, and the rewrites the knowledge base's statements withdrew")
     ask.add_argument("--trace", action="store_true",
                      help="print each step on standard error as it happens: the engine starting and stopping, "
                           "evaluation reaching a predicate, the candidates retrieved, the judge's verdicts and the "
@@ -323,10 +341,6 @@ def parser() -> argparse.ArgumentParser:
                           "probability P with belief b, disbelief d and uncertainty u; rank the answers by P")
     ask.add_argument("--answer-threshold", type=float, default=0.0, metavar="P",
                      help="with --beliefs, print only the answers whose projected probability is at least P")
-    ask.add_argument("--check", action="store_true",
-                     help="weigh each admitted rewrite against the knowledge base's statements read by meaning, as "
-                          "the judge reads them against the rewrite's claim, and give answers beliefs from the result; "
-                          "with --explain, list the statements read against each rewrite")
     ask.add_argument("--json", action="store_true")
     ask.set_defaults(run=cmd_ask)
 
@@ -337,10 +351,6 @@ def parser() -> argparse.ArgumentParser:
     rewrites.add_argument("--snars", action="store_true",
                           help="print each admitted rewrite as two lines of SNARS's world: its validity believed at "
                                "its opinion, and a rule-kit row deriving its conclusion from its premise and validity")
-    rewrites.add_argument("--check", action="store_true",
-                          help="weigh each admitted rewrite against the knowledge base's statements read by meaning, "
-                               "as ask --check does: print its opinion after the check and the statements read "
-                               "against its claim, or with --snars export that opinion")
     rewrites.set_defaults(run=cmd_rewrites)
 
     sub.add_parser("engines", help="list engines and their capabilities").set_defaults(run=cmd_engines)
