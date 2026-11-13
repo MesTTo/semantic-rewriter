@@ -363,25 +363,27 @@ def snars_table() -> str:
     for m in _load("snars_ranking.json"):
         answers, ap, p = m["answers"], m["average_precision"], m["p_range"]
         outside = "; ".join(f"{a}: {r['rewriter']:,} and {r['snars']:,}" for a, r in m["outside"].items()) or "none"
-        rows.append([m["question"], m["depth"], f"{answers['both']:,} of {answers['rewriter']:,}",
-                     answers["with_several_proofs"], ap["rewriter"], ap["snars"], m["kendall_tau_b"],
+        rows.append([m["question"], m["depth"], f"1/{answers['rewriter']:,}",
+                     f"{answers['both']:,} of {answers['rewriter']:,}", answers["with_several_proofs"],
+                     ap["rewriter"], ap["snars"], m["kendall_tau_b"],
                      f"{p['rewriter'][0]:.3f} to {p['rewriter'][1]:.3f}", f"{p['snars'][0]:.3f} to {p['snars'][1]:.3f}",
                      outside])
-    return _table(["question", "SNARS depth", "answers both rank", "with several proofs",
+    return _table(["question", "SNARS depth", "candidates' prior", "answers both rank", "with several proofs",
                    "average precision over them, rewriter", "and SNARS", "Kendall's tau-b", "P, rewriter",
                    "P, SNARS", "answers outside Wikidata's: rank by each"], rows)
 
 
 def snars_chain_table() -> str:
-    """SNARS's P along experiments/snars_ranking.py's chain, by its rule rows' truth and the rewrite's validity, one
-    column per number of rule applications an answer's proofs take."""
+    """SNARS's P along experiments/snars_ranking.py's chain, by the candidates' prior and the rewrite's validity, beside
+    the P the rewriter's lineage gives every answer, one column per number of rule applications an answer's proofs
+    take."""
     m = _load("snars_chain.json")
     steps = sorted({x["applications"] for arm in m["arms"] for x in arm["answers"].values()})
-    rows = [[arm["rules"], arm["validity"],
+    rows = [[arm["prior"], arm["validity"], arm["lineage"],
              *(next(x["P"] for x in arm["answers"].values() if x["applications"] == s) for s in steps)]
             for arm in m["arms"]]
-    return _table(["rule rows", "rewrite's validity", *(f"P at {s} rule application{'s' * (s > 1)}" for s in steps)],
-                  rows)
+    return _table(["candidates' prior", "rewrite's validity", "P, rewriter's lineage",
+                   *(f"P at {s} rule application{'s' * (s > 1)}" for s in steps)], rows)
 
 
 def claim_actions_table() -> str:

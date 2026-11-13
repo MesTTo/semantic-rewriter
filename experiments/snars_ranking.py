@@ -1,9 +1,11 @@
-"""Purpose: compare how SNARS ranks a Wikidata question's answers with how the rewriter ranks them, and find on a
-constructed chain what makes the two part. The rewriter weighs each answer by its exact lineage, the question's own
-rules certain and a rewrite used twice in a derivation counting once. SNARS, given the knowledge base's statements,
-the question's own rules and the admitted rewrites as semrewrite.snars writes them, proves every answer by modus
-ponens at each step and fuses each answer's evidence-disjoint proofs (mettabase's sn prove and sn fuse-proofs).
-SNARS does all of its own proving and fusing; this script only routes its proofs to the answers they conclude.
+"""Purpose: compare how SNARS ranks a Wikidata question's answers with how the rewriter ranks them, and measure on a
+constructed chain how SNARS's P depends on a derivation's length. The rewriter weighs each answer by its exact lineage,
+the question's own rules certain and a rewrite used twice in a derivation counting once. SNARS is given the knowledge
+base's statements, the question's own rules as certain-rule rows, the admitted rewrites as semrewrite.snars writes
+them, and each of the question's N candidate answers seeded at the marginal 1/N, the base rate a conclusion keeps
+where its derivation fails (SLN 8.2). It proves every answer (mettabase's sn prove, which conditions a proof on a
+validity it uses more than once) and fuses each answer's evidence-disjoint proofs (sn fuse-proofs). SNARS does all of
+its own proving and fusing; this script only routes its proofs to the answers they conclude.
 
 Run from the repository root with PETTA_PATH and METTABASE_PATH set, as tests/test_snars.py needs them:
 
@@ -11,8 +13,8 @@ Run from the repository root with PETTA_PATH and METTABASE_PATH set, as tests/te
 
 The questions write results/snars_ranking.json and print each ranking's average precision against Wikidata's own
 answer and how far the two rankings agree. `chain` writes results/snars_chain.json: SNARS's P along a chain that uses
-one rewrite at every link, with SNARS's rule rows at their structural truth or certain, and the rewrite's validity
-at several opinions.
+one rewrite at every link, with the chain's candidates seeded at 1/N or unseeded, and the rewrite's validity at
+several opinions.
 """
 
 from __future__ import annotations
@@ -40,7 +42,7 @@ from semrewrite.model import Atom, Rewrite, Rule, is_variable
 from semrewrite.opinion import Opinion
 from semrewrite.protocols import Budget
 from semrewrite.rewriter import Rewriter
-from semrewrite.snars import believed, rule_rows, statement
+from semrewrite.snars import believed, certain_rule, marginal, rule_rows, statement
 
 RESULTS = ROOT / "results" / "snars_ranking.json"
 CHAIN = ROOT / "results" / "snars_chain.json"
@@ -49,12 +51,9 @@ CHAIN = ROOT / "results" / "snars_chain.json"
 # Alphabet's chain ownership through its transitive rule, and depth 3 reaches 2,894 of its 2,903 in about three
 # minutes, where depth 2 reached 376.
 RUNS = {"leonardo": ("jev", 0.1, 1), "alphabet": ("jev", 0.1, 3)}
-# The chain's arms. SNARS's backward chainer applies every rule row at one structural truth, (sn struct-tv), belief
-# 0.9; these two lines, run once SNARS is loaded, make it certain instead. The rewrite's validity is certain, or an
-# opinion at Wikidata's base rate whose P, 0.95 or 0.24, lies near the top or the bottom of the rewriter's P on
-# Leonardo's question.
-CERTAIN_RULES = ("!(match &self (= (sn struct-tv) $o) (remove-atom &self (= (sn struct-tv) $o)))",
-                 "!(add-atom &self (= (sn struct-tv) (Opinion 1.0 0.0 0.0 0.5)))")
+# The chain's arms. The rewrite's validity is certain, or an opinion at Wikidata's base rate whose P, 0.95 or 0.24,
+# lies near the top or the bottom of the rewriter's P on Leonardo's question. The chain's candidates, the nodes a can
+# own, are seeded at 1/N as the questions' are, or left unseeded at SNARS's default base rate, 0.5.
 VALIDITIES = {"certain": Opinion(1.0, 0.0, 0.0), "P 0.95": Opinion(0.94, 0.0, 0.06, 0.214),
               "P 0.24": Opinion(0.2, 0.6, 0.2, 0.214)}
 
@@ -70,12 +69,12 @@ def _evaluate():
 
 
 def _rule_lines(index: int, rule: Rule) -> list[str]:
-    """A question's own rule in SNARS's world: a two-premise rule as a rule-kit row, a one-premise rule over distinct
-    variables as a rewrite certainly valid."""
+    """A question's own rule in SNARS's world, certain as the rewriter takes it: a two-premise rule as a certain-rule
+    row, a one-premise rule over distinct variables as a rewrite certainly valid."""
     if len(rule.body) == 2:
         first, second = rule.body
-        return [(f"(sn rw rule-{index} ded-shape {statement(first.pred, first.args)} "
-                 f"{statement(second.pred, second.args)} {statement(rule.head.pred, rule.head.args)})")]
+        return [certain_rule(f"rule-{index}", statement(first.pred, first.args), statement(second.pred, second.args),
+                             statement(rule.head.pred, rule.head.args))]
     (premise,) = rule.body
     if len(set(premise.args)) == len(premise.args) and set(rule.head.args) <= set(premise.args):
         mapping = tuple(premise.args.index(v) for v in rule.head.args)
@@ -232,10 +231,12 @@ def compare(name: str, judge_name: str, threshold: float, depth: int) -> dict[st
         raise RuntimeError(msg)
     lineage = {question.answers_of([row]).pop(): o.projection for row, o in out.beliefs.items()}
 
-    # SNARS's world: the statements the rewrites and rules read, certain; the rules; the rewrites.
+    # SNARS's world: each candidate answer's marginal at 1/N, the candidates being the answers the admitted rewrites
+    # reach; the statements the rewrites and rules read, certain; the rules; the rewrites.
     used = {r.premise for r in rewrites} | {b.pred for rule in kb.rules for b in rule.body}
     facts = [f for f in kb.facts if f.pred in used]
-    world = [believed(f, Opinion(1.0, 0.0, 0.0), "kb") for f in facts]
+    world = [marginal(a, 1.0 / len(lineage)) for a in sorted(lineage)]
+    world += [believed(f, Opinion(1.0, 0.0, 0.0), "kb") for f in facts]
     world += [line for i, rule in enumerate(kb.rules) for line in _rule_lines(i, rule)]
     world += [line for r in rewrites for line in rule_rows(r, opinion[r.key], f"semrewrite {judge_name}")]
     by_answer, snars, seconds = _prove(world, kb.queries[0], depth)
@@ -250,7 +251,7 @@ def compare(name: str, judge_name: str, threshold: float, depth: int) -> dict[st
     tau, concordant, discordant = _kendall({a: lineage[a] for a in both}, {a: snars[a] for a in both})
     multi = sum(1 for a in both if len(by_answer[a]) > 1)
     return {
-        "question": name, "judge": judge_name, "threshold": threshold, "depth": depth,
+        "question": name, "judge": judge_name, "threshold": threshold, "depth": depth, "prior": 1.0 / len(lineage),
         "rewrites": len(rewrites), "facts": len(facts), "proofs": sum(len(ps) for ps in by_answer.values()),
         "answers": {"rewriter": len(lineage), "snars": len(snars), "both": len(both),
                     "rewriter_only": sorted(set(lineage) - set(snars))[:20],
@@ -269,19 +270,21 @@ def compare(name: str, judge_name: str, threshold: float, depth: int) -> dict[st
 # Time: 2 x 3 arms, each _prove's two PeTTa runs over 2 x links statements and rules.
 def chain(links: int = 4, depth: int = 3) -> dict[str, Any]:
     """SNARS's P for each answer along a chain a -> b1 -> ... -> b<links> of owned_by statements, which a owns through
-    the rewrite owns(X,Y) <= owned_by(Y,X) at every link and the transitive rule between links, in each arm: the rule
-    rows at SNARS's structural truth or certain, and the rewrite's validity at each of VALIDITIES."""
+    the rewrite owns(X,Y) <= owned_by(Y,X) at every link and the transitive rule between links, in each arm: the chain's
+    candidates b1 ... b<links> seeded at 1/links or unseeded, and the rewrite's validity at each of VALIDITIES. The
+    rewriter's lineage gives every answer the validity's P, the one rewrite counting once."""
     nodes = ["a", *(f"b{i}" for i in range(1, links + 1))]
     facts = [believed(Atom("owned_by", (child, parent)), Opinion(1.0, 0.0, 0.0), "kb")
              for parent, child in itertools.pairwise(nodes)]
     transitive = _rule_lines(0, Rule(Atom("owns", ("X", "Z")), (Atom("owns", ("X", "Y")), Atom("owns", ("Y", "Z")))))
     rewrite = Rewrite("owns", "owned_by", (1, 0))
+    priors = {f"1/{links}": [marginal(b, 1.0 / links) for b in nodes[1:]], "unseeded, 0.5": []}
     arms = []
-    for rules, swap in (("SNARS's structural truth", ()), ("certain", CERTAIN_RULES)):
+    for prior, seeds in priors.items():
         for validity, opinion in VALIDITIES.items():
-            world = [*swap, *facts, *transitive, *rule_rows(rewrite, opinion, "chain")]
+            world = [*seeds, *facts, *transitive, *rule_rows(rewrite, opinion, "chain")]
             by_answer, fused, _ = _prove(world, Atom("owns", ("a", "X")), depth)
-            arms.append({"rules": rules, "validity": validity,
+            arms.append({"prior": prior, "validity": validity, "lineage": round(opinion.projection, 4),
                          "answers": {a: {"applications": min(_applications(p[2]) for p in ps), "P": round(fused[a], 4)}
                                      for a, ps in sorted(by_answer.items())}})
     return {"links": links, "depth": depth,
@@ -296,7 +299,7 @@ if __name__ == "__main__":
         result = chain()
         CHAIN.write_text(json.dumps(result, indent=1) + "\n")
         for arm in result["arms"]:
-            print(json.dumps({"rules": arm["rules"], "validity": arm["validity"],
+            print(json.dumps({"prior": arm["prior"], "validity": arm["validity"],
                               "P": {a: [x["applications"], x["P"]] for a, x in arm["answers"].items()}}))
     runs = [(a.split(":")[0], int(a.split(":")[1]) if ":" in a else None) for a in args if a != "chain"]
     if runs:
