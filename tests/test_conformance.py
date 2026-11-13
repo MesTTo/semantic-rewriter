@@ -8,6 +8,7 @@ broken engines, since a kit that passes a broken engine is worthless.
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import time
@@ -548,6 +549,27 @@ def test_the_shard_holding_the_first_failure_shrinks_it_to_the_unsharded_case() 
     owner, _ = run((first % SHARDS, SHARDS))
     assert first > 0 and whole.outcome == owner.outcome == "fail"
     assert owner.case == whole.case and len(whole.case.program.rules) == 3
+
+
+# Prints a checksum of the cases each property's seed-0 search draws.
+DRAWN = """
+import zlib
+from semrewrite import conformance as kit
+from semrewrite.engines.python import PythonEngine
+for prop in kit.PROPERTIES:
+    seen = []
+    record = kit.Property(prop.name, "", lambda c: None, prop.strategy, lambda engine, case: seen.append(str(case)))
+    kit.check(PythonEngine(), record, max_examples=30)
+    print(prop.name, zlib.crc32("\\n".join(seen).encode()))
+"""
+
+
+def test_a_seeded_search_draws_the_same_cases_whatever_the_hash_seed() -> None:
+    """The shards of a search run in separate pytest-xdist workers, each hashing strings with its own seed, so they
+    replay one search only if a seeded search draws the same cases whatever PYTHONHASHSEED is."""
+    outputs = {subprocess.run([sys.executable, "-c", DRAWN], env={**os.environ, "PYTHONHASHSEED": seed},
+                              capture_output=True, text=True, check=True).stdout for seed in ("1", "2")}
+    assert len(outputs) == 1 and len(outputs.pop().splitlines()) == len(kit.PROPERTIES)
 
 
 def test_a_shard_needs_a_seed_and_an_index_below_its_count() -> None:
