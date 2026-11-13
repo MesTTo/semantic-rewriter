@@ -146,6 +146,12 @@ def _petta(program: str) -> str:
     return result.stdout
 
 
+def _import_snars() -> str:
+    """The line importing METTABASE_PATH's SNARS by absolute path, which PeTTa resolves whether mettabase's imports are
+    relative to the repository (its main, on PeTTa d8d4692) or to each file (GoalChainer's line, on import-overhaul)."""
+    return f'!(import! &self "{Path(os.environ["METTABASE_PATH"]) / "lib" / "mettabase" / "snars"}")'
+
+
 def _applications(proof) -> int:
     """The rule applications in a proof term: a leaf, a statement's sid, has none."""
     return 1 + sum(_applications(arg) for arg in proof[1:]) if isinstance(proof, list) else 0
@@ -189,14 +195,14 @@ def _prove(world: list[str], query: Atom, depth: int) -> tuple[dict[str, list[li
     """SNARS's proofs of `query` to `depth` in the world the lines `world` write, by the answer filling the query's
     variable; each answer's P once SNARS fuses its proofs; and the seconds each run took."""
     role = "o" if is_variable(query.args[1]) else "s"
-    program = ["!(import! &self lib/mettabase/snars)", *world, f"!(sn prove {statement(query.pred, query.args)} {depth})"]
+    program = [_import_snars(), *world, f"!(sn prove {statement(query.pred, query.args)} {depth})"]
     started = time.perf_counter()
     by_answer: dict[str, list[list]] = {}
     for proof in _proofs(_parse(_petta("\n".join(program) + "\n"))):
         by_answer.setdefault(_filler(proof[3], role), []).append(proof)
     proving = time.perf_counter() - started
 
-    fusing = ["!(import! &self lib/mettabase/snars)"]
+    fusing = [_import_snars()]
     fusing += [f'!(Fused {json.dumps(a)} (sn fuse-proofs ({" ".join(_show(p) for p in ps)})))'
                for a, ps in sorted(by_answer.items())]
     started = time.perf_counter()

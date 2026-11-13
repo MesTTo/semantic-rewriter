@@ -3,8 +3,10 @@ deriving its conclusion from its premise and that validity; statements are writt
 arity, with numbers PeTTa reads; the command line prints a rewriter's admitted rewrites that way; and SNARS itself, run
 on PeTTa, proves a conclusion through the exported lines.
 
-The SNARS check needs PETTA_PATH, a PeTTa checkout that loads mettabase's SNARS (its fixtures pass on PeTTa d8d4692),
-METTABASE_PATH, the mettabase checkout, and swipl on the PATH; it runs PeTTa with mettabase as the working directory,
+The SNARS check needs PETTA_PATH, a PeTTa checkout that loads mettabase's SNARS (mettabase's main loads on PeTTa
+d8d4692, GoalChainer's mettabase line, whose imports are file-relative, on PeTTa's import-overhaul), METTABASE_PATH, the
+mettabase checkout, and swipl on the PATH; it imports SNARS by absolute path, which both resolve, and runs PeTTa with
+mettabase as the working directory,
 mettabase's and PeTTa's Python packages on PYTHONPATH as mettabase's scripts/use-petta-env.sh puts them, and the program
 on standard input, so it writes nothing, and is skipped, with the reason, when what it needs is missing.
 """
@@ -86,7 +88,7 @@ def test_snars_proves_a_conclusion_through_the_exported_lines() -> None:
     the exported rule-kit row, at an opinion whose masses sum to 1."""
     petta, mettabase = Path(os.environ["PETTA_PATH"]), Path(os.environ["METTABASE_PATH"])
     program = "\n".join([
-        "!(import! &self lib/mettabase/snars)",
+        f'!(import! &self "{mettabase / "lib" / "mettabase" / "snars"}")',
         believed(Atom("mum", ("alice", "tom")), Opinion(1.0, 0.0, 0.0), "kb"),
         *rule_rows(MUM, Opinion(0.45, 0.05, 0.5)),
         f"!(let $r (collapse (sn prove {statement('parent', ('alice', 'tom'))} 3)) (Proved $r))",
