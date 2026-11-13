@@ -57,7 +57,8 @@ grew by three for each digit a solve's tag gained. The first solve on a thread r
 every encoding once on a small program, outside any count: the first evaluation to
 reach a builtin, op or library predicate also resolves its import, fills pymetta's
 dispatch cache and creates the thread's global variables, which made the first
-solve of a process count 61 more inferences than the same solve later; building
+solve of a process count 61 more inferences than the same solve later, and the
+first under a time limit 3 more than the next one under a time limit; building
 the first engine on a thread runs it, so a caller's first timed solve does not
 wait for it, and a solve on a thread no engine was built on runs it first. Every
 context also imports lib_tabling, tabled or not: pymetta keeps the hooks that
@@ -292,12 +293,13 @@ def _settle(engine: PyMeTTaEngine) -> None:
     The program has facts of arity one and two, a rule with a two-atom body, and rewrites with and without a swap of
     their arguments, two of which make the cycle f <= g <= f, so the sources hold every clause shape _native_source
     and _meta_source write. It runs under every setting of tables, depth bound, what the bound counts, discovery
-    callback and proofs. e(X, Y) reaches no cycle and runs under each; f(X, Y) runs wherever a run on a cycle
+    callback and proofs, with and without a time limit, since the first evaluation under a time limit cost 3
+    inferences more. e(X, Y) reaches no cycle and runs under each; f(X, Y) runs wherever a run on a cycle
     terminates, with tables or a bound, since the first tabled cycle of a process, and the first proof table to join
-    two proofs of one answer, cost their first solve more too. Each must answer as the program says, since a warm-up
-    that failed would hide the engine's own fault.
+    two proofs of one answer, cost their first solve more too. Each must answer as the program says, since a
+    warm-up that failed would hide the engine's own fault.
     """
-    # Time: 44 solves of this eight-clause program, once per thread, 1.5 s measured.
+    # Time: 88 solves of this eight-clause program, once per thread.
     _SETTLED.done = True
     rewrites = (Rewrite("d", "c", (1, 0)), Rewrite("e", "d", (0, 1)), Rewrite("g", "d", (0, 1)),
                 Rewrite("f", "g", (1, 0)), Rewrite("g", "f", (1, 0)))
@@ -311,12 +313,12 @@ def _settle(engine: PyMeTTaEngine) -> None:
     # f(k, j) takes three rewrite steps and one rule step, so a bound of 4 reaches it, and e(j, k), counting either.
     bounds = ((0, "steps"), (4, "steps"), (4, "rewrites"))
     try:
-        for tabled, (depth, counts), lazy, proofs in itertools.product((True, False), bounds, (False, True),
-                                                                       (False, True)):
+        for tabled, (depth, counts), lazy, proofs, seconds in itertools.product(
+                (True, False), bounds, (False, True), (False, True), (math.inf, 60.0)):
             program = Program(facts=facts, rules=rules, rewrites=() if lazy else rewrites, tabled=tabled,
                               depth=depth, depth_counts=counts, proofs=proofs)
             for query, answers in queries if tabled or depth else queries[:1]:
-                solution = engine.solve(program, query, Budget(work=1_000_000, seconds=math.inf),
+                solution = engine.solve(program, query, Budget(work=1_000_000, seconds=seconds),
                                         expand if lazy else None)
                 if solution.status != "ok" or solution.answers != answers:
                     msg = (f"the warm-up solve of {query} in {program} ended {solution.status} with "

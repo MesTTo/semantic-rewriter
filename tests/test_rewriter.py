@@ -193,9 +193,10 @@ def test_a_fresh_process_counts_each_first_solve_as_it_counts_the_solve_again(en
     ask counts the same work both times wherever it finished, and ends the same way.
 
     PyMeTTa counted 61 inferences more on a process's first solve, and more again on the first solve of each
-    encoding, while those solves paid pymetta's one-time setup inside their count; a measured run's work was then
-    no budget for the same run later. The process is a fresh one, importing this checkout's package, so its first
-    solves are the ones measured.
+    encoding and on the first under a time limit, while those solves paid pymetta's one-time setup inside their
+    count; a measured run's work was then no budget for the same run later. The process is a fresh one, importing
+    this checkout's package, so its first solves are the ones measured, and the budget has a time limit, as the
+    rewriter's default budget does; the rounds test above measures its first solve without one.
     """
     code = (
         "import json\n"
@@ -209,7 +210,7 @@ def test_a_fresh_process_counts_each_first_solve_as_it_counts_the_solve_again(en
         f"engine = make({engine_name!r})\n"
         "names = [n for n, s in STRATEGIES.items()\n"
         "         if all(getattr(engine.capabilities, c) for c, need in s.needs().items() if need)]\n"
-        "rewriter = Rewriter(kb, OracleJudge(kb.entailed()), engine, None, budget=Budget(work=100_000, seconds=math.inf))\n"
+        "rewriter = Rewriter(kb, OracleJudge(kb.entailed()), engine, None, budget=Budget(work=100_000, seconds=60.0))\n"
         "passes = [[(n, str(q), *(lambda o: (o.status, o.work))(rewriter.ask(q, n))) for n in names for q in kb.queries[:6]]\n"
         "          for _ in range(2)]\n"
         "print(json.dumps(passes))\n"
