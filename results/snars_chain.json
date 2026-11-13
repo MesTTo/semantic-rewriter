@@ -23,134 +23,140 @@
  },
  "arms": [
   {
-   "rules": "SNARS's structural truth",
+   "prior": "1/4",
    "validity": "certain",
+   "lineage": 1.0,
    "answers": {
     "b1": {
      "applications": 1,
-     "P": 0.9494
+     "P": 0.9992
     },
     "b2": {
      "applications": 3,
-     "P": 0.8908
+     "P": 0.9985
     },
     "b3": {
      "applications": 5,
-     "P": 0.8574
+     "P": 0.9982
     },
     "b4": {
      "applications": 7,
-     "P": 0.8261
+     "P": 0.998
     }
    }
   },
   {
-   "rules": "SNARS's structural truth",
+   "prior": "1/4",
    "validity": "P 0.95",
+   "lineage": 0.9528,
    "answers": {
     "b1": {
      "applications": 1,
-     "P": 0.926
+     "P": 0.9643
     },
     "b2": {
      "applications": 3,
-     "P": 0.8645
+     "P": 0.9658
     },
     "b3": {
      "applications": 5,
-     "P": 0.8303
+     "P": 0.9659
     },
     "b4": {
      "applications": 7,
-     "P": 0.7984
+     "P": 0.9661
     }
    }
   },
   {
-   "rules": "SNARS's structural truth",
+   "prior": "1/4",
    "validity": "P 0.24",
+   "lineage": 0.2428,
    "answers": {
     "b1": {
      "applications": 1,
-     "P": 0.5684
+     "P": 0.432
     },
     "b2": {
      "applications": 3,
-     "P": 0.5438
+     "P": 0.4673
     },
     "b3": {
      "applications": 5,
-     "P": 0.5355
+     "P": 0.4739
     },
     "b4": {
      "applications": 7,
-     "P": 0.5274
+     "P": 0.4817
     }
    }
   },
   {
-   "rules": "certain",
+   "prior": "unseeded, 0.5",
    "validity": "certain",
+   "lineage": 1.0,
    "answers": {
     "b1": {
      "applications": 1,
+     "P": 0.9995
+    },
+    "b2": {
+     "applications": 3,
      "P": 0.9993
     },
-    "b2": {
-     "applications": 3,
-     "P": 0.9991
-    },
     "b3": {
      "applications": 5,
-     "P": 0.999
+     "P": 0.9993
     },
     "b4": {
      "applications": 7,
-     "P": 0.9988
+     "P": 0.9993
     }
    }
   },
   {
-   "rules": "certain",
+   "prior": "unseeded, 0.5",
    "validity": "P 0.95",
+   "lineage": 0.9528,
    "answers": {
     "b1": {
      "applications": 1,
-     "P": 0.9733
+     "P": 0.9762
     },
     "b2": {
      "applications": 3,
-     "P": 0.9649
+     "P": 0.9818
     },
     "b3": {
      "applications": 5,
-     "P": 0.9595
+     "P": 0.9833
     },
     "b4": {
      "applications": 7,
-     "P": 0.954
+     "P": 0.9852
     }
    }
   },
   {
-   "rules": "certain",
+   "prior": "unseeded, 0.5",
    "validity": "P 0.24",
+   "lineage": 0.2428,
    "answers": {
     "b1": {
      "applications": 1,
-     "P": 0.576
+     "P": 0.6213
     },
     "b2": {
      "applications": 3,
-     "P": 0.5545
+     "P": 0.7159
     },
     "b3": {
      "applications": 5,
-     "P": 0.5462
+     "P": 0.7396
     },
     "b4": {
      "applications": 7,
-     "P": 0.5383
+     "P": 0.7692
     }
    }
   }

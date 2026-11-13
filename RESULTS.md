@@ -559,35 +559,35 @@ The budget holds on the test updates. At the rule of thumb 3.5 the full knowledg
 
 ### SNARS's ranking beside the rewriter's
 
-`semrewrite rewrites --snars` puts the admitted rewrites into the world of mettabase's SNARS, where GoalChainer reasons. To see whether SNARS ranks the answers as the rewriter does, `experiments/snars_ranking.py` gives SNARS the statements those rewrites and the question's own rules read and has it prove and fuse every answer itself, Jev admitting at 0.1 as above.
+`semrewrite rewrites --snars` puts the admitted rewrites into the world of mettabase's SNARS, where GoalChainer reasons, each as a rule of SNARS's certain-rule class whose second premise is the rewrite's validity. To see whether SNARS ranks the answers as the rewriter does, `experiments/snars_ranking.py` gives SNARS the statements those rewrites and the question's own rules read, the question's rules as certain-rule rows, and each of the question's N candidate answers at the prior 1/N, and has it prove and fuse every answer itself, Jev admitting at 0.1 as above.
 
 <!-- BEGIN GENERATED: snars-ranking -->
-| question | SNARS depth | answers both rank | with several proofs | average precision over them, rewriter | and SNARS | Kendall's tau-b | P, rewriter | P, SNARS | answers outside Wikidata's: rank by each |
-|---|---|---|---|---|---|---|---|---|---|
-| leonardo | 1 | 858 of 858 | 50 | 1.000 | 1.000 | 1.000 | 0.239 to 0.978 | 0.566 to 0.923 | annunciation_q154326: 850 and 850; copy_of_the_leonardo_da_vinci_s_last_supper: 851 and 851; leonardo_da_vinci_the_mind_of_the_renaissance_q101731196: 853 and 853; the_child_in_time_q1747269: 854 and 854; the_da_vinci_code_q124474978: 855 and 855 |
-| alphabet | 3 | 2,894 of 2,903 | 2,602 | 1.000 | 1.000 | 0.028 | 0.100 to 0.998 | 0.631 to 0.961 | google_earth_vr: 2,894 and 2,827 |
+| question | SNARS depth | candidates' prior | answers both rank | with several proofs | average precision over them, rewriter | and SNARS | Kendall's tau-b | P, rewriter | P, SNARS | answers outside Wikidata's: rank by each |
+|---|---|---|---|---|---|---|---|---|---|---|
+| leonardo | 1 | 1/858 | 858 of 858 | 50 | 1.000 | 1.000 | 1.000 | 0.239 to 0.978 | 0.240 to 0.924 | annunciation_q154326: 850 and 850; copy_of_the_leonardo_da_vinci_s_last_supper: 851 and 851; leonardo_da_vinci_the_mind_of_the_renaissance_q101731196: 853 and 853; the_child_in_time_q1747269: 854 and 854; the_da_vinci_code_q124474978: 855 and 855 |
+| alphabet | 3 | 1/2,903 | 2,894 of 2,903 | 2,602 | 1.000 | 1.000 | 0.631 | 0.100 to 0.998 | 0.098 to 0.978 | google_earth_vr: 2,894 and 2,894 |
 <!-- END GENERATED: snars-ranking -->
 
-The two agree exactly where every derivation has the same shape. Every answer to Leonardo's question comes through one rewrite in one step, and the two rankings order every pair of answers alike: SNARS's P is a monotone function of the rewriter's, its five answers outside Wikidata's at the same five ranks.
+Every answer to Leonardo's question comes through one rewrite in one step, and the two rankings order every pair of answers alike, its five answers outside Wikidata's at the same five ranks. SNARS gives a one-step answer its rewrite's P times its fact's, plus the prior on what remains, so its lowest answer gets 0.240 where the rewriter gives 0.239.
 
-They part where derivations differ in length. Alphabet's question owns what Alphabet's holdings own, through its transitive rule, so its answers' shortest proofs take from 1 to 7 rule applications. The rewriter takes the question's own rules as certain and counts a rewrite once however often a derivation uses it, so an answer's P depends on which rewrites it needs and not on how long its chain is. SNARS's P falls with the chain: the median P of answers whose shortest proof takes 1, 3, 5 and 7 rule applications falls from 0.928 to 0.867, 0.833 and 0.801, and the rankings barely agree. The rewriter ranks Alphabet's one answer outside Wikidata's last; SNARS puts 67 of Wikidata's answers below it.
+Alphabet's question owns what Alphabet's holdings own, through its transitive rule, so its answers' shortest proofs take from 1 to 7 rule applications, and 12,401 of SNARS's 12,571 proofs use one rewrite's validity more than once. SNARS conditions such a proof on that validity, so the rewrite's doubt counts once, as the rewriter counts it, and an answer's P no longer falls with its chain: the median P of answers whose shortest proof takes 1, 3, 5 and 7 rule applications is 0.957, 0.955, 0.914 and 0.953 by SNARS and 0.957, 0.957, 0.916 and 0.957 by the rewriter. Both put Alphabet's one answer outside Wikidata's last, SNARS at 0.098 and the rewriter at 0.100. The rankings still part where an answer has several derivations: the rewriter takes their disjunction, while SNARS pools only the proofs whose evidence is disjoint and skips any that shares a validity with one already pooled. Alphabet's 292 answers with one proof order alike but for one pair, and its 2,602 with several make up the rest of the disagreement.
 
-A chain of four ownership links, each through one rewrite and joined by the transitive rule, separates the causes (`python experiments/snars_ranking.py chain`). Each row is one setting of the rule rows' truth and the rewrite's validity, and gives SNARS's P for the answers one to four links away:
+A chain of four ownership links, each through one rewrite and joined by the transitive rule, shows how SNARS's P depends on a derivation's length (`python experiments/snars_ranking.py chain`). Each row is one prior for the chain's candidates and one opinion of the rewrite's validity, and gives the P the rewriter's lineage gives every answer and SNARS's P for the answers one to four links away:
 
 <!-- BEGIN GENERATED: snars-chain -->
-| rule rows | rewrite's validity | P at 1 rule application | P at 3 rule applications | P at 5 rule applications | P at 7 rule applications |
-|---|---|---|---|---|---|
-| SNARS's structural truth | certain | 0.949 | 0.891 | 0.857 | 0.826 |
-| SNARS's structural truth | P 0.95 | 0.926 | 0.865 | 0.830 | 0.798 |
-| SNARS's structural truth | P 0.24 | 0.568 | 0.544 | 0.535 | 0.527 |
-| certain | certain | 0.999 | 0.999 | 0.999 | 0.999 |
-| certain | P 0.95 | 0.973 | 0.965 | 0.960 | 0.954 |
-| certain | P 0.24 | 0.576 | 0.554 | 0.546 | 0.538 |
+| candidates' prior | rewrite's validity | P, rewriter's lineage | P at 1 rule application | P at 3 rule applications | P at 5 rule applications | P at 7 rule applications |
+|---|---|---|---|---|---|---|
+| 1/4 | certain | 1.000 | 0.999 | 0.999 | 0.998 | 0.998 |
+| 1/4 | P 0.95 | 0.953 | 0.964 | 0.966 | 0.966 | 0.966 |
+| 1/4 | P 0.24 | 0.243 | 0.432 | 0.467 | 0.474 | 0.482 |
+| unseeded, 0.5 | certain | 1.000 | 1.000 | 0.999 | 0.999 | 0.999 |
+| unseeded, 0.5 | P 0.95 | 0.953 | 0.976 | 0.982 | 0.983 | 0.985 |
+| unseeded, 0.5 | P 0.24 | 0.243 | 0.621 | 0.716 | 0.740 | 0.769 |
 <!-- END GENERATED: snars-chain -->
 
-- Most of the fall comes from the one truth SNARS's backward chainer gives every rule row, belief 0.9 (`sn struct-tv` in mettabase's `sbc.metta`), which discounts each rule application, the transitive rule's included. With the rewrite certain, P still falls from 0.949 at one rule application to 0.826 at seven.
-- With the rule rows certain, using the rewrite's validity again at each link takes a rewrite at P 0.95 down by 0.02 over seven applications. The rewriter keeps such an answer at the rewrite's P.
-- SNARS's modus ponens gives a conclusion whose premises fail the probability that keeps the conclusion's marginal at the rule row's base rate, one half, so a rewrite at P 0.24 still gives its conclusion 0.57. The chain's one-link answers match the ends of SNARS's range on Leonardo's question: Leonardo's lowest answer, at 0.239 by the rewriter, gets 0.566 from SNARS, and its highest, at 0.978, gets 0.923, below the 0.949 the structural truth leaves a certain rewrite.
+- SNARS's P does not fall with the chain. A certain-rule row gives its conclusion the product of its premises' probabilities as belief and no disbelief, so the transitive rule discounts nothing, and a proof that uses the rewrite's validity at every link is conditioned on it, so the validity's doubt counts once. Before mettabase had either, the same chain fell from 0.949 at one rule application to 0.826 at seven with the rewrite certain, from the 0.9 belief SNARS's backward chainer gave every rule row and from the validity's doubt counted at every link.
+- SNARS sits above the lineage by its open world. Where a derivation fails, its conclusion keeps the prior, here 1/4, where the lineage gives 0, and each derived link adds the prior again on what its premises leave, so with the validity false the answer two links away still gets 1/16 + 1/4 x 15/16 = 0.297. A rewrite at P 0.24 fails three times in four, which lifts its answers to between 0.43 and 0.48. The lift is the prior: on Leonardo's question the candidates' 1/858 lifts the lowest answer by 0.001, and Alphabet's 1/2,903 acts as 0.001, the least base rate SNARS holds.
+- Unseeded, every conclusion's prior is SNARS's default, one half, and the same rewrite's answers reach 0.62 to 0.77, which is why the experiment seeds each question's candidates.
 
 ## Can a judge tell what typically follows?
 
