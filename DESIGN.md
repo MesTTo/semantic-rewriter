@@ -227,8 +227,9 @@ class Engine(Protocol):
 | `untabled` | can run `tabled=False` as plain top-down resolution (only useful for experiments) |
 | `reached` | with no depth bound, reports every predicate evaluation called, and possibly more of the program's; the rounds strategy expands what it reports, so a predicate left out loses the answers its rewrites give, while an extra one only costs an expansion. Under a depth bound it may report fewer |
 | `proofs` | with `proofs=True`, returns a derivation for each answer |
+| `repeatable_work` | a solve that finishes counts the same work whatever the process ran before it, so a finished run's work is the budget the same run needs and one unit less stops it |
 
-`Budget` gives the most a run may spend: work in the engine's own unit (inferences for a Prolog engine, candidate rows examined for the Python engine) and wall-clock seconds, which may be infinite. `Solution` carries the answers (one tuple of constants per answer, the query's arguments with its variables filled), a status (`ok`, `work_limit`, `time_limit` or `error`), the work spent, the predicates reached when the engine reports them, and proofs when the program asked for them. Proofs are asked for because they can cost an engine work: on PyMeTTa, where tables keep each answer's shortest proof, they cost 35 to 43 percent more inferences over the four benchmarks' queries (lazy-tabled 1,278,407 against 1,719,877, eager-worklist 1,031,206 against 1,471,025, with the oracle judge).
+`Budget` gives the most a run may spend: work in the engine's own unit (inferences for a Prolog engine, candidate rows examined for the Python engine) and wall-clock seconds, which may be infinite. `Solution` carries the answers (one tuple of constants per answer, the query's arguments with its variables filled), a status (`ok`, `work_limit`, `time_limit` or `error`), the work spent, the predicates reached when the engine reports them, and proofs when the program asked for them. Proofs are asked for because they can cost an engine work: on PyMeTTa, where tables keep each answer's shortest proof, they cost 35 to 44 percent more inferences over the four benchmarks' queries (lazy-tabled 1,249,146 against 1,689,222, eager-worklist 1,004,689 against 1,443,151, with the oracle judge).
 
 An engine must keep this contract:
 
@@ -286,6 +287,7 @@ An engine implements the protocol when it passes the conformance kit, `semrewrit
 | with a bound on rewrites, answers equal the reference fixpoint restricted to derivations of at most that many rewrites on any path, and recursion through user rules answers completely, with tables on or off | `rewrite_depth` |
 | lazy expansion gives the same answers as passing every rewrite up front | `lazy` |
 | a budget too small for the program ends the run with a limit status and no answers, and an `ok` run stayed within its budget | always |
+| a run that finishes counts the same work when it is solved again after other runs, and a budget one unit short of that work stops it with no answers | `repeatable_work` |
 | constants and predicates spelled like the engine's reserved words keep their answers, with every rewrite up front and through the callback | `tabling`, `depth` or `rewrite_depth` |
 | each answer has one proof whose steps are program rules or rewrites, whose leaves are program facts, and whose height in counted steps respects the depth bound | `proofs` |
 | without tables, a query on a rewrite cycle never finishes, and one that reaches no cycle finishes with the fixpoint | `untabled` |

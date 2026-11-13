@@ -121,7 +121,7 @@ def test_it_is_the_registered_engine() -> None:
     assert isinstance(engine, PythonEngine) and isinstance(engine, Engine)
     assert engine.name == "python"
     assert engine.capabilities == Capabilities(tabling=True, depth=True, rewrite_depth=True, lazy=True,
-                                               untabled=False, reached=True, proofs=True)
+                                               untabled=False, reached=True, proofs=True, repeatable_work=True)
 
 
 def test_the_design_example() -> None:

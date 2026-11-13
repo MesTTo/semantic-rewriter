@@ -47,6 +47,30 @@ makes every call of a name that earlier contexts tabled cost more, by a few
 inferences per such context (repros/tabled_contexts_raise_inference_cost.py),
 which over a long process starved untabled runs of their budget.
 
+Work is the inferences evaluating the query spends, and a solve that finishes
+counts the same work whatever the process ran before it, so a finished run's work
+is the exact budget the same run needs. pymetta 0.9.4 counts some of its own upkeep
+inside an evaluation, and the engine keeps that upkeep out of the count four ways
+(repros/history_changes_inference_count.py). It parses the query before counting:
+pymetta's reader spends three inferences a character, so a count that included it
+grew by three for each digit a solve's tag gained. The first solve on a thread runs
+every encoding once on a small program, outside any count: the first evaluation to
+reach a builtin, op or library predicate also resolves its import, fills pymetta's
+dispatch cache and creates the thread's global variables, which made the first
+solve of a process count 61 more inferences than the same solve later; building
+the first engine on a thread runs it, so a caller's first timed solve does not
+wait for it, and a solve on a thread no engine was built on runs it first. Every
+context also imports lib_tabling, tabled or not: pymetta keeps the hooks that
+invalidate its cache of translated forms installed only while some translation is
+cached, so an untabled context, which evaluated nothing before its query, installed
+them inside its count whenever the context before it had left the cache empty, 4
+more inferences for depth-bounded parent(X, max) after another untabled run. And
+Python's cyclic collector stays off while the engine counts, as timeit keeps it off
+while timing: a collection there ran the finalizers of earlier solves' garbage,
+which call into the engine, 3 more inferences now and then. pymetta counts only the
+thread that started its runtime, so a solve on another thread reports a meaningless
+count, -40 for a solve the main thread counts 2,358.
+
 pymetta 0.9.4 charges an op's calls differently by its parameter's
 annotation, so each op's annotation is the one measured cheapest where it is
 called. The discovery op takes a Symbol: annotated object, an inference limit
@@ -54,15 +78,18 @@ reached in it arrives as an EngineError from the second context of a process
 on (repros/op_object_parameter_wraps_limit.py), and while the meta encoding held
 its facts as equations, the first naive solve of a process ran to 16 to 23
 million inferences against a budget of 300,000. With the oracle on family,
-lazy-tabled costs 19,253 inferences a query with Symbol, 20,746 unannotated and
-21,301 with object. The reach op takes object, which cost 174 inferences a table
-on a tabled path closure against 287 unannotated.
+lazy-tabled cost 19,253 inferences a query with Symbol, 20,746 unannotated and
+21,301 with object, counting each query's parse as the engine then did. The reach
+op takes object, which cost 174 inferences a table on a tabled path closure
+against 287 unannotated.
 """
 
 from __future__ import annotations
 
+import gc
 import itertools
 import math
+import threading
 import time
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator
@@ -76,6 +103,9 @@ from semrewrite.protocols import Budget, Capabilities, Expander, Program, Proof,
 
 # The solves this process has run, which tag every function name a solve defines.
 _SOLVES = itertools.count()
+
+# Whether this thread's first solve has run every encoding outside any count (_settle).
+_SETTLED = threading.local()
 
 # The heads of a proof term (module docstring).
 _PROOF, _FACT, _REWRITE, _RULE = "pf", "proof-fact", "proof-rewrite", "proof-rule"
@@ -142,11 +172,16 @@ class _Names:
 
 
 class PyMeTTaEngine:
-    """semrewrite.protocols.Engine on upstream pymetta; its work unit is the SWI-Prolog inference."""
+    """semrewrite.protocols.Engine on upstream pymetta; its work unit is the SWI-Prolog inference, and a solve that
+    finishes counts the same work whatever ran before it (module docstring)."""
 
     name = "pymetta"
     capabilities = Capabilities(tabling=True, depth=True, rewrite_depth=True, lazy=True, untabled=True, reached=True,
-                                proofs=True)
+                                proofs=True, repeatable_work=True)
+
+    def __init__(self) -> None:
+        if not getattr(_SETTLED, "done", False):
+            _settle(self)
 
     # -- the protocol ----------------------------------------------------------
 
@@ -156,6 +191,8 @@ class PyMeTTaEngine:
             status = "work_limit" if budget.work <= 0 else "time_limit"
             return Solution(status=status, detail=f"budget {budget} leaves nothing to spend", reached=frozenset(),
                             proofs={} if program.proofs else None)
+        if not getattr(_SETTLED, "done", False):
+            _settle(self)
         tag = next(_SOLVES)
         preds, consts = _Names(f"p{tag}__"), _Names("c__")
         native = expand is None and program.depth == 0 and program.tabled
@@ -174,7 +211,7 @@ class PyMeTTaEngine:
             source, tables = _meta_source(program, query, preds, consts, tag, terms)
             ops = {"impliers": _impliers(program, expand, reached, preds, known if terms else None)}
         term = _query_term(query, preds, consts, meta=not native, depth=program.depth, tag=tag, proofs=terms is not None)
-        solution, result = self._run(source, program.tabled, _declarations(tables, terms), ops, term, budget, reached)
+        solution, result = self._run(source, _declarations(tables, terms), ops, term, budget, reached)
         if program.proofs:
             solution.proofs = {}
         if solution.status == "ok":
@@ -184,11 +221,13 @@ class PyMeTTaEngine:
 
     # -- evaluation ----------------------------------------------------------------
 
-    def _run(self, source: str, tabling: bool, declarations: tuple[list[str], list[str]],
+    def _run(self, source: str, declarations: tuple[list[str], list[str]],
              ops: dict[str, Callable[..., Iterator[Expression]]], term: str, budget: Budget,
              reached: set[str]) -> tuple[Solution, list]:
         """Load the source, declare its tables, evaluate the term within the budget, then undo the declarations
-        that outlive the context; the raw results come back beside the solution for the caller to read."""
+        that outlive the context; the raw results come back beside the solution for the caller to read. Only the
+        evaluation is counted: the term is parsed before, and every context imports lib_tabling, whose import caches
+        a translation, so the count never includes installing pymetta's translation-cache hooks (module docstring)."""
         solution = Solution()
         result: list = []
         declare, undo = declarations
@@ -196,25 +235,33 @@ class PyMeTTaEngine:
         with MeTTa() as m:
             for name, fn in ops.items():
                 m.op(fn, name=name, effect=EffectClass.nondeterministicReadOnly)
-            if tabling:
-                m.self.run("!(import! (context-space) (library lib_tabling))")
+            m.self.run("!(import! (context-space) (library lib_tabling))")
             m.self.run(source)
             try:
                 for decl in declare:
                     if m.self.run(decl) != [[True]]:
                         msg = f"pymetta refused the tabling declaration {decl}"
                         raise RuntimeError(msg)
-                with m.stats() as stats:
-                    try:
-                        # pymetta takes None for no time limit; SWI overflows on an infinite timeout.
-                        timeout = None if math.isinf(budget.seconds) else budget.seconds
-                        result = m.eval(parse(term), inferences=budget.work, timeout=timeout)
-                    except InferenceLimitError as e:
-                        solution.status, solution.detail = "work_limit", str(e)
-                    except TimeLimitError as e:
-                        solution.status, solution.detail = "time_limit", str(e)
-                    except EngineError as e:
-                        solution.status, solution.detail = "error", str(e)
+                goal = parse(term)
+                # The collector stays off while counting, as timeit keeps it off while timing: a collection inside the
+                # count would run the finalizers of earlier solves' garbage, some of which call into the engine.
+                collecting = gc.isenabled()
+                gc.disable()
+                try:
+                    with m.stats() as stats:
+                        try:
+                            # pymetta takes None for no time limit; SWI overflows on an infinite timeout.
+                            timeout = None if math.isinf(budget.seconds) else budget.seconds
+                            result = m.eval(goal, inferences=budget.work, timeout=timeout)
+                        except InferenceLimitError as e:
+                            solution.status, solution.detail = "work_limit", str(e)
+                        except TimeLimitError as e:
+                            solution.status, solution.detail = "time_limit", str(e)
+                        except EngineError as e:
+                            solution.status, solution.detail = "error", str(e)
+                finally:
+                    if collecting:
+                        gc.enable()
                 # A limit reached inside a Python op can surface as a plain EngineError, so an engine error
                 # is read as a limit when the engine's own inference count or the elapsed time reached the budget.
                 if solution.status == "error" and stats.inferences >= budget.work:
@@ -236,6 +283,48 @@ class PyMeTTaEngine:
         solution.derivations = len(result)
         solution.reached = frozenset(reached)
         return solution, result
+
+
+def _settle(engine: PyMeTTaEngine) -> None:
+    """Solve a small program once in every encoding the engine writes, outside any count, so that no later solve on
+    this thread counts pymetta resolving a builtin, op or library predicate, or creating a global, for the first time.
+
+    The program has facts of arity one and two, a rule with a two-atom body, and rewrites with and without a swap of
+    their arguments, two of which make the cycle f <= g <= f, so the sources hold every clause shape _native_source
+    and _meta_source write. It runs under every setting of tables, depth bound, what the bound counts, discovery
+    callback and proofs. e(X, Y) reaches no cycle and runs under each; f(X, Y) runs wherever a run on a cycle
+    terminates, with tables or a bound, since the first tabled cycle of a process, and the first proof table to join
+    two proofs of one answer, cost their first solve more too. Each must answer as the program says, since a warm-up
+    that failed would hide the engine's own fault.
+    """
+    # Time: 44 solves of this eight-clause program, once per thread, 1.5 s measured.
+    _SETTLED.done = True
+    rewrites = (Rewrite("d", "c", (1, 0)), Rewrite("e", "d", (0, 1)), Rewrite("g", "d", (0, 1)),
+                Rewrite("f", "g", (1, 0)), Rewrite("g", "f", (1, 0)))
+    facts = (Atom("a", ("k", "j")), Atom("b", ("j",)))
+    rules = (Rule(Atom("c", ("X", "Y")), (Atom("a", ("X", "Y")), Atom("b", ("Y",)))),)
+    queries = ((Atom("e", ("X", "Y")), {("j", "k")}), (Atom("f", ("X", "Y")), {("k", "j")}))
+
+    def expand(p: str) -> list[Rewrite]:
+        return [rw for rw in rewrites if rw.conclusion == p]
+
+    # f(k, j) takes three rewrite steps and one rule step, so a bound of 4 reaches it, and e(j, k), counting either.
+    bounds = ((0, "steps"), (4, "steps"), (4, "rewrites"))
+    try:
+        for tabled, (depth, counts), lazy, proofs in itertools.product((True, False), bounds, (False, True),
+                                                                       (False, True)):
+            program = Program(facts=facts, rules=rules, rewrites=() if lazy else rewrites, tabled=tabled,
+                              depth=depth, depth_counts=counts, proofs=proofs)
+            for query, answers in queries if tabled or depth else queries[:1]:
+                solution = engine.solve(program, query, Budget(work=1_000_000, seconds=math.inf),
+                                        expand if lazy else None)
+                if solution.status != "ok" or solution.answers != answers:
+                    msg = (f"the warm-up solve of {query} in {program} ended {solution.status} with "
+                           f"{sorted(solution.answers)}: {solution.detail}")
+                    raise RuntimeError(msg)
+    except BaseException:
+        _SETTLED.done = False
+        raise
 
 
 def _read_answers(solution: Solution, result: list, query: Atom, consts: _Names, reader: _ProofReader | None) -> None:

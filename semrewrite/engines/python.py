@@ -497,8 +497,10 @@ class PythonEngine:
     """
 
     name: str = "python"
+    # Work counts candidate rows in insertion order and nothing is kept between solves (module docstring).
     capabilities: Capabilities = Capabilities(
-        tabling=True, depth=True, rewrite_depth=True, lazy=True, untabled=False, reached=True, proofs=True)
+        tabling=True, depth=True, rewrite_depth=True, lazy=True, untabled=False, reached=True, proofs=True,
+        repeatable_work=True)
 
     def solve(self, program: Program, query: Atom, budget: Budget, expand: Expander | None = None) -> Solution:
         """Answer `query` over `program`, calling `expand` once per relevant predicate, within `budget`."""

@@ -65,7 +65,8 @@ class TopDown:
     Like a Prolog machine it binds variables in one store with a trail that
     backtracking unwinds, and keeps goals in a shared linked list, so a step costs the
     size of the clause it tries, however deep the search; facts are indexed on their
-    first argument. Work counts the clauses tried; a depth bound n lets a goal use a
+    first argument. Work counts the clauses tried, and nothing outlives a solve, so the
+    same run always counts the same work; a depth bound n lets a goal use a
     counted rule only while fewer than n counted steps lie above it, where every rule
     counts, or under depth_counts "rewrites" only the rules of rewrites. It has the
     untabled capability the Python engine lacks, so it exercises the untabled property,
@@ -73,7 +74,8 @@ class TopDown:
     """
 
     name = "topdown"
-    capabilities = Capabilities(depth=True, rewrite_depth=True, lazy=True, untabled=True, reached=True)
+    capabilities = Capabilities(depth=True, rewrite_depth=True, lazy=True, untabled=True, reached=True,
+                                repeatable_work=True)
 
     def solve(self, program: Program, query: Atom, budget: Budget, expand: Expander | None = None) -> Solution:
         start = time.monotonic()
@@ -183,7 +185,8 @@ def test_kit_passes_a_top_down_engine_and_runs_untabled() -> None:
     outcomes = {v.prop: v.outcome for v in report.verdicts}
     assert report.passed, report.summary()
     assert outcomes == {"tabling": "skip", "depth": "pass", "rewrite-depth": "pass", "lazy": "pass",
-                        "budget": "pass", "names": "pass", "untabled": "pass", "proofs": "skip", "rounds": "skip"}
+                        "budget": "pass", "repeatable": "pass", "names": "pass", "untabled": "pass", "proofs": "skip",
+                        "rounds": "skip"}
     depth = next(v for v in report.verdicts if v.prop == "depth")
     assert depth.may_stop == 3 * depth.cases and 0 <= depth.stopped <= depth.may_stop
     assert "untabled runs allowed to stop at a limit did" in depth.lines()[0]
@@ -425,6 +428,19 @@ class ReachesQueryOnly(_Delegate):
         return replace(self.inner.solve(program, query, budget, expand), reached=frozenset({query.pred}))
 
 
+class DriftingWork(_Delegate):
+    """Counts one unit of work more for every solve it ran before, as a count that takes in the process's history does."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.solves = 0
+
+    def solve(self, program, query, budget, expand=None):
+        solution = self.inner.solve(program, query, budget, expand)
+        self.solves += 1
+        return replace(solution, work=solution.work + self.solves)
+
+
 BROKEN: list[tuple[Engine, str]] = [
     (IgnoresDepth(), "depth"),
     (DepthOffByOne(), "depth"),
@@ -447,6 +463,7 @@ BROKEN: list[tuple[Engine, str]] = [
     (DropsLongRules(), "tabling"),
     (LoosensOneAtomRules(), "tabling"),
     (ReachesQueryOnly(), "rounds"),
+    (DriftingWork(), "repeatable"),
 ]
 
 

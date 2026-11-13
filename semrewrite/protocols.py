@@ -49,6 +49,8 @@ class Capabilities:
     reached: with no depth bound, reports every predicate evaluation called, and possibly more of the program's,
         which the rounds strategy expands; under a depth bound it may report fewer.
     proofs: with Program.proofs, returns one derivation per answer.
+    repeatable_work: a solve that finishes counts the same work whenever the process runs it, whatever ran before,
+        so a finished run's work is the exact budget the same run needs and one unit less stops it.
     """
 
     tabling: bool = False
@@ -58,6 +60,7 @@ class Capabilities:
     untabled: bool = False
     reached: bool = False
     proofs: bool = False
+    repeatable_work: bool = False
 
 
 @dataclass(frozen=True, slots=True)

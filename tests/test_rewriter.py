@@ -1,7 +1,9 @@
 """Purpose: tests of the semantic rewriter on every installed engine: every strategy
 the engine can run answers every benchmark query exactly under a perfect judge,
 strategies it cannot run are refused by name, names spelled like engine
-keywords keep their answers, and without tables rewriting loops on a cycle.
+keywords keep their answers, without tables rewriting loops on a cycle, and an
+engine claiming repeatable work counts a fresh process's first solves as it
+counts them again.
 """
 
 from __future__ import annotations
@@ -123,9 +125,14 @@ def test_a_strategy_named_by_its_timing_string_is_the_same_strategy() -> None:
         Rewriter(kb, OracleJudge(kb.entailed()), Bare(), None).ask("parent(X, Y)", Strategy("by-name", "lazy"))
 
 
-@pytest.mark.parametrize("engine_name", [e for e in ENGINES if "rounds" in _runnable(e)])
+@pytest.mark.parametrize("engine_name",
+                         [e for e in ENGINES if "rounds" in _runnable(e) and make(e).capabilities.repeatable_work])
 def test_rounds_share_one_budget_and_stop_once_a_round_adds_nothing(engine_name: str) -> None:
-    """Each evaluation gets only what the earlier ones left, and a round whose expansions add no rewrite is the last."""
+    """Each evaluation gets only what the earlier ones left, and a round whose expansions add no rewrite is the last.
+
+    The engine's work is repeatable, so the first run's work is what the same run needs wherever it runs in the
+    process, and a budget one unit short of it stops the second run with no answers, run alone or after other tests.
+    """
     kb = KB("chain", {"p": "{x} is p", "q": "{x} is q", "r": "{x} is r"}, tuple(atom("q", f"c{i}") for i in range(40)),
             gold=frozenset({("q", "p", (0,))}))
     roomy = Rewriter(kb, OracleJudge(kb.entailed()), make(engine_name), None, budget=Budget(work=10**9, seconds=math.inf))
@@ -152,10 +159,11 @@ def test_a_shared_discoverer_admits_afresh_when_the_threshold_moves(engine_name:
 
 @pytest.mark.parametrize("engine_name", [e for e in ENGINES if "naive" in _runnable(e)])
 def test_the_first_solve_of_a_process_stops_at_its_work_budget(engine_name: str) -> None:
-    """A fresh process's first run of a rewrite loop stops at its inference budget, not at its time limit.
+    """A fresh process's first naive run of a rewrite loop stops at its inference budget, not at its time limit.
 
     With an object-annotated op, pymetta 0.9.4 ran the first naive solve of mother(X, bea) to 16 million
-    inferences against 300,000, so the run gets a process of its own, importing this checkout's package.
+    inferences against 300,000, so the run gets a process of its own, importing this checkout's package. Building
+    the PyMeTTa engine runs its warm-up first, but no unbounded loop: tables or a depth bound end every warm-up loop.
     """
     code = (
         "import json\n"
@@ -177,6 +185,44 @@ def test_the_first_solve_of_a_process_stops_at_its_work_budget(engine_name: str)
     outcome = json.loads(done.stdout.strip().splitlines()[-1])
     assert outcome["status"] == "work_limit", outcome
     assert outcome["work"] <= 330_000, outcome
+
+
+@pytest.mark.parametrize("engine_name", [e for e in ENGINES if make(e).capabilities.repeatable_work])
+def test_a_fresh_process_counts_each_first_solve_as_it_counts_the_solve_again(engine_name: str) -> None:
+    """In a fresh process every strategy the engine runs asks six family queries, then asks them all again, and each
+    ask counts the same work both times wherever it finished, and ends the same way.
+
+    PyMeTTa counted 61 inferences more on a process's first solve, and more again on the first solve of each
+    encoding, while those solves paid pymetta's one-time setup inside their count; a measured run's work was then
+    no budget for the same run later. The process is a fresh one, importing this checkout's package, so its first
+    solves are the ones measured.
+    """
+    code = (
+        "import json\n"
+        "import math\n"
+        "from semrewrite.benchmarks import BENCHMARKS\n"
+        "from semrewrite.engines import make\n"
+        "from semrewrite.judges.oracle import OracleJudge\n"
+        "from semrewrite.protocols import Budget\n"
+        "from semrewrite.rewriter import STRATEGIES, Rewriter\n"
+        "kb = BENCHMARKS['family']()\n"
+        f"engine = make({engine_name!r})\n"
+        "names = [n for n, s in STRATEGIES.items()\n"
+        "         if all(getattr(engine.capabilities, c) for c, need in s.needs().items() if need)]\n"
+        "rewriter = Rewriter(kb, OracleJudge(kb.entailed()), engine, None, budget=Budget(work=100_000, seconds=math.inf))\n"
+        "passes = [[(n, str(q), *(lambda o: (o.status, o.work))(rewriter.ask(q, n))) for n in names for q in kb.queries[:6]]\n"
+        "          for _ in range(2)]\n"
+        "print(json.dumps(passes))\n"
+    )
+    package_root = str(Path(semrewrite.__file__).resolve().parents[1])
+    done = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True,
+                          env={**os.environ, "PYTHONPATH": package_root})
+    first, again = json.loads(done.stdout.strip().splitlines()[-1])
+    assert any(status == "ok" for _, _, status, _ in first)
+    for (strategy, query, status, work), (_, _, status_again, work_again) in zip(first, again, strict=True):
+        assert status_again == status, (strategy, query, status, status_again)
+        if status == "ok":
+            assert work_again == work, (strategy, query, work, work_again)
 
 
 @pytest.mark.parametrize("engine_name", ENGINES)

@@ -15,6 +15,7 @@ or from a shell, `python -m semrewrite.conformance --engine python`.
 | rewrite-depth | rewrite_depth | with a bound of 1 to 4 rewrites, answers equal the reference cut at that many rewrites and recursion through user rules answers completely, tables on or off (untabled runs may stop) |
 | lazy | lazy, and tabling or a depth bound | rewrites given through expand answer as rewrites given up front; expand sees only the program's predicates |
 | budget | | a budget too small ends with a limit status and no answers; a run reporting ok stayed in its budget |
+| repeatable | repeatable_work, and tabling or depth | every run that must finish counts the same work when solved again after the others, in reverse order, and one unit less stops it with no answers |
 | names | tabling or a depth bound | predicates and constants spelled like reserved words keep their answers, eagerly and lazily |
 | untabled | untabled | untabled, a query on a rewrite cycle hits a limit and one reaching no cycle answers exactly |
 | proofs | proofs, and tabling or a depth bound | every answer has a proof deriving it from the program within the depth bound |
@@ -551,6 +552,70 @@ def check_budget(engine: Engine, case: Case) -> None:
         _limited(rerun, LIMITS, what, half)
 
 
+def _finishing(c: Capabilities) -> str | None:
+    if c.tabling or c.depth:
+        return None
+    return "the engine has neither tabling nor a depth bound counting steps, so none of its runs has to finish"
+
+
+def _repeated_runs(c: Capabilities, program: Program) -> list[tuple[Program, bool]]:
+    """The runs the repeatable property makes, each a program and whether its rewrites come through expand: with tables
+    and no bound, one step without tables where the engine runs untabled and with them otherwise, and REWRITE_BOUND
+    rewrites with tables, each where the engine has it and so must finish; each eagerly, lazily and with proofs,
+    where the engine has them."""
+    bounded = []
+    if c.tabling:
+        bounded.append(replace(program, tabled=True, depth=0))
+    if c.depth:
+        bounded.append(replace(program, tabled=not c.untabled, depth=1, depth_counts="steps"))
+    if c.rewrite_depth and c.tabling:
+        bounded.append(replace(program, tabled=True, depth=REWRITE_BOUND, depth_counts="rewrites"))
+    runs = []
+    for p in bounded:
+        runs.append((p, False))
+        if c.lazy:
+            runs.append((replace(p, rewrites=()), True))
+        if c.proofs:
+            runs.append((replace(p, proofs=True), False))
+    return runs
+
+
+def _run_name(program: Program, lazy: bool) -> str:
+    """How a report names one of the repeatable property's runs."""
+    how = "rewrites through expand" if lazy else "with proofs" if program.proofs else "rewrites up front"
+    return f"{_bound(program)}, {'tabled' if program.tabled else 'untabled'}, {how}"
+
+
+# Time: 2r + 1 solves, r = len(_repeated_runs), at most 9.
+def check_repeatable(engine: Engine, case: Case) -> None:
+    """A finished run counts the same work whatever ran before it, so its work is the exact budget it needs.
+
+    Every run _repeated_runs lists must finish; each is solved again after all of them, in reverse order, so its
+    second solve follows other runs than its first did, and must answer as before with the same work. The first run
+    then gets a budget one unit short of the work it counted, and must end at work_limit with no answers.
+    """
+    _require(engine, REPEATABLE.needs)
+    expander = _Expander(case.program.rewrites)
+    runs = _repeated_runs(engine.capabilities, case.program)
+    first = []
+    for program, lazy in runs:
+        solution = engine.solve(program, case.query, GENEROUS, expander if lazy else None)
+        if solution.status != "ok":
+            _fail(f"{_run_name(program, lazy)}: status {solution.status} ({solution.detail}), expected ok")
+        first.append(solution)
+    for (program, lazy), was in reversed(list(zip(runs, first, strict=True))):
+        again = engine.solve(program, case.query, GENEROUS, expander if lazy else None)
+        if again.status != "ok" or again.work != was.work or set(again.answers) != set(was.answers):
+            _fail(f"{_run_name(program, lazy)}, solved again after the other runs: status {again.status}, work "
+                  f"{again.work} and {len(again.answers)} answers, where the first solve counted {was.work} for "
+                  f"{len(was.answers)} answers")
+    (program, lazy), need = runs[0], first[0].work
+    if need > 0:
+        short = Budget(work=need - 1, seconds=GENEROUS.seconds)
+        _limited(engine.solve(program, case.query, short, expander if lazy else None), {"work_limit"},
+                 f"{_run_name(program, lazy)}, work budget {short.work}, one unit short of the {need} it counted", short)
+
+
 def _limited(solution: Solution, statuses: Iterable[str], what: str, budget: Budget) -> None:
     """Fail unless the run stopped with one of `statuses`, a limit of `budget` it reached, and returned no answers."""
     statuses = set(statuses)
@@ -784,6 +849,8 @@ LAZY = Property("lazy", "rewrites given through expand answer as rewrites given 
                 _capability("lazy", _exact), cases, check_lazy)
 BUDGET = Property("budget", "a budget too small ends with a limit status and no answers; a run reporting ok stayed in its budget",
                   _nothing, chains, check_budget)
+REPEATABLE = Property("repeatable", "a finished run counts the same work after other runs, and one unit less stops it",
+                      _capability("repeatable_work", _finishing), cases, check_repeatable)
 NAMES = Property("names", "predicates and constants spelled like reserved words keep their answers, eagerly and lazily",
                  _exact, lambda: cases(RESERVED, RESERVED), check_names)
 UNTABLED = Property("untabled", "untabled, a query on a rewrite cycle hits a limit and one reaching no cycle answers exactly",
@@ -795,7 +862,8 @@ ROUNDS = Property("rounds", "evaluating, adding the rewrites of every predicate 
                   cases, check_rounds)
 
 #: Every property, in the order the report lists them.
-PROPERTIES: tuple[Property, ...] = (TABLING, DEPTH, REWRITE_DEPTH, LAZY, BUDGET, NAMES, UNTABLED, PROOFS, ROUNDS)
+PROPERTIES: tuple[Property, ...] = (TABLING, DEPTH, REWRITE_DEPTH, LAZY, BUDGET, REPEATABLE, NAMES, UNTABLED, PROOFS,
+                                    ROUNDS)
 
 
 def property_named(name: str) -> Property:
