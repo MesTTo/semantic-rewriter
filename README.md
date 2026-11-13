@@ -1,6 +1,6 @@
 # Semantic rewriter
 
-A logic program answers `owns(alphabet_inc, X)` only from clauses whose head says `owns`. Wikidata never says "owns". It records that YouTube is owned by Google and that XXVI Holdings is owner of Google, in two of the 1,790 properties it uses to link one entity to another. The semantic rewriter closes that gap without changing how the program is evaluated. When evaluation first reaches a predicate, it asks an entailment model which other predicates imply it and in which argument order, admits the implications the model trusts as ordinary rules, such as `owns(X, Y) :- owned_by(Y, X)`, and lets the engine carry on.
+A logic program answers `owns(alphabet_inc, X)` only from clauses whose head says `owns`. Wikidata never says "owns". It records that YouTube is owned by Google and that XXVI Holdings is owner of Google, in two of the 1,790 properties it uses to link one entity to another. The semantic rewriter closes that gap without changing how the program is evaluated. When evaluation first reaches a predicate, it asks an entailment model which other predicates imply it and in which argument order, admits the implications the model trusts as ordinary rules, such as `owns(X, Y) :- owned_by(Y, X)`, and lets the engine carry on. Each admitted rule keeps the model's opinion of it, so every answer can also say how probable it is: the chance that every rule of one of its derivations is right.
 
 The rewriter runs on any logic engine that implements a small protocol. Two ship with it: a pure-Python engine with no dependencies, and [PyMeTTa](https://github.com/MesTTo/PyMeTTa) (MeTTa on SWI-Prolog). With tabling, every query terminates and gets exactly the answers its admitted rules imply; [DESIGN.md](DESIGN.md) states the conditions and the protocols, and [RESULTS.md](RESULTS.md) the experiment behind the defaults.
 
@@ -162,6 +162,44 @@ ok: 1 answer, 2,581,151 work, 202 judge questions, 43.58 s
 
 Embedding similarity scores how alike two sentences are, whichever way they run. As premises of "A is a parent of B", the embedding judge scored "B is the child of A" at 0.96 and "A is the child of B" at 0.97, and admitted both. So "Princess Louise is the child of Queen Victoria" also made Louise a parent of Victoria, and Victoria a descendant of herself.
 
+### How sure is each answer?
+
+`--beliefs` gives every answer an opinion that it holds, in subjective logic's terms: a probability P, and the belief b, disbelief d and uncertainty u it comes from. A rewrite is one claim, right or wrong for every use of it, so an answer is as probable as the chance that every rewrite of one of its derivations is right. Each rewrite is right as Jev's opinion of it says, discounted by how far Jev proved right on labelled pairs; [DESIGN.md](DESIGN.md#answer-beliefs) says how the probabilities combine.
+
+That makes a low rewrite threshold cheap. At 0.1 instead of 0.65, Jev admits 110 rewrites into Victoria's descendants instead of 18, and 21 of the answers they add are not in Wikidata's record. Each of those 21 ranks below each of Wikidata's 1,164, so an answer threshold anywhere between them keeps exactly Wikidata's answer:
+
+<!-- BEGIN GENERATED: wikidata-placed -->
+| answer | rank | in Wikidata's answer | P | b | d | u |
+|---|---|---|---|---|---|---|
+| `sophia_hermann` | 1,160 of 1,185 | yes | 0.958 | 0.945 | 0.029 | 0.026 |
+| `sophia_wise_glossinger` | 1,161 of 1,185 | yes | 0.958 | 0.945 | 0.029 | 0.026 |
+| `stephan_albert_bernadotte_count_bernadotte` | 1,162 of 1,185 | yes | 0.958 | 0.945 | 0.029 | 0.026 |
+| `stephan_straehl` | 1,163 of 1,185 | yes | 0.958 | 0.945 | 0.029 | 0.026 |
+| `victoria_bayard_romanov_ilyinsky` | 1,164 of 1,185 | yes | 0.958 | 0.945 | 0.029 | 0.026 |
+| `british_army` | 1,165 of 1,185 | no | 0.334 | 0.324 | 0.649 | 0.026 |
+| `hellenic_armed_forces` | 1,166 of 1,185 | no | 0.334 | 0.324 | 0.649 | 0.026 |
+| `imperial_german_army` | 1,167 of 1,185 | no | 0.334 | 0.324 | 0.649 | 0.026 |
+| `luftwaffe` | 1,168 of 1,185 | no | 0.334 | 0.324 | 0.649 | 0.026 |
+| `royal_air_force` | 1,169 of 1,185 | no | 0.334 | 0.324 | 0.649 | 0.026 |
+<!-- END GENERATED: wikidata-placed -->
+
+Asked about one of them, the rewriter shows where its doubt comes from:
+
+<!-- BEGIN GENERATED: wikidata-graded -->
+```text
+$ semrewrite ask examples/wikidata/victoria.metta 'descendant_of(british_army, queen_victoria)' --judge jev --threshold 0.1 --strategy rewrite-depth-tabled --depth 1 --retriever judge --k 50 --engine pymetta --work 50000000 --seconds inf --beliefs --explain 2>/dev/null
+descendant_of(british_army, queen_victoria)    P 0.334  b 0.324  d 0.649  u 0.026
+    descendant_of(british_army, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
+      parent_of(prince_arthur_duke_of_connaught_and_strathearn, british_army)    [by parent_of(X0, X1) ⇐ military_branch_p241(X0, X1), score 0.330]
+        military_branch_p241(prince_arthur_duke_of_connaught_and_strathearn, british_army)    [fact]
+      descendant_of(prince_arthur_duke_of_connaught_and_strathearn, queen_victoria)    [by descendant_of(X, Y) :- parent_of(Y, X)]
+        parent_of(queen_victoria, prince_arthur_duke_of_connaught_and_strathearn)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
+          mother_p25(prince_arthur_duke_of_connaught_and_strathearn, queen_victoria)    [fact]
+```
+<!-- END GENERATED: wikidata-graded -->
+
+The British Army descends from Victoria because one of her sons served in it, read through a rewrite that takes a person's military branch for their child. Jev admitted that rewrite at 0.330, so the answer is more probably wrong than right. [RESULTS.md](RESULTS.md#how-sure-is-each-answer) has the same measurement on all three questions.
+
 ## A small example: choosing the threshold
 
 `examples/parent_of_tom.kb` states Tom's family in words that never say "parent", in the rewriter's plain-text format. Each predicate has a gloss, a sentence with a placeholder per argument, which is what the entailment model reads, and the `gold` lines say which implications a careful reader accepts:
@@ -227,7 +265,7 @@ rewrites admitted (14):
   parent(X0, X1) ⇐ guardian(X0, X1)
   parent(X0, X1) ⇐ mother(X0, X1)
   parent(X0, X1) ⇐ mum(X0, X1)
-ok: 3 answers, 63 work, 78 judge questions, 10.62 s
+ok: 3 answers, 63 work, 78 judge questions, 0.75 s
 ```
 <!-- END GENERATED: tom-explain -->
 
@@ -238,7 +276,7 @@ Every answer comes with its derivation, and each step names the rule or the admi
 $ semrewrite ask examples/parent_of_tom.kb 'parent(X, tom)' --judge nli-deberta-large --retriever all --threshold 0.995
 parent(alice, tom)
 parent(bob, tom)
-ok: 2 answers, 14 work, 65 judge questions, 0.70 s
+ok: 2 answers, 14 work, 65 judge questions, 0.24 s
 ```
 <!-- END GENERATED: tom-strict -->
 
@@ -267,7 +305,7 @@ rewrites admitted (6):
   parent(X0, X1) ⇐ dad(X0, X1)
   parent(X0, X1) ⇐ mother(X0, X1)
   parent(X0, X1) ⇐ mum(X0, X1)
-ok: 2 answers, 24 work, 78 judge questions, 0.54 s
+ok: 2 answers, 24 work, 78 judge questions, 0.29 s
 ```
 <!-- END GENERATED: tom-grandparent -->
 
@@ -292,14 +330,16 @@ The core runs on Python 3.11 or later; the PyMeTTa engine needs 3.12 or later. `
 
 ```sh
 semrewrite ask KB QUERY [--judge NAME] [--engine python|pymetta] [--strategy NAME] [--depth N] [--explain] [--trace] [--json]
+semrewrite ask KB QUERY --beliefs [--answer-threshold P]  # each answer with its opinion, ranked by P
 semrewrite rewrites KB PREDICATE [--judge NAME] [--all]   # what discovery admits, and with --all what it rejects
+semrewrite rewrites KB PREDICATE --narsese                # the admitted rewrites as ONA Narsese, with %f;c%
 semrewrite engines                                       # installed engines and their capabilities
 semrewrite strategies                                    # the strategies and their knobs
 semrewrite conformance --engine NAME                     # check an engine against the protocol
 semrewrite convert family.metta family.kb                # between the text, JSON and MeTTa formats
 ```
 
-`--judge oracle` uses the `gold` lines of the knowledge base instead of a model, which is how tests and the experiment separate engine behaviour from judge error. `--retriever all` judges every predicate of the right arity instead of the 8 nearest by gloss embedding, which suits small catalogues and loads no embedding model. `--retriever judge` ranks every predicate with the `--prefilter` judge, the cross-encoder nli-deberta-large by default, and the admitting judge sees only the `--k` it ranks highest, which suits a catalogue too large to judge whole, such as Wikidata's 1,790 properties above. `--depth N` replaces the strategy's depth bound, counted the way the strategy counts it, and `--depth 0` removes it. `--explain` prints each answer's derivation and the rewrites admitted, and `--trace` prints each step on standard error as it happens, as in the Alphabet example above. The exit status is 0 when the query finished, 2 when a budget stopped it and 1 on an error.
+`--judge oracle` uses the `gold` lines of the knowledge base instead of a model, which is how tests and the experiment separate engine behaviour from judge error. `--retriever all` judges every predicate of the right arity instead of the 8 nearest by gloss embedding, which suits small catalogues and loads no embedding model. `--retriever judge` ranks every predicate with the `--prefilter` judge, the cross-encoder nli-deberta-large by default, and the admitting judge sees only the `--k` it ranks highest, which suits a catalogue too large to judge whole, such as Wikidata's 1,790 properties above. `--depth N` replaces the strategy's depth bound, counted the way the strategy counts it, and `--depth 0` removes it. `--explain` prints each answer's derivation and the rewrites admitted, and `--trace` prints each step on standard error as it happens, as in the Alphabet example above. `--beliefs` prints each answer with its opinion, highest P first, as in the Victoria example above, and `--answer-threshold P` drops the answers below P. `rewrites --narsese` prints each admitted rewrite as an implication an ONA reasoner reads, with its opinion as frequency and confidence. The exit status is 0 when the query finished, 2 when a budget stopped it and 1 on an error.
 
 ## Python
 

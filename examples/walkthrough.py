@@ -51,6 +51,10 @@ JEV = ["--judge", "jev", "--threshold", "0.65", "--strategy", "rewrite-depth-tab
        "--engine", "pymetta"]
 SIMILARITY = ["--judge", "cosine-bge", "--strategy", "rewrite-depth-tabled", "--retriever", "all", "--engine", "pymetta"]
 
+# A command whose last word is this runs with its standard error discarded, as a shell would, and shows it typed.
+QUIET = "2>/dev/null"
+
+
 
 def wikidata(depth: int, judge: Sequence[str] = JEV[:4]) -> list[str]:
     """A judge's settings on Wikidata's catalogue, Jev's unless `judge` names another, as in
@@ -81,6 +85,12 @@ def wikidata_summary() -> str:
     return _evaluation().summary([])
 
 
+def wikidata_placed() -> str:
+    """Where the answers outside Wikidata's land among Victoria's descendants ranked by their opinions, Jev admitting at
+    rewrite threshold 0.1 (examples/wikidata/evaluate.py)."""
+    return _evaluation().placed("victoria", 0.1)
+
+
 # Each generated block: the paths of the knowledge bases it shows, space separated, the commands whose transcripts it
 # holds, or a function writing it.
 BLOCKS: dict[str, str | list[list[str]] | Callable[[], str]] = {
@@ -102,6 +112,9 @@ BLOCKS: dict[str, str | list[list[str]] | Callable[[], str]] = {
                           "--explain"]],
     "wikidata-similarity": [["ask", VICTORIA, "descendant_of(queen_victoria, queen_victoria)",
                              *wikidata(1, SIMILARITY[:2]), "--explain"]],
+    "wikidata-placed": wikidata_placed,
+    "wikidata-graded": [["ask", VICTORIA, "descendant_of(british_army, queen_victoria)",
+                         *wikidata(1, ["--judge", "jev", "--threshold", "0.1"]), "--beliefs", "--explain", QUIET]],
     "wikidata-chained": [
         ["ask", VICTORIA, "descendant_of(army_air_corps, queen_victoria)", *wikidata(3), "--explain"],
     ],
@@ -126,16 +139,24 @@ BLOCKS: dict[str, str | list[list[str]] | Callable[[], str]] = {
 }
 
 
+def command_line(argv: list[str]) -> str:
+    """The command as a shell user types it."""
+    if argv[-1:] == [QUIET]:
+        return f"semrewrite {shlex.join(argv[:-1])} {QUIET}"
+    return f"semrewrite {shlex.join(argv)}"
+
+
 def transcript(argv: list[str]) -> str:
     """The command line and everything it printed, standard output and standard error in the order written, as a
-    terminal shows them."""
+    terminal shows them; standard output alone for a command ending in 2>/dev/null."""
+    quiet = argv[-1:] == [QUIET]
     printed = io.StringIO()
-    with contextlib.redirect_stdout(printed), contextlib.redirect_stderr(printed):
-        status = main(argv)
+    with contextlib.redirect_stdout(printed), contextlib.redirect_stderr(io.StringIO() if quiet else printed):
+        status = main(argv[:-1] if quiet else argv)
     if status == 1:
-        msg = f"semrewrite {shlex.join(argv)} failed: {printed.getvalue()}"
+        msg = f"{command_line(argv)} failed: {printed.getvalue()}"
         raise SystemExit(msg)
-    return f"$ semrewrite {shlex.join(argv)}\n{printed.getvalue()}".rstrip("\n")
+    return f"$ {command_line(argv)}\n{printed.getvalue()}".rstrip("\n")
 
 
 def render(name: str) -> str:

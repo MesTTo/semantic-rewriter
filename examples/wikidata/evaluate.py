@@ -4,9 +4,12 @@ rewrite on any path and, on the questions DEPTHS names, chains of up to three as
 engine with tables, and the same cascade retrieves the candidates each judge sees: the cross-encoder
 nli-deberta-large ranks all 1,790 properties and the judge decides on the top K. It prints a markdown table per
 question, then the rewrites each judge admitted into the question's own predicates and some of the answers each run
-got wrong; summary() puts the runs allowed one rewrite on a path in one table across the questions.
+got wrong; summary() puts the runs allowed one rewrite on a path in one table across the questions; beliefs() ranks
+each question's answers by the opinion each gets from its lineage, with Jev admitting at two rewrite thresholds and
+nli-deberta-large at its own, and scores the ranking against Wikidata's answer.
 
-Run from the repository root: python examples/wikidata/evaluate.py [NAME ...]
+Run from the repository root: python examples/wikidata/evaluate.py [NAME ...]; with --beliefs first it
+prints the beliefs table and writes results/wikidata_beliefs.json, which RESULTS.md's table reads.
 
 Wikidata's own answer to each question is computed from the knowledge base's own statements, through the properties
 questions.py names and every property Wikidata files under them in its own subproperty hierarchy; the builder checked
@@ -17,6 +20,7 @@ Wikidata's answer, and some are listed. Jev's questions not yet in its answer ca
 from __future__ import annotations
 
 import atexit
+import json
 import math
 import os
 import sys
@@ -36,7 +40,10 @@ from questions import QUESTIONS, Question, property_id
 
 from semrewrite import formats
 from semrewrite.engines import make as make_engine
+from semrewrite.judges import default_data_trust
+from semrewrite.judges import default_threshold as make_threshold
 from semrewrite.judges import make as make_judge
+from semrewrite.lineage import SETS
 from semrewrite.protocols import Budget
 from semrewrite.retrieve import JudgeRetriever
 from semrewrite.rewriter import STRATEGIES, Rewriter
@@ -59,6 +66,11 @@ DEPTHS = {"victoria": (1, 3)}
 # Enough for every finishing run here; a run admitting rewrites that join everyone to everyone spends it instead.
 WORK = 50_000_000
 STOPPED = {"work_limit": "the work budget stopped it", "time_limit": "the time budget stopped it"}
+# The judges and rewrite thresholds whose answers get opinions, None for the judge's calibrated default: Jev at the
+# threshold RESULTS.md calibrated for answer F1 and at a low one that admits more true rewrites with the false, leaving
+# the answer threshold to sort their answers; and nli-deberta-large, whose opinions the knowledge base's evidence is
+# fused with at a data trust above 0, where Jev's is 0.
+BELIEF_RUNS = (("jev", 0.65), ("jev", 0.1), ("nli-deberta-large", None))
 
 
 @cache
@@ -197,5 +209,121 @@ def summary(names: list[str]) -> str:
     return "\n".join(rows)
 
 
+# Time: one cascade ranking and one solve, then the lineage of every answer; the second rewriter shares the first's
+# discoverer, so only the lineage runs again.
+@cache
+def _believed(name: str, judge_name: str, threshold: float | None) -> tuple[Outcome, Outcome]:
+    """The question answered with `judge_name` admitting at `threshold`, its calibrated default when None, one rewrite
+    on a path, each answer with its opinion: from the judge's opinions alone, and fused with the knowledge base's
+    evidence at the judge's calibrated data trust."""
+    _, kb, _, _ = _question(name)
+    engine, retriever = _tools()
+    budget = Budget(work=WORK, seconds=math.inf)
+    judge = make_judge(judge_name) if threshold is None else make_judge(judge_name, threshold=threshold)
+    alone = Rewriter(kb, judge, engine, retriever, k=K, budget=budget, beliefs=SETS)
+    disc = alone.discoverer()
+    strategy = replace(STRATEGY, depth=1)
+    first = alone.ask(kb.queries[0], strategy, disc)
+    fused = Rewriter(kb, alone.scorer, engine, retriever, k=K, budget=budget, beliefs=SETS,
+                     data_trust=default_data_trust(judge_name))
+    second = fused.ask(kb.queries[0], strategy, disc)
+    judge.close()
+    return first, second
+
+
+def ranking(question: Question, truth: set[str], out: Outcome) -> dict[str, float | None]:
+    """How well a run's answers ranked by projected probability sort Wikidata's answer from the rest: average
+    precision against Wikidata's answer, the best F1 over answer thresholds with the threshold reaching it, the F1 of
+    every answer, and the lowest projection inside Wikidata's answer and highest outside it."""
+    if not out.finished or out.beliefs is None:
+        msg = f"{question.name}: {out.status} {out.detail}"
+        raise RuntimeError(msg)
+    scored = {question.answers_of([row]).pop(): o.projection for row, o in out.beliefs.items()}
+    ranked = sorted(scored.items(), key=lambda es: (-es[1], es[0]))
+    hits, precision_sum, best = 0, 0.0, (0.0, None)
+    for k, (entity, p) in enumerate(ranked, start=1):
+        if entity in truth:
+            hits += 1
+            precision_sum += hits / k
+        # F1 is read only where the next answer's projection differs, since a threshold keeps tied answers together.
+        if k == len(ranked) or ranked[k][1] != p:
+            f1 = 2 * hits / (k + len(truth))
+            if f1 > best[0]:
+                best = (f1, p)
+    inside = [p for e, p in ranked if e in truth]
+    outside = [p for e, p in ranked if e not in truth]
+    return {"ap": precision_sum / len(truth), "best_f1": best[0], "at": best[1],
+            "f1": 2 * len(set(scored) & truth) / (len(scored) + len(truth)),
+            "lowest_inside": min(inside, default=None), "highest_outside": max(outside, default=None)}
+
+
+def belief_rows(names: list[str]) -> list[dict[str, object]]:
+    """Each named question's runs, every question's when none is named, for each judge and threshold BELIEF_RUNS
+    names: its answers, how many Wikidata's answer holds, and how well their projected probabilities rank them, from
+    the judge's opinions alone and with the knowledge base's evidence fused in at its data trust."""
+    rows: list[dict[str, object]] = []
+    for name in names or list(QUESTIONS):
+        question, _, truth, _ = _question(name)
+        for judge_name, chosen in BELIEF_RUNS:
+            alone, fused = _believed(name, judge_name, chosen)
+            got = question.answers_of(alone.answers)
+            threshold = make_threshold(judge_name) if chosen is None else chosen
+            rows.append({"question": name, "judge": judge_name, "threshold": threshold,
+                         "data_trust": default_data_trust(judge_name), "answers": len(got), "outside": len(got - truth),
+                         "truth": len(truth), "rewrites": len(alone.admitted),
+                         "alone": ranking(question, truth, alone), "fused": ranking(question, truth, fused)})
+    return rows
+
+
+def beliefs(rows: list[dict[str, object]]) -> str:
+    """belief_rows' runs as one markdown table."""
+    def number(x: object) -> str:
+        return "none" if x is None else f"{x:.3f}"
+
+    head = ["question", "judge", "rewrite threshold", "answers", "not in Wikidata's", "F1 of all answers",
+            "average precision by P", "best F1 by P (at P)", "lowest P inside", "highest P outside",
+            "average precision with the knowledge base's evidence (data trust)"]
+    lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+    for r in rows:
+        m, f = r["alone"], r["fused"]
+        assert isinstance(m, dict) and isinstance(f, dict)
+        lines.append("| " + " | ".join([
+            str(r["question"]), str(r["judge"]), f"{r['threshold']:.3g}", f"{r['answers']:,}", f"{r['outside']:,}",
+            number(m["f1"]), number(m["ap"]), f"{number(m['best_f1'])} ({number(m['at'])})",
+            number(m["lowest_inside"]), number(m["highest_outside"]), f"{number(f['ap'])} ({r['data_trust']:.2f})"])
+            + " |")
+    return "\n".join(lines)
+
+
+def placed(name: str, threshold: float, shown: int = 5) -> str:
+    """Where the answers outside Wikidata's land among the answers of Jev admitting at `threshold`, ranked by projected
+    probability: the `shown` highest outside Wikidata's answer and the `shown` lowest inside it, with each one's rank
+    and opinion, as a markdown table."""
+    question, _, truth, _ = _question(name)
+    out, _ = _believed(name, "jev", threshold)
+    if not out.finished or out.beliefs is None:
+        msg = f"{name}: {out.status} {out.detail}"
+        raise RuntimeError(msg)
+    opinions = {question.answers_of([row]).pop(): o for row, o in out.beliefs.items()}
+    ranked = sorted(opinions, key=lambda e: (-opinions[e].projection, e))
+    rank = {e: i for i, e in enumerate(ranked, start=1)}
+    chosen = [e for e in ranked if e not in truth][:shown] + [e for e in ranked if e in truth][-shown:]
+    rows = ["| answer | rank | in Wikidata's answer | P | b | d | u |", "|---|---|---|---|---|---|---|"]
+    for e in sorted(chosen, key=rank.__getitem__):
+        o = opinions[e]
+        rows.append(f"| `{e}` | {rank[e]:,} of {len(ranked):,} | {'yes' if e in truth else 'no'} | {o.projection:.3f} "
+                    f"| {o.belief:.3f} | {o.disbelief:.3f} | {o.uncertainty:.3f} |")
+    return "\n".join(rows)
+
+
+# The answer-belief runs' measurements, which RESULTS.md's table reads.
+BELIEFS_JSON = ROOT / "results" / "wikidata_beliefs.json"
+
+
 if __name__ == "__main__":
-    print(report(sys.argv[1:]))
+    if sys.argv[1:2] == ["--beliefs"]:
+        measured = belief_rows(sys.argv[2:])
+        BELIEFS_JSON.write_text(json.dumps(measured, indent=1) + "\n")
+        print(beliefs(measured))
+    else:
+        print(report(sys.argv[1:]))

@@ -121,4 +121,4 @@ def test_the_walkthrough_fills_exactly_the_readmes_generated_blocks() -> None:
         blocks |= set(begun)
     assert blocks == set(walkthrough.BLOCKS)
     for argv in (a for spec in walkthrough.BLOCKS.values() if isinstance(spec, list) for a in spec):
-        assert any(f"$ semrewrite {walkthrough.shlex.join(argv)}\n" in text for text in texts), argv
+        assert any(f"$ {walkthrough.command_line(argv)}\n" in text for text in texts), argv

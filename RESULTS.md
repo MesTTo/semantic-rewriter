@@ -1,6 +1,6 @@
 # Semantic rewriter on pymetta: results
 
-This file answers the four questions behind the experiment. The tables between `GENERATED` markers come from the files under `results/`, rendered by `python experiments/report.py`; the commands that regenerate those files are at the end.
+This file answers the five questions behind the experiment. The tables between `GENERATED` markers come from the files under `results/`, rendered by `python experiments/report.py`; the commands that regenerate those files are at the end.
 
 ## Short answers
 
@@ -9,6 +9,8 @@ Does semantic reduction loop? No, as long as goals are tabled and each predicate
 Which implementation? Twelve were built, as settings of five knobs. The one to use is goal-directed discovery with tables and a per-predicate memo. Discovering inside SLG evaluation (`lazy-tabled`) is the natural fit; compiling rewrites to native equations (`eager-worklist`) and merging aliases with a union-find (`alias-canonical`) are cheaper in engine work. Each of the three costs about 116 judge questions per query on its own, or 17 once a benchmark's queries share the memo. With an imperfect judge, also bound the depth, and calibrate what the bound counts as you calibrate the threshold. Tabled evaluation bounded at three steps (`depth-tabled`) raised answer F1 at calibrated thresholds for six of the seven judges. Bounding three rewrites alone (`rewrite-depth-tabled`), so that the knowledge base's own rules recurse freely, gave Jev its best F1 and the perfect judge every answer, but scored below the step bound with every other judge.
 
 Can a cross-encoder or Jev tell which way? Yes. On the Levy/Holt and Wikidata pairs, Jev gets 0.82 to 0.89 direction accuracy, the NLI cross-encoders 0.77 to 0.87, and embedding similarity sits at chance. Inside the rewriter, the deciding quantity is admission precision, because every false rewrite becomes a rule applied everywhere. Jev at a threshold calibrated on the other benchmarks reaches answer F1 0.892, and 0.916 with its rewrites bounded at three. On the same basis the best cross-encoder reaches 0.70, and 0.91 once evaluation is tabled and bounded at three steps; similarity alone reaches at most 0.47. Asking each judge both ways and rejecting the weaker direction lowered every cross-encoder's false-rewrite rate.
+
+How sure is each answer? Each answer can carry an opinion: the probability that every rewrite of one of its derivations is right, each right as its judge's opinion says, discounted by how far the judge proved right on labelled pairs. Jev's trust fits to 0.974. On the Wikidata questions, Jev admitting at 0.1 instead of 0.65 brings in 21 answers outside Wikidata's record for Victoria and one for Alphabet, and every one of them ranks below every answer Wikidata records. The knowledge base's own statements, as a second source on each rewrite, add nothing to Jev, whose trust in them fits to 0. They lower the NLI cross-encoders' log loss on labelled pairs from about 0.64 to about 0.48, but among a question's rewrites they help on one question and hurt on another, since there they count a rewrite's statements the other rewrites miss as evidence against it.
 
 Is pymetta stable enough? Yes. Tabling, ops called inside tables, table refresh and budgets all did what the rewriter needed. I found twelve defects, seven of which involve state that outlives a `MeTTa()` context; ten have a script under `repros/`, and the engine works around every one.
 
@@ -385,6 +387,52 @@ The cost is one extra judge question per candidate. In return, the false-rewrite
 | reranker-qwen3 | directional | 0.010 | 0.384 | 0.473 | 0.640 | 0.514 | 0.486 | 0.500 | 0.539 |
 <!-- END GENERATED: direction-policy -->
 
+## How sure is each answer?
+
+With `--beliefs`, every answer comes with an opinion that it holds: a belief, a disbelief and an uncertainty, and the probability P they project. DESIGN.md says how they are computed. Two measurements decide what the opinions are worth: how well each judge's opinions are calibrated, and whether the answers' probabilities sort Wikidata's own answer from the rest.
+
+### How far each judge is trusted
+
+A judge's trust is fitted on the Wikidata dev pairs, as its threshold is: it is the trust whose discounted opinions give the labels the highest likelihood. The table gives each judge's trust, the test pairs' ROC AUC, and the log loss and Brier score of its trusted opinions on them. A judge that said one half every time would score 0.693 and 0.250.
+
+<!-- BEGIN GENERATED: trust -->
+| judge | trust | test ROC AUC | test log loss | test Brier | data trust | test pairs with data | their log loss, judge alone | fused with the data |
+|---|---|---|---|---|---|---|---|---|
+| jev | 0.974 | 0.878 | 0.322 | 0.097 | 0.000 | 933 | 0.364 | 0.364 |
+| nli-deberta-large-wanli | 0.589 | 0.802 | 0.621 | 0.216 | 0.774 | 933 | 0.629 | 0.467 |
+| nli-deberta-large | 0.411 | 0.754 | 0.631 | 0.220 | 0.769 | 933 | 0.630 | 0.487 |
+| nli-deberta-base | 0.310 | 0.744 | 0.663 | 0.235 | 0.745 | 933 | 0.658 | 0.495 |
+| cosine-bge | 0.000 | 0.531 | 0.693 | 0.250 | 0.700 | 933 | 0.693 | 0.533 |
+| cosine-qwen3 | 0.000 | 0.532 | 0.693 | 0.250 | 0.700 | 933 | 0.693 | 0.533 |
+| reranker-qwen3 | 0.000 | 0.668 | 0.693 | 0.250 | 0.700 | 933 | 0.693 | 0.533 |
+<!-- END GENERATED: trust -->
+
+Jev is trusted almost completely, at 0.974, and its trusted opinions reach a test log loss of 0.322. The NLI cross-encoders are trusted at 0.31 to 0.59; their neutral class already leaves part of each opinion uncertain, and the discount adds more. The cosine judges and the reranker get no trust at all. For the cosine judges that is right, since they rank the test pairs at chance. The reranker ranks them better, at an AUC of 0.668, but its probabilities run high: two thirds of the Wikidata test pairs it scores at 0.81 or more are false. Trust can only shrink a probability toward one half, not recalibrate it.
+
+The last three columns test the knowledge base as a second source, on the 933 test pairs whose two properties both have statements in the Wikidata examples' knowledge bases. Its evidence on a pair counts the premise's statements the conclusion also states as for it, and the rest as against it. Fitted jointly with each judge, its trust is 0 for Jev: on these pairs the statements add nothing to Jev's opinions. With the NLI cross-encoders it is 0.75 to 0.77, and fusing the statements in lowers their log loss from between 0.63 and 0.66 to between 0.47 and 0.50. With the cosine judges and the reranker, which carry no trust, the statements alone reach 0.533.
+
+### Answer beliefs on the Wikidata questions
+
+Each question is answered with one rewrite on a path, by Jev at the rewrite threshold calibrated for answer F1, 0.65, and at 0.1, and by nli-deberta-large at its calibrated threshold, 0.659. Every answer is ranked by P and scored against Wikidata's own answer: the average precision of the ranking, the best F1 an answer threshold reaches and the P it sits at, and the lowest P inside Wikidata's answer beside the highest outside it. The last column ranks the answers again after the knowledge base's evidence on each rewrite is fused in at the judge's data trust.
+
+<!-- BEGIN GENERATED: wikidata-beliefs -->
+| question | judge | rewrite threshold | answers | not in Wikidata's | F1 of all answers | average precision by P | best F1 by P (at P) | lowest P inside | highest P outside | average precision with the knowledge base's evidence (data trust) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| victoria | jev | 0.65 | 1,164 | 0 | 1.000 | 1.000 | 1.000 (0.958) | 0.958 | none | 1.000 (0.00) |
+| victoria | jev | 0.1 | 1,185 | 21 | 0.991 | 1.000 | 1.000 (0.958) | 0.958 | 0.334 | 1.000 (0.00) |
+| victoria | nli-deberta-large | 0.659 | 1,188 | 24 | 0.990 | 1.000 | 0.999 (0.643) | 0.643 | 0.643 | 1.000 (0.77) |
+| leonardo | jev | 0.65 | 851 | 2 | 0.996 | 0.994 | 0.997 (0.704) | 0.704 | 0.695 | 0.994 (0.00) |
+| leonardo | jev | 0.1 | 858 | 5 | 0.996 | 0.999 | 0.997 (0.704) | 0.247 | 0.695 | 0.999 (0.00) |
+| leonardo | nli-deberta-large | 0.659 | 858 | 5 | 0.996 | 0.999 | 0.996 (0.705) | 0.705 | 0.705 | 0.983 (0.77) |
+| alphabet | jev | 0.65 | 2,849 | 0 | 0.938 | 0.883 | 0.938 (0.955) | 0.955 | none | 0.883 (0.00) |
+| alphabet | jev | 0.1 | 2,903 | 1 | 0.947 | 0.900 | 0.947 (0.222) | 0.222 | 0.108 | 0.900 (0.00) |
+| alphabet | nli-deberta-large | 0.659 | 2,906 | 4 | 0.947 | 0.899 | 0.947 (0.497) | 0.497 | 0.643 | 0.898 (0.77) |
+<!-- END GENERATED: wikidata-beliefs -->
+
+Lowering Jev's rewrite threshold to 0.1 admits six times as many rewrites into Victoria's descendants, 110 against 18, and brings in 21 answers outside Wikidata's record. All 21 rank below all 1,164 of Wikidata's, at P 0.334 or less against 0.958 or more, so an answer threshold between them keeps exactly Wikidata's answer. On Alphabet the lower threshold finds 53 more of Wikidata's holdings, and its one answer outside the record, at P 0.108, ranks below all of them, so F1 rises from 0.938 to 0.947. On Leonardo it finds four more of Wikidata's works and three more answers outside it. There P does not separate the two sets: the highest answer outside, at 0.695, ranks above the lowest of Wikidata's, at 0.247, though the best answer threshold, 0.704, still reaches F1 0.997.
+
+The knowledge base's evidence changes nothing for Jev, whose data trust is 0. For nli-deberta-large, at a data trust of 0.77, its effect depends on the question. It separated Victoria's answers completely, every answer outside Wikidata's at P 0.361 or less and every answer inside at 0.408 or more, where alone the two sets met at 0.643. It left Alphabet's average precision where it was, and it lowered Leonardo's from 0.999 to 0.983. On Leonardo the evidence counted against `creator`, the property Wikidata itself files a work's maker under: of the 858 works it states, the other admitted rewrites derive about 40, so the other 818 count against it, and its P fell from 0.705 to 0.270, nearly as low as a rewrite through the material a work is made from. The data trust was fitted on property pairs, where the conclusion's own statements are the reference; among a question's rewrites the reference is what the other rewrites derive, which covers only part of the relation, so a rewrite stating much the others miss reads as wrong.
+
 ## Is pymetta stable enough?
 
 Yes, for this experiment. Everything the rewriter needs from upstream pymetta 0.9.4 worked, and every defect it hit has a workaround in the engine. These held throughout:
@@ -437,6 +485,7 @@ uv sync
 .venv/bin/python -m semrewrite.pairs fetch levyholt
 .venv/bin/python -m semrewrite.pairs build levyholt
 .venv/bin/python experiments/judge_eval.py
+.venv/bin/python examples/wikidata/evaluate.py --beliefs
 .venv/bin/python experiments/impl_eval.py --judges oracle --budget 500000 --tag oracle
 for spec in "judges-1 jev" "judges-2 nli-deberta-base" "judges-3 nli-deberta-large" "judges-4 nli-deberta-large-wanli" \
             "judges-5 reranker-qwen3" "judges-6 cosine-bge" "judges-7 cosine-qwen3"; do
@@ -457,6 +506,7 @@ What each step produces:
 
 - `pytest` runs the engine tests, the termination properties and the judge tests. The second `pytest` line writes the termination statistics this file quotes; Hypothesis draws new catalogues on each run, so the shares it reports move a little from run to run.
 - `judge_eval.py` writes `results/judges.json` and the calibrated thresholds and trusts in `semrewrite/judges/calibration.json`. Jev's answers are cached on disk, so a rerun sends no requests unless it asks something new, which needs a TypeSafe key; this repository does not include the experiment's cache.
+- `evaluate.py --beliefs` answers the three Wikidata questions with Jev admitting at two rewrite thresholds and nli-deberta-large at its own, gives every answer its opinion, and writes how well they rank Wikidata's answer to `results/wikidata_beliefs.json`. It loads nli-deberta-large for the retrieval cascade and reads Jev's answer cache.
 - `impl_eval.py` writes `results/implementations.<tag>.json` and `.jsonl`. Each judge run takes a process of its own: pymetta keeps about 25 KB for every context that imports `lib_tabling` (see the pymetta section), and three judges in one process outgrew 4 GiB.
 - `direction_policy.py` writes `results/direction_policy.<tag>.json`, and `blowup.py` writes `results/blowup.json`.
 - `report.py` fills the tables in this file; `--complete` makes a missing results file an error.

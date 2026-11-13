@@ -176,6 +176,36 @@ def pairs_table() -> str:
                    "precision", "recall", "balanced accuracy"], rows)
 
 
+def trust_table() -> str:
+    """Each judge's trust and data trust as judge_eval.py fitted them on Wikidata dev pairs, with Wikidata test pairs'
+    ROC AUC and the log loss and Brier score of its trusted opinions, and on the test pairs the knowledge base has
+    evidence on, its log loss alone and fused with that evidence."""
+    judges = _load("judges.json")["judges"]
+    rows = []
+    for name, j in sorted(judges.items(), key=lambda nj: -nj[1]["variants"]["letters"]["trust"]["default"]):
+        variant = j["variants"]["letters"]
+        test = variant["sets"]["wikidata"]["test"]
+        data = variant["data"]
+        rows.append([name, variant["trust"]["default"], test["auc"], test["at_default_trust"]["log_loss"],
+                     test["at_default_trust"]["brier"], data["trust"], data["test"]["judge"]["rows"],
+                     data["test"]["judge"]["log_loss"], data["test"]["fused"]["log_loss"]])
+    return _table(["judge", "trust", "test ROC AUC", "test log loss", "test Brier", "data trust", "test pairs with data",
+                   "their log loss, judge alone", "fused with the data"], rows)
+
+
+def beliefs_table() -> str:
+    """The Wikidata questions' answers ranked by projected probability, from examples/wikidata/evaluate.py --beliefs,
+    rendered by that script's own table."""
+    import importlib.util
+
+    rows = _load("wikidata_beliefs.json")
+    spec = importlib.util.spec_from_file_location("wikidata_evaluate", ROOT / "examples" / "wikidata" / "evaluate.py")
+    assert spec is not None and spec.loader is not None
+    evaluate = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(evaluate)
+    return evaluate.beliefs(rows)
+
+
 def direction_policy_table() -> str:
     """Plain against direction-aware admission per judge: the calibrated slack, Wikidata test pairs, and lazy-tabled answers."""
     rows = []
@@ -249,6 +279,8 @@ GENERATORS: dict[str, Callable[[], str]] = {
     "judges-in-kb": judges_in_kb_table,
     "judges-strategies": judges_strategies_table,
     "pairs": pairs_table,
+    "trust": trust_table,
+    "wikidata-beliefs": beliefs_table,
 }
 
 
