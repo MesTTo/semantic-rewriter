@@ -18,18 +18,19 @@ Finite evidence always gives u > 0, and every constructor from evidence keeps it
 evidence arena. The constructor also accepts dogmatic opinions (u = 0, as J Def 3.1 allows): the rewriter answers a
 query the knowledge base derives outright as (1, 0, 0), a fact of SLN T1's structural layer rather than evidence.
 
-Equation numbers (J x.y) are those of A. Jøsang, Subjective Logic, Springer 2016. Where SNARS computes otherwise,
-this module follows SLN and the book:
+Equation numbers (J x.y) are those of A. Jøsang, Subjective Logic, Springer 2016. Where SNARS's truth.metta (at
+mettabase c9bbbe8) computes otherwise, this module follows SLN and the book:
 
-* SNARS's `sn opinion` view and `sn fuse-op` set u = max(u-min, 2/t), u-min = 0.001, without renormalising b and d,
-  so its b + d + u exceeds 1 once r + s > 1998. Here b + d + u = 1 and u is never clamped; below that much evidence
-  the views agree to the bit and fusion to within 1e-15.
+* SNARS's `sn opinion` view and `sn fuse-op` floor u at u-min = 0.001, which binds past 1998 units of evidence, and
+  at c9bbbe8 do so without renormalising b and d, so b + d + u exceeds 1. This module never floors u; below that
+  much evidence the views agree to the bit and fusion to within 1e-15.
 * `sn fuse-op` keeps its first argument's base rate; fuse takes the evidence-weighted mean when the base rates
   differ (J Def 12.5, SLN 3.1). SNARS cites J 12.12 for it, which is the book's cinema example; cumulative fusion is
   J Def 12.5, Eq 12.14, and Thm 12.2, Eq 12.17.
-* `sn and-op` and `sn or-op` replace a quotient whose denominator is below 1e-6 by 0 (`sn kdiv`), which at
-  a_x = a_y = 1 (product) or a_x = a_y = 0 (coproduct) leaves b + d + u < 1. J 7.1 and J 7.3 are undefined there,
-  and conjoin and disjoin raise ValueError.
+* `sn and-op` and `sn or-op` replace a quotient whose denominator is below 1e-6 by 0 (`sn kdiv`), which near
+  a_x = a_y = 1 (product) or a_x = a_y = 0 (coproduct) loses the cross terms and leaves b + d + u < 1. Here the
+  denominators keep their precision up to the corner, and at the corner, where J 7.1 and J 7.3 are 0/0, the cross
+  terms go to uncertainty (conjoin).
 * `sn op-to-ev` divides by u and so fails on dogmatic opinions; fuse handles them by J Def 12.5's two cases.
 """
 
@@ -254,12 +255,12 @@ class Opinion:
         """The opinion that both independent propositions hold: binomial multiplication (J Def 7.1, `sn and-op`).
 
         It projects P(x) P(y) (J 7.2). The book's (0.75, 0.15, 0.10, 0.50) and (0.10, 0.00, 0.90, 0.20) multiply to
-        (0.15, 0.15, 0.70, 0.10) to two places. J 7.1 divides by 1 - a_x a_y, so it is undefined when both base
-        rates are 1, and this raises ValueError there.
+        (0.15, 0.15, 0.70, 0.10) to two places. J 7.1 shares the cross terms b_x u_y + u_x b_y between belief and
+        uncertainty by quotients over 1 - a_x a_y, which are 0/0 when both base rates are 1; there P(x) P(y) = b + u
+        no longer fixes the split, and the cross terms all go to uncertainty, since J 7.1.3 designs the product to
+        keep the most uncertainty and b_x b_y is the least belief it allows. So (0.5, 0, 0.5, 1) with itself is
+        (0.25, 0, 0.75, 1), and a fact at base rate 1, (1, 0, 0, 1), with itself stays (1, 0, 0, 1).
         """
-        if self.base_rate == 1.0 and other.base_rate == 1.0:
-            msg = "the product is undefined when both base rates are 1: J 7.1 divides by 1 - a_x a_y = 0"
-            raise ValueError(msg)
         belief, disbelief, uncertainty, rate, _ = _multiply(self, 1.0 - self.base_rate, other, 1.0 - other.base_rate)
         return Opinion(belief, disbelief, uncertainty, rate)
 
@@ -267,12 +268,9 @@ class Opinion:
         """The opinion that either independent proposition holds: comultiplication (J Def 7.2, Eq 7.3, `sn or-op`).
 
         It projects P(x) + P(y) - P(x) P(y) (J 7.4). The book's (0.75, 0.15, 0.10, 0.50) and (0.35, 0.00, 0.65,
-        0.20) give (0.84, 0.06, 0.10, 0.60) to two places. J 7.3 divides by a_x + a_y - a_x a_y, so it is undefined
-        when both base rates are 0, and this raises ValueError there.
+        0.20) give (0.84, 0.06, 0.10, 0.60) to two places. Where both base rates are 0, J 7.3's quotients are 0/0
+        and the cross terms d_x u_y + u_x d_y go to uncertainty, the dual of conjoin's corner.
         """
-        if self.base_rate == 0.0 and other.base_rate == 0.0:
-            msg = "the coproduct is undefined when both base rates are 0: J 7.3 divides by a_x + a_y - a_x a_y = 0"
-            raise ValueError(msg)
         # J 7.3 is J 7.1 under the duality b <-> d, a <-> 1 - a (J 7.1.3, de Morgan): x or y is the complement of
         # (not x) and (not y). Passing each original a as its complement's complement keeps the coproduct's base
         # rate a_x + a_y - a_x a_y, which _multiply returns as its denominator, free of 1 - (1 - a) rounding.
@@ -362,25 +360,31 @@ def _multiply(
 ) -> tuple[float, float, float, float, float]:
     """J 7.1's product of independent opinions x and y as (b, d, u, a, 1 - a), given 1 - a of each argument.
 
-    J 7.1 divides by 1 - a_x a_y, computed as (1 - a_x) + a_x (1 - a_y), a sum of non-negative terms that is 0 only
-    when both base rates are 1 (the callers refuse that) and keeps its precision where a_x a_y is near 1; the same
-    sum is the product's 1 - a. Time: a fixed 30 or so float operations.
+    b = b_x b_y + q_b and u = u_x u_y + q_u, where the quotients q_b and q_u over 1 - a_x a_y share the cross terms
+    b_x u_y + u_x b_y: their numerators sum to the cross terms times 1 - a_x a_y. That denominator is computed as
+    (1 - a_x) + a_x (1 - a_y), a sum of non-negative terms that keeps its precision where a_x a_y is near 1 and is 0
+    only when both base rates are 1; the same sum is the product's 1 - a. Time: a fixed 30 or so float operations.
     """
     ax, ay = x.base_rate, y.base_rate
-    # Both quotients and their shared denominator are linear in the two complements, so dividing both by the larger
-    # leaves the quotients unchanged and keeps their precision where the complements are tiny: the coproduct of
-    # base rates 0 and 5e-324 would otherwise divide subnormals and return u = 1 for u = 2/3.
-    scale = max(x_rate_complement, y_rate_complement)
-    xc, yc = x_rate_complement / scale, y_rate_complement / scale
-    denominator = xc + ax * yc
     belief_by_uncertainty = x.belief * y.uncertainty
     uncertainty_by_belief = x.uncertainty * y.belief
-    belief = x.belief * y.belief + (xc * ay * belief_by_uncertainty + ax * yc * uncertainty_by_belief) / denominator
+    scale = max(x_rate_complement, y_rate_complement)
+    if scale == 0.0:
+        # Both base rates are 1: J 7.1's quotients are 0/0 and P(x) P(y) = b + u leaves the split open. J 7.1.3
+        # designs the product to keep the most uncertainty, so the cross terms all go to u.
+        belief_share, uncertainty_share = 0.0, belief_by_uncertainty + uncertainty_by_belief
+    else:
+        # The quotients and their shared denominator are linear in the two complements, so dividing both by the
+        # larger leaves the quotients unchanged and keeps their precision where the complements are tiny: the
+        # coproduct of base rates 0 and 5e-324 would otherwise divide subnormals and return u = 1 for u = 2/3.
+        xc, yc = x_rate_complement / scale, y_rate_complement / scale
+        denominator = xc + ax * yc
+        belief_share = (xc * ay * belief_by_uncertainty + ax * yc * uncertainty_by_belief) / denominator
+        uncertainty_share = (yc * belief_by_uncertainty + xc * uncertainty_by_belief) / denominator
     # d_x + d_y - d_x d_y written d_x + d_y (1 - d_x), which cannot round above 1.
     disbelief = x.disbelief + y.disbelief * (1.0 - x.disbelief)
-    uncertainty = x.uncertainty * y.uncertainty + (
-        yc * belief_by_uncertainty + xc * uncertainty_by_belief
-    ) / denominator
+    belief = x.belief * y.belief + belief_share
+    uncertainty = x.uncertainty * y.uncertainty + uncertainty_share
     return belief, disbelief, uncertainty, ax * ay, x_rate_complement + ax * y_rate_complement
 
 

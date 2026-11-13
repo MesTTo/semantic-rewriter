@@ -5,7 +5,9 @@ SNARS's truth.metta, run on PeTTa, computes every operation it shares to within 
 The ONA check needs ONA_PATH, an OpenNARS-for-Applications checkout with its NAR binary built. The SNARS check needs
 PETTA_PATH, a PeTTa checkout, METTABASE_PATH, the mettabase checkout whose lib/mettabase/snars it loads, and swipl on
 the PATH; it runs PeTTa with mettabase as the working directory, which SNARS's kernel needs, and writes nothing.
-Each is skipped, with the reason, when what it needs is missing.
+Each is skipped, with the reason, when what it needs is missing. The SNARS check includes the product's base-rate
+corners and fusion of unequal base rates, which truth.metta at mettabase c9bbbe8 gets wrong (sn kdiv drops the cross
+terms, sn fuse-op keeps the first base rate) and its commit 10cdbc4 corrects; it fails on the former.
 """
 
 from __future__ import annotations
@@ -104,6 +106,19 @@ def test_coproduct_example_of_the_book() -> None:
     coproduct = Opinion(0.75, 0.15, 0.10, 0.50).disjoin(Opinion(0.35, 0.00, 0.65, 0.20))
     assert_printed(coproduct, (0.84, 0.06, 0.10, 0.60))
     assert math.isclose(coproduct.projection, 0.80 + 0.48 - 0.80 * 0.48)
+
+
+def test_products_at_the_base_rate_corners_keep_the_most_uncertainty() -> None:
+    # J 7.1 is 0/0 at a_x = a_y = 1 and J 7.3 at a_x = a_y = 0; the cross terms go to u (J 7.1.3).
+    half = Opinion(0.5, 0.0, 0.5, 1.0)
+    assert_close(half.conjoin(half), Opinion(0.25, 0.0, 0.75, 1.0))
+    assert half.conjoin(half).projection == half.projection * half.projection
+    true = Opinion(1.0, 0.0, 0.0, 1.0)
+    assert true.conjoin(true) == true
+    assert_close(half.complement().disjoin(half.complement()), Opinion(0.0, 0.25, 0.75, 0.0))
+    # Next to the corner the quotients keep their precision: J 7.1 there, with no mass lost.
+    near = Opinion(0.5, 0.0, 0.5, 1.0 - 2.0**-40)
+    assert_close(half.conjoin(near), Opinion(0.5, 0.0, 0.5, near.base_rate))
 
 
 def test_conflict_examples_of_the_book() -> None:
@@ -244,22 +259,18 @@ def test_complement_is_an_involution(opinion: Opinion) -> None:
 
 @given(opinions(DYADIC), opinions(DYADIC))
 def test_conjoin_and_disjoin_are_de_morgan_duals(x: Opinion, y: Opinion) -> None:
-    assume(not (x.base_rate == 1.0 and y.base_rate == 1.0))
     assert_close(x.conjoin(y), x.complement().disjoin(y.complement()).complement())
-    assume(not (x.base_rate == 0.0 and y.base_rate == 0.0))
     assert_close(x.disjoin(y), x.complement().conjoin(y.complement()).complement())
 
 
 @given(opinions(), opinions())
 def test_products_project_as_probabilities_do(x: Opinion, y: Opinion) -> None:
-    # J 7.2 and J 7.4.
+    # J 7.2 and J 7.4, which the corner rule keeps: there a = 1 makes P = b + u = 1 - d (and a = 0 makes P = b).
     px, py = x.projection, y.projection
-    if not (x.base_rate == 1.0 and y.base_rate == 1.0):
-        assert math.isclose(x.conjoin(y).projection, px * py, abs_tol=1e-12)
-        assert_close(x.conjoin(y), y.conjoin(x))
-    if not (x.base_rate == 0.0 and y.base_rate == 0.0):
-        assert math.isclose(x.disjoin(y).projection, px + py - px * py, abs_tol=1e-12)
-        assert_close(x.disjoin(y), y.disjoin(x))
+    assert math.isclose(x.conjoin(y).projection, px * py, abs_tol=1e-12)
+    assert_close(x.conjoin(y), y.conjoin(x))
+    assert math.isclose(x.disjoin(y).projection, px + py - px * py, abs_tol=1e-12)
+    assert_close(x.disjoin(y), y.disjoin(x))
 
 
 @given(opinions())
@@ -400,8 +411,6 @@ def test_dogmatic_opinions_are_allowed_but_are_no_evidence() -> None:
         lambda: Opinion.from_nal(0.5, 0.5, k=0.0),
         lambda: Opinion(0.2, 0.3, 0.5).to_nal(k=-1.0),
         lambda: Opinion(0.2, 0.3, 0.5).discount(1.5),
-        lambda: Opinion(0.2, 0.3, 0.5, 1.0).conjoin(Opinion(0.1, 0.1, 0.8, 1.0)),
-        lambda: Opinion(0.2, 0.3, 0.5, 0.0).disjoin(Opinion(0.1, 0.1, 0.8, 0.0)),
     ],
 )
 def test_operations_refuse_what_they_cannot_answer(build: Callable[[], object]) -> None:
@@ -560,31 +569,31 @@ def _sample_opinion(rng: random.Random, dogmatic: bool) -> Opinion:
     return Opinion.from_evidence(_sample_evidence(rng), _sample_evidence(rng), _sample_rate(rng))
 
 
+# The base-rate corners of the product and coproduct and their neighbours, which the first calls take.
+_CORNERS = ((1.0, 1.0), (1.0, 1.0 - 1e-9), (0.0, 0.0), (0.0, 1e-9), (1.0, 0.0), (0.0, 1.0))
+
+
 def _oracle_cases(rng: random.Random, per_operator: int) -> _Oracle:
     oracle = _Oracle()
     for i in range(per_operator):
         x, y = _sample_opinion(rng, dogmatic=True), _sample_opinion(rng, dogmatic=True)
+        if i < len(_CORNERS):
+            x = Opinion(x.belief, x.disbelief, x.uncertainty, _CORNERS[i][0])
+            y = Opinion(y.belief, y.disbelief, y.uncertainty, _CORNERS[i][1])
         trust = rng.choice([0.0, 1.0]) if rng.random() < 0.2 else rng.random()
         oracle.add("project", f"(sn project {_metta(x)})", _NUMBER, (x.projection,))
         oracle.add("complement", f"(sn complement {_metta(x)})", _OPINION, _fields(x.complement()))
         discounted = _fields(x.discount(trust))
         oracle.add("discount-op", f"(sn discount-op {_metta(x)} {trust!r})", _OPINION, discounted)
-        # SNARS's kdiv zeroes a quotient whose denominator is below 1e-6; pairs within 10 times that are left out.
-        if 1.0 - x.base_rate * y.base_rate >= 1e-5:
-            oracle.add("and-op", f"(sn and-op {_metta(x)} {_metta(y)})", _OPINION, _fields(x.conjoin(y)))
-        if x.base_rate + y.base_rate - x.base_rate * y.base_rate >= 1e-5:
-            oracle.add("or-op", f"(sn or-op {_metta(x)} {_metta(y)})", _OPINION, _fields(x.disjoin(y)))
+        oracle.add("and-op", f"(sn and-op {_metta(x)} {_metta(y)})", _OPINION, _fields(x.conjoin(y)))
+        oracle.add("or-op", f"(sn or-op {_metta(x)} {_metta(y)})", _OPINION, _fields(x.disjoin(y)))
         # op-to-ev, fuse-op and the cells hold evidence, which a dogmatic opinion is not.
         x, y = _sample_opinion(rng, dogmatic=False), _sample_opinion(rng, dogmatic=False)
         r, s = x.evidence()
         oracle.add("op-to-ev", f"(sn op-to-ev {_metta(x)})", _EVIDENCE, (r, s, x.base_rate))
         same = Opinion(y.belief, y.disbelief, y.uncertainty, x.base_rate)
         oracle.add("fuse-op", f"(sn fuse-op {_metta(x)} {_metta(same)})", _OPINION, _fields(x.fuse(same)))
-        # With unequal base rates SNARS keeps its first argument's, where fuse takes the evidence-weighted mean: the
-        # masses agree, and SNARS's base rate is expected to be x's.
-        fused = x.fuse(y)
-        want = (fused.belief, fused.disbelief, fused.uncertainty, x.base_rate)
-        oracle.add("fuse-op, unequal a", f"(sn fuse-op {_metta(x)} {_metta(y)})", _OPINION, want)
+        oracle.add("fuse-op, unequal a", f"(sn fuse-op {_metta(x)} {_metta(y)})", _OPINION, _fields(x.fuse(y)))
         cells = []
         for side in ("x", "y"):
             positive, negative, rate = _sample_evidence(rng), _sample_evidence(rng), _sample_rate(rng)
@@ -614,15 +623,18 @@ def test_operators_agree_with_snars_truth_metta() -> None:
     assert result.returncode == 0, result.stdout + result.stderr
     answers = dict(re.findall(r"^\(Case (\d+) (.*)\)$", result.stdout, flags=re.MULTILINE))
     assert len(answers) == len(oracle.cases), result.stdout + result.stderr
-    worst: dict[str, tuple[int, float]] = {}
+    worst: dict[str, tuple[int, int, float]] = {}
+    disagreements = []
     for i, (name, call, shape, want) in enumerate(oracle.cases):
         match = shape.match(answers[str(i)])
         assert match, (call, answers[str(i)])
         got = tuple(float(g) for g in match.groups())
         error = max(abs(g - w) for g, w in zip(got, want, strict=True))
-        assert error <= 1e-9, (name, call, got, want)
-        count, largest = worst.get(name, (0, 0.0))
-        worst[name] = (count + 1, max(largest, error))
+        if error > 1e-9:
+            disagreements.append((name, call, got, want))
+        count, off, largest = worst.get(name, (0, 0, 0.0))
+        worst[name] = (count + 1, off + (error > 1e-9), max(largest, error))
     print(f"\nSNARS truth.metta at {mettabase} against semrewrite.opinion, {len(oracle.cases)} calls:")
-    for name, (count, largest) in sorted(worst.items()):
-        print(f"  {name:20} {count:4} calls, largest difference {largest:.3g}")
+    for name, (count, off, largest) in sorted(worst.items()):
+        print(f"  {name:20} {count:4} calls, {off:3} beyond 1e-9, largest difference {largest:.3g}")
+    assert not disagreements, disagreements[:5]
