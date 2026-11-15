@@ -62,9 +62,12 @@ class SentenceJudge:
     calibrated ones. `check_trust`, the trust the claim check puts in the
     judge's reading of a statement against a rewrite's claim, is complete too
     until the factory sets the one calibrated for the judge, or None where none
-    was, which the check then refuses (semrewrite.claims). `calibrated_threshold`
-    is the threshold the judge was calibrated to admit at, which a run's own
-    `threshold` may override; the factory sets it, and None leaves the run's.
+    was, which the check then refuses (semrewrite.claims); `exception_trust`, the
+    trust it puts in the judge's reading of a statement about an application's
+    individuals, with its premise, against its conclusion, likewise.
+    `calibrated_threshold` is the threshold the judge was calibrated to admit at,
+    which a run's own `threshold` may override; the factory sets it, and None
+    leaves the run's.
     """
 
     # The pair set whose dev rows calibrate this kind of judge's defaults: the kind of question it is asked.
@@ -80,6 +83,7 @@ class SentenceJudge:
         self.trust = 1.0
         self.base_rate = 0.5
         self.check_trust: float | None = 1.0
+        self.exception_trust: float | None = 1.0
         self.calibrated_threshold: float | None = None
         self.fillers = fillers
         self.usage: dict[str, int] = {"pairs": 0, "calls": 0}

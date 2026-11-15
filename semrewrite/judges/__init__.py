@@ -1,10 +1,12 @@
 """Purpose: the judge factory, which builds judges by name for the command
 line and the experiments. make(name) builds a direction judge, its threshold,
-trust, base rate and check trust read from semrewrite/judges/calibration.json,
-where experiments/judge_eval.py writes each judge's threshold and trust
-calibrated on the dev rows of the labelled set its entry names, and each such
-set's base rate once, and experiments/check_trust.py writes the trust the claim
-check puts in the judge's reading of a statement against a claim;
+trust, base rate, check trust and exception trust read from
+semrewrite/judges/calibration.json, where experiments/judge_eval.py writes each
+judge's threshold and trust calibrated on the dev rows of the labelled set its
+entry names, and each such set's base rate once, experiments/check_trust.py
+writes the trust the claim check puts in the judge's reading of a statement
+against a rewrite's claim, and experiments/exception_trust.py the trust it puts
+in the judge's reading of a statement about an application's individuals;
 make("oracle", gold=...) builds the OracleJudge of semrewrite/judges/oracle.py.
 
     from semrewrite.judges import make
@@ -21,7 +23,7 @@ from __future__ import annotations
 import json
 import os
 import pathlib
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from typing import Any
 
 from semrewrite.judges.base import DEFAULT_SET, SentenceJudge
@@ -68,13 +70,14 @@ def _table(path: pathlib.Path | None) -> tuple[pathlib.Path, dict[str, Any]]:
     return path, json.loads(path.read_text()) if path.is_file() else {}
 
 
-def _calibrated(name: str, field: str, option: str, path: pathlib.Path | None) -> float:
-    """The value of `field` calibrated for judge `name`, which `option` of make() overrides; raises when none was
-    calibrated."""
+def _calibrated(name: str, field: str, option: str, path: pathlib.Path | None,
+                by: str = "experiments/judge_eval.py") -> float:
+    """The value of `field` calibrated for judge `name` by the experiment `by`, which `option` of make() overrides;
+    raises when none was calibrated."""
     path, table = _table(path)
     entry = table.get("judges", {}).get(name, {})
     if field not in entry:
-        msg = f"no calibrated {option} for {name!r} in {path}; run experiments/judge_eval.py or pass {option}="
+        msg = f"no calibrated {option} for {name!r} in {path}; run {by} or pass {option}="
         raise LookupError(msg)
     return float(entry[field])
 
@@ -126,22 +129,41 @@ def default_check_trust(name: str, path: pathlib.Path | None = None) -> float:
     """The trust the claim check puts in judge `name`'s reading of a statement against a rewrite's claim, fitted by
     experiments/check_trust.py on CHECK_SET's dev updates read against their inferences; raises when none was
     fitted."""
-    return _calibrated(name, "check_trust", "check_trust", path)
+    return _calibrated(name, "check_trust", "check_trust", path, "experiments/check_trust.py")
+
+
+def default_exception_trust(name: str, path: pathlib.Path | None = None) -> float:
+    """The trust the claim check puts in judge `name`'s reading of a statement naming an application's individuals,
+    with its premise, against its conclusion, fitted by experiments/exception_trust.py on CHECK_SET's dev updates
+    read so, names filled in for PersonX; raises when none was fitted."""
+    return _calibrated(name, "exception_trust", "exception_trust", path, "experiments/exception_trust.py")
+
+
+def _fitted(reader: Callable[[str], float], name: str) -> float | None:
+    """The value `reader` reads for judge `name`, or None where none was fitted, which the claim check refuses only
+    when it has something to read."""
+    try:
+        return reader(name)
+    except LookupError:
+        return None
 
 
 def make(
     name: str, *, threshold: float | None = None, trust: float | None = None, base_rate: float | None = None,
-    check_trust: float | None = None, gold: Iterable[tuple[str, str, Any]] | None = None, **options: Any,
+    check_trust: float | None = None, exception_trust: float | None = None,
+    gold: Iterable[tuple[str, str, Any]] | None = None, **options: Any,
 ) -> Judge:
-    """The judge called `name`, at `threshold`, `trust`, `base_rate` and `check_trust` or their calibrated defaults.
+    """The judge called `name`, at `threshold`, `trust`, `base_rate`, `check_trust` and `exception_trust` or their
+    calibrated defaults.
 
     `options` reach the judge's constructor: `fillers=("X", "Y")` for any judge,
     `budget=` or `cache=` for Jev. "oracle" needs `gold`, the (premise,
     conclusion, mapping) triples that hold; a bool stands for a binary swap. The
     oracle is right by construction, so its trust is complete unless given, and
     its opinions are certain, so its base rate never shows; it reads no
-    sentences, so it has no check trust. A judge with no calibrated check trust
-    gets None, which the claim check refuses only when it has something to read.
+    sentences, so it has no check or exception trust. A judge with no calibrated
+    check or exception trust gets None, which the claim check refuses only when it
+    has something to read that needs it.
     """
     if name == "oracle":
         if gold is None:
@@ -163,12 +185,8 @@ def make(
     judge = cls(name, chosen, **{**defaults, **options})
     judge.trust = default_trust(name) if trust is None else trust
     judge.base_rate = default_base_rate(name) if base_rate is None else base_rate
-    if check_trust is None:
-        try:
-            check_trust = default_check_trust(name)
-        except LookupError:
-            check_trust = None
-    judge.check_trust = check_trust
+    judge.check_trust = check_trust if check_trust is not None else _fitted(default_check_trust, name)
+    judge.exception_trust = exception_trust if exception_trust is not None else _fitted(default_exception_trust, name)
     # The bar the claim check defeats a rewrite at, which a run admitting at another threshold does not move.
     judge.calibrated_threshold = default_threshold(name) if _has(name, "default") else chosen
     return judge

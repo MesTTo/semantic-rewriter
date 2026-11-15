@@ -15,11 +15,16 @@ candidate answers at 1/N (`marginal`), as SNARS's open world reads them (SLN 8.2
 shares its one validity statement, as the rewriter's answer beliefs do: SNARS revises them all when evidence about the
 rewrite arrives, a proof that uses the statement more than once is conditioned on it so its doubt counts once, and
 its proof stamps hold the statement's sid, so two proofs through the rewrite are never fused as independent.
+
+A rewrite one of whose applications carries a leaf, the claim check's opinion that it applies normally to that row
+(semrewrite.claims.Application), is written instead as two certain-rule rows through its application, `applies`, and
+one `normal` statement per row it is applied to (exception_rows), so SNARS conditions each proof on the row's leaf as
+the lineage does, and a defeated application proves nothing. A rewrite with no leaf keeps its two lines.
 """
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
 from semrewrite.model import Atom, Rewrite, is_variable
 from semrewrite.opinion import Opinion, W
@@ -103,6 +108,41 @@ def rule_rows(rewrite: Rewrite, opinion: Opinion, source: str = "semrewrite") ->
     row = certain_rule(rule_name(rewrite), statement(premise.pred, premise.args), validity,
                        statement(rule.head.pred, rule.head.args))
     return _believe(validity, opinion, source), row
+
+
+def exception_rows(rewrite: Rewrite, opinion: Opinion, rows: Iterable[tuple[str, ...]],
+                   leaves: Mapping[tuple[str, ...], Opinion], source: str = "semrewrite") -> list[str]:
+    """The lines putting `rewrite`, held at `opinion` by `source`, into SNARS's world where its applications carry
+    leaves: its validity believed at the opinion, as rule_rows writes it; two certain-rule rows, the premise and the
+    validity giving the rewrite's application to the row, `applies`, and that and the row's leaf giving the
+    conclusion; and for each of `rows`, every row the rewrite is applied to, the row's leaf believed: its opinion in
+    `leaves` where the claim check read the application, else the certain leaf (1, 0, 0, 1), since no exception is
+    assumed where none was read, and no line where the leaf is certainly false, a defeated application, which then
+    proves nothing. Both rows are certain rules, so sn fuse-proofs counts a proof from its leaves, the premise, the
+    validity and the row's leaf, as the lineage counts its sets (Fierens et al., TPLP 2015, section 3.1: one
+    probabilistic fact per grounding).
+
+    >>> lines = exception_rows(Rewrite("wastes_time", "play_games", (0,)), Opinion(0.9, 0.0, 0.1),
+    ...                        [("kim",), ("amy",)], {("kim",): Opinion(0.0, 1.0, 0.0, 1.0)})
+    >>> [line.split(" (sh ")[0] for line in lines[1:3]]
+    ['(sn rw rw-wastes_time-play_games-0-applies certain-rule', '(sn rw rw-wastes_time-play_games-0-normal certain-rule']
+    >>> len(lines), '"amy"' in lines[3], "(evidence 2000.0 0.0) (rate 1.0)" in lines[3]
+    (4, True, True)
+    """
+    rule = rewrite.rule()
+    (premise,) = rule.body
+    name = rule_name(rewrite)
+    validity = statement("valid", (name,))
+    applied = statement("applies", (name, *rule.head.args))
+    lines = [_believe(validity, opinion, source),
+             certain_rule(f"{name}-applies", statement(premise.pred, premise.args), validity, applied),
+             certain_rule(f"{name}-normal", applied, statement("normal", (name, *rule.head.args)),
+                          statement(rule.head.pred, rule.head.args))]
+    for row in sorted(set(rows)):
+        leaf = leaves.get(row, Opinion(1.0, 0.0, 0.0, 1.0))
+        if leaf.projection > 0.0:
+            lines.append(_believe(statement("normal", (name, *row)), leaf, source))
+    return lines
 
 
 def certain_rule(name: str, first: str, second: str, conclusion: str) -> str:

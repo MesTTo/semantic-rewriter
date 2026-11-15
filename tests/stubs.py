@@ -2,8 +2,9 @@
 probability looked up by proposal key in a fixed table, so a test states which
 rewrites a judge would admit and at what score; sentence judges reading each
 pair of sentences as a fixed table says, at a stated trust, base rate, check
-trust and calibrated threshold, which the claim check's tests read statements
-against claims with; and an embedder giving cosines from a table.
+trust, exception trust and calibrated threshold, which the claim check's tests
+read statements against claims and applications with; and an embedder giving
+cosines from a table.
 """
 
 from __future__ import annotations
@@ -44,13 +45,14 @@ class SentenceTableJudge(SentenceJudge):
     reads_contradiction: ClassVar[bool] = True
 
     def __init__(self, table: Mapping[tuple[str, str], Opinion], *, threshold: float = 0.5, trust: float = 1.0,
-                 base_rate: float = 0.5, check_trust: float | None = 1.0, calibrated_threshold: float | None = None,
-                 name: str = "sentence stub") -> None:
+                 base_rate: float = 0.5, check_trust: float | None = 1.0, exception_trust: float | None = 1.0,
+                 calibrated_threshold: float | None = None, name: str = "sentence stub") -> None:
         super().__init__(name, threshold)
         self.table = dict(table)
         self.trust = trust
         self.base_rate = base_rate
         self.check_trust = check_trust
+        self.exception_trust = exception_trust
         self.calibrated_threshold = calibrated_threshold
         self.asked: list[tuple[str, str]] = []
 

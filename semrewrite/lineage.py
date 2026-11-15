@@ -1,16 +1,22 @@
-"""Purpose: an answer's lineage over the rewrites it needs, and the moments of its probability: the minimal sets of
-rewrite keys that some derivation of each answer uses (PosBool provenance; Green, Karvounarakis and Tannen 2007), by
-semi-naive evaluation of the program's magic-sets rewrite for the query, and the probability that every rewrite of
-some set is valid when each is valid independently.
+"""Purpose: an answer's lineage over the rewrites it needs and the exceptions their applications carry, and the
+moments of its probability: the minimal sets of variables that some derivation of each answer uses (PosBool
+provenance; Green, Karvounarakis and Tannen 2007), by semi-naive evaluation of the program's magic-sets rewrite for the
+query, every application of a rewrite the evaluation makes, and the probability that every variable of some set
+holds when each holds independently.
 
 A rewrite's validity is one unknown shared by every application of it, so an
 answer derived through "mother" at ten generations needs that one rewrite, not
 ten copies of it: the set {mother} is its lineage, and its probability is the
-rewrite's. Evaluation keeps at most k sets per row, the most probable: dropping
-a set from a disjunction only lowers its probability, so a belief computed from
-a bounded lineage is a lower bound, and the bound is what keeps a lineage over
-many chained rewrites in memory (an unbounded run over 184 Wikidata rewrites
-grew past 11 GiB).
+rewrite's. An application can also carry an exception of its own, the leaf
+that the rewrite applies normally to that row, McCarthy's not ab(rewrite, row):
+a derivation through it needs the rewrite and the leaf, so the leaf lowers the
+answers derived through that application and no other, the rewrite's validity
+staying one variable for every row (by-table) while the exception is the row's
+alone (by-tuple; Dong, Halevy and Yu, VLDB 2007). Evaluation keeps at most k
+sets per row, the most probable: dropping a set from a disjunction only lowers
+its probability, so a belief computed from a bounded lineage is a lower bound,
+and the bound is what keeps a lineage over many chained rewrites in memory (an
+unbounded run over 184 Wikidata rewrites grew past 11 GiB).
 """
 
 from __future__ import annotations
@@ -22,24 +28,42 @@ from dataclasses import dataclass, field
 from functools import cache
 
 from semrewrite.model import Atom, Key, is_variable
+from semrewrite.model import Mapping as Permutation
 from semrewrite.protocols import Program
 
-Lineage = frozenset[frozenset[Key]]
-"""An antichain of minimal rewrite-key sets: the answer holds when every rewrite of some set is valid."""
+Row = tuple[str, ...]
+
+Leaf = tuple[str, str, Permutation, Row]
+"""That a rewrite applies normally to one row: its key, (premise, conclusion, mapping), then the row it concludes,
+whose arguments bind every variable the rewrite has. It sorts after its rewrite's key, which it extends."""
+
+Variable = Key | Leaf
+"""What a lineage's sets hold: a rewrite's validity, by its key, or one application's leaf."""
+
+Lineage = frozenset[frozenset[Variable]]
+"""An antichain of minimal variable sets: the answer holds when every variable of some set holds."""
 
 TRUE: Lineage = frozenset({frozenset()})
 FALSE: Lineage = frozenset()
 
-Row = tuple[str, ...]
+
+def leaf(key: Key, row: Row) -> Leaf:
+    """The leaf of the rewrite `key` applied to `row`.
+
+    >>> leaf(("play_games", "wastes_time", (0,)), ("kim",))
+    ('play_games', 'wastes_time', (0,), ('kim',))
+    """
+    premise, conclusion, mapping = key
+    return premise, conclusion, mapping, row
 
 # The sets a row's lineage keeps by default: on Victoria's question with 184 chained Wikidata rewrites, 16 sets a row
 # kept every belief inside Wikidata's answer above every belief outside it, where an unbounded lineage passed 11 GiB.
 SETS = 16
 
 
-def minimise(sets: Iterable[frozenset[Key]]) -> Lineage:
+def minimise(sets: Iterable[frozenset[Variable]]) -> Lineage:
     """The minimal sets among `sets`, by absorption: x + xy = x."""
-    kept: list[frozenset[Key]] = []
+    kept: list[frozenset[Variable]] = []
     # Time: O(m^2) subset tests for m sets, smallest first.
     for s in sorted(set(sets), key=lambda s: (len(s), sorted(s))):
         if not any(k <= s for k in kept):
@@ -49,9 +73,12 @@ def minimise(sets: Iterable[frozenset[Key]]) -> Lineage:
 
 @dataclass
 class Lineages:
-    """Each answer row's lineage, and the work the evaluation spent counting candidate rows, as the engines count it."""
+    """Each answer row's lineage, the work the evaluation spent counting candidate rows, as the engines count it, and
+    `applied`, the rows each rewrite was applied to on the way, every variable bound: the applications that can carry
+    an exception."""
 
     answers: dict[Row, Lineage] = field(default_factory=dict)
+    applied: dict[Key, set[Row]] = field(default_factory=dict)
     work: int = 0
     rounds: int = 0
     finished: bool = True
@@ -97,11 +124,15 @@ def _magic(clauses: list[tuple[Atom, tuple[Atom, ...], Key | None]], query: Atom
 
 
 # Time: per round, each clause joins its delta rows against indexed full relations; a row re-enters the delta only when
-# its lineage gains a minimal set, and each lineage holds at most k sets of at most r keys, r the rewrites.
-def lineages(program: Program, query: Atom, weights: Mapping[Key, float], k: int, work: int) -> Lineages:
+# its lineage gains a minimal set, and each lineage holds at most k sets of at most r + a variables, r the rewrites and
+# a the applications with leaves.
+def lineages(program: Program, query: Atom, weights: Mapping[Variable, float], k: int, work: int) -> Lineages:
     """Each answer of `query` over the program's facts, rules and rewrites, with its lineage: at most `k` minimal
-    rewrite sets, the most probable by `weights`, a rewrite's probability of being valid. Evaluation stops unfinished
-    once it has examined `work` candidate rows."""
+    variable sets, the most probable by `weights`, a rewrite's probability of being valid and a leaf's of holding.
+    An application whose leaf `weights` holds is an exception's: each derivation through it needs the leaf as well as
+    the rewrite, and where the leaf weighs 0, a defeated application, it derives nothing, so an answer every
+    derivation of which it carries is no answer. Every other application needs its rewrite alone. Evaluation stops
+    unfinished once it has examined `work` candidate rows."""
     if k < 1:
         msg = f"a lineage keeps at least one set per row, not {k}"
         raise ValueError(msg)
@@ -125,10 +156,10 @@ def lineages(program: Program, query: Atom, weights: Mapping[Key, float], k: int
         stated[f"{pred}{sep}stated"] = stated.pop(pred)
     rewritten, seed, target = _magic(clauses, query, sep)
 
-    def weight(s: frozenset[Key]) -> float:
-        return math.prod(weights[key] for key in s)
+    def weight(s: frozenset[Variable]) -> float:
+        return math.prod(weights[v] for v in s)
 
-    def bounded(sets: Iterable[frozenset[Key]]) -> Lineage:
+    def bounded(sets: Iterable[frozenset[Variable]]) -> Lineage:
         kept = minimise(sets)
         if len(kept) <= k:
             return kept
@@ -181,11 +212,19 @@ def lineages(program: Program, query: Atom, weights: Mapping[Key, float], k: int
                                 nxt.append(({**b, **b2}, bounded(x | y for x in acc for y in l2)))
                         partial = nxt
                     for b, acc in partial:
+                        out = tuple(b.get(t, t) for t in head.args)
                         if is_filter:
                             acc = TRUE
                         elif rewrite is not None:
-                            acc = bounded(s | {rewrite} for s in acc)
-                        out = tuple(b.get(t, t) for t in head.args)
+                            # A rewrite's head lists every variable it has, so the row it derives is its binding.
+                            result.applied.setdefault(rewrite, set()).add(out)
+                            normal = leaf(rewrite, out)
+                            if normal not in weights:
+                                acc = bounded(s | {rewrite} for s in acc)
+                            elif weights[normal] > 0.0:
+                                acc = bounded(s | {rewrite, normal} for s in acc)
+                            else:
+                                continue
                         old = rel[head.pred].get(out, FALSE)
                         new = bounded(old | acc)
                         if new != old:
@@ -196,25 +235,26 @@ def lineages(program: Program, query: Atom, weights: Mapping[Key, float], k: int
     return result
 
 
-def _split(lin: Lineage, key: Key) -> tuple[Lineage, Lineage]:
-    """The lineage given the rewrite `key` valid, and given it invalid: Shannon expansion on one variable."""
-    return minimise(s - {key} for s in lin), frozenset(s for s in lin if key not in s)
+def _split(lin: Lineage, var: Variable) -> tuple[Lineage, Lineage]:
+    """The lineage given `var` holds, and given it fails: Shannon expansion on one variable."""
+    return minimise(s - {var} for s in lin), frozenset(s for s in lin if var not in s)
 
 
-def _pivot(*lins: Lineage) -> Key:
-    """The rewrite occurring in the most sets, which the expansion splits on first."""
-    counts: dict[Key, int] = defaultdict(int)
+def _pivot(*lins: Lineage) -> Variable:
+    """The variable occurring in the most sets, which the expansion splits on first."""
+    counts: dict[Variable, int] = defaultdict(int)
     for lin in lins:
         for s in lin:
-            for key in s:
-                counts[key] += 1
-    return max(sorted(counts), key=lambda key: counts[key])
+            for var in s:
+                counts[var] += 1
+    return max(sorted(counts), key=lambda var: counts[var])
 
 
-# Time: exponential in the distinct rewrites of a lineage in the worst case, memoised on each sub-lineage; with k sets
-# of a few rewrites each it is small.
-def probability(lin: Lineage, p: Mapping[Key, float]) -> float:
-    """The probability that every rewrite of some set in `lin` is valid, each valid independently with p[key]."""
+# Time: exponential in the distinct variables of a lineage in the worst case, memoised on each sub-lineage; with k
+# sets of a few variables each it is small.
+def probability(lin: Lineage, p: Mapping[Variable, float]) -> float:
+    """The probability that every variable of some set in `lin` holds, each independently with p[var]: a rewrite
+    valid, a leaf's application normal."""
 
     @cache
     def f(sub: Lineage) -> float:
@@ -222,18 +262,19 @@ def probability(lin: Lineage, p: Mapping[Key, float]) -> float:
             return 0.0
         if frozenset() in sub:
             return 1.0
-        key = _pivot(sub)
-        valid, invalid = _split(sub, key)
-        return p[key] * f(valid) + (1 - p[key]) * f(invalid)
+        var = _pivot(sub)
+        holds, fails = _split(sub, var)
+        return p[var] * f(holds) + (1 - p[var]) * f(fails)
 
     return f(lin)
 
 
-def moments(lin: Lineage, mean: Mapping[Key, float], square: Mapping[Key, float]) -> tuple[float, float]:
-    """The exact mean and second moment of the answer's probability when each rewrite's probability of being valid is
-    an independent random variable with mean[key] and E[p^2] = square[key], such as a Beta's: the answer's probability
-    is multilinear in the rewrites' probabilities, so its mean is its value at their means, and its second moment
-    follows the same expansion over pairs (the route of exact variance for weighted model counting, AAAI 2026)."""
+def moments(lin: Lineage, mean: Mapping[Variable, float], square: Mapping[Variable, float]) -> tuple[float, float]:
+    """The exact mean and second moment of the answer's probability when each variable's probability of holding, a
+    rewrite's of being valid or a leaf's of its application being normal, is an independent random variable with
+    mean[var] and E[p^2] = square[var], such as a Beta's: the answer's probability is multilinear in the variables'
+    probabilities, so its mean is its value at their means, and its second moment follows the same expansion over
+    pairs (the route of exact variance for weighted model counting, AAAI 2026)."""
 
     @cache
     def m1(sub: Lineage) -> float:
@@ -247,11 +288,11 @@ def moments(lin: Lineage, mean: Mapping[Key, float], square: Mapping[Key, float]
             return m1(y)
         if frozenset() in y:
             return m1(x)
-        key = _pivot(x, y)
-        x1, x0 = _split(x, key)
-        y1, y0 = _split(y, key)
-        both, one = square[key], mean[key] - square[key]
-        neither = 1 - 2 * mean[key] + square[key]
+        var = _pivot(x, y)
+        x1, x0 = _split(x, var)
+        y1, y0 = _split(y, var)
+        both, one = square[var], mean[var] - square[var]
+        neither = 1 - 2 * mean[var] + square[var]
         return both * m2(x1, y1) + one * (m2(x1, y0) + m2(x0, y1)) + neither * m2(x0, y0)
 
     return m1(lin), m2(lin, lin)

@@ -22,10 +22,11 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import shlex
 import subprocess
 import sys
 import time
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -48,14 +49,17 @@ OTHERS = 2000
 SEED = 20261114
 
 
-def provenance() -> dict[str, Any]:
-    """What a run is computed from, taken before the judges load: the code revision and the inputs that differ
-    from it."""
+def provenance(inputs: Sequence[str] = INPUTS) -> dict[str, Any]:
+    """What a run is computed from, taken before the judges load: the command that ran it, by the script that ran
+    and not this module, which experiments/exception_trust.py also calls, the code revision and the `inputs` that
+    differ from it."""
     head = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], capture_output=True, text=True, check=False)
-    dirty = subprocess.run(["git", "-C", str(ROOT), "status", "--porcelain", "--", *INPUTS],
+    dirty = subprocess.run(["git", "-C", str(ROOT), "status", "--porcelain", "--", *inputs],
                            capture_output=True, text=True, check=False)
+    script = Path(sys.argv[0]).resolve()
+    ran = script.relative_to(ROOT) if script.is_relative_to(ROOT) else script
     return {"at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-            "command": "python experiments/check_trust.py " + " ".join(sys.argv[1:]),
+            "command": shlex.join(["python", str(ran), *sys.argv[1:]]),
             "commit": head.stdout.strip() or None,
             "inputs_uncommitted": sorted(line[3:] for line in dirty.stdout.splitlines())}
 
@@ -75,14 +79,15 @@ def asked(items: Sequence[pairs.DefeasibleItem]) -> tuple[list[tuple[str, str, s
     return own, others
 
 
-def stances(judge: SentenceJudge, questions: Sequence[tuple[str, str, str]], cache: Path | None) -> list[Opinion]:
-    """The judge's stance on each question, read from `cache` when an earlier run of this judge wrote the same
-    questions there, else read by the judge and written to `cache`."""
+def stances(judge: SentenceJudge, questions: Sequence[tuple[str, str, str]], cache: Path | None,
+            reader: Callable[[SentenceJudge, Sequence[tuple[str, str, str]]], list[Opinion]] = read) -> list[Opinion]:
+    """The judge's stance on each question as `reader` reads it, read from `cache` when an earlier run of this judge
+    wrote the same questions there, else read by the judge and written to `cache`."""
     if cache is not None and cache.is_file():
         rows = [json.loads(line) for line in cache.read_text().splitlines()]
         if [tuple(r["question"]) for r in rows] == [tuple(q) for q in questions]:
             return [Opinion(r["belief"], r["disbelief"], r["uncertainty"]) for r in rows]
-    found = read(judge, questions)
+    found = reader(judge, questions)
     if cache is not None:
         cache.parent.mkdir(parents=True, exist_ok=True)
         cache.write_text("".join(json.dumps({"question": list(q), "belief": o.belief, "disbelief": o.disbelief,
@@ -138,9 +143,9 @@ def measure(name: str, items: Sequence[pairs.DefeasibleItem], rate: float, cache
     return out
 
 
-def store(trusts: dict[str, float], rate: float, path: Path = CALIBRATION) -> None:
-    """Write each judge's check trust into the calibration file, every other value kept, and CHECK_SET's base rate in
-    its sets table once, refusing a different one already there."""
+def store(trusts: dict[str, float], rate: float, path: Path = CALIBRATION, field: str = "check_trust") -> None:
+    """Write each judge's trust into the calibration file as `field`, its check trust unless named, every other value
+    kept, and CHECK_SET's base rate in its sets table once, refusing a different one already there."""
     table = json.loads(path.read_text())
     held = table.setdefault("sets", {}).setdefault(CHECK_SET, {})
     if "base_rate" in held and abs(held["base_rate"] - rate) > 1e-12:
@@ -148,7 +153,7 @@ def store(trusts: dict[str, float], rate: float, path: Path = CALIBRATION) -> No
         raise ValueError(msg)
     held["base_rate"] = rate
     for name, trust in trusts.items():
-        table.setdefault("judges", {}).setdefault(name, {})["check_trust"] = trust
+        table.setdefault("judges", {}).setdefault(name, {})[field] = trust
     path.write_text(json.dumps(table, indent=1) + "\n")
 
 

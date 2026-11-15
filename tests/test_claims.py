@@ -1,5 +1,5 @@
-"""Purpose: tests of the claim check (semrewrite.claims): a fact states its gloss filled with its arguments' names and a
-rewrite claims its proposal as a conditional; the gate reads the statements that stand out in similarity and never a
+"""Purpose: tests of the claim check (semrewrite.claims): a fact states its gloss filled with its arguments' names,
+naming those individuals, and a rewrite claims its proposal as a conditional; the gate reads the statements that stand out in similarity and never a
 rewrite's own predicates'; a statement the judge reads as contradicting a claim at its threshold withdraws the rewrite,
 one read more vaguely only lowers answers' P, discounted by the judge's check trust, and one read as neutral moves
 nothing, on generated knowledge bases; statements the judge reads as saying the same count once; a judge whose
@@ -216,7 +216,7 @@ def test_a_run_admitting_at_a_low_threshold_still_defeats_only_at_the_calibrated
     before, _ = ask(holes=True, believed=False)
     vague, rewriter = ask(holes=True, believed=True, belief=(0.0, 0.5))
     clear, _ = ask(holes=True, believed=True, belief=(0.0, 0.7))
-    assert rewriter.claims is not None and rewriter.claims.bar == 0.659 and rewriter.scorer.threshold == 0.03
+    assert rewriter.claims is not None and rewriter.claims.bar() == 0.659 and rewriter.scorer.threshold == 0.03
     assert vague.defeated == {} and ("kim",) in vague.answers
     assert vague.beliefs is not None and before.beliefs is not None
     assert vague.beliefs[("kim",)].projection < before.beliefs[("kim",)].projection
@@ -229,8 +229,10 @@ def test_a_run_admitting_at_a_low_threshold_still_defeats_only_at_the_calibrated
 def test_a_fact_states_its_gloss_filled_with_its_arguments_names() -> None:
     kb = KB("k", glosses={"mother": "{y} is the mother of {x}", "tv": "I watch TV", "same": "I watch TV."},
             facts=(Atom("mother", ("edward_vii", "queen_victoria")), Atom("tv", ()), Atom("same", ())))
-    assert statements(kb) == {"queen victoria is the mother of edward vii.": Stated(frozenset({"mother"}), False),
-                              "I watch TV.": Stated(frozenset({"tv", "same"}), True)}
+    assert statements(kb) == {
+        "queen victoria is the mother of edward vii.": Stated(frozenset({"mother"}), False,
+                                                              frozenset({"edward_vii", "queen_victoria"})),
+        "I watch TV.": Stated(frozenset({"tv", "same"}), True, frozenset())}
 
 
 def test_a_rewrite_claims_its_proposal_as_a_conditional() -> None:
@@ -472,15 +474,38 @@ def test_a_judge_reading_no_sentences_cannot_check_what_the_knowledge_base_state
     assert default_check(holes, names) is None
 
 
-def test_a_judge_with_no_check_trust_is_refused_only_when_something_is_read() -> None:
+def test_a_judge_with_no_check_trust_hands_its_reading_to_the_default_reader_only_when_something_is_read(
+        monkeypatch) -> None:
+    """With nothing to read nothing is loaded and nothing substituted; with the belief stated, the default reader
+    reads it, the substitution recorded with why, and its reading withdraws the gaming match as the judge's own
+    would; a reader given without a check trust is refused."""
+    import semrewrite.claims
+    import semrewrite.judges
+
     kb, judge, embedder = actions(holes=True, believed=False)
     judge.check_trust = None
-    assert Rewriter(kb, judge, make("python"), None, claims=ClaimCheck(kb, judge, embedder)).ask(
-        "wastes_time(X)").answers == {("sam",), ("kim",)}
+    loaded: list[SentenceTableJudge] = []
+
+    def default(name: str, **_: object) -> SentenceTableJudge:
+        loaded.append(actions(holes=True, believed=True)[1])
+        loaded[-1].name = name
+        return loaded[-1]
+
+    monkeypatch.setattr(semrewrite.judges, "make", default)
+    monkeypatch.setattr(semrewrite.claims, "_SHARED", {})
+    check = ClaimCheck(kb, judge, embedder)
+    assert Rewriter(kb, judge, make("python"), None, claims=check).ask("wastes_time(X)").answers == {("sam",), ("kim",)}
+    assert loaded == [] and check.substituted == {}
     kb, judge, embedder = actions(holes=True, believed=True)
     judge.check_trust = None
+    check = ClaimCheck(kb, judge, embedder)
+    out = Rewriter(kb, judge, make("python"), None, claims=check).ask("wastes_time(X)")
+    assert out.answers == {("sam",)} and set(out.defeated) == {GAMES[True]}
+    assert check.substituted == {"check_trust": ("nli-deberta-large", "sentence stub has no check trust")}
+    assert len(loaded) == 1 and check.reading("check_trust")[0] is loaded[0]
     with pytest.raises(LookupError, match="no calibrated check trust for 'sentence stub'"):
-        Rewriter(kb, judge, make("python"), None, claims=ClaimCheck(kb, judge, embedder)).ask("wastes_time(X)")
+        Rewriter(kb, judge, make("python"), None, claims=ClaimCheck(kb, judge, embedder, reader=judge)).ask(
+            "wastes_time(X)")
     with pytest.raises(ValueError, match="a check trust is a probability"):
         ClaimCheck(kb, judge, embedder, trust=1.5)
 

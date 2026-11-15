@@ -14,9 +14,13 @@ The rewriter owns discovery and hands the engine either every rewrite up
 front (eager, saturate, rounds) or a callback it calls while it evaluates
 (lazy). Every rewrite discovery admits is checked against what the knowledge
 base states (semrewrite.claims): one a statement clearly contradicts is
-withdrawn before the engine sees it. It refuses a strategy whose needs the
-engine's capabilities do not cover, rather than running something else under
-its name.
+withdrawn before the engine sees it. After the engine, each application of a
+rewrite to a row is checked against what the knowledge base states about the
+row's individuals: an answer every derivation of which applies a rewrite to a
+row that a statement clearly contradicts is no answer, and a vaguer reading
+weighs on that application's leaf in the answers' beliefs. It refuses a
+strategy whose needs the engine's capabilities do not cover, rather than
+running something else under its name.
 """
 
 from __future__ import annotations
@@ -28,18 +32,19 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, get_args
 
-from semrewrite.claims import default_check, weigh
+from semrewrite.claims import APPLICATIONS, default_check, weigh
 from semrewrite.discovery import Discoverer, ScoreCache
 from semrewrite.evidence import rewrite_evidence, statements
 from semrewrite.kb import KB
-from semrewrite.lineage import lineages, moments, probability
+from semrewrite.lineage import Lineages, Row, Variable, leaf, lineages, moments, probability
 from semrewrite.model import Atom, Key, Mapping, Proposal, Rewrite, Rule, compose, identity, inverse, parse_atom
 from semrewrite.opinion import Opinion
 from semrewrite.protocols import Admission, Budget, DepthCounts, Engine, Judge, Program, Proof, Retriever, Solution
-from semrewrite.trace import Solved, Solving, Tracer
+from semrewrite.trace import Excepted, Solved, Solving, Tracer
 
 if TYPE_CHECKING:
-    from semrewrite.claims import ClaimCheck, Reading
+    from semrewrite.claims import Application, ClaimCheck, Reading
+    from semrewrite.judges.base import SentenceJudge
 
 # The protocol's default budget; a Budget is frozen, so one instance serves every rewriter.
 DEFAULT_BUDGET = Budget()
@@ -134,7 +139,10 @@ class Outcome:
     holds a derivation per answer when the engine provides them; `beliefs`, when the rewriter was asked for them,
     holds each answer's opinion that some derivation's rewrites are all valid, and `rewrite_beliefs` each admitted
     rewrite's opinion that it is valid, which those answers' opinions are computed from; `readings`, with beliefs and
-    a claim check, holds the statements read against each admitted rewrite (semrewrite.claims).
+    a claim check, holds the statements read against each admitted rewrite (semrewrite.claims). Where the check read
+    an application, `applications` holds each one read by (rewrite key, row), `applied` every row the lineage applied
+    each such rewrite to, and `fallen` the engine's answers every derivation of which a defeated application carries,
+    which `answers` no longer holds.
     """
 
     kb: str
@@ -159,6 +167,9 @@ class Outcome:
     beliefs: dict[tuple[str, ...], Opinion] | None = None
     rewrite_beliefs: dict[Key, Opinion] | None = None
     readings: dict[Key, tuple[Reading, ...]] | None = None
+    applications: dict[tuple[Key, Row], Application] | None = None
+    applied: dict[Key, frozenset[Row]] | None = None
+    fallen: set[tuple[str, ...]] = field(default_factory=set)
 
     @property
     def finished(self) -> bool:
@@ -184,6 +195,7 @@ class Rewriter:
         beliefs: int = 0,
         data_trust: float = 0.0,
         claims: ClaimCheck | None = None,
+        reader: SentenceJudge | None = None,
     ) -> None:
         self.kb = kb
         self.catalogue = kb.catalogue()
@@ -206,11 +218,16 @@ class Rewriter:
             msg = f"data trust is a probability, not {data_trust}"
             raise ValueError(msg)
         self.data_trust = data_trust
-        # Reads each admitted rewrite against the knowledge base's statements by meaning (semrewrite.claims): a clear
-        # contradiction withdraws it in discovery, and the other readings fuse into its opinion after the knowledge
-        # base's evidence does. Unless given one, the run's judge reads and the run's retriever chooses what it reads;
-        # None only where the judge reads no sentences and the knowledge base states nothing to read.
-        self.claims = claims if claims is not None else default_check(kb, self.scorer.judge, retriever)
+        # Reads each admitted rewrite, and each application of one, against the knowledge base's statements by meaning
+        # (semrewrite.claims): a clear contradiction withdraws a rewrite in discovery and an application after the
+        # engine, and the other readings fuse into its opinion or its leaf. Unless given one, `reader` reads where
+        # given, else the run's judge where it carries the trust a reading weighs at, else the check's default reader,
+        # and the run's retriever chooses what it reads; None only where the judge reads no sentences, no reader is
+        # given and the knowledge base states nothing naming no individual.
+        self.claims = claims if claims is not None else default_check(kb, self.scorer.judge, retriever, reader, trace)
+        # A check handed in tells this rewriter's trace what it reads with, unless it has a trace of its own.
+        if self.claims is not None and self.claims.trace is None:
+            self.claims.trace = trace
         self._rules_by_head: dict[str, list[Rule]] = defaultdict(list)
         for rule in kb.rules:
             self._rules_by_head[rule.head.pred].append(rule)
@@ -263,8 +280,8 @@ class Rewriter:
             Timing.ROUNDS: self._rounds,
         }[strategy.timing]
         run(strategy, query, disc, out)
-        if self.beliefs and out.finished:
-            self._believe(query, out)
+        if out.finished and (self.beliefs or (self.claims is not None and self.claims.individuals)):
+            self._weigh(query, out)
         out.seconds = time.perf_counter() - started
         out.expansions = disc.stats.expansions - before[0]
         out.proposals = disc.stats.proposals - before[1]
@@ -297,45 +314,120 @@ class Rewriter:
 
     # -- timings -------------------------------------------------------------
 
-    def _believe(self, query: Atom, out: Outcome) -> None:
-        """Each answer's opinion that the rewrites of some derivation are all valid.
+    def _weigh(self, query: Atom, out: Outcome) -> None:
+        """The answers the exceptions leave, and with beliefs asked each answer's opinion that the variables of some
+        derivation all hold.
 
         Each admitted rewrite is valid with a probability distributed as the Beta of its opinion (rewrite_opinions),
-        independently of the others. The answer's probability is then a polynomial in those probabilities, read off
-        its lineage over the knowledge base and every admitted rewrite with no depth bound, since a bound limits
-        search and not what the admitted rewrites imply. Its mean and
-        variance are exact, and its opinion is the Beta matched to those two moments (Cerutti, Kaplan, Kimmig and
-        Şensoy, Machine Learning 2022), with the probability its lineage has at the rewrites' base rates as its
-        base rate, as the product and coproduct of opinions take theirs (Jøsang 2016, Eqs. 7.1 and 7.3). An answer
-        the knowledge base derives with no rewrite is certain. A lineage the work budget stops leaves the run at
-        work_limit with no answers, as an engine's would."""
+        independently of the others. An application the claim check reads, a rewrite applied to a row some statement
+        about the row's individuals bears on, also needs its leaf, the opinion that it applies normally there
+        (semrewrite.claims.Application): a defeated application derives nothing, so an engine answer every derivation
+        of which it carries is dropped, and the others weigh on the answers derived through them alone. The lineage
+        over the knowledge base and every admitted rewrite, with no depth bound, since a bound limits search and not
+        what the admitted rewrites imply, finds the applications; it is evaluated again with the leaves when the check
+        reads any. An answer's probability is then a polynomial in its variables' probabilities. Its mean and variance
+        are exact, and its opinion is the Beta matched to those two moments (Cerutti, Kaplan, Kimmig and Şensoy,
+        Machine Learning 2022), with the probability its lineage has at the variables' base rates as its base rate, as
+        the product and coproduct of opinions take theirs (Jøsang 2016, Eqs. 7.1 and 7.3); a leaf's base rate is 1,
+        since no exception is assumed where none is read. An answer the knowledge base derives with no rewrite is
+        certain. A lineage the work budget stops leaves the run at work_limit with no answers, as an engine's would."""
         rewrites, opinion = self.rewrite_opinions(out.admitted)
-        out.rewrite_beliefs = opinion
-        out.readings = self.claims.readings(rewrites) if self.claims is not None else None
-        mean = {key: o.projection for key, o in opinion.items()}
-        square = {key: o.projection**2 + o.variance for key, o in opinion.items()}
-        base = {key: o.base_rate for key, o in opinion.items()}
-        found = lineages(Program(facts=self.kb.facts, rules=self.kb.rules, rewrites=rewrites), query, mean,
-                         self.beliefs, self.budget.work)
-        out.work += found.work
-        if not found.finished:
-            out.status, out.detail = "work_limit", f"lineage stopped after {found.work:,} work"
-            out.answers, out.beliefs = set(), None
+        if self.beliefs:
+            out.rewrite_beliefs = opinion
+            out.readings = self.claims.readings(rewrites) if self.claims is not None else None
+        mean: dict[Variable, float] = {key: o.projection for key, o in opinion.items()}
+        program = Program(facts=self.kb.facts, rules=self.kb.rules, rewrites=rewrites)
+        found = self._lineage(program, query, mean, out)
+        if found is None:
             return
         missing = sorted(row for row in out.answers if row not in found.answers)
         if missing:
             msg = f"the lineage of {query} lacks the engine's answers {missing[:3]}"
             raise RuntimeError(msg)
-        beliefs = {}
-        for row in out.answers:
-            lin = found.answers[row]
-            first, second = moments(lin, mean, square)
-            variance = second - first * first
-            # E[f^2] - E[f]^2 cancels to a few ulps below zero where the answer is all but certain.
-            if -1e-12 < variance < 0.0:
-                variance = 0.0
-            beliefs[row] = Opinion.from_moments(first, variance, probability(lin, base))
-        out.beliefs = beliefs
+        leaves: dict[Variable, Opinion] = {}
+        if self.claims is not None and self.claims.individuals:
+            read = self.claims.applications(found.applied)
+            out.applications = read
+            # A leaf that no reading disbelieves is certain, x . 1 = x, so it is left out and changes nothing.
+            leaves = {leaf(key, row): app.normal for (key, row), app in read.items() if app.normal.projection < 1.0}
+            self._trace_exceptions(read)
+        if leaves:
+            mean |= {var: o.projection for var, o in leaves.items()}
+            found = self._lineage(program, query, mean, out)
+            if found is None:
+                return
+            excepted = {key for key, _ in out.applications or {}}
+            out.applied = {key: frozenset(rows) for key, rows in found.applied.items() if key in excepted}
+            out.fallen = {row for row in out.answers if row not in found.answers}
+            out.answers -= out.fallen
+            self._prove_around(query, out, rewrites)
+        if self.beliefs:
+            out.beliefs = answer_beliefs(found, out.answers, {**opinion, **leaves})
+
+    def _lineage(self, program: Program, query: Atom, weights: dict[Variable, float], out: Outcome) -> Lineages | None:
+        """The query's lineage at `weights`, keeping the beliefs' bound of sets per row, or one where only the answers
+        are wanted; None, with the run at work_limit and no answers, where the work budget stops it."""
+        found = lineages(program, query, weights, self.beliefs or 1, self.budget.work)
+        out.work += found.work
+        if found.finished:
+            return found
+        out.status, out.detail = "work_limit", f"lineage stopped after {found.work:,} work"
+        out.answers, out.beliefs = set(), None
+        return None
+
+    def _trace_exceptions(self, read: dict[tuple[Key, Row], Application]) -> None:
+        """Tell the trace of each defeated application, with the statements defeating it."""
+        if self.trace is None or self.claims is None:
+            return
+        for (key, row), app in sorted(read.items()):
+            if app.defeated:
+                premise, conclusion, mapping = key
+                self.trace(Excepted(Rewrite(conclusion, premise, mapping), row, app.premise, app.conclusion,
+                                    tuple((r.statement, r.stance.disbelief) for r in app.defeats),
+                                    self.claims.bar(APPLICATIONS)))
+
+    # Time: one walk of each proof, and where one applies a defeated application one more engine solve, unbounded, of
+    # the program with each rewrite holding a defeated application guarded by a fact per row the lineage applied it to.
+    def _prove_around(self, query: Atom, out: Outcome, rewrites: Iterable[Rewrite]) -> None:
+        """Replace each proof that applies a defeated application with a derivation the exceptions leave: the query
+        solved once more, with no depth bound, each rewrite holding a defeated application turned into its rule
+        guarded by one fact per row the lineage applied it to that no defeat removes, and each guarded step read back
+        as the rewrite's. An answer standing through another derivation thus shows that derivation."""
+        if not out.proofs or out.applications is None or out.applied is None:
+            return
+        defeated = {(key, row) for (key, row), app in out.applications.items() if app.defeated}
+        stale = sorted(row for row, proof in out.proofs.items() if row in out.answers and _applies(proof, defeated))
+        if not stale:
+            return
+        names = {f.pred for f in self.kb.facts} | set(self.catalogue) | {r.head.pred for r in self.kb.rules}
+        guard_of: dict[Key, str] = {}
+        for i, key in enumerate(sorted({key for key, _ in defeated})):
+            name = f"normal_{i}"
+            while name in names:
+                name += "_"
+            guard_of[key] = name
+        guarded: dict[Rule, Rewrite] = {}
+        kept: list[Rewrite] = []
+        facts = list(self.kb.facts)
+        for rw in rewrites:
+            if rw.key not in guard_of:
+                kept.append(rw)
+                continue
+            rule = rw.rule()
+            guarded[Rule(rule.head, (*rule.body, Atom(guard_of[rw.key], rule.head.args)))] = rw
+            facts += [Atom(guard_of[rw.key], row) for row in sorted(out.applied.get(rw.key, ()))
+                      if (rw.key, row) not in defeated]
+        program = Program(facts=tuple(facts), rules=(*self.kb.rules, *guarded), rewrites=tuple(kept), proofs=True)
+        solution = self.engine.solve(program, query, self.budget)
+        out.work += solution.work
+        if not solution.finished or solution.proofs is None:
+            msg = f"re-solving {query} around its defeated applications ended {solution.status}: {solution.detail}"
+            raise RuntimeError(msg)
+        for row in stale:
+            if row not in solution.proofs:
+                msg = f"re-solving {query} around its defeated applications lost the answer {row}, which its lineage keeps"
+                raise RuntimeError(msg)
+            out.proofs[row] = _unguard(solution.proofs[row], guarded)
 
     def _program(self, rewrites: Iterable[Rewrite] = (), *, kb: KB | None = None, tabled: bool = True, depth: int = 0,
                  depth_counts: DepthCounts = "steps") -> Program:
@@ -453,6 +545,40 @@ class Rewriter:
 def _defeated(disc: Discoverer, goals: Iterable[str]) -> dict[Key, tuple[Reading, ...]]:
     """The rewrites concluding `goals` that the claim check withdrew in `disc`, each with the readings defeating it."""
     return {key: readings for key, (_, readings) in disc.defeats(goals).items()}
+
+
+def answer_beliefs(found: Lineages, rows: Iterable[Row], opinions: dict[Variable, Opinion]) -> dict[Row, Opinion]:
+    """Each of `rows`' opinion from its lineage in `found`, each variable at its opinion in `opinions`: the Beta
+    matched to the exact mean and variance of the answer's probability, at the probability its lineage has at the
+    variables' base rates (Rewriter._weigh says why)."""
+    mean = {var: o.projection for var, o in opinions.items()}
+    square = {var: o.projection**2 + o.variance for var, o in opinions.items()}
+    base = {var: o.base_rate for var, o in opinions.items()}
+    beliefs = {}
+    for row in rows:
+        lin = found.answers[row]
+        first, second = moments(lin, mean, square)
+        variance = second - first * first
+        # E[f^2] - E[f]^2 cancels to a few ulps below zero where the answer is all but certain.
+        if -1e-12 < variance < 0.0:
+            variance = 0.0
+        beliefs[row] = Opinion.from_moments(first, variance, probability(lin, base))
+    return beliefs
+
+
+def _applies(proof: Proof, applications: set[tuple[Key, Row]]) -> bool:
+    """Whether some step of `proof` applies a rewrite to a row among `applications`."""
+    if isinstance(proof.by, Rewrite) and (proof.by.key, proof.atom.args) in applications:
+        return True
+    return any(_applies(child, applications) for child in proof.children)
+
+
+def _unguard(proof: Proof, guarded: dict[Rule, Rewrite]) -> Proof:
+    """`proof` with each step of a guarded rule read back as its rewrite's step, the guard's fact dropped."""
+    children = tuple(_unguard(child, guarded) for child in proof.children)
+    if isinstance(proof.by, Rule) and proof.by in guarded:
+        return Proof(proof.atom, guarded[proof.by], children[:-1])
+    return Proof(proof.atom, proof.by, children)
 
 
 class GroupUnionFind:

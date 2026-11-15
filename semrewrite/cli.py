@@ -21,6 +21,7 @@ from dataclasses import fields, replace
 
 from semrewrite import formats
 from semrewrite.admission import Directional, Threshold
+from semrewrite.claims import APPLICATIONS, CLAIMS
 from semrewrite.engines import REGISTRY as ENGINES
 from semrewrite.engines import available
 from semrewrite.engines import make as make_engine
@@ -69,16 +70,25 @@ def _retriever(args: argparse.Namespace):
 
 
 def _rewriter(args: argparse.Namespace, kb: KB) -> Rewriter:
-    """The run's rewriter, which checks every rewrite it admits against the knowledge base's statements with the run's
-    judge, the run's embedding retriever choosing the statements (semrewrite.claims.default_check)."""
-    from semrewrite.judges import default_data_trust
+    """The run's rewriter, which checks every rewrite it admits, and every application of one, against the knowledge
+    base's statements, read by --reader where given, else by the run's judge wherever it carries the trust a reading
+    weighs at, else by the check's default reader, the run's embedding retriever choosing the statements
+    (semrewrite.claims.default_check)."""
+    from semrewrite.judges import default_data_trust, make
+    from semrewrite.judges.base import SentenceJudge
 
     admission = Directional(args.directional) if args.directional is not None else Threshold()
     beliefs = getattr(args, "beliefs", False)
+    reader = None
+    if args.reader is not None:
+        reader = make(args.reader)
+        if not isinstance(reader, SentenceJudge):
+            msg = f"the claim check reads sentences, and {args.reader} reads none"
+            raise ValueError(msg)
     return Rewriter(kb, _judge(args, kb), make_engine(args.engine), _retriever(args), k=args.k,
                     budget=Budget(work=args.work, seconds=args.seconds), admission=admission,
                     proofs=getattr(args, "explain", False), trace=TextTrace() if getattr(args, "trace", False) else None,
-                    beliefs=SETS if beliefs else 0, data_trust=default_data_trust(args.judge))
+                    beliefs=SETS if beliefs else 0, data_trust=default_data_trust(args.judge), reader=reader)
 
 
 def _opinion_text(o: Opinion) -> str:
@@ -114,6 +124,23 @@ def _defeated_json(rw: Rewriter, defeated: dict) -> list[dict]:
              "statements": [_statement_json(r) for r in defeated[(p, c, m)]]} for p, c, m in sorted(defeated)]
 
 
+def _application_text(key: tuple, row: tuple[str, ...]) -> str:
+    """A rewrite applied to a row, its variables filled: wastes_time(kim) ⇐ play_games(kim)."""
+    premise, conclusion, mapping = key
+    return f"{conclusion}({', '.join(row)}) ⇐ {premise}({', '.join(row[m] for m in mapping)})"
+
+
+def _applications_json(out) -> list[dict]:
+    """Each application the claim check read, as --json writes it: the rewrite, the row, the premise and conclusion
+    the row fills, whether a statement defeats it, its leaf's opinion that it applies normally, and the statements
+    read, each with the judge's stance and the opinion it weighs on the leaf with."""
+    assert out.applications is not None
+    return [{"rewrite": [p, c, list(m)], "row": list(row), "premise": a.premise, "conclusion": a.conclusion,
+             "defeated": a.defeated, "normal": _opinion_json(a.normal),
+             "statements": [_statement_json(r) for r in a.readings]}
+            for ((p, c, m), row), a in sorted(out.applications.items())]
+
+
 def _reading_lines(readings) -> list[str]:
     """Each statement read against a claim, as a line: which side it weighs on, the reading's opinion, the statement,
     its similarity to the claim, and the statement it was counted with when the judge reads the two as the same."""
@@ -144,8 +171,46 @@ def _explain_rewrites(rw: Rewriter, out) -> None:
         for key in sorted(out.defeated, key=lambda k: (k[1], k[0], k[2])):
             p, c, m = key
             print(f"  {Rewrite(c, p, m)}", file=sys.stderr)
-            for line in _defeat_lines(out.defeated[key], rw.claims.bar if rw.claims is not None else rw.scorer.threshold):
+            for line in _defeat_lines(out.defeated[key], rw.claims.bar() if rw.claims is not None else rw.scorer.threshold):
                 print(f"    {line}", file=sys.stderr)
+    _explain_applications(rw, out)
+    _readers(rw)
+
+
+def _readers(rw: Rewriter) -> None:
+    """On standard error, each kind of reading the claim check handed from the run's judge to another, with why;
+    nothing where the run's judge read everything it read."""
+    for kind, (reader, why) in sorted((rw.claims.substituted if rw.claims is not None else {}).items()):
+        what = "against rewrites' claims" if kind == CLAIMS else "about applications' individuals"
+        print(f"\nstatements {what} read by {reader}: {why}", file=sys.stderr)
+
+
+def _explain_applications(rw: Rewriter, out) -> None:
+    """The applications the claim check read, on standard error: those a statement about their individuals defeats,
+    each with the statements contradicting its conclusion, then those it only weighs, each with its leaf's opinion
+    and the statements read, then the answers no derivation is left for. Nothing where no application was read."""
+    if not out.applications or rw.claims is None:
+        return
+    order = sorted(out.applications.items(), key=lambda item: (item[0][0][1], item[0][0][0], item[0][1]))
+    defeated = [(at, a) for at, a in order if a.defeated]
+    weighed = [(at, a) for at, a in order if not a.defeated]
+    if defeated:
+        print(f"\napplications defeated by what the knowledge base states about their individuals ({len(defeated)}):",
+              file=sys.stderr)
+        for (key, row), a in defeated:
+            print(f"  {_application_text(key, row)}, given \"{a.premise}.\"", file=sys.stderr)
+            for line in _defeat_lines(a.defeats, rw.claims.bar(APPLICATIONS)):
+                print(f"    {line}", file=sys.stderr)
+    if weighed:
+        print(f"\napplications weighed by what the knowledge base states about their individuals ({len(weighed)}):",
+              file=sys.stderr)
+        for (key, row), a in weighed:
+            print(f"  {_application_text(key, row)}    normal {_opinion_text(a.normal)}", file=sys.stderr)
+            for line in _reading_lines(a.readings):
+                print(f"    {line}", file=sys.stderr)
+    if out.fallen:
+        fallen = ", ".join(f"{out.query.split('(')[0]}({', '.join(row)})" for row in sorted(out.fallen))
+        print(f"\nanswers a defeat leaves no derivation for ({len(out.fallen)}): {fallen}", file=sys.stderr)
 
 
 def cmd_ask(args: argparse.Namespace) -> int:
@@ -156,8 +221,9 @@ def cmd_ask(args: argparse.Namespace) -> int:
     out = rw.ask(query, strategy if args.depth is None else replace(strategy, depth=args.depth))
     rows = sorted(out.answers)
     beliefs = out.beliefs
-    # The check's readings and cost are shown where the knowledge base states something it reads.
-    checked = rw.claims is not None and rw.claims.reads
+    # The check's readings and cost are shown where the knowledge base states something it reads, against a rewrite's
+    # claim or about an application's individuals.
+    checked = rw.claims is not None and (rw.claims.reads or bool(out.applications))
     if beliefs is not None:
         # Ranked by projected probability, highest first; --answer-threshold drops the answers below it.
         rows = sorted((r for r in rows if beliefs[r].projection >= args.answer_threshold),
@@ -170,6 +236,11 @@ def cmd_ask(args: argparse.Namespace) -> int:
             "rewrites": sorted([p, c, list(m)] for p, c, m in out.admitted),
             **({"defeated": _defeated_json(rw, out.defeated)} if checked else {}),
             **({"checks": _readings_json(rw, out)} if checked and out.readings is not None else {}),
+            **({"exceptions": _applications_json(out), "fallen": [list(a) for a in sorted(out.fallen)]}
+               if out.applications else {}),
+            **({"readers": {kind: {"judge": reader, "why": why}
+                            for kind, (reader, why) in sorted(rw.claims.substituted.items())}}
+               if rw.claims is not None and rw.claims.substituted else {}),
             "cost": {"work": out.work, "seconds": round(out.seconds, 3), "expansions": out.expansions,
                      "proposals": out.proposals, "tables": out.tables,
                      **({"check": {**rw.claims.usage, "seconds": round(rw.claims.seconds, 3)}}
@@ -183,9 +254,12 @@ def cmd_ask(args: argparse.Namespace) -> int:
                 print("\n".join("    " + line for line in out.proofs[row].lines()))
         if args.explain:
             _explain_rewrites(rw, out)
+        applications = "" if not out.applications else (
+            f", {plural(len(out.applications), 'application')} read, "
+            f"{sum(a.defeated for a in out.applications.values()):,} defeated")
         cost = "" if not checked or rw.claims is None else (
             f", {plural(rw.claims.usage['pairs'], 'pair')} reading {plural(rw.claims.usage['claims'], 'claim')} in "
-            f"{rw.claims.seconds:.2f} s, {plural(len(out.defeated), 'rewrite')} withdrawn")
+            f"{rw.claims.seconds:.2f} s, {plural(len(out.defeated), 'rewrite')} withdrawn{applications}")
         print(f"{out.status}: {plural(len(out.answers), 'answer')}, {out.work:,} work, {out.proposals:,} judge questions"
               f"{cost}, {out.seconds:.2f} s", file=sys.stderr)
     return 0 if out.finished else (2 if out.status in ("work_limit", "time_limit") else 1)
@@ -215,11 +289,12 @@ def cmd_rewrites(args: argparse.Namespace) -> int:
             print(f"          {line}")
     for r, found in sorted(defeated.values(), key=lambda held: -held[0].score):
         print(f"defeat  {r.score:.3f}  {r}")
-        for line in _defeat_lines(found, rw.claims.bar if rw.claims is not None else rw.scorer.threshold):
+        for line in _defeat_lines(found, rw.claims.bar() if rw.claims is not None else rw.scorer.threshold):
             print(f"          {line}")
     for p, s in sorted(zip(proposals, scores, strict=True), key=lambda ps: -ps[1]):
         if p.key not in admitted and p.key not in defeated:
             print(f"reject  {s:.3f}  {p.rewrite(s)}")
+    _readers(rw)
     print(f"{disc.stats.proposals:,} judge questions at threshold {rw.scorer.threshold:.3f}", file=sys.stderr)
     return 0
 
@@ -318,6 +393,9 @@ def parser() -> argparse.ArgumentParser:
                        help="candidates by gloss embedding, every predicate, or ranked by the --prefilter judge")
         p.add_argument("--prefilter", default="nli-deberta-large", metavar="JUDGE",
                        help="the judge that ranks candidates for --retriever judge")
+        p.add_argument("--reader", metavar="JUDGE",
+                       help="the judge the claim check reads statements with; by default the run's judge wherever it "
+                            "carries the calibrated trust a reading weighs at, else nli-deberta-large")
         p.add_argument("--k", type=int, default=8, help="candidates retrieved per expansion")
         p.add_argument("--engine", default="python", choices=sorted(ENGINES))
         p.add_argument("--work", type=int, default=2_000_000, help="work budget in the engine's unit")

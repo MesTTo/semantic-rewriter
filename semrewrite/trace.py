@@ -7,7 +7,10 @@ the claim check withdraws an admitted rewrite that a statement clearly
 contradicts (Defeated), later asks for the same predicate's rewrites come from
 the memo (Remembered), and the engine stops (Solved). With lazy discovery the expansions happen
 between Solving and Solved, inside evaluation; the other timings expand before
-the engine starts.
+the engine starts. After the engine, the claim check defeats each application
+of a rewrite to one row that a statement about the row's individuals clearly
+contradicts (Excepted). Where the run's judge carries no calibrated trust for
+a reading, the check reads with another judge and says so (ReadBy).
 """
 
 from __future__ import annotations
@@ -70,13 +73,37 @@ class Defeated:
 
 
 @dataclass(frozen=True, slots=True)
+class ReadBy:
+    """The claim check reads `kind`, "check_trust" for statements against a rewrite's claim or "exception_trust" for
+    statements about an application's individuals, with `reader` and not the run's judge, because of `why`."""
+
+    kind: str
+    reader: str
+    why: str
+
+
+@dataclass(frozen=True, slots=True)
+class Excepted:
+    """The claim check defeated `rewrite`'s application to `row`, which concludes `conclusion` from `premise`: the
+    judge reads each of `statements`, with the disbelief beside it, with the premise as contradicting the conclusion at
+    or above `threshold`, so that application derives nothing."""
+
+    rewrite: Rewrite
+    row: tuple[str, ...]
+    premise: str
+    conclusion: str
+    statements: tuple[tuple[str, float], ...]
+    threshold: float
+
+
+@dataclass(frozen=True, slots=True)
 class Remembered:
     """An ask for the rewrites concluding `goal`, answered from the discoverer's memo without asking the judge."""
 
     goal: str
 
 
-Event = Solving | Solved | Expanded | Defeated | Remembered
+Event = Solving | Solved | Expanded | Defeated | ReadBy | Excepted | Remembered
 Tracer = Callable[[Event], None]
 """Receives each event as it happens."""
 
@@ -126,6 +153,13 @@ class TextTrace:
                 for statement, disbelief in statements:
                     self._print(f'  withdrawn: {rewrite}, since "{statement}" contradicts "{claim}" '
                                 f"(d {disbelief:.3f}, threshold {threshold:.3f})")
+            case ReadBy(kind, reader, why):
+                what = "against rewrites' claims" if kind == "check_trust" else "about applications' individuals"
+                self._print(f"  the claim check reads statements {what} with {reader}: {why}")
+            case Excepted(rewrite, row, premise, conclusion, statements, threshold):
+                for statement, disbelief in statements:
+                    self._print(f'  excepted: {rewrite} for ({", ".join(row)}), since "{statement}" with "{premise}." '
+                                f'contradicts "{conclusion}." (d {disbelief:.3f}, threshold {threshold:.3f})')
             case Remembered(goal):
                 self._remembered[goal] += 1
             case Solved(engine, solution):

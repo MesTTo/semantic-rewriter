@@ -200,7 +200,7 @@ class Discoverer:
                 if rw.key in withdrawn:
                     self.trace(Defeated(rw, self.check.claim(rw.key) if self.check is not None else "",
                                         tuple((r.statement, r.stance.disbelief) for r in withdrawn[rw.key]),
-                                        self.check.bar if self.check is not None else self.scorer.threshold))
+                                        self.check.bar() if self.check is not None else self.scorer.threshold))
         return found
 
     def _defeat(self, admitted: Sequence[Rewrite]) -> dict[Key, tuple[Reading, ...]]:

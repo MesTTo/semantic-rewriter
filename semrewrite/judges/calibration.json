@@ -64,7 +64,8 @@
    },
    "trust": 0.34785897737458393,
    "data_trust": 0.4074871375823756,
-   "check_trust": 0.698273436590954
+   "check_trust": 0.698273436590954,
+   "exception_trust": 0.6702793088534087
   },
   "nli-deberta-large-wanli": {
    "default": 0.05405977550547415,
