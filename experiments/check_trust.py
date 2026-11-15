@@ -9,7 +9,9 @@ judge's check trust.
 On the test updates it reports log loss and Brier score at that trust, at the judge's predicate-pair trust and at
 none, which leaves the base rate, and how often a stance reaches the judge's threshold as a contradiction, so the check
 would withdraw the rewrite: for weakeners, which it should, for strengtheners, which it should not, and for other
-premises' updates read against a claim, which bear on it not at all. It writes the measurement to
+premises' updates read against a claim, which bear on it not at all; and a defeat's precision, the weakeners among the
+updates it reaches, and its recall, the weakeners reached, as experiments/exception_trust.py measures them for the
+readings of named people. It writes the measurement to
 results/check_trust.json, each judge's with the provenance of the run that measured it, since the file keeps the judges
 earlier runs measured, and each judge's check_trust into semrewrite/judges/calibration.json, leaving every other value
 there as it was; the set's base rate stays in the file's sets table, once.
@@ -107,6 +109,14 @@ def defeat_rate(opinions: Sequence[Opinion], bar: float) -> float | None:
     return sum(o.disbelief >= bar for o in opinions) / len(opinions) if opinions else None
 
 
+def precision_recall(opinions: Sequence[Opinion], labels: Sequence[bool], bar: float) -> dict[str, float | None]:
+    """A defeat's precision, the weakeners among the own updates it reaches, and its recall, the weakeners reached."""
+    weakeners = sum(o.disbelief >= bar for o, y in zip(opinions, labels, strict=True) if not y)
+    wrong = sum(o.disbelief >= bar for o, y in zip(opinions, labels, strict=True) if y)
+    return {"precision": weakeners / (weakeners + wrong) if weakeners + wrong else None,
+            "recall": weakeners / sum(not y for y in labels)}
+
+
 def measure(name: str, items: Sequence[pairs.DefeasibleItem], rate: float, cache: Path | None) -> dict[str, Any]:
     """Judge `name`'s check trust fitted on the dev items, and its scores and defeat rates on dev and test."""
     judge = make_judge(name)
@@ -139,6 +149,7 @@ def measure(name: str, items: Sequence[pairs.DefeasibleItem], rate: float, cache
             "at_base_rate": scored(opinions, labels, rate, 0.0),
             "auc": roc_auc([o.belief - o.disbelief for o in opinions], labels),
             "defeat": {"weakener": defeat_rate(weakeners, bar), "strengthener": defeat_rate(strengtheners, bar)},
+            **precision_recall(opinions, labels, bar),
         }
     out["test"]["defeat"]["other"] = defeat_rate(read_others, bar)
     return out

@@ -38,7 +38,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from check_trust import defeat_rate, provenance, scored, stances, store
+from check_trust import defeat_rate, precision_recall, provenance, scored, stances, store
 from claim_gate import SIZES
 
 from semrewrite import pairs
@@ -100,14 +100,6 @@ def asked(items: Sequence[Item], named: dict[str, Names]) -> tuple[list[tuple[st
         if claim.premise != statement.premise:
             others.append(question(statement, claim, named[claim.id]))
     return own, others
-
-
-def precision_recall(opinions: Sequence[Opinion], labels: Sequence[bool], bar: float) -> dict[str, float | None]:
-    """A defeat's precision, the weakeners among the own updates it reaches, and its recall, the weakeners reached."""
-    weakeners = sum(o.disbelief >= bar for o, y in zip(opinions, labels, strict=True) if not y)
-    wrong = sum(o.disbelief >= bar for o, y in zip(opinions, labels, strict=True) if y)
-    return {"precision": weakeners / (weakeners + wrong) if weakeners + wrong else None,
-            "recall": weakeners / sum(not y for y in labels)}
 
 
 # Time: k x N cosines for k claims and N updates in batches, then per claim and size a median and a median deviation,
