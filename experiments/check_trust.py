@@ -10,8 +10,9 @@ On the test updates it reports log loss and Brier score at that trust, at the ju
 none, which leaves the base rate, and how often a stance reaches the judge's threshold as a contradiction, so the check
 would withdraw the rewrite: for weakeners, which it should, for strengtheners, which it should not, and for other
 premises' updates read against a claim, which bear on it not at all. It writes the measurement to
-results/check_trust.json and each judge's check_trust into semrewrite/judges/calibration.json, leaving every other
-value there as it was; the set's base rate stays in the file's sets table, once.
+results/check_trust.json, each judge's with the provenance of the run that measured it, since the file keeps the judges
+earlier runs measured, and each judge's check_trust into semrewrite/judges/calibration.json, leaving every other value
+there as it was; the set's base rate stays in the file's sets table, once.
 
 Run from the repository root, with a GPU for the model judges: python experiments/check_trust.py [--judges a,b]
 [--stances DIR]. Jev is left out by default: it needs a TypeSafe key and spends its budget on every pair.
@@ -172,13 +173,13 @@ def main(argv: Sequence[str] | None = None) -> None:
     rate = sum(i.strengthens for i in dev) / len(dev)
     previous = json.loads(OUT.read_text()) if OUT.is_file() else {}
     measured = {k: v for k, v in previous.get("judges", {}).items() if k in NAMES}
+    # The file keeps the judges earlier runs measured, so each judge carries the provenance of the run measuring it.
     for name in names:
-        measured[name] = measure(name, items, rate, args.stances)
+        measured[name] = {**measure(name, items, rate, args.stances), "provenance": state}
         print(f"{name}: check trust {measured[name]['check_trust']:.4f}, test log loss "
               f"{measured[name]['test']['at_check_trust']['log_loss']:.4f}, weakeners defeated "
               f"{measured[name]['test']['defeat']['weakener']:.3f}", flush=True)
     results = {
-        "provenance": state,
         "set": CHECK_SET,
         "base_rate": rate,
         "rule": "each update read against its inference written as the claim If premise, inference. as the claim "
