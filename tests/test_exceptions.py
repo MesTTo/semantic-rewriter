@@ -5,7 +5,8 @@ only derivation, under every strategy the engine runs, and keeps watching TV's w
 proof shown going through it, while amy's gaming answer and the rewrite's validity stay as they were; an application
 reads only the statements naming its row's individuals that stand out against its rewrite's claim, never its
 rewrite's own predicates' rows; a vaguer reading weighs on the leaf at the judge's exception trust; a statement the
-claims read, as with every statement read, is not read again for an application; a run judge with no exception trust
+claims read, as with every statement read, is not read again for an application; a run with nothing to weigh
+evaluates no lineage, and the exceptions' own work counts apart from the run's; a run judge with no exception trust
 hands applications to the default reader, and a reader given without one is refused once there is something to read;
 the trace and the command line report the defeat; and the SNARS export writes the leaves, which SNARS, run on PeTTa,
 counts as the lineage does.
@@ -226,6 +227,23 @@ def test_a_judge_without_an_exception_trust_hands_applications_to_the_default_re
         Rewriter(kb, judge, make("python"), None, beliefs=16, claims=check).ask("wastes_time(X)")
 
 
+@pytest.mark.parametrize("beliefs", [16, 0])
+def test_the_exceptions_work_is_counted_apart_and_only_where_something_may_be_read(beliefs: int) -> None:
+    """With no statement about an individual a rewrite's applications can bind, a run without beliefs evaluates no
+    lineage and loads no model, and every run counts in `work` what it counted before the exceptions: the engine's, and
+    with beliefs the lineage's. With the belief stated, the lineages and the solve the exceptions add count in
+    `exception_work`, and `work` is the run's without the belief."""
+    kb, judge, embedder = people(believed=False)
+    check = ClaimCheck(kb, judge, embedder)
+    out = Rewriter(kb, judge, make("python"), None, beliefs=beliefs, claims=check).ask("wastes_time(X)")
+    assert out.exception_work == 0 and embedder.asked == []
+    assert (out.applications is None) == (beliefs == 0)
+    kb, judge, embedder = people()
+    excepted = Rewriter(kb, judge, make("python"), None, beliefs=beliefs, proofs=True,
+                        claims=ClaimCheck(kb, judge, embedder)).ask("wastes_time(X)")
+    assert excepted.fallen == {("kim",)} and excepted.exception_work > 0 and excepted.work == out.work
+
+
 def test_without_the_models_extra_a_run_with_a_statement_to_weigh_names_the_extra(monkeypatch, capsys) -> None:
     """An install without the models extra, such as Jev's extra alone: where no application has a statement about its
     individuals the check loads nothing and the run answers; where one has, the gate needs the embedding model, and a
@@ -245,7 +263,7 @@ def test_without_the_models_extra_a_run_with_a_statement_to_weigh_names_the_extr
     monkeypatch.setattr(semrewrite.claims, "_SHARED", {})
     kb, judge, _ = people(believed=False, exception_trust=None)
     out = Rewriter(kb, judge, make("python"), None, claims=ClaimCheck(kb, judge)).ask("wastes_time(X)", "lazy-tabled")
-    assert out.answers == {("sam",), ("kim",), ("amy",)} and out.applications == {}
+    assert out.answers == {("sam",), ("kim",), ("amy",)} and out.applications is None
     kb, judge, embedder = people(exception_trust=None)
     extra = r"which needs sentence_transformers, part of the models extra: pip install 'semantic-rewriter\[models\]'"
     with pytest.raises(ModuleNotFoundError, match=r"chooses the statements it reads by an embedding model's cosines, "
@@ -289,10 +307,10 @@ def test_the_command_line_shows_the_defeated_application_and_the_answer_it_left(
             '  wastes_time(kim) ⇐ play_games(kim), given "kim plays games."\n'
             '    contradicts  d 0.985 >= 0.659  "kim considers gaming to be productive."  similarity 0.676') in printed.err
     assert "answers a defeat leaves no derivation for (1): wastes_time(kim)" in printed.err
-    assert "1 application read, 1 defeated" in printed.err
+    assert re.search(r"1 application read, 1 defeated, [1-9][0-9,]* work on exceptions", printed.err)
     assert main(["ask", "people.kb", "wastes_time(X)", "--retriever", "all", "--json"]) == 0
     got = json.loads(capsys.readouterr().out)
-    assert got["answers"] == [["amy"], ["sam"]] and got["fallen"] == [["kim"]]
+    assert got["answers"] == [["amy"], ["sam"]] and got["fallen"] == [["kim"]] and got["cost"]["exception_work"] > 0
     (exception,) = got["exceptions"]
     assert exception["rewrite"] == ["play_games", "wastes_time", [0]] and exception["row"] == ["kim"]
     assert exception["defeated"] and [s["statement"] for s in exception["statements"]] == [BELIEF]

@@ -142,7 +142,10 @@ class Outcome:
     a claim check, holds the statements read against each admitted rewrite (semrewrite.claims). Where the check read
     an application, `applications` holds each one read by (rewrite key, row), `applied` every row the lineage applied
     each such rewrite to, and `fallen` the engine's answers every derivation of which a defeated application carries,
-    which `answers` no longer holds.
+    which `answers` no longer holds. `work` counts what the run would count without the exceptions, the engine's and,
+    with beliefs, the lineage's; `exception_work` what the exceptions add: the lineage a run without beliefs evaluates
+    to find the applications, the lineage evaluated again with the leaves, and the solve showing a derivation they
+    leave.
     """
 
     kb: str
@@ -161,6 +164,7 @@ class Outcome:
     defeated: dict[Key, tuple[Reading, ...]] = field(default_factory=dict)
     rounds: int = 0
     work: int = 0
+    exception_work: int = 0
     tables: int = 0
     seconds: float = 0.0
     proofs: dict[tuple[str, ...], Proof] | None = None
@@ -325,7 +329,10 @@ class Rewriter:
         of which it carries is dropped, and the others weigh on the answers derived through them alone. The lineage
         over the knowledge base and every admitted rewrite, with no depth bound, since a bound limits search and not
         what the admitted rewrites imply, finds the applications; it is evaluated again with the leaves when the check
-        reads any. An answer's probability is then a polynomial in its variables' probabilities. Its mean and variance
+        reads any. Without beliefs it is evaluated only where a statement an application may read stands out against
+        some admitted rewrite (ClaimCheck.bears), since otherwise no application reads anything, and its work counts
+        in `exception_work`, as every evaluation the exceptions add does. An answer's probability is then a polynomial
+        in its variables' probabilities. Its mean and variance
         are exact, and its opinion is the Beta matched to those two moments (Cerutti, Kaplan, Kimmig and Şensoy,
         Machine Learning 2022), with the probability its lineage has at the variables' base rates as its base rate, as
         the product and coproduct of opinions take theirs (Jøsang 2016, Eqs. 7.1 and 7.3); a leaf's base rate is 1,
@@ -335,17 +342,24 @@ class Rewriter:
         if self.beliefs:
             out.rewrite_beliefs = opinion
             out.readings = self.claims.readings(rewrites) if self.claims is not None else None
+        excepting = self.claims is not None and self.claims.individuals
+        if not self.beliefs and not (excepting and self.claims is not None and self.claims.bears(rewrites)):
+            return
         mean: dict[Variable, float] = {key: o.projection for key, o in opinion.items()}
         program = Program(facts=self.kb.facts, rules=self.kb.rules, rewrites=rewrites)
-        found = self._lineage(program, query, mean, out)
-        if found is None:
+        found = self._lineage(program, query, mean)
+        if self.beliefs:
+            out.work += found.work
+        else:
+            out.exception_work += found.work
+        if _stopped(found, out):
             return
         missing = sorted(row for row in out.answers if row not in found.answers)
         if missing:
             msg = f"the lineage of {query} lacks the engine's answers {missing[:3]}"
             raise RuntimeError(msg)
         leaves: dict[Variable, Opinion] = {}
-        if self.claims is not None and self.claims.individuals:
+        if excepting and self.claims is not None:
             read = self.claims.applications(found.applied)
             out.applications = read
             # A leaf that no reading disbelieves is certain, x . 1 = x, so it is left out and changes nothing.
@@ -353,8 +367,9 @@ class Rewriter:
             self._trace_exceptions(read)
         if leaves:
             mean |= {var: o.projection for var, o in leaves.items()}
-            found = self._lineage(program, query, mean, out)
-            if found is None:
+            found = self._lineage(program, query, mean)
+            out.exception_work += found.work
+            if _stopped(found, out):
                 return
             excepted = {key for key, _ in out.applications or {}}
             out.applied = {key: frozenset(rows) for key, rows in found.applied.items() if key in excepted}
@@ -364,16 +379,10 @@ class Rewriter:
         if self.beliefs:
             out.beliefs = answer_beliefs(found, out.answers, {**opinion, **leaves})
 
-    def _lineage(self, program: Program, query: Atom, weights: dict[Variable, float], out: Outcome) -> Lineages | None:
+    def _lineage(self, program: Program, query: Atom, weights: dict[Variable, float]) -> Lineages:
         """The query's lineage at `weights`, keeping the beliefs' bound of sets per row, or one where only the answers
-        are wanted; None, with the run at work_limit and no answers, where the work budget stops it."""
-        found = lineages(program, query, weights, self.beliefs or 1, self.budget.work)
-        out.work += found.work
-        if found.finished:
-            return found
-        out.status, out.detail = "work_limit", f"lineage stopped after {found.work:,} work"
-        out.answers, out.beliefs = set(), None
-        return None
+        are wanted."""
+        return lineages(program, query, weights, self.beliefs or 1, self.budget.work)
 
     def _trace_exceptions(self, read: dict[tuple[Key, Row], Application]) -> None:
         """Tell the trace of each defeated application, with the statements defeating it."""
@@ -419,7 +428,7 @@ class Rewriter:
                       if (rw.key, row) not in defeated]
         program = Program(facts=tuple(facts), rules=(*self.kb.rules, *guarded), rewrites=tuple(kept), proofs=True)
         solution = self.engine.solve(program, query, self.budget)
-        out.work += solution.work
+        out.exception_work += solution.work
         if not solution.finished or solution.proofs is None:
             msg = f"re-solving {query} around its defeated applications ended {solution.status}: {solution.detail}"
             raise RuntimeError(msg)
@@ -545,6 +554,16 @@ class Rewriter:
 def _defeated(disc: Discoverer, goals: Iterable[str]) -> dict[Key, tuple[Reading, ...]]:
     """The rewrites concluding `goals` that the claim check withdrew in `disc`, each with the readings defeating it."""
     return {key: readings for key, (_, readings) in disc.defeats(goals).items()}
+
+
+def _stopped(found: Lineages, out: Outcome) -> bool:
+    """Whether the work budget stopped the lineage `found`, which leaves the run at work_limit with no answers, as an
+    engine's stop would."""
+    if found.finished:
+        return False
+    out.status, out.detail = "work_limit", f"lineage stopped after {found.work:,} work"
+    out.answers, out.beliefs = set(), None
+    return True
 
 
 def answer_beliefs(found: Lineages, rows: Iterable[Row], opinions: dict[Variable, Opinion]) -> dict[Row, Opinion]:

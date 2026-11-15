@@ -296,9 +296,20 @@ DEFAULT_READER = "nli-deberta-large"
 # rewrite's claim, and a statement about an application's individuals, with its premise, against its conclusion.
 CLAIMS, APPLICATIONS = "check_trust", "exception_trust"
 _KINDS = {CLAIMS: "check trust", APPLICATIONS: "exception trust"}
-# The default reader, loaded once a process on first use and shared by every check, as one embedding model serves
-# every run of the Wikidata evaluation; the process's end releases it.
+# The default reader and the default embedding model, each loaded once a process on first use and shared by every
+# check and whatever else in the process asks for it; the process's end releases them.
 _SHARED: dict[str, SentenceJudge] = {}
+_EMBEDDER: list[Embedder] = []
+
+
+def default_embedder() -> Embedder:
+    """semrewrite.retrieve's default embedding model, made on the first call in a process and returned to every later
+    one, so the checks a process makes, one per rewriter, hold one copy of it."""
+    if not _EMBEDDER:
+        from semrewrite.retrieve import EmbeddingRetriever
+
+        _EMBEDDER.append(EmbeddingRetriever())
+    return _EMBEDDER[0]
 
 
 def default_reader() -> SentenceJudge:
@@ -380,6 +391,12 @@ class ClaimCheck:
         for j, text in enumerate(self._sentences):
             for name in () if self._readable[j] else stated[text].individuals:
                 self._about.setdefault(name, []).append(j)
+        # The individuals each predicate's facts name, and the predicates a rule derives, which bound the individuals a
+        # rewrite's applications can bind (bears).
+        self._arguments: dict[str, set[str]] = {}
+        for fact in kb.facts:
+            self._arguments.setdefault(fact.pred, set()).update(fact.args)
+        self._heads = {rule.head.pred for rule in kb.rules}
         # Each claim's statements standing out against it, with their cosines, nearest first; each application read;
         # and each reader's reading of each ordered pair of statements, whether the first says the second.
         self._kept: dict[Key, dict[int, float]] = {}
@@ -443,12 +460,11 @@ class ClaimCheck:
 
     @property
     def embedder(self) -> Embedder:
-        """The embedding model choosing statements: the one given, else the default, loaded on first use."""
+        """The embedding model choosing statements: the one given, else the process's default (default_embedder),
+        loaded on first use."""
         if self._embedder is None:
             try:
-                from semrewrite.retrieve import EmbeddingRetriever
-
-                self._embedder = EmbeddingRetriever()
+                self._embedder = default_embedder()
             except ModuleNotFoundError as error:
                 raise _needs_models(error, "chooses the statements it reads by an embedding model's cosines") from error
         return self._embedder
@@ -462,6 +478,34 @@ class ClaimCheck:
     def claim(self, key: Key) -> str:
         """The rewrite's claim, the conditional of its proposal's sentences."""
         return conditional(*self.sentences(key))
+
+    # Time: per rewrite, a scan of the statements naming the individuals its applications can bind, at most the m
+    # statements naming any, and the gate (_standing) of each rewrite with one outside its own predicates, not seen
+    # before.
+    def bears(self, rewrites: Iterable[Rewrite]) -> bool:
+        """Whether some application of `rewrites`, admitted together, may have a statement to read, without finding
+        the applications: a statement naming an individual one of them can bind, other than its own predicates' rows,
+        that stands out against its claim. Every variable of a rewrite comes from its premise, so its applications
+        bind the individuals of its premise's rows: its facts' arguments, unless a rule or one of `rewrites` derives
+        the premise, when any individual may be bound. Where nothing qualifies no application reads anything, so a
+        run need not find them; the gate is computed only for the rewrites with such a statement, and the embedding
+        model loads only where one has."""
+        rewrites = list(rewrites)
+        derived = self._heads | {rw.conclusion for rw in rewrites}
+        bearing: list[tuple[Key, set[int]]] = []
+        for key in sorted({rw.key for rw in rewrites}):
+            premise, conclusion, _ = key
+            names = self._about if premise in derived else self._arguments.get(premise, set())
+            about = {j for name in names for j in self._about.get(name, ())
+                     if premise not in self._stated_by[j] and conclusion not in self._stated_by[j]}
+            if about:
+                bearing.append((key, about))
+        if not bearing:
+            return False
+        started = time.perf_counter()
+        self._standing([key for key, _ in bearing])
+        self.seconds += time.perf_counter() - started
+        return any(j in about for key, about in bearing for j in self._kept[key])
 
     def instance(self, key: Key, row: Sequence[str]) -> tuple[str, str]:
         """The premise and conclusion sentences of the rewrite applied to `row`, its arguments' names as words:

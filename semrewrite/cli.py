@@ -241,7 +241,8 @@ def cmd_ask(args: argparse.Namespace) -> int:
             **({"readers": {kind: {"judge": reader, "why": why}
                             for kind, (reader, why) in sorted(rw.claims.substituted.items())}}
                if rw.claims is not None and rw.claims.substituted else {}),
-            "cost": {"work": out.work, "seconds": round(out.seconds, 3), "expansions": out.expansions,
+            "cost": {"work": out.work, **({"exception_work": out.exception_work} if out.applications else {}),
+                     "seconds": round(out.seconds, 3), "expansions": out.expansions,
                      "proposals": out.proposals, "tables": out.tables,
                      **({"check": {**rw.claims.usage, "seconds": round(rw.claims.seconds, 3)}}
                         if rw.claims is not None and checked else {})},
@@ -256,7 +257,7 @@ def cmd_ask(args: argparse.Namespace) -> int:
             _explain_rewrites(rw, out)
         applications = "" if not out.applications else (
             f", {plural(len(out.applications), 'application')} read, "
-            f"{sum(a.defeated for a in out.applications.values()):,} defeated")
+            f"{sum(a.defeated for a in out.applications.values()):,} defeated, {out.exception_work:,} work on exceptions")
         cost = "" if not checked or rw.claims is None else (
             f", {plural(rw.claims.usage['pairs'], 'pair')} reading {plural(rw.claims.usage['claims'], 'claim')} in "
             f"{rw.claims.seconds:.2f} s, {plural(len(out.defeated), 'rewrite')} withdrawn{applications}")

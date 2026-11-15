@@ -2,9 +2,13 @@
 default, gives each property test 400 cases unless the test fixes its own count;
 `ci` gives 100, which CI's PyMeTTa job selects with `--hypothesis-profile=ci` so
 that the engine properties on PyMeTTa finish in reasonable time. Neither puts a
-deadline on an example.
+deadline on an example. Each test starts with no process-shared claim-check model
+loaded, as a process does, so a stub one test loads never serves another.
 """
 
+from collections.abc import Iterator
+
+import pytest
 from hypothesis import settings
 
 # Every profile turns Hypothesis's 200 ms per-example deadline off. On a shared, loaded machine an example that takes
@@ -13,3 +17,13 @@ from hypothesis import settings
 settings.register_profile("thorough", max_examples=400, deadline=None)
 settings.register_profile("ci", max_examples=100, deadline=None)
 settings.load_profile("thorough")
+
+
+@pytest.fixture(autouse=True)
+def _no_shared_models(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    """semrewrite.claims's default reader and embedding model, empty for the test, as a fresh process has them."""
+    import semrewrite.claims
+
+    monkeypatch.setattr(semrewrite.claims, "_SHARED", {})
+    monkeypatch.setattr(semrewrite.claims, "_EMBEDDER", [])
+    yield
