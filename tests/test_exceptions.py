@@ -226,6 +226,43 @@ def test_a_judge_without_an_exception_trust_hands_applications_to_the_default_re
         Rewriter(kb, judge, make("python"), None, beliefs=16, claims=check).ask("wastes_time(X)")
 
 
+def test_without_the_models_extra_a_run_with_a_statement_to_weigh_names_the_extra(monkeypatch, capsys) -> None:
+    """An install without the models extra, such as Jev's extra alone: where no application has a statement about its
+    individuals the check loads nothing and the run answers; where one has, the gate needs the embedding model, and a
+    run judge with no exception trust needs nli-deberta-large, so the run stops with an error saying what for and
+    naming the extra and the command that installs it, which the command line prints as it prints every missing
+    library's."""
+    import semrewrite.claims
+    import semrewrite.judges
+    import semrewrite.retrieve
+    from semrewrite import cli
+
+    def missing(*_: object, **__: object) -> None:
+        raise ModuleNotFoundError("No module named 'sentence_transformers'", name="sentence_transformers")
+
+    monkeypatch.setattr(semrewrite.retrieve, "EmbeddingRetriever", missing)
+    monkeypatch.setattr(semrewrite.judges, "make", missing)
+    monkeypatch.setattr(semrewrite.claims, "_SHARED", {})
+    kb, judge, _ = people(believed=False, exception_trust=None)
+    out = Rewriter(kb, judge, make("python"), None, claims=ClaimCheck(kb, judge)).ask("wastes_time(X)", "lazy-tabled")
+    assert out.answers == {("sam",), ("kim",), ("amy",)} and out.applications == {}
+    kb, judge, embedder = people(exception_trust=None)
+    extra = r"which needs sentence_transformers, part of the models extra: pip install 'semantic-rewriter\[models\]'"
+    with pytest.raises(ModuleNotFoundError, match=r"chooses the statements it reads by an embedding model's cosines, "
+                       + extra):
+        Rewriter(kb, judge, make("python"), None, claims=ClaimCheck(kb, judge)).ask("wastes_time(X)", "lazy-tabled")
+    with pytest.raises(ModuleNotFoundError, match="reads with nli-deberta-large where nli stub has no exception "
+                       "trust, " + extra):
+        Rewriter(kb, judge, make("python"), None, claims=ClaimCheck(kb, judge, embedder)).ask("wastes_time(X)",
+                                                                                                "lazy-tabled")
+    monkeypatch.setattr(cli, "_judge", lambda args, kb: judge)
+    monkeypatch.setattr(cli.formats, "load", lambda path: kb)
+    monkeypatch.setattr(semrewrite.judges, "default_data_trust", lambda name: 0.0)
+    assert main(["ask", "people.kb", "wastes_time(X)", "--retriever", "all"]) == 1
+    assert capsys.readouterr().err == ("semrewrite: sentence_transformers is not installed; "
+                                       "pip install 'semantic-rewriter[models]'\n")
+
+
 def test_the_trace_reports_each_defeated_application() -> None:
     stream = io.StringIO()
     ask(*people(), trace=TextTrace(stream))
