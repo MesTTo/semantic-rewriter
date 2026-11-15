@@ -179,8 +179,9 @@ def test_a_neutral_reading_leaves_every_answer_as_it_was() -> None:
 
 def test_a_judge_without_an_exception_trust_hands_applications_to_the_default_reader(monkeypatch) -> None:
     """jev's case: the run's judge has no exception trust, so the default reader reads kim's application, the
-    substitution is recorded and traced with why, and the defeat stands as before; a reader given without one is
-    refused, naming the experiment that fits it; and with nothing to read nothing is loaded."""
+    substitution is recorded and traced with why, and the defeat stands as before; the process holds that reader once,
+    for every later check and whatever else asks for it; a reader given without one is refused, naming the experiment
+    that fits it; and with nothing to read nothing is loaded."""
     import semrewrite.claims
     import semrewrite.judges
 
@@ -203,6 +204,7 @@ def test_a_judge_without_an_exception_trust_hands_applications_to_the_default_re
     assert rewriter.claims.substituted == {"exception_trust": ("nli-deberta-large", "nli stub has no exception trust")}
     assert ("the claim check reads statements about applications' individuals with nli-deberta-large: nli stub has "
             "no exception trust") in stream.getvalue()
+    assert semrewrite.claims.default_reader() is loaded[0] and len(loaded) == 1
     check = ClaimCheck(kb, judge, embedder, reader=judge)
     with pytest.raises(LookupError, match="exception trust .* experiments/exception_trust.py"):
         Rewriter(kb, judge, make("python"), None, beliefs=16, claims=check).ask("wastes_time(X)")

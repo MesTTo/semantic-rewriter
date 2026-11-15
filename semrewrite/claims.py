@@ -301,6 +301,22 @@ _KINDS = {CLAIMS: "check trust", APPLICATIONS: "exception trust"}
 _SHARED: dict[str, SentenceJudge] = {}
 
 
+def default_reader() -> SentenceJudge:
+    """DEFAULT_READER, made on the first call in a process and returned to every later one, so every check reading
+    with it, and whatever else in the process ranks with that model, such as the Wikidata evaluation's cascade, holds
+    one copy of it."""
+    if DEFAULT_READER not in _SHARED:
+        from semrewrite.judges import make
+        from semrewrite.judges.base import SentenceJudge
+
+        loaded = make(DEFAULT_READER)
+        if not isinstance(loaded, SentenceJudge):
+            msg = f"{DEFAULT_READER} reads no sentences"
+            raise TypeError(msg)
+        _SHARED[DEFAULT_READER] = loaded
+    return _SHARED[DEFAULT_READER]
+
+
 class ClaimCheck:
     """Weighs rewrites, and applications of them, against one knowledge base's statements, read by a sentence judge,
     and one embedding model whose cosines choose the statements each claim is read against.
@@ -395,23 +411,16 @@ class ClaimCheck:
             why = f"{name} has no {_KINDS[kind]}"
         else:
             why = f"{name} reads no sentences"
-        if DEFAULT_READER not in _SHARED:
-            from semrewrite.judges import make
-
-            try:
-                loaded = make(DEFAULT_READER)
-            except ModuleNotFoundError as error:
-                raise _needs_models(error, f"reads with {DEFAULT_READER} where {why}") from error
-            if not isinstance(loaded, SentenceJudge):
-                msg = f"{DEFAULT_READER} reads no sentences"
-                raise TypeError(msg)
-            _SHARED[DEFAULT_READER] = loaded
+        try:
+            reader = default_reader()
+        except ModuleNotFoundError as error:
+            raise _needs_models(error, f"reads with {DEFAULT_READER} where {why}") from error
         self.substituted[kind] = (DEFAULT_READER, why)
         if self.trace is not None:
             from semrewrite.trace import ReadBy
 
             self.trace(ReadBy(kind, DEFAULT_READER, why))
-        return _SHARED[DEFAULT_READER]
+        return reader
 
     def bar(self, kind: str = CLAIMS) -> float:
         """The disbelief at which a stance of `kind` defeats what it is read against: the threshold its reader was
