@@ -244,6 +244,13 @@ def compare(name: str, judge_name: str, threshold: float, depth: int) -> dict[st
     world += [line for i, rule in enumerate(kb.rules) for line in _rule_lines(i, rule)]
     world += [line for r in rewrites for line in rule_rows(r, opinion[r.key], f"semrewrite {judge_name}")]
     by_answer, snars, seconds = _prove(world, kb.queries[0], depth)
+    # Both scorings to 9 decimal places before anything compares them. SNARS counts an answer's proofs in an order its
+    # statement ids set, so two answers equal in exact arithmetic can differ in the last bits (about 1e-16), and
+    # Kendall's tau-b would count that difference as an order neither method states: on Alphabet's saved world it
+    # read 0.732 unrounded and 0.929 at 9 places, with the same 1,732,830 pairs concordant and 2,156 discordant. SNARS
+    # itself takes a difference below its k-eps, 1e-6, for rounding, so 9 places keep every difference it means.
+    lineage = {a: round(p, 9) for a, p in lineage.items()}
+    snars = {a: round(p, 9) for a, p in snars.items()}
 
     both = set(lineage) & set(snars)
     # An answer's shortest proof, counted in rule applications, and where each ranking puts the answers outside
