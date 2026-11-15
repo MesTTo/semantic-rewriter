@@ -4,8 +4,10 @@ the question's own rules certain and a rewrite used twice in a derivation counti
 base's statements, the question's own rules as certain-rule rows, the admitted rewrites as semrewrite.snars writes
 them, and each of the question's N candidate answers seeded at the marginal 1/N, the base rate a conclusion keeps
 where its derivation fails (SLN 8.2). It proves every answer (mettabase's sn prove, which conditions a proof on a
-validity it uses more than once) and fuses each answer's evidence-disjoint proofs (sn fuse-proofs). SNARS does all of
-its own proving and fusing; this script only routes its proofs to the answers they conclude.
+validity it uses more than once) and counts each answer's proofs over the statements they share (sn fuse-proofs, which
+conditions on every shared statement and takes the disjunction of the derivations that share nothing, as the lineage
+does), in the world the proofs came from. SNARS does all of its own proving and fusing; this script only routes its
+proofs to the answers they conclude.
 
 Run from the repository root with PETTA_PATH and METTABASE_PATH set, as tests/test_snars.py needs them:
 
@@ -201,7 +203,9 @@ def _prove(world: list[str], query: Atom, depth: int) -> tuple[dict[str, list[li
         by_answer.setdefault(_filler(proof[3], role), []).append(proof)
     proving = time.perf_counter() - started
 
-    fusing = [_import_snars()]
+    # sn fuse-proofs counts an answer's proofs over the leaves they share, replaying them through the world, so the
+    # fusing run loads the same world the proofs came from.
+    fusing = [_import_snars(), *world]
     fusing += [f'!(Fused {json.dumps(a)} (sn fuse-proofs ({" ".join(_show(p) for p in ps)})))'
                for a, ps in sorted(by_answer.items())]
     started = time.perf_counter()
