@@ -1,13 +1,14 @@
-"""Purpose: tests of per-application exceptions (semrewrite.claims.Application, the rewriter's exception step): on
-the actions example with per-person statements, as nli-deberta-large and bge-small read it, "kim considers gaming to
-be productive." defeats kim's application of the gaming match and no other, so kim is no answer where gaming was kim's
-only derivation and keeps watching TV's where kim also watches TV, with the proof shown going through it, while amy's
-gaming answer and the rewrite's validity stay as they were; an application reads only the statements naming its
-row's individuals that stand out against its rewrite's claim, never its rewrite's own predicates' rows; a vaguer
-reading weighs on the leaf at the judge's exception trust; a statement the claims read, as with every statement
-read, is not read again for an application; a run judge with no exception trust hands applications to the default
-reader, and a reader given without one is refused once there is something to read; the trace and the command line
-report the defeat; and the SNARS export writes the leaves, which SNARS, run on PeTTa, counts as the lineage does.
+"""Purpose: tests of per-application exceptions (semrewrite.claims.Application, the rewriter's exception step): on the
+actions example with per-person statements, as nli-deberta-large and bge-small read it, "kim considers gaming to be
+productive." defeats kim's application of the gaming match and no other, so kim is no answer where gaming was kim's
+only derivation, under every strategy the engine runs, and keeps watching TV's where kim also watches TV, with the
+proof shown going through it, while amy's gaming answer and the rewrite's validity stay as they were; an application
+reads only the statements naming its row's individuals that stand out against its rewrite's claim, never its
+rewrite's own predicates' rows; a vaguer reading weighs on the leaf at the judge's exception trust; a statement the
+claims read, as with every statement read, is not read again for an application; a run judge with no exception trust
+hands applications to the default reader, and a reader given without one is refused once there is something to read;
+the trace and the command line report the defeat; and the SNARS export writes the leaves, which SNARS, run on PeTTa,
+counts as the lineage does.
 """
 
 from __future__ import annotations
@@ -30,7 +31,7 @@ from semrewrite.kb import KB
 from semrewrite.lineage import leaf
 from semrewrite.model import Atom, Rewrite
 from semrewrite.opinion import Opinion
-from semrewrite.rewriter import Rewriter
+from semrewrite.rewriter import STRATEGIES, Rewriter, Timing
 from semrewrite.snars import believed, exception_rows, statement
 from semrewrite.trace import TextTrace
 
@@ -110,6 +111,21 @@ def test_a_statement_about_one_person_defeats_that_persons_application_alone(bel
         assert out.beliefs[("amy",)] == plain.beliefs[("amy",)] and out.beliefs[("sam",)] == plain.beliefs[("sam",)]
         assert out.rewrite_beliefs is not None and plain.rewrite_beliefs is not None
         assert out.rewrite_beliefs[GAMES] == plain.rewrite_beliefs[GAMES]
+
+
+# Every strategy that rewrites and that the python engine can run.
+RUNNABLE = sorted(name for name, s in STRATEGIES.items() if s.timing is not Timing.NONE
+                  and all(getattr(make("python").capabilities, c) for c, need in s.needs().items() if need))
+
+
+@pytest.mark.parametrize("strategy", RUNNABLE)
+def test_every_strategy_drops_the_answer_of_the_defeated_application_alone(strategy: str) -> None:
+    """The exception step reads the lineage over the knowledge base and the admitted rewrites, not the program the
+    engine ran, so under every strategy, alias-canonical's merged predicates included, kim falls and amy stays."""
+    kb, judge, embedder = people()
+    rewriter = Rewriter(kb, judge, make("python"), None, claims=ClaimCheck(kb, judge, embedder))
+    out = rewriter.ask("wastes_time(X)", strategy)
+    assert out.answers == {("sam",), ("amy",)} and out.fallen == {("kim",)}
 
 
 def test_another_derivation_keeps_the_answer_and_the_proof_shown_is_one_the_exception_allows() -> None:
