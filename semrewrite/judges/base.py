@@ -62,9 +62,11 @@ class SentenceJudge:
     calibrated ones. `check_trust`, the trust the claim check puts in the
     judge's reading of a statement against a rewrite's claim, is complete too
     until the factory sets the one calibrated for the judge, or None where none
-    was, which the check then refuses (semrewrite.claims); `exception_trust`, the
-    trust it puts in the judge's reading of a statement about an application's
-    individuals, with its premise, against its conclusion, likewise.
+    was: the check then reads with its default reader where the judge is the
+    run's, and refuses the judge where it was given as the reader
+    (semrewrite.claims.ClaimCheck.reading); `exception_trust`, the trust it puts
+    in the judge's reading of a statement about an application's individuals,
+    with its premise, against its conclusion, likewise.
     `calibrated_threshold` is the threshold the judge was calibrated to admit at,
     which a run's own `threshold` may override; the factory sets it, and None
     leaves the run's.

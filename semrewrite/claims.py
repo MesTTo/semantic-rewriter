@@ -326,7 +326,8 @@ class ClaimCheck:
     over every statement, so an individual with a handful of statements is never weighed against that handful alone. A
     clear contradiction defeats that application; every other reading weighs on its leaf at `exception_trust`, its
     reader's exception trust unless given, fitted on delta-ATOMIC's updates read in that form with names filled in
-    (experiments/exception_trust.py).
+    (experiments/exception_trust.py). Each statement is read in one place, so its evidence counts once: with
+    `with_arguments` the claims read the statements naming individuals, and no application reads any.
 
     Each kind of reading has its reader (reading): `reader` where one is given, else `judge`, the run's, where it is a
     sentence judge carrying the trust that reading weighs at, else DEFAULT_READER, loaded once a process on the first
@@ -357,11 +358,11 @@ class ClaimCheck:
         self._sentences = sorted(stated)
         self._stated_by = [stated[text].predicates for text in self._sentences]
         self._readable = [with_arguments or stated[text].general for text in self._sentences]
-        self._names = [stated[text].individuals for text in self._sentences]
-        # The statements naming each individual, so an application finds its own without reading the rest.
+        # The statements naming each individual that no claim reads, so an application finds its own without reading
+        # the rest, and a statement the claims read is not read again.
         self._about: dict[str, list[int]] = {}
-        for j, names in enumerate(self._names):
-            for name in names:
+        for j, text in enumerate(self._sentences):
+            for name in () if self._readable[j] else stated[text].individuals:
                 self._about.setdefault(name, []).append(j)
         # Each claim's statements standing out against it, with their cosines, nearest first; each application read;
         # and each reader's reading of each ordered pair of statements, whether the first says the second.
@@ -427,9 +428,9 @@ class ClaimCheck:
 
     @property
     def individuals(self) -> bool:
-        """Whether the knowledge base states anything naming an individual, which an application binding that
-        individual may read."""
-        return any(self._names)
+        """Whether the knowledge base states anything naming an individual that no claim reads, which an application
+        binding that individual may read."""
+        return bool(self._about)
 
     @property
     def embedder(self) -> Embedder:

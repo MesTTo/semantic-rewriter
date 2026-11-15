@@ -140,8 +140,8 @@ def default_exception_trust(name: str, path: pathlib.Path | None = None) -> floa
 
 
 def _fitted(reader: Callable[[str], float], name: str) -> float | None:
-    """The value `reader` reads for judge `name`, or None where none was fitted, which the claim check refuses only
-    when it has something to read."""
+    """The value `reader` reads for judge `name`, or None where none was fitted (make says what the claim check does
+    then)."""
     try:
         return reader(name)
     except LookupError:
@@ -162,8 +162,9 @@ def make(
     oracle is right by construction, so its trust is complete unless given, and
     its opinions are certain, so its base rate never shows; it reads no
     sentences, so it has no check or exception trust. A judge with no calibrated
-    check or exception trust gets None, which the claim check refuses only when it
-    has something to read that needs it.
+    check or exception trust gets None: the claim check then reads what needs it
+    with its default reader where the judge is the run's, and refuses the judge
+    where it was given as the reader, once it has something to read.
     """
     if name == "oracle":
         if gold is None:

@@ -4,9 +4,10 @@ be productive." defeats kim's application of the gaming match and no other, so k
 only derivation and keeps watching TV's where kim also watches TV, with the proof shown going through it, while amy's
 gaming answer and the rewrite's validity stay as they were; an application reads only the statements naming its
 row's individuals that stand out against its rewrite's claim, never its rewrite's own predicates' rows; a vaguer
-reading weighs on the leaf at the judge's exception trust; a judge with none is refused once there is something to
-read; the trace and the command line report the defeat; and the SNARS export writes the leaves, which SNARS, run on
-PeTTa, counts as the lineage does.
+reading weighs on the leaf at the judge's exception trust; a statement the claims read, as with every statement
+read, is not read again for an application; a run judge with no exception trust hands applications to the default
+reader, and a reader given without one is refused once there is something to read; the trace and the command line
+report the defeat; and the SNARS export writes the leaves, which SNARS, run on PeTTa, counts as the lineage does.
 """
 
 from __future__ import annotations
@@ -139,6 +140,18 @@ def test_an_application_reads_only_the_statements_naming_its_individuals_that_st
     assert check.usage == {"claims": 0, "pairs": 1, "statements": 11, "applications": 1}
     assert check.applications({GAMES: [("kim",)]}) == {(GAMES, ("kim",)): read[(GAMES, ("kim",))]}
     assert len(judge.asked) == 1
+
+
+def test_a_statement_the_claims_read_is_not_read_again_for_an_application() -> None:
+    """With every statement read against the claims, the belief is read against the gaming claim and defeats the
+    rewrite there, as before applications were read, and no application reads anything, so its evidence counts
+    once."""
+    kb, judge, embedder = people()
+    judge.table[(BELIEF, conditional("A plays games", "A wastes time"))] = reading(*DEFEAT)
+    check = ClaimCheck(kb, judge, embedder, with_arguments=True)
+    assert not check.individuals
+    assert check.applications({GAMES: [("kim",), ("amy",)]}) == {} and "applications" not in check.usage
+    assert set(check.defeats([Rewrite("wastes_time", "play_games", (0,))])) == {GAMES}
 
 
 def test_a_vaguer_reading_weighs_on_the_leaf_at_the_exception_trust() -> None:
