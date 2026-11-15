@@ -16,7 +16,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from semrewrite.engines.python import PythonEngine
-from semrewrite.lineage import Leaf, leaf, lineages, minimise, moments, probability
+from semrewrite.lineage import Leaf, Variable, leaf, lineages, minimise, moments, probability
 from semrewrite.model import Atom, Rewrite, Rule
 from semrewrite.protocols import Budget, Program
 
@@ -64,7 +64,7 @@ def _brute(program: Program, query: Atom) -> dict[tuple[str, ...], list[frozense
 @given(programs(), st.sampled_from(CONSTANTS))
 def test_each_answer_s_lineage_is_the_minimal_rewrite_sets_that_derive_it(program: Program, constant: str) -> None:
     query = Atom("p", ("X", constant))
-    weights = {rw.key: rw.score for rw in program.rewrites}
+    weights: dict[Variable, float] = {rw.key: rw.score for rw in program.rewrites}
     got = lineages(program, query, weights, k=64, work=10_000_000)
     assert got.finished
     expected = {row: minimise(sets) for row, sets in _brute(program, query).items()}
@@ -76,9 +76,9 @@ def test_each_answer_s_lineage_is_the_minimal_rewrite_sets_that_derive_it(progra
 def test_probability_and_second_moment_equal_the_sums_over_rewrite_subsets(program: Program, constant: str) -> None:
     query = Atom("p", ("X", constant))
     rewrites = program.rewrites
-    mean = {rw.key: rw.score for rw in rewrites}
+    mean: dict[Variable, float] = {rw.key: rw.score for rw in rewrites}
     # A Beta with that mean and four pseudo-observations: E[p^2] = m (m n + 1) / (n + 1) with n = 4.
-    square = {key: m * (m * 4 + 1) / 5 for key, m in mean.items()}
+    square: dict[Variable, float] = {key: m * (m * 4 + 1) / 5 for key, m in mean.items()}
     got = lineages(program, query, mean, k=64, work=10_000_000)
     worlds = {}
     for n in range(len(rewrites) + 1):
@@ -121,7 +121,7 @@ def test_a_rewrite_reused_down_a_chain_counts_once() -> None:
 def test_a_bounded_lineage_keeps_the_most_probable_sets_and_a_small_budget_stops_unfinished() -> None:
     weak, strong = Rewrite("q", "r", (0, 1), 0.2), Rewrite("q", "s", (0, 1), 0.9)
     program = Program(facts=(Atom("r", ("a", "b")), Atom("s", ("a", "b"))), rewrites=(weak, strong))
-    weights = {weak.key: 0.2, strong.key: 0.9}
+    weights: dict[Variable, float] = {weak.key: 0.2, strong.key: 0.9}
     both = lineages(program, Atom("q", ("X", "Y")), weights, k=2, work=1_000).answers[("a", "b")]
     assert both == frozenset({frozenset({weak.key}), frozenset({strong.key})})
     one = lineages(program, Atom("q", ("X", "Y")), weights, k=1, work=1_000).answers[("a", "b")]
@@ -145,7 +145,7 @@ def concluded(draw):
 def _excepted(program: Program, query: Atom, data) -> dict:
     """Up to three of the applications the lineage of `query` makes, each with a leaf: a weight in (0.05, 0.95), or
     0 for a defeated application."""
-    weights = {rw.key: rw.score for rw in program.rewrites}
+    weights: dict[Variable, float] = {rw.key: rw.score for rw in program.rewrites}
     applied = lineages(program, query, weights, k=64, work=10_000_000).applied
     made = sorted(leaf(key, row) for key, rows in applied.items() for row in rows)
     chosen = data.draw(st.lists(st.sampled_from(made), min_size=1, max_size=3, unique=True))
@@ -212,7 +212,7 @@ def test_a_lineage_with_exception_leaves_counts_every_world_of_rewrites_and_leav
     leaves, and an answer no world derives, every derivation of which a defeated application carries, is none."""
     program, query = drawn
     leaves = _excepted(program, query, data)
-    weights = {rw.key: rw.score for rw in program.rewrites} | leaves
+    weights: dict[Variable, float] = {rw.key: rw.score for rw in program.rewrites} | leaves
     square = {v: m * (m * 4 + 1) / 5 for v, m in weights.items()}
     got = lineages(program, query, weights, k=64, work=10_000_000)
     assert got.finished
@@ -224,7 +224,8 @@ def test_a_lineage_with_exception_leaves_counts_every_world_of_rewrites_and_leav
         assert all(math.isclose(a, b, abs_tol=1e-12) for a, b in zip(moments(lin, weights, square), (p, second),
                                                                       strict=True))
     # A defeat removes the applications its derivations fed and adds none.
-    plain = lineages(program, query, {rw.key: rw.score for rw in program.rewrites}, k=64, work=10_000_000).applied
+    scores: dict[Variable, float] = {rw.key: rw.score for rw in program.rewrites}
+    plain = lineages(program, query, scores, k=64, work=10_000_000).applied
     assert all(rows <= plain[key] for key, rows in got.applied.items())
 
 
@@ -235,7 +236,7 @@ def test_an_exception_never_moves_an_answer_not_derived_through_its_application(
     application always normal and never is keeps its lineage exactly; every other answer's probability is w times
     the first plus 1 - w times the second, so the leaf moves it by its own weight alone."""
     program, query = drawn
-    weights = {rw.key: rw.score for rw in program.rewrites}
+    weights: dict[Variable, float] = {rw.key: rw.score for rw in program.rewrites}
     before = lineages(program, query, weights, k=64, work=10_000_000)
     applications = sorted((key, row) for key, rows in before.applied.items() for row in rows)
     key, row = data.draw(st.sampled_from(applications))

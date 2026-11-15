@@ -284,7 +284,9 @@ def test_snars_counts_an_application_s_leaf_as_the_lineage_does() -> None:
     proofs = re.findall(r"\(: \(Opinion (\S+) (\S+) (\S+) (\S+)\) (\(.*?\)) \(sh ", proved[0])
     assert len(proofs) == 1, out
     fused = _snars([*world, f"!(Fused (sn fuse-proofs ({proved[0]})))"])
-    b, d, u, _ = (float(x) for x in re.search(r"\(Fused \(Opinion (\S+) (\S+) (\S+) (\S+)\)\)", fused).groups())
+    found = re.search(r"\(Fused \(Opinion (\S+) (\S+) (\S+) (\S+)\)\)", fused)
+    assert found, fused
+    b, d, u, _ = (float(x) for x in found.groups())
     # The P SNARS reads back from the evidence written, (r + 2a) / (r + s + 2) (J 3.11).
     def back(o: Opinion) -> float:
         r, s = o.evidence()
@@ -310,7 +312,9 @@ def test_snars_conditions_on_a_validity_two_applications_share_and_one_applicati
     out = _snars([*world, f"!(let $r (collapse (sn prove {statement('owns', ('a', 'b2'))} 4)) (Proved $r))"])
     (proved,) = re.findall(r"\(Proved \((.*?)\)\)\s*$", out, re.MULTILINE)
     fused = _snars([*world, f"!(Fused (sn fuse-proofs ({proved})))"])
-    b, d, _, _ = (float(x) for x in re.search(r"\(Fused \(Opinion (\S+) (\S+) (\S+) (\S+)\)\)", fused).groups())
+    found = re.search(r"\(Fused \(Opinion (\S+) (\S+) (\S+) (\S+)\)\)", fused)
+    assert found, fused
+    b, d, _, _ = (float(x) for x in found.groups())
 
     def back(o: Opinion) -> float:
         r, s = o.evidence()
