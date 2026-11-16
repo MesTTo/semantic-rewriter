@@ -141,12 +141,13 @@ class Outcome:
     rewrite's opinion that it is valid, which those answers' opinions are computed from; `readings`, with beliefs and
     a claim check, holds the statements read against each admitted rewrite (semrewrite.claims). Where the check read
     an application, `applications` holds each one read by (rewrite key, row), `applied` every row the lineage applied
-    each such rewrite to, or the engine's proofs where they settle a run without beliefs, `carried` for each answer the applications whose leaves its derivations carry, those that
-    weigh on its opinion, and `fallen` the engine's answers every derivation of which a defeated application carries,
-    which `answers` no longer holds. `work` counts what the run would count without the exceptions, the engine's and,
-    with beliefs, the lineage's; `exception_work` what the exceptions add: the lineage a run without beliefs evaluates
-    to find the applications, the lineage evaluated again with the leaves, and the solve showing a derivation they
-    leave.
+    each such rewrite to, or the proofs where they settle a run without beliefs, `carried` for each answer the
+    applications whose leaves its derivations carry, those that weigh on its opinion, and `fallen` the engine's answers
+    every derivation of which a defeated application carries, which `answers` no longer holds. `work` counts what the
+    run would count without the exceptions, the engine's and, with beliefs, the lineage's; `exception_work` what the
+    exceptions add: the solve for proofs a run without beliefs or proofs of its own takes to settle them, the lineage
+    such a run evaluates to find the applications where a proof carries a defeat, the lineage evaluated again with the
+    leaves, and the solve showing a derivation they leave.
     """
 
     kb: str
@@ -332,10 +333,10 @@ class Rewriter:
         over the knowledge base and every admitted rewrite, with no depth bound, since a bound limits search and not
         what the admitted rewrites imply, finds the applications; it is evaluated again with the leaves when the check
         reads any. Without beliefs it is evaluated only where a statement an application may read stands out against
-        some admitted rewrite (ClaimCheck.bears), since otherwise no application reads anything, and not where the
-        engine proved every answer and no application its proofs make is defeated (_witnessed), since then no answer
-        falls; its work counts in `exception_work`, as every evaluation the exceptions add does. An answer's probability is then a polynomial
-        in its variables' probabilities. Its mean and variance
+        some admitted rewrite (ClaimCheck.bears), since otherwise no application reads anything, and not where a proof
+        of every answer, the run's own or one more solve's, makes no defeated application (_witnessed), since then no
+        answer falls; its work counts in `exception_work`, as every evaluation the exceptions add does. An answer's
+        probability is then a polynomial in its variables' probabilities. Its mean and variance
         are exact, and its opinion is the Beta matched to those two moments (Cerutti, Kaplan, Kimmig and Şensoy,
         Machine Learning 2022), with the probability its lineage has at the variables' base rates as its base rate, as
         the product and coproduct of opinions take theirs (Jøsang 2016, Eqs. 7.1 and 7.3); a leaf's base rate is 1,
@@ -348,7 +349,7 @@ class Rewriter:
         excepting = self.claims is not None and self.claims.individuals
         if not self.beliefs and not (excepting and self.claims is not None and self.claims.bears(rewrites)):
             return
-        if not self.beliefs and self._witnessed(out):
+        if not self.beliefs and self._witnessed(query, out, rewrites):
             return
         mean: dict[Variable, float] = {key: o.projection for key, o in opinion.items()}
         program = Program(facts=self.kb.facts, rules=self.kb.rules, rewrites=rewrites)
@@ -386,19 +387,33 @@ class Rewriter:
         if self.beliefs:
             out.beliefs = answer_beliefs(found, out.answers, {**opinion, **leaves})
 
-    # Time: one walk of every answer's proof and one claim-check call over the applications the proofs make, in place
-    # of the lineage, which on Alphabet's question examined 42,856,144 candidate rows to the engine's 2,293,388.
-    def _witnessed(self, out: Outcome) -> bool:
-        """Whether the engine's proofs settle the exceptions of a run without beliefs: an answer falls only when every
-        derivation of it carries a defeated application, so where the engine gave a proof of every answer and none of
-        the applications those proofs make is defeated, no answer falls. Those applications are then the ones read,
-        and the lineage, which finds every application the admitted rewrites make, is left for a run with beliefs,
-        whose opinions it gives, or one where a proof carries a defeat."""
-        if self.claims is None or out.proofs is None or not out.answers <= set(out.proofs):
+    # Time: where the run's proofs miss an answer, one engine solve of the knowledge base and the admitted rewrites with
+    # proofs; then one walk of every answer's proof and one claim-check call over the applications the proofs make, in
+    # place of the lineage, which on Alphabet's question examined 42,856,144 candidate rows to the engine's 2,293,388.
+    def _witnessed(self, query: Atom, out: Outcome, rewrites: tuple[Rewrite, ...]) -> bool:
+        """Whether proofs settle the exceptions of a run without beliefs: an answer falls only when every derivation
+        of it carries a defeated application, so where a proof of every answer is at hand and none of the applications
+        those proofs make is defeated, no answer falls. The run's own proofs serve where they cover every answer.
+        Otherwise an engine that proves solves the knowledge base and the admitted rewrites once more, with proofs and
+        no depth bound, as the lineage reads them; that solve's work counts in `exception_work`, and its proofs stay
+        out of the outcome, which holds proofs only where they were asked for. The applications the proofs make are
+        then the ones read, and the lineage, which finds every application the admitted rewrites make, is left for a
+        run with beliefs, whose opinions it gives, or one where a proof carries a defeat."""
+        if self.claims is None:
             return False
+        proofs = out.proofs
+        if proofs is None or not out.answers <= set(proofs):
+            if not self.engine.capabilities.proofs:
+                return False
+            program = Program(facts=self.kb.facts, rules=self.kb.rules, rewrites=rewrites, proofs=True)
+            solution = self.engine.solve(program, query, self.budget)
+            out.exception_work += solution.work
+            if not solution.finished or solution.proofs is None or not out.answers <= set(solution.proofs):
+                return False
+            proofs = solution.proofs
         made: dict[Key, set[Row]] = {}
         for row in sorted(out.answers):
-            _made(out.proofs[row], made)
+            _made(proofs[row], made)
         read = self.claims.applications(made)
         if any(app.defeated for app in read.values()):
             return False

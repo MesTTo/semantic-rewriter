@@ -14,6 +14,7 @@ counts as the lineage does.
 
 from __future__ import annotations
 
+import dataclasses
 import io
 import json
 import os
@@ -341,16 +342,44 @@ def test_explain_lists_a_weighed_application_only_where_it_weighs_on_an_answer(m
     assert "applications weighed" not in err and "other application" not in err
 
 
+def _counting_lineages(monkeypatch) -> list[tuple]:
+    """The calls the rewriter makes to the lineage from now on, each still evaluated."""
+    from semrewrite import rewriter
+
+    calls: list[tuple] = []
+    real = rewriter.lineages
+    monkeypatch.setattr(rewriter, "lineages", lambda *args, **kwargs: calls.append(args) or real(*args, **kwargs))
+    return calls
+
+
+@pytest.mark.parametrize("proofs", [True, False])
 @pytest.mark.parametrize(("belief", "lineage"), [(DEFEAT, True), ((0.5, 0.3), False)])
-def test_a_run_without_beliefs_settles_the_exceptions_from_its_proofs_unless_one_carries_a_defeat(belief, lineage) -> None:
-    """Without beliefs the engine's proofs settle the exceptions where none of the applications they make is
-    defeated: kim's gaming application read below the bar leaves every answer, and no lineage is evaluated. A defeat
-    on kim's proof sends the run to the lineage, which drops kim; either way the answers are the lineage's own."""
-    _, out = ask(*people(belief=belief), beliefs=0, proofs=True)
-    _, plain = ask(*people(belief=belief), beliefs=0, proofs=False)
-    assert out.answers == plain.answers and out.fallen == plain.fallen
-    assert out.fallen == ({("kim",)} if lineage else set())
-    assert (out.exception_work > 0) is lineage and plain.exception_work > 0
+def test_a_run_without_beliefs_settles_the_exceptions_from_proofs_unless_one_carries_a_defeat(
+        belief, lineage, proofs, monkeypatch) -> None:
+    """Without beliefs, proofs settle the exceptions where none of the applications they make is defeated: kim's
+    gaming application read below the bar leaves every answer, and no lineage is evaluated. A run that asked for no
+    proofs solves once more for them, that solve's work counting among the exceptions', and keeps none of them. A
+    defeat on kim's proof sends the run to the lineage, which drops kim; either way the answers are those the lineage
+    leaves a run with beliefs."""
+    _, weighed = ask(*people(belief=belief))
+    evaluated = _counting_lineages(monkeypatch)
+    _, out = ask(*people(belief=belief), beliefs=0, proofs=proofs)
+    assert out.answers == weighed.answers and out.fallen == weighed.fallen == ({("kim",)} if lineage else set())
+    assert bool(evaluated) is lineage
+    assert (out.exception_work > 0) is (lineage or not proofs)
+    assert (out.proofs is not None) is proofs
+    assert out.applications is not None and set(out.applications) == {(GAMES, ("kim",))}
+
+
+def test_an_engine_that_cannot_prove_leaves_the_exceptions_to_the_lineage(monkeypatch) -> None:
+    """With no proofs to be had, a run without beliefs finds and reads the applications through the lineage."""
+    kb, judge, embedder = people(belief=(0.5, 0.3))
+    engine = make("python")
+    monkeypatch.setattr(engine, "capabilities", dataclasses.replace(engine.capabilities, proofs=False))
+    evaluated = _counting_lineages(monkeypatch)
+    out = Rewriter(kb, judge, engine, None, beliefs=0, claims=ClaimCheck(kb, judge, embedder)).ask(
+        "wastes_time(X)", "lazy-tabled")
+    assert evaluated and out.fallen == set() and out.proofs is None
     assert out.applications is not None and set(out.applications) == {(GAMES, ("kim",))}
 
 
