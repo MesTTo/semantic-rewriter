@@ -19,7 +19,8 @@
    },
    "trust": 0.001540569060717999,
    "data_trust": 0.17123371371455878,
-   "check_trust": 1.0
+   "check_trust": 1.0,
+   "exception_trust": 1.0
   },
   "cosine-qwen3": {
    "default": 0.9751224517822266,
@@ -31,7 +32,8 @@
    },
    "trust": 0.0005621496889577945,
    "data_trust": 0.16870426496085067,
-   "check_trust": 1.0
+   "check_trust": 1.0,
+   "exception_trust": 1.0
   },
   "jev": {
    "default": 0.165,
@@ -52,7 +54,8 @@
    },
    "trust": 0.3114297961631095,
    "data_trust": 0.36350127004188687,
-   "check_trust": 0.702552660960317
+   "check_trust": 0.702552660960317,
+   "exception_trust": 0.5343546836963156
   },
   "nli-deberta-large": {
    "default": 0.6592527778093171,
@@ -77,7 +80,8 @@
    },
    "trust": 0.5238079757330589,
    "data_trust": 0.420989332262417,
-   "check_trust": 0.9033006495672349
+   "check_trust": 0.9033006495672349,
+   "exception_trust": 0.7724430525828829
   },
   "reranker-qwen3": {
    "default": 0.8078806102275848,
@@ -89,7 +93,8 @@
    },
    "trust": 0.07735878821260883,
    "data_trust": 0.2628940374353752,
-   "check_trust": 0.9733920988967133
+   "check_trust": 0.9733920988967133,
+   "exception_trust": 0.756522201198913
   },
   "typical-qwen3-4b": {
    "set": "delta-atomic",

@@ -14,7 +14,7 @@ How sure is each answer? Each answer can carry an opinion: the probability that 
 
 Can a judge tell what typically follows? Yes, when it is asked that. A knowledge base of everyday actions asks what typically follows, such as whether someone who watches TV wastes time, and the NLI cross-encoders call such pairs neutral. Qwen3-4B-Instruct-2507, asked whether the conclusion typically follows, scores held-out log loss 0.588 on δ-ATOMIC's defeasible inferences and 0.485 on Balanced COPA's causes and effects, against nli-deberta-large's 0.661 and 0.637 and the base rate's 0.693, and picks COPA's more plausible alternative for 450 of 500 questions. On a knowledge base of eight actions it ranks the three that waste time first, and the entailment judge finds one of them.
 
-Can a stated belief withdraw an answer? Yes. The rewriter checks every rewrite it admits, and a stated belief the judge reads as contradicting a match at the threshold it was calibrated at withdraws the match. With "I consider gaming to be productive" stated, nli-deberta-large and typical-qwen3-4b both withdraw the gaming match, so in the first person "I waste time" keeps only watching TV's derivation, and with holes kim, who plays games, is no answer under nli-deberta-large while sam keeps P 0.420. Under typical-qwen3-4b kim stays an answer, at P 0.479 instead of 0.885, through a route the belief does not touch: playing games typically means scrolling social media, which wastes time. A vaguer reading only lowers a match, discounted by a check trust fitted on delta-ATOMIC, 0.698 for nli-deberta-large against its 0.348 on predicate pairs. Where a knowledge base states nothing without arguments, as on the Wikidata questions, the check reads nothing and changes nothing.
+Can a stated belief withdraw an answer? Yes. The rewriter checks every rewrite it admits, and a stated belief the judge reads as contradicting a match at the threshold it was calibrated at withdraws the match. With "I consider gaming to be productive" stated, nli-deberta-large and typical-qwen3-4b both withdraw the gaming match, so in the first person "I waste time" keeps only watching TV's derivation, and with holes kim, who plays games, is no answer under nli-deberta-large while sam keeps P 0.420. Under typical-qwen3-4b kim stays an answer, at P 0.479 instead of 0.885, through a route the belief does not touch: playing games typically means scrolling social media, which wastes time. A vaguer reading only lowers a match, discounted by a check trust fitted on delta-ATOMIC, 0.698 for nli-deberta-large against its 0.348 on predicate pairs. A statement about one person bears on that person's answers alone: with "kim considers gaming to be productive" stated, nli-deberta-large reads it with kim's premise, "kim plays games.", against "kim wastes time." at d 0.985, so kim's application of the gaming match derives nothing and kim falls from P 0.551 to watching TV's 0.420, while amy, who also plays games, keeps 0.224 and the match stays admitted. On the Wikidata questions, where every statement names an entity, the check reads them against the applications binding those entities and defeats none: no average precision changes, and the answers it moves, none on Victoria, 2 on Leonardo and up to 2,493 on Alphabet, move by at most 0.00054 in P.
 
 Is pymetta stable enough? Yes. Tabling, ops called inside tables, table refresh and budgets all did what the rewriter needed. I found sixteen defects, nine of which involve state that outlives a `MeTTa()` context; fourteen have a script under `repros/`. The engine works around every one that could change an answer, a status or a finished run's work; the other two cost memory for each function name a solve defines and let a run its budget stops overrun the budget by up to 2.4 percent.
 
@@ -426,25 +426,47 @@ The last three columns test the knowledge base as a second source, on the 933 te
 Each question is answered with one rewrite on a path, by Jev at the rewrite threshold calibrated for answer F1, 0.65, and at 0.1, and by nli-deberta-large at its calibrated threshold, 0.659. Every answer is ranked by P and scored against Wikidata's own answer: the average precision of the ranking, the best F1 an answer threshold reaches and the P it sits at, and the lowest P inside Wikidata's answer beside the highest outside it.
 
 <!-- BEGIN GENERATED: wikidata-beliefs -->
-| question | judge | rewrite threshold | claim check | answers | not in Wikidata's | F1 of all answers | average precision by P | best F1 by P (at P) | lowest P inside | highest P outside |
-|---|---|---|---|---|---|---|---|---|---|---|
-| victoria | jev | 0.65 | statements naming no individual: 0 of 18 rewrites moved, 0 withdrawn; 0 judge pairs, 0.0 s | 1,164 | 0 | 1.000 | 1.000 | 1.000 (0.938) | 0.938 | none |
-| victoria | jev | 0.1 | statements naming no individual: 0 of 110 rewrites moved, 0 withdrawn; 0 judge pairs, 0.0 s | 1,185 | 21 | 0.991 | 1.000 | 1.000 (0.938) | 0.938 | 0.324 |
-| victoria | nli-deberta-large | 0.659 | statements naming no individual: 0 of 117 rewrites moved, 0 withdrawn; 0 judge pairs, 0.0 s | 1,188 | 24 | 0.990 | 1.000 | 0.999 (0.358) | 0.358 | 0.358 |
-| victoria | nli-deberta-large | 0.659 | every statement: 24 of 117 rewrites moved, 5 withdrawn; 417 judge pairs, 9.5 s | 1,188 | 24 | 0.990 | 1.000 | 0.996 (0.487) | 0.358 | 0.527 |
-| leonardo | jev | 0.65 | statements naming no individual: 0 of 16 rewrites moved, 0 withdrawn; 0 judge pairs, 0.0 s | 851 | 2 | 0.996 | 0.994 | 0.997 (0.689) | 0.689 | 0.679 |
-| leonardo | jev | 0.1 | statements naming no individual: 0 of 52 rewrites moved, 0 withdrawn; 0 judge pairs, 0.0 s | 858 | 5 | 0.996 | 0.999 | 0.997 (0.689) | 0.239 | 0.679 |
-| leonardo | nli-deberta-large | 0.659 | statements naming no individual: 0 of 59 rewrites moved, 0 withdrawn; 0 judge pairs, 0.0 s | 858 | 5 | 0.996 | 0.999 | 0.996 (0.486) | 0.486 | 0.487 |
-| leonardo | nli-deberta-large | 0.659 | every statement: 18 of 59 rewrites moved, 13 withdrawn; 1,081 judge pairs, 6.6 s | 856 | 5 | 0.995 | 0.996 | 0.995 (0.486) | 0.486 | 0.487 |
-| alphabet | jev | 0.65 | statements naming no individual: 0 of 3 rewrites moved, 0 withdrawn; 0 judge pairs, 0.0 s | 2,849 | 0 | 0.938 | 0.883 | 0.938 (0.916) | 0.916 | none |
-| alphabet | jev | 0.1 | statements naming no individual: 0 of 42 rewrites moved, 0 withdrawn; 0 judge pairs, 0.0 s | 2,903 | 1 | 0.947 | 0.900 | 0.947 (0.210) | 0.210 | 0.100 |
-| alphabet | nli-deberta-large | 0.659 | statements naming no individual: 0 of 62 rewrites moved, 0 withdrawn; 0 judge pairs, 0.0 s | 2,906 | 4 | 0.947 | 0.899 | 0.947 (0.237) | 0.237 | 0.357 |
-| alphabet | nli-deberta-large | 0.659 | every statement: 23 of 62 rewrites moved, 31 withdrawn; 39,429 judge pairs, 123.7 s | 0 | 0 | 0.000 | 0.000 | 0.000 (none) | none | none |
+| question | judge | rewrite threshold | claim check | answers | not in Wikidata's | F1 of all answers | average precision by P | before the exceptions | best F1 by P (at P) | lowest P inside | highest P outside |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| victoria | jev | 0.65 | statements naming no individual: 0 of 18 rewrites moved, 0 withdrawn; 0 applications read, 0 defeated, 0 answers changed; 0 judge pairs, 12.3 s | 1,164 | 0 | 1.000 | 1.000 | 1.000 | 1.000 (0.938) | 0.938 | none |
+| victoria | jev | 0.1 | statements naming no individual: 0 of 110 rewrites moved, 0 withdrawn; 5 applications read, 0 defeated, 0 answers changed; 5 judge pairs, 7.0 s | 1,185 | 21 | 0.991 | 1.000 | 1.000 | 1.000 (0.938) | 0.938 | 0.324 |
+| victoria | nli-deberta-large | 0.659 | statements naming no individual: 0 of 117 rewrites moved, 0 withdrawn; 5 applications read, 0 defeated, 0 answers changed; 5 judge pairs, 0.8 s | 1,188 | 24 | 0.990 | 1.000 | 1.000 | 0.999 (0.358) | 0.358 | 0.358 |
+| victoria | nli-deberta-large | 0.659 | every statement: 24 of 117 rewrites moved, 5 withdrawn; 0 applications read, 0 defeated, 0 answers changed; 417 judge pairs, 15.7 s | 1,188 | 24 | 0.990 | 1.000 | 1.000 | 0.996 (0.487) | 0.358 | 0.527 |
+| leonardo | jev | 0.65 | statements naming no individual: 0 of 16 rewrites moved, 0 withdrawn; 2 applications read, 0 defeated, 2 answers changed; 2 judge pairs, 20.3 s | 851 | 2 | 0.996 | 0.994 | 0.994 | 0.997 (0.689) | 0.689 | 0.679 |
+| leonardo | jev | 0.1 | statements naming no individual: 0 of 52 rewrites moved, 0 withdrawn; 2 applications read, 0 defeated, 2 answers changed; 2 judge pairs, 4.6 s | 858 | 5 | 0.996 | 0.999 | 0.999 | 0.997 (0.689) | 0.239 | 0.679 |
+| leonardo | nli-deberta-large | 0.659 | statements naming no individual: 0 of 59 rewrites moved, 0 withdrawn; 2 applications read, 0 defeated, 2 answers changed; 2 judge pairs, 0.8 s | 858 | 5 | 0.996 | 0.999 | 0.999 | 0.996 (0.486) | 0.486 | 0.487 |
+| leonardo | nli-deberta-large | 0.659 | every statement: 18 of 59 rewrites moved, 13 withdrawn; 0 applications read, 0 defeated, 0 answers changed; 1,081 judge pairs, 19.8 s | 856 | 5 | 0.995 | 0.996 | 0.996 | 0.995 (0.486) | 0.486 | 0.487 |
+| alphabet | jev | 0.65 | statements naming no individual: 0 of 3 rewrites moved, 0 withdrawn; 361 applications read, 0 defeated, 2,430 answers changed; 494 judge pairs, 25.6 s | 2,849 | 0 | 0.938 | 0.883 | 0.883 | 0.938 (0.916) | 0.916 | none |
+| alphabet | jev | 0.1 | statements naming no individual: 0 of 42 rewrites moved, 0 withdrawn; 387 applications read, 0 defeated, 2,487 answers changed; 526 judge pairs, 40.7 s | 2,903 | 1 | 0.947 | 0.900 | 0.900 | 0.947 (0.210) | 0.210 | 0.100 |
+| alphabet | nli-deberta-large | 0.659 | statements naming no individual: 0 of 62 rewrites moved, 0 withdrawn; 391 applications read, 0 defeated, 2,493 answers changed; 530 judge pairs, 82.2 s | 2,906 | 4 | 0.947 | 0.899 | 0.899 | 0.947 (0.237) | 0.237 | 0.357 |
+| alphabet | nli-deberta-large | 0.659 | every statement: 23 of 62 rewrites moved, 31 withdrawn; 0 applications read, 0 defeated, 0 answers changed; 39,429 judge pairs, 543.2 s | 0 | 0 | 0.000 | 0.000 | 0.000 | 0.000 (none) | none | none |
 <!-- END GENERATED: wikidata-beliefs -->
 
 Lowering Jev's rewrite threshold to 0.1 admits six times as many rewrites into Victoria's descendants, 110 against 18, and brings in 21 answers outside Wikidata's record. All 21 rank below all 1,164 of Wikidata's, at P 0.324 or less against 0.938 or more, so an answer threshold between them keeps exactly Wikidata's answer. On Alphabet the lower threshold finds 53 more of Wikidata's holdings, and its one answer outside the record, at P 0.100, ranks below all of them, so F1 rises from 0.938 to 0.947. On Leonardo it finds four more of Wikidata's works and three more answers outside it. There P does not separate the two sets: the highest answer outside, at 0.679, ranks above the lowest of Wikidata's, at 0.239, though the best answer threshold, 0.689, still reaches F1 0.997.
 
-Every run checks its rewrites, as the rewriter always does now. Every statement of the three knowledge bases names an entity, so the check, which reads only statements that name no individual, reads nothing on them, asks the judge nothing and loads no embedding model: each run's answers and ranking are what they were without the check. The last row of each question repeats nli-deberta-large's run reading every statement, which shows why the check does not. Read by meaning against rules written with letters, the facts move rewrites and now withdraw them too, since the judge reads many of them as contradicting a rule at its threshold: 5 of Victoria's 117 rewrites, 13 of Leonardo's 59 and 31 of Alphabet's 62. No fact states one of a question's own predicates, so every answer comes through a rewrite, and on Alphabet every answer's derivations lost one: that run answers nothing. On Alphabet's question one false rewrite, owns ⇐ space launch vehicle, kept 189 statements such as "orbital launch pad 2 is owned by spacex.", which the judge reads as contradicting "If A is the space launch vehicle of B, A owns B.", and the judge pairs that find which of a claim's statements say the same grow with the square of their number.
+Every run checks its rewrites and their applications, as the rewriter always does now (DESIGN.md, Exceptions to one application). Every statement of the three knowledge bases names an entity, so none is read against a rewrite's claim and every rewrite's validity is what it was without the check. Each statement is read instead against the applications that bind an individual it names, where the relevance gate keeps it, beside the application's premise against its conclusion. The column before the exceptions is each run's average precision with the applications' exception leaves left out, as the release computed it. No run defeats an application, and no run's average precision, best F1 or F1 of all answers changes. The table below lists every answer the exceptions changed, by the rewrite whose applications its derivations carry; `results/wikidata_beliefs.json` lists each one with its applications and every statement read against them.
+
+<!-- BEGIN GENERATED: wikidata-exceptions -->
+| question | judge | rewrite threshold | rewrite | applications | defeated | statements read | lowest belief | highest disbelief | highest P of an exception | answers changed | largest fall in P |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| leonardo | jev | 0.65 | created(X0, X1) ⇐ architect_p84(X1, X0) | 2 | 0 | 1 | 0.999 | 2.85e-05 | 1.91e-05 | 2 | 1.32e-05 |
+| leonardo | jev | 0.1 | created(X0, X1) ⇐ architect_p84(X1, X0) | 2 | 0 | 1 | 0.999 | 2.85e-05 | 1.91e-05 | 2 | 1.32e-05 |
+| leonardo | nli-deberta-large | 0.659 | created(X0, X1) ⇐ architect_p84(X1, X0) | 2 | 0 | 1 | 0.999 | 2.85e-05 | 1.91e-05 | 2 | 9.29e-06 |
+| alphabet | jev | 0.65 | owns(X0, X1) ⇐ owner_of_p1830(X0, X1) | 114 | 0 | 5 | 0.991 | 0.000207 | 0.000123 | 2,429 | 0.000541 |
+| alphabet | jev | 0.65 | owns(X0, X1) ⇐ owned_by_p127(X1, X0) | 247 | 0 | 4 | 0.981 | 0.000819 | 0.000549 | 247 | 0.000541 |
+| alphabet | jev | 0.1 | owns(X0, X1) ⇐ owner_of_p1830(X0, X1) | 114 | 0 | 5 | 0.991 | 0.000207 | 0.000123 | 2,486 | 0.000541 |
+| alphabet | jev | 0.1 | owns(X0, X1) ⇐ owned_by_p127(X1, X0) | 247 | 0 | 4 | 0.981 | 0.000819 | 0.000549 | 247 | 0.000541 |
+| alphabet | jev | 0.1 | owns(X0, X1) ⇐ copyright_holder_p3931(X1, X0) | 25 | 0 | 27 | 0.998 | 3.94e-05 | 2.69e-05 | 25 | 8.05e-05 |
+| alphabet | nli-deberta-large | 0.659 | owns(X0, X1) ⇐ owner_of_p1830(X0, X1) | 114 | 0 | 5 | 0.991 | 0.000207 | 0.000123 | 2,492 | 0.000361 |
+| alphabet | nli-deberta-large | 0.659 | owns(X0, X1) ⇐ owned_by_p127(X1, X0) | 247 | 0 | 4 | 0.981 | 0.000819 | 0.000549 | 247 | 0.000361 |
+| alphabet | nli-deberta-large | 0.659 | owns(X0, X1) ⇐ collection_p195(X0, X1) | 2 | 0 | 1 | 0.975 | 0.00615 | 0.00412 | 11 | 4.92e-05 |
+| alphabet | nli-deberta-large | 0.659 | owns(X0, X1) ⇐ copyright_holder_p3931(X1, X0) | 25 | 0 | 27 | 0.998 | 3.94e-05 | 2.69e-05 | 25 | 3.41e-05 |
+| alphabet | nli-deberta-large | 0.659 | owns(X0, X1) ⇐ collection_p195(X1, X0) | 2 | 0 | 1 | 0.953 | 0.00668 | 0.00447 | 1 | 4.23e-05 |
+<!-- END GENERATED: wikidata-exceptions -->
+
+On Victoria the runs with Jev at 0.1 and with nli-deberta-large read five applications each and change no answer. On Leonardo all three runs read the same two applications of created ⇐ architect, with "architect is the occupation of leonardo da vinci.", and lower the two answers they carry, the city walls of Lecco and the Mausoleo Trivulzio, by about 10⁻⁵ in P. On Alphabet 361 to 390 applications are read and 2,430 to 2,493 answers change, by at most 0.00054 in P. The statements the gate keeps for these applications are other facts about the individuals they bind, such as "q15330 is instance of business.", which 246 applications binding q15330 read in each run, and read beside the premise they leave its support for the conclusion standing: every reading has belief 0.953 or more and disbelief 0.0067 or less, so no application is an exception with probability above 0.0045. Only the P at which the best F1 is reached and the lowest P inside or highest outside Wikidata's answer move, in the fifth decimal or later. The check asks the judge 0, 5 and 5 pairs on Victoria, 2 on Leonardo, and 494 to 530 on Alphabet, against 417, 1,081 and 39,429 for reading every statement against the rewrites' claims. Its seconds were measured with nli-deberta-large's 24 blocks streamed from CPU memory to the GPU, which other work left about 1.5 GiB free, on a workstation under memory pressure: reading every statement against Alphabet's claims took 543.2 s so, against 123.7 s with the model whole on the GPU at the release.
+
+The last row of each question repeats nli-deberta-large's run reading every statement against the rewrites' claims, which shows why the check does not. Read by meaning against rules written with letters, the facts move rewrites and now withdraw them too, since the judge reads many of them as contradicting a rule at its threshold: 5 of Victoria's 117 rewrites, 13 of Leonardo's 59 and 31 of Alphabet's 62. No fact states one of a question's own predicates, so every answer comes through a rewrite, and on Alphabet every answer's derivations lost one: that run answers nothing. On Alphabet's question one false rewrite, owns ⇐ space launch vehicle, kept 189 statements such as "orbital launch pad 2 is owned by spacex.", which the judge reads as contradicting "If A is the space launch vehicle of B, A owns B.", and the judge pairs that find which of a claim's statements say the same grow with the square of their number.
 
 The knowledge base gives evidence on a rewrite only where it states the rewrite's conclusion, the setting each data trust was fitted in. None of the three questions states any of its own predicates, so every opinion here is its judge's alone. A first version also counted what the other admitted rewrites derive, reading a row they missed as evidence against a rewrite. With nli-deberta-large that separated Victoria's answers completely, but it lowered Leonardo's average precision from 0.999 to 0.983: of the 858 works `creator` states, the other admitted rewrites derive about 40, so 818 counted against it, and its P fell nearly as low as a rewrite through the material a work is made from. The other rewrites cover only part of a relation, so a row they miss is no evidence against a rewrite.
 
@@ -455,18 +477,18 @@ The rewriter checks every rewrite it admits against the knowledge base's stateme
 <!-- BEGIN GENERATED: claim-check-actions -->
 | judge | form | rewrite threshold | check trust | match or answer | P without the belief | P with it | read against it, with the belief stated | check's cost |
 |---|---|---|---|---|---|---|---|---|
-| nli-deberta-large | first person | 0.03 | 0.698 | match play_games ⇒ wastes_time | 0.456 | withdrawn | contradicted by "I consider gaming to be productive." (d 1.000) | 1 pair, 0.02 s |
-| nli-deberta-large | first person | 0.03 | 0.698 | match watch_tv ⇒ wastes_time | 0.478 | 0.478 | nothing | 1 pair, 0.02 s |
-| nli-deberta-large | first person | 0.03 | 0.698 | answer wastes_time() | 0.717 | 0.478 |  | 1 pair, 0.02 s |
-| nli-deberta-large | first person | 0.659 | 0.698 | match play_games ⇒ wastes_time | 0.456 | withdrawn | contradicted by "I consider gaming to be productive." (d 1.000) | 1 pair, 0.02 s |
-| nli-deberta-large | first person | 0.659 | 0.698 | match watch_tv ⇒ wastes_time | 0.478 | 0.478 | nothing | 1 pair, 0.02 s |
-| nli-deberta-large | first person | 0.659 | 0.698 | answer wastes_time() | 0.717 | 0.478 |  | 1 pair, 0.02 s |
-| nli-deberta-large | with holes | 0.03 | 0.698 | match play_games ⇒ wastes_time | 0.224 | withdrawn | contradicted by "I consider gaming to be productive." (d 1.000) | 1 pair, 0.05 s |
-| nli-deberta-large | with holes | 0.03 | 0.698 | match watch_tv ⇒ wastes_time | 0.420 | 0.420 | nothing | 1 pair, 0.05 s |
-| nli-deberta-large | with holes | 0.03 | 0.698 | answer wastes_time(kim) | 0.224 | withdrawn |  | 1 pair, 0.05 s |
-| nli-deberta-large | with holes | 0.03 | 0.698 | answer wastes_time(sam) | 0.420 | 0.420 |  | 1 pair, 0.05 s |
-| nli-deberta-large | with holes | 0.659 | 0.698 | match watch_tv ⇒ wastes_time | 0.420 | 0.420 | nothing | 0 pairs, 0.18 s |
-| nli-deberta-large | with holes | 0.659 | 0.698 | answer wastes_time(sam) | 0.420 | 0.420 |  | 0 pairs, 0.18 s |
+| nli-deberta-large | first person | 0.03 | 0.698 | match play_games ⇒ wastes_time | 0.456 | withdrawn | contradicted by "I consider gaming to be productive." (d 1.000) | 1 pair, 0.44 s |
+| nli-deberta-large | first person | 0.03 | 0.698 | match watch_tv ⇒ wastes_time | 0.478 | 0.478 | nothing | 1 pair, 0.44 s |
+| nli-deberta-large | first person | 0.03 | 0.698 | answer wastes_time() | 0.717 | 0.478 |  | 1 pair, 0.44 s |
+| nli-deberta-large | first person | 0.659 | 0.698 | match play_games ⇒ wastes_time | 0.456 | withdrawn | contradicted by "I consider gaming to be productive." (d 1.000) | 1 pair, 0.47 s |
+| nli-deberta-large | first person | 0.659 | 0.698 | match watch_tv ⇒ wastes_time | 0.478 | 0.478 | nothing | 1 pair, 0.47 s |
+| nli-deberta-large | first person | 0.659 | 0.698 | answer wastes_time() | 0.717 | 0.478 |  | 1 pair, 0.47 s |
+| nli-deberta-large | with holes | 0.03 | 0.698 | match play_games ⇒ wastes_time | 0.224 | withdrawn | contradicted by "I consider gaming to be productive." (d 1.000) | 1 pair, 0.73 s |
+| nli-deberta-large | with holes | 0.03 | 0.698 | match watch_tv ⇒ wastes_time | 0.420 | 0.420 | nothing | 1 pair, 0.73 s |
+| nli-deberta-large | with holes | 0.03 | 0.698 | answer wastes_time(kim) | 0.224 | withdrawn |  | 1 pair, 0.73 s |
+| nli-deberta-large | with holes | 0.03 | 0.698 | answer wastes_time(sam) | 0.420 | 0.420 |  | 1 pair, 0.73 s |
+| nli-deberta-large | with holes | 0.659 | 0.698 | match watch_tv ⇒ wastes_time | 0.420 | 0.420 | nothing | 0 pairs, 0.20 s |
+| nli-deberta-large | with holes | 0.659 | 0.698 | answer wastes_time(sam) | 0.420 | 0.420 |  | 0 pairs, 0.20 s |
 | typical-qwen3-4b | first person | 0.03 | 0.738 | match play_games ⇒ wastes_time | 0.782 | withdrawn | contradicted by "I consider gaming to be productive." (d 0.977) | 10 pairs, 0.29 s |
 | typical-qwen3-4b | first person | 0.03 | 0.738 | match watch_tv ⇒ wastes_time | 0.782 | 0.782 | nothing | 10 pairs, 0.29 s |
 | typical-qwen3-4b | first person | 0.03 | 0.738 | answer wastes_time() | 0.999 | 0.998 |  | 10 pairs, 0.29 s |
@@ -494,7 +516,7 @@ The rewriter checks every rewrite it admits against the knowledge base's stateme
 | typical-qwen3-4b | with holes | 0.269 | 0.738 | answer wastes_time(sam) | 0.782 | 0.782 |  | 6 pairs, 0.24 s |
 <!-- END GENERATED: claim-check-actions -->
 
-The belief withdraws the gaming match and moves nothing else. nli-deberta-large reads it as contradicting the gaming match's claim at d 1.000, past its calibrated threshold of 0.659, so discovery withdraws the match before the engine runs. In the first person "I waste time" keeps only watching TV's derivation and falls from P 0.717 to 0.478, the watching-TV match's own P; with holes, at 0.03, kim is no longer an answer and sam stays at 0.420. Nothing asks for `play_games` once its match is gone, so `play_games ⇐ gaming_productive`, which the judge reads at 0.958 and which once gave the answer a second gaming derivation, is never considered. The check asks the judge one pair: of the eight or nine statements, only the belief stands out from the gaming match's claim, at a modified z-score of 4.8 without arguments and 5.8 with them, and no statement reaches 2.5 against any other claim.
+The belief withdraws the gaming match and moves nothing else. nli-deberta-large reads it as contradicting the gaming match's claim at d 1.000, past its calibrated threshold of 0.659, so discovery withdraws the match before the engine runs. In the first person "I waste time" keeps only watching TV's derivation and falls from P 0.717 to 0.478, the watching-TV match's own P; with holes, at 0.03, kim is no longer an answer and sam stays at 0.420. Nothing asks for `play_games` once its match is gone, so `play_games ⇐ gaming_productive`, which the judge reads at 0.958 and which once gave the answer a second gaming derivation, is never considered. The check asks the judge one pair: of the eight or nine statements, only the belief stands out from the gaming match's claim, at a modified z-score of 4.8 without arguments and 5.8 with them, and no statement reaches 2.5 against any other claim. nli-deberta-large's seconds here and in the per-person table below were measured with its 24 blocks streamed from CPU memory to the GPU, which other work left about 1.4 GiB free; whole on the GPU the release took 0.02 s for the first person's pair, against 0.44 s streamed.
 
 typical-qwen3-4b, the judge of what typically follows, runs at its delta-ATOMIC calibration: threshold 0.269, trust 0.559, base rate 0.504 and check trust 0.738. Its disbelief says only that a conclusion does not follow, so the check also asks it whether the claim's negation follows, and it reads the belief as making "It is not the case that if A plays games, A wastes time." follow: a stance of d 0.953 with holes and 0.977 in the first person, so it withdraws the gaming match too. With holes it also withdraws "If A wastes time, A plays games.", read at d 0.411 against its threshold. Kim stays an answer, falling from P 0.885 to 0.479, because this judge also admits "If A plays games, A scrolls social media." at P 0.553, and scrolling social media wastes time: a second route the belief does not bear on, since being productive does not stop a gamer scrolling. Typical implications chain as rules here, as DESIGN.md's limits say. In the first person this judge matches five actions to wasting time, so "I waste time" stays at 0.995 with the gaming match withdrawn.
 
@@ -556,6 +578,86 @@ The gate's spread is 3.75, chosen on nli-deberta-large's dev updates by spurious
 <!-- END GENERATED: claim-gate -->
 
 The budget holds on the test updates. At the rule of thumb 3.5 the full knowledge base lets through 0.016 a claim on dev and 0.015 on test. A spurious contradiction that reaches the judge's threshold is worse than one that only weighs, since it withdraws a valid rewrite, so the table counts those too. At 3.75 nli-deberta-large's spurious defeats stay at or under 0.0059 a claim at every size on test and typical-qwen3-4b's at or under 0.0088. typical-qwen3-4b, whose spurious contradictions alone would allow 3.5, needs 3.75 for its defeats, since its threshold is 0.269: at 3.5 they reach 0.018 a claim on dev. Counted in defeats, every judge's dev updates choose 3.75. The WANLI judge's defeats at 3.75 reach 0.0107 a claim at full size on test, 22 among 2,047 claims where the budget allows 20, since its threshold, 0.054, makes almost any contradiction it reads a defeat. The gate reads few of an inference's own updates, because every update describes PersonX and the updates written for an inference lie no nearer it than many others do: their cosines to it have median 0.72, inside the 90th percentile of the others', 0.74. So the check finds a statement that is about the same thing as a rewrite, as the gaming belief is about gaming, and misses one that bears on it only through what the reader knows.
+
+### Exceptions to one application
+
+A statement about one person should change that person's answers alone (DESIGN.md, Exceptions to one application). `experiments/claim_check.py` also asks `examples/actions_people.kb`, the eight people with amy also playing games and kim also watching TV, without and with "kim considers gaming to be productive" stated about kim:
+
+<!-- BEGIN GENERATED: claim-check-people -->
+| judge | rewrite threshold | answer | P without the belief | P with it | applications read with the belief stated |
+|---|---|---|---|---|---|
+| nli-deberta-large | 0.03 | wastes_time(amy) | 0.224 | 0.224 | nothing |
+| nli-deberta-large | 0.03 | wastes_time(kim) | 0.551 | 0.420 | play_games ⇒ wastes_time for kim: defeated, "kim considers gaming to be productive." b 0.001 d 0.985 |
+| nli-deberta-large | 0.03 | wastes_time(sam) | 0.420 | 0.420 | nothing |
+| nli-deberta-large | 0.03 | the check's cost |  |  | 1 application read, 1 pair, 0.38 s |
+| nli-deberta-large | 0.659 | wastes_time(kim) | 0.420 | 0.420 | nothing |
+| nli-deberta-large | 0.659 | wastes_time(sam) | 0.420 | 0.420 | nothing |
+| nli-deberta-large | 0.659 | the check's cost |  |  | 0 applications read, 0 pairs, 0.00 s |
+<!-- END GENERATED: claim-check-people -->
+
+At 0.03, where nli-deberta-large admits the gaming match, kim's application of it reads the belief with kim's premise, "kim plays games. kim considers gaming to be productive.", against "kim wastes time." at d 0.985, past the calibrated 0.659, so it derives nothing. kim falls from 0.551, gaming or watching TV, to 0.420, watching TV alone; amy, whose application of the same match reads nothing, stays at 0.224, and sam at 0.420. amy's and sam's P move in the seventh digit only because the judge scores the same proposals a few millionths apart in a different batch. The check read one application with one judge pair. The belief stands out against the gaming claim at z 4.4 and against the TV claim at 0.98, so kim's TV application reads nothing, which matters: the judge reads the belief with "kim watches TV." against "kim wastes time." at d 0.988 too, so the gate, not the judge, keeps the exception to the right rewrite. At the calibrated threshold the gaming match is not admitted, so nothing is read.
+
+An application's statements are read with its premise against its conclusion, not against its named conditional. `experiments/exception_trust.py` fills a name in for PersonX and PersonY in every delta-ATOMIC update and inference and reads each update both ways; the trust is fitted on dev as the check trust is, and the defeat columns count readings at the judge's calibrated threshold:
+
+<!-- BEGIN GENERATED: exception-trust -->
+Test split at base rate 0.504, PersonX and PersonY named per item from 16 first names; other premises' updates are 2,000 drawn with a fixed seed, each filled with its claim's people. The PersonX conditional reads the same updates unnamed, with the check trust's other premises' updates.
+
+| judge | form | trust | log loss at trust | at none | AUC | weakeners defeating | strengtheners defeating | same person's other updates defeating | defeat precision | defeat recall |
+|---|---|---|---|---|---|---|---|---|---|---|
+| cosine-bge | premise and statement | 1.000 | 0.689 | 0.693 | 0.636 | 0.000 | 0.000 | 0.000 | none | 0.000 |
+| cosine-bge | named conditional | 1.000 | 0.689 | 0.693 | 0.649 | 0.000 | 0.000 | 0.000 | none | 0.000 |
+| cosine-bge | PersonX conditional | 1.000 | 0.689 | 0.693 | 0.653 | 0.000 | 0.000 | 0.000 | none | 0.000 |
+| cosine-qwen3 | premise and statement | 1.000 | 0.689 | 0.693 | 0.664 | 0.000 | 0.000 | 0.000 | none | 0.000 |
+| cosine-qwen3 | named conditional | 1.000 | 0.690 | 0.693 | 0.663 | 0.000 | 0.000 | 0.000 | none | 0.000 |
+| cosine-qwen3 | PersonX conditional | 1.000 | 0.689 | 0.693 | 0.680 | 0.000 | 0.000 | 0.000 | none | 0.000 |
+| nli-deberta-base | premise and statement | 0.534 | 0.666 | 0.693 | 0.686 | 0.117 | 0.019 | 0.048 | 0.860 | 0.117 |
+| nli-deberta-base | named conditional | 0.619 | 0.658 | 0.693 | 0.705 | 0.301 | 0.098 | 0.281 | 0.752 | 0.301 |
+| nli-deberta-base | PersonX conditional | 0.703 | 0.649 | 0.693 | 0.722 | 0.312 | 0.082 | 0.275 | 0.788 | 0.312 |
+| nli-deberta-large | premise and statement | 0.670 | 0.662 | 0.693 | 0.710 | 0.125 | 0.018 | 0.045 | 0.874 | 0.125 |
+| nli-deberta-large | named conditional | 0.624 | 0.650 | 0.693 | 0.736 | 0.317 | 0.086 | 0.272 | 0.784 | 0.317 |
+| nli-deberta-large | PersonX conditional | 0.698 | 0.642 | 0.693 | 0.752 | 0.321 | 0.073 | 0.268 | 0.812 | 0.321 |
+| nli-deberta-large-wanli | premise and statement | 0.772 | 0.649 | 0.693 | 0.738 | 0.213 | 0.049 | 0.096 | 0.811 | 0.213 |
+| nli-deberta-large-wanli | named conditional | 0.831 | 0.635 | 0.693 | 0.764 | 0.448 | 0.126 | 0.382 | 0.777 | 0.448 |
+| nli-deberta-large-wanli | PersonX conditional | 0.903 | 0.623 | 0.693 | 0.778 | 0.430 | 0.100 | 0.391 | 0.808 | 0.430 |
+| reranker-qwen3 | premise and statement | 0.757 | 0.663 | 0.693 | 0.669 | 0.004 | 0.000 | 0.002 | 0.889 | 0.004 |
+| reranker-qwen3 | named conditional | 0.806 | 0.679 | 0.693 | 0.602 | 0.000 | 0.000 | 0.000 | none | 0.000 |
+| reranker-qwen3 | PersonX conditional | 0.973 | 0.667 | 0.693 | 0.642 | 0.000 | 0.000 | 0.000 | none | 0.000 |
+<!-- END GENERATED: exception-trust -->
+
+Filling a name in for PersonX does not make a claim easier to read. For every judge that reads contradiction, the named conditional calibrates a little worse than the PersonX conditional the check trust was fitted on: log loss 0.658 against 0.649 for nli-deberta-base, 0.650 against 0.642 for nli-deberta-large, 0.635 against 0.623 for the WANLI judge and 0.679 against 0.667 for the reranker, with AUC lower by 0.014 to 0.040. Read with its premise, an update defeats its inference more precisely than as a conditional, at less than half the recall: precision 0.874 against 0.784 for nli-deberta-large and 0.860 against 0.752 for nli-deberta-base, and an update about the same person written for another premise defeats at 4.5% against 27.2% under nli-deberta-large. A defeat removes an answer, while a reading below the bar only weighs, so the check takes the form with the higher precision and weighs its readings at the trust fitted on it, 0.670 for nli-deberta-large. The WANLI judge gains least, 0.811 against 0.777, and still defeats 9.6% of the same person's other updates. The reranker almost never reads a contradiction, recall 0.004 with the premise and none as a conditional. The cosine judges score a conclusion and its negation alike, so their stances' belief and disbelief nearly cancel (medians 0.149 and 0.122 for cosine-bge), and nine in ten of their projections lie between 0.498 and 0.531, around the base rate 0.504. Discounting such readings moves them almost nowhere, so the fit's likelihood is highest at the top of its range and their trust sits at that bound, 1.0, with log loss 0.689 against the base rate's 0.693; their disbelief never reaches their threshold, so they never defeat.
+
+The gate the applications meet is not the one the check trust was calibrated in: there every statement and claim shared PersonX, while here the claim is written with letters and each statement names its own people. At the deployed spread over all 4,138 test updates it keeps 5.3% of an inference's own update, against 0.15% with PersonX, and 0.06% of the other updates each:
+
+<!-- BEGIN GENERATED: exception-gate -->
+Spread 3.75; a knowledge base of each size holds a claim's own update and others drawn with a fixed seed.
+
+| statements | own update kept | other statements kept, per statement |
+|---|---|---|
+| 8 | 0.094 | 0.583% |
+| 32 | 0.076 | 0.186% |
+| 128 | 0.056 | 0.077% |
+| 512 | 0.055 | 0.065% |
+| all | 0.053 | 0.060% |
+
+The kept others each judge reads as a defeat, by the knowledge base's statements:
+
+| judge | form | 8 | 32 | 128 | 512 | all |
+|---|---|---|---|---|---|---|
+| cosine-bge | premise and statement | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 |
+| cosine-bge | named conditional | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 |
+| cosine-qwen3 | premise and statement | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 |
+| cosine-qwen3 | named conditional | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 |
+| nli-deberta-base | premise and statement | 0.059 | 0.046 | 0.062 | 0.055 | 0.055 |
+| nli-deberta-base | named conditional | 0.189 | 0.201 | 0.187 | 0.174 | 0.168 |
+| nli-deberta-large | premise and statement | 0.036 | 0.021 | 0.052 | 0.034 | 0.032 |
+| nli-deberta-large | named conditional | 0.207 | 0.197 | 0.167 | 0.162 | 0.148 |
+| nli-deberta-large-wanli | premise and statement | 0.107 | 0.100 | 0.135 | 0.108 | 0.108 |
+| nli-deberta-large-wanli | named conditional | 0.355 | 0.347 | 0.286 | 0.284 | 0.275 |
+| reranker-qwen3 | premise and statement | 0.000 | 0.000 | 0.005 | 0.001 | 0.001 |
+| reranker-qwen3 | named conditional | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 |
+<!-- END GENERATED: exception-gate -->
+
+An application reads only the kept statements naming its own individuals, so h statements about them cost about h × 0.0006 kept others, and with the premise beside them nli-deberta-large defeats 3.2% of those, against 14.8% as a named conditional: about h × 1.9 × 10⁻⁵ spurious defeats an application, within the budget of one per hundred for any h up to 500.
 
 ### SNARS's ranking beside the rewriter's
 

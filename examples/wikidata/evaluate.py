@@ -6,12 +6,14 @@ nli-deberta-large ranks all 1,790 properties and the judge decides on the top K.
 question, then the rewrites each judge admitted into the question's own predicates and some of the answers each run
 got wrong; summary() puts the runs allowed one rewrite on a path in one table across the questions; beliefs() ranks
 each question's answers by the opinion each gets from its lineage, with Jev admitting at two rewrite thresholds and
-nli-deberta-large at its own, each run checking its rewrites against the knowledge base's statements as the rewriter
-always does (semrewrite.claims), the last also reading every statement rather than those naming no individual, and
-scores the ranking against Wikidata's answer.
+nli-deberta-large at its own, each run checking its rewrites and their applications against the knowledge base's
+statements as the rewriter always does (semrewrite.claims), the last also reading every statement against the rewrites'
+claims rather than those naming no individual, and so none against an application, and scores the ranking against
+Wikidata's answer, before the exceptions the statements about an application's individuals make and after, with every
+answer they changed, which exceptions() lists by the rewrite whose applications they carry.
 
 Run from the repository root: python examples/wikidata/evaluate.py [NAME ...]; with --beliefs first it
-prints the beliefs table and writes results/wikidata_beliefs.json, which RESULTS.md's table reads.
+prints the beliefs and exceptions tables and writes results/wikidata_beliefs.json, which RESULTS.md's tables read.
 
 Wikidata's own answer to each question is computed from the knowledge base's own statements, through the properties
 questions.py names and every property Wikidata files under them in its own subproperty hierarchy; the builder checked
@@ -41,16 +43,17 @@ sys.path[:0] = [str(ROOT), str(HERE)]
 from questions import QUESTIONS, Question, property_id
 
 from semrewrite import formats
-from semrewrite.claims import ClaimCheck
+from semrewrite.claims import ClaimCheck, default_reader
 from semrewrite.engines import make as make_engine
 from semrewrite.judges import default_data_trust
 from semrewrite.judges import default_threshold as make_threshold
 from semrewrite.judges import make as make_judge
 from semrewrite.judges.base import SentenceJudge
-from semrewrite.lineage import SETS
-from semrewrite.protocols import Budget
-from semrewrite.retrieve import EmbeddingRetriever, JudgeRetriever
-from semrewrite.rewriter import STRATEGIES, Rewriter
+from semrewrite.lineage import SETS, Leaf, Variable, leaf, lineages
+from semrewrite.model import Rewrite
+from semrewrite.protocols import Budget, Program
+from semrewrite.retrieve import JudgeRetriever
+from semrewrite.rewriter import STRATEGIES, Rewriter, answer_beliefs
 
 if TYPE_CHECKING:
     from semrewrite.discovery import Discoverer
@@ -74,28 +77,24 @@ STOPPED = {"work_limit": "the work budget stopped it", "time_limit": "the time b
 # threshold RESULTS.md calibrated for answer F1 and at a low one that admits more true rewrites with the false, leaving
 # the answer threshold to sort their answers; and nli-deberta-large, a model that runs locally, beside Jev's hosted one.
 BELIEF_RUNS = (("jev", 0.65), ("jev", 0.1), ("nli-deberta-large", None))
-# Every belief run checks its rewrites as the rewriter does, reading the statements that name no individual, of which
-# these knowledge bases state none. This run repeats nli-deberta-large's reading every statement instead, which shows
-# why the check does not. Its judge is the run's, asked about new sentence pairs, so it runs with the locally run
-# nli-deberta-large; Jev would need a TypeSafe key for every pair its cache lacks.
+# Every belief run checks its rewrites and their applications as the rewriter does: these knowledge bases state
+# nothing naming no individual, so no rewrite's claim reads a statement, and each fact is read against the
+# applications binding the individuals it names. This run repeats nli-deberta-large's reading every statement against
+# the rewrites' claims instead, which shows why the check does not. Its judge is the run's, asked about new sentence
+# pairs, so it runs with the locally run nli-deberta-large; Jev would need a TypeSafe key for every pair its cache
+# lacks.
 CHECK_RUNS = (("nli-deberta-large", None, "every"),)
 
 
 @cache
 def _tools() -> tuple[Engine, JudgeRetriever]:
     """One engine and one cascade retriever a process: every run shares the retriever, whose cache scores each
-    candidate once across runs and questions, and the retriever releases its model when the process ends."""
-    retriever = JudgeRetriever(make_judge("nli-deberta-large"))
+    candidate once across runs and questions, and the retriever releases its model when the process ends. Its
+    nli-deberta-large is the claim check's default reader, so a run whose judge carries no exception trust reads with
+    the model the cascade holds rather than a second copy of it on the GPU."""
+    retriever = JudgeRetriever(default_reader())
     atexit.register(retriever.close)
     return make_engine("pymetta"), retriever
-
-
-@cache
-def _embedder() -> EmbeddingRetriever:
-    """The embedding model the claim check chooses statements with, one a process, released when the process ends."""
-    embedder = EmbeddingRetriever()
-    atexit.register(embedder.close)
-    return embedder
 
 
 @cache
@@ -232,19 +231,20 @@ def _believed(name: str, judge_name: str, threshold: float | None, check: str = 
               ) -> tuple[Outcome, dict | None]:
     """The question answered with `judge_name` admitting at `threshold`, its calibrated default when None, one rewrite
     on a path, each answer with its opinion as `semrewrite ask --beliefs` gives it: from the judge's opinions fused
-    with the knowledge base's evidence at the judge's calibrated data trust and with the statements the judge reads
-    against each rewrite's claim, as the rewriter checks every rewrite: "general" reads the statements that name no
-    individual, as the rewriter does, and "every" reads every statement. With the check comes its cost: the claims it
-    read, the judge pairs it asked, the statements it embedded, the rewrites it moved and withdrew, and its seconds;
-    None for a judge that reads no sentences, which has no check here."""
+    with the knowledge base's evidence at the judge's calibrated data trust and with the statements read against each
+    rewrite's claim and each application, as the rewriter checks them: "general" is the rewriter's own check, which
+    reads the statements that name no individual against the claims and those naming one against the applications
+    binding it, and "every" reads every statement against the claims. With the check comes its cost: the claims it
+    read, the judge pairs it asked, the statements it embedded, the rewrites it moved and withdrew, the applications
+    it read and defeated, the readers it substituted, and its seconds, with the ranking before the exceptions and
+    every answer they changed (_excepted); None for a judge that reads no sentences, which has no check here."""
     _, kb, _, _ = _question(name)
     engine, retriever = _tools()
     judge = make_judge(judge_name) if threshold is None else make_judge(judge_name, threshold=threshold)
     if check == "every" and not isinstance(judge, SentenceJudge):
         msg = f"judge {judge_name} does not read sentences, so it cannot check claims"
         raise TypeError(msg)
-    claims = ClaimCheck(kb, judge, _embedder(), with_arguments=True) if check == "every" and isinstance(
-        judge, SentenceJudge) else None
+    claims = ClaimCheck(kb, judge, with_arguments=True) if check == "every" and isinstance(judge, SentenceJudge) else None
     rewriter = Rewriter(kb, judge, engine, retriever, k=K, budget=Budget(work=WORK, seconds=math.inf), beliefs=SETS,
                         data_trust=default_data_trust(judge_name), claims=claims)
     out = rewriter.ask(kb.queries[0], replace(STRATEGY, depth=1), rewriter.discoverer())
@@ -252,18 +252,59 @@ def _believed(name: str, judge_name: str, threshold: float | None, check: str = 
     if rewriter.claims is None:
         return out, None
     weighed = sum(any(r.opinion.belief or r.opinion.disbelief for r in rs) for rs in (out.readings or {}).values())
+    read = out.applications or {}
     return out, {**rewriter.claims.usage, "seconds": rewriter.claims.seconds, "rewrites_weighed": weighed,
-                 "withdrawn": len(out.defeated), "reads": check}
+                 "withdrawn": len(out.defeated), "reads": check,
+                 "applications_read": len(read), "applications_defeated": sum(a.defeated for a in read.values()),
+                 "readers": {kind: list(by) for kind, by in sorted(rewriter.claims.substituted.items())},
+                 **_excepted(name, rewriter, out)}
 
 
-def ranking(question: Question, truth: set[str], out: Outcome) -> dict[str, float | None]:
-    """How well a run's answers ranked by projected probability sort Wikidata's answer from the rest: average
-    precision against Wikidata's answer, the best F1 over answer thresholds with the threshold reaching it, the F1 of
-    every answer, and the lowest projection inside Wikidata's answer and highest outside it."""
-    if not out.finished or out.beliefs is None:
-        msg = f"{question.name}: {out.status} {out.detail}"
-        raise RuntimeError(msg)
-    scored = {question.answers_of([row]).pop(): o.projection for row, o in out.beliefs.items()}
+# Time: two lineages of the query over the admitted rewrites, one without leaves and one with them, each defeated
+# leaf kept at a vanishing weight so the derivations it carries stay visible.
+def _excepted(name: str, rewriter: Rewriter, out: Outcome) -> dict[str, object]:
+    """What the exceptions did to a belief run: how its answers ranked before them, each answer's opinion computed
+    without the leaves as the release before them computed it, and every answer whose opinion they changed or which
+    they left no derivation for, with the applications its derivations carry, by their place in `carried`, which lists
+    each of them once with the statements read against it. The belief runs' changed answers mention 1,143
+    applications 11,532 times, so listing an application under each answer would repeat its readings tenfold."""
+    question, kb, truth, _ = _question(name)
+    rewrites, opinion = rewriter.rewrite_opinions(out.admitted)
+    program = Program(facts=kb.facts, rules=kb.rules, rewrites=rewrites)
+    mean: dict[Variable, float] = {key: o.projection for key, o in opinion.items()}
+    plain = lineages(program, kb.queries[0], mean, SETS, WORK)
+    before = answer_beliefs(plain, out.answers | out.fallen, dict(opinion))
+    read = out.applications or {}
+    weights = {leaf(key, row): max(a.normal.projection, 1e-9) for (key, row), a in read.items()
+               if a.normal.projection < 1.0}
+    shown = lineages(program, kb.queries[0], {**mean, **weights}, SETS, WORK)
+    after = out.beliefs or {}
+    changed: list[dict[str, object]] = []
+    # Each carried application's place in `carried`, in the order the changed answers first carry them.
+    place: dict[Leaf, int] = {}
+    for row in sorted(out.answers | out.fallen):
+        if after.get(row) == before[row]:
+            continue
+        carried = sorted({v for s in shown.answers.get(row, frozenset()) for v in s if len(v) == 4})
+        changed.append({"answer": list(row), "before": before[row].projection,
+                        "after": after[row].projection if row in after else None,
+                        "applications": [place.setdefault(v, len(place)) for v in carried]})
+    carried_once = [{"rewrite": [v[0], v[1], list(v[2])], "row": list(v[3]),
+                     "defeated": read[((v[0], v[1], v[2]), v[3])].defeated,
+                     "normal": read[((v[0], v[1], v[2]), v[3])].normal.projection,
+                     "statements": [{"statement": r.statement, "belief": r.stance.belief,
+                                     "disbelief": r.stance.disbelief}
+                                    for r in read[((v[0], v[1], v[2]), v[3])].readings]}
+                    for v in sorted(place, key=place.__getitem__)]
+    return {"before": ranking(question, truth, {row: o.projection for row, o in before.items()}),
+            "carried": carried_once, "changed": changed, "fallen": [list(row) for row in sorted(out.fallen)]}
+
+
+def ranking(question: Question, truth: set[str], projected: dict[tuple[str, ...], float]) -> dict[str, float | None]:
+    """How well answers ranked by their projected probabilities, `projected`, sort Wikidata's answer from the rest:
+    average precision against Wikidata's answer, the best F1 over answer thresholds with the threshold reaching it,
+    the F1 of every answer, and the lowest projection inside Wikidata's answer and highest outside it."""
+    scored = {question.answers_of([row]).pop(): p for row, p in projected.items()}
     ranked = sorted(scored.items(), key=lambda es: (-es[1], es[0]))
     hits, precision_sum, best = 0, 0.0, (0.0, None)
     for k, (entity, p) in enumerate(ranked, start=1):
@@ -291,11 +332,15 @@ def belief_rows(names: list[str]) -> list[dict[str, object]]:
         runs = [(judge, chosen, "general") for judge, chosen in BELIEF_RUNS] + list(CHECK_RUNS)
         for judge_name, chosen, check in runs:
             out, cost = _believed(name, judge_name, chosen, check)
+            if not out.finished or out.beliefs is None:
+                msg = f"{name}: {out.status} {out.detail}"
+                raise RuntimeError(msg)
             got = question.answers_of(out.answers)
             threshold = make_threshold(judge_name) if chosen is None else chosen
+            projected = {r: o.projection for r, o in out.beliefs.items()}
             rows.append({"question": name, "judge": judge_name, "threshold": threshold, "check": cost,
                          "answers": len(got), "outside": len(got - truth), "truth": len(truth),
-                         "rewrites": len(out.admitted), "ranking": ranking(question, truth, out)})
+                         "rewrites": len(out.admitted), "ranking": ranking(question, truth, projected)})
     return rows
 
 
@@ -308,21 +353,65 @@ def beliefs(rows: list[dict[str, object]]) -> str:
         if not isinstance(cost, dict):
             return "none: the judge reads no sentences"
         read = {"general": "statements naming no individual", "every": "every statement"}[str(cost["reads"])]
+        changed = cost.get("changed", [])
+        assert isinstance(changed, list)
         return (f"{read}: {cost['rewrites_weighed']} of {cost['claims']} rewrites moved, {cost['withdrawn']} "
-                f"withdrawn; {cost['pairs']:,} judge pairs, {cost['seconds']:.1f} s")
+                f"withdrawn; {cost['applications_read']:,} applications read, {cost['applications_defeated']:,} "
+                f"defeated, {len(changed):,} answers changed; {cost['pairs']:,} judge pairs, {cost['seconds']:.1f} s")
+
+    def before(cost: object) -> str:
+        if not isinstance(cost, dict):
+            return "none"
+        m = cost["before"]
+        assert isinstance(m, dict)
+        return number(m["ap"])
 
     head = ["question", "judge", "rewrite threshold", "claim check", "answers", "not in Wikidata's",
-            "F1 of all answers", "average precision by P", "best F1 by P (at P)", "lowest P inside",
-            "highest P outside"]
+            "F1 of all answers", "average precision by P", "before the exceptions", "best F1 by P (at P)",
+            "lowest P inside", "highest P outside"]
     lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     for r in rows:
         m = r["ranking"]
         assert isinstance(m, dict)
         lines.append("| " + " | ".join([
             str(r["question"]), str(r["judge"]), f"{r['threshold']:.3g}", checked(r.get("check")), f"{r['answers']:,}",
-            f"{r['outside']:,}", number(m["f1"]), number(m["ap"]), f"{number(m['best_f1'])} ({number(m['at'])})",
-            number(m["lowest_inside"]), number(m["highest_outside"])])
+            f"{r['outside']:,}", number(m["f1"]), number(m["ap"]), before(r.get("check")),
+            f"{number(m['best_f1'])} ({number(m['at'])})", number(m["lowest_inside"]), number(m["highest_outside"])])
             + " |")
+    return "\n".join(lines)
+
+
+def exceptions(rows: list[dict[str, object]]) -> str:
+    """Every answer the exceptions changed in belief_rows' runs, by the rewrite whose applications its derivations
+    carry, as one markdown table: those applications and how many were defeated, the statements read against them,
+    the lowest belief and the highest disbelief among the readings, the highest probability that one of them is an
+    exception, and the answers changed with the largest fall in P. An answer carrying applications of two rewrites
+    counts under each, and a run that changed no answer has no row; results/wikidata_beliefs.json lists every changed
+    answer with its applications and their readings."""
+    head = ["question", "judge", "rewrite threshold", "rewrite", "applications", "defeated", "statements read",
+            "lowest belief", "highest disbelief", "highest P of an exception", "answers changed", "largest fall in P"]
+    lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+    for r in rows:
+        check = r.get("check")
+        if not isinstance(check, dict):
+            continue
+        carried: dict[tuple[str, str, tuple[int, ...]], list[tuple[dict, dict]]] = {}
+        for answer in check["changed"]:
+            for place in answer["applications"]:
+                application = check["carried"][place]
+                premise, conclusion, mapping = application["rewrite"]
+                carried.setdefault((premise, conclusion, tuple(mapping)), []).append((answer, application))
+        for (premise, conclusion, mapping), pairs in carried.items():
+            applications = {tuple(application["row"]): application for _, application in pairs}
+            readings = [s for application in applications.values() for s in application["statements"]]
+            answers = {tuple(answer["answer"]): answer for answer, _ in pairs}
+            lines.append("| " + " | ".join([
+                str(r["question"]), str(r["judge"]), f"{r['threshold']:.3g}", str(Rewrite(conclusion, premise, mapping)),
+                f"{len(applications):,}", f"{sum(a['defeated'] for a in applications.values()):,}",
+                f"{len({s['statement'] for s in readings}):,}", f"{min(s['belief'] for s in readings):.3g}",
+                f"{max(s['disbelief'] for s in readings):.3g}",
+                f"{max(1 - a['normal'] for a in applications.values()):.3g}", f"{len(answers):,}",
+                f"{max(a['before'] - (a['after'] or 0.0) for a in answers.values()):.3g}"]) + " |")
     return "\n".join(lines)
 
 
@@ -356,5 +445,7 @@ if __name__ == "__main__":
         measured = belief_rows(sys.argv[2:])
         BELIEFS_JSON.write_text(json.dumps(measured, indent=1) + "\n")
         print(beliefs(measured))
+        print()
+        print(exceptions(measured))
     else:
         print(report(sys.argv[1:]))

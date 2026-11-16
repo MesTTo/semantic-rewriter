@@ -1,0 +1,2339 @@
+{
+ "set": "delta-atomic",
+ "base_rate": 0.5044270833333333,
+ "people": {
+  "names": [
+   "kim",
+   "sam",
+   "lee",
+   "ana",
+   "joe",
+   "max",
+   "eve",
+   "raj",
+   "amy",
+   "tom",
+   "liz",
+   "ben",
+   "mia",
+   "dan",
+   "zoe",
+   "ian"
+  ],
+  "seed": 20261116
+ },
+ "rule": "PersonX and PersonY named per item; the taken form reads the update with the premise against the inference, the rejected named conditional reads it against If premise, inference.; a strengthener's inference holds, a weakener's does not; each form's trust maximises the dev labels' likelihood under each stance's projection at the set's base rate after discounting by it; a stance whose disbelief reaches the judge's threshold defeats; the gate writes claims with letters and statements with names, at the deployed spread",
+ "spread": 3.75,
+ "others": {
+  "rows": 2000,
+  "seed": 20261116
+ },
+ "judges": {
+  "cosine-bge": {
+   "trust": 0.001540569060717999,
+   "check_trust": 1.0,
+   "threshold": 0.957196980714798,
+   "reads_contradiction": false,
+   "forms": {
+    "premise and statement": {
+     "trust": 1.0,
+     "dev": {
+      "rows": 3840,
+      "at_trust": {
+       "rows": 3840,
+       "log_loss": 0.6890943880951732,
+       "brier": 0.24797643440757358
+      },
+      "at_base_rate": {
+       "rows": 3840,
+       "log_loss": 0.6931079819140841,
+       "brier": 0.24998040093315974
+      },
+      "auc": 0.6307543370234917,
+      "defeat": {
+       "weakener": 0.0,
+       "strengthener": 0.0
+      },
+      "precision": null,
+      "recall": 0.0
+     },
+     "test": {
+      "rows": 4138,
+      "at_trust": {
+       "rows": 4138,
+       "log_loss": 0.6889822639921632,
+       "brier": 0.2479206241165526
+      },
+      "at_base_rate": {
+       "rows": 4138,
+       "log_loss": 0.6930922300333804,
+       "brier": 0.24997252519862698
+      },
+      "auc": 0.6364477112112137,
+      "defeat": {
+       "weakener": 0.0,
+       "strengthener": 0.0,
+       "other_same_person": 0.0
+      },
+      "precision": null,
+      "recall": 0.0
+     }
+    },
+    "named conditional": {
+     "trust": 1.0,
+     "dev": {
+      "rows": 3840,
+      "at_trust": {
+       "rows": 3840,
+       "log_loss": 0.689416372548626,
+       "brier": 0.24813597506147766
+      },
+      "at_base_rate": {
+       "rows": 3840,
+       "log_loss": 0.6931079819140841,
+       "brier": 0.24998040093315974
+      },
+      "auc": 0.6325672232876329,
+      "defeat": {
+       "weakener": 0.0,
+       "strengthener": 0.0
+      },
+      "precision": null,
+      "recall": 0.0
+     },
+     "test": {
+      "rows": 4138,
+      "at_trust": {
+       "rows": 4138,
+       "log_loss": 0.6890719388820223,
+       "brier": 0.2479640316150821
+      },
+      "at_base_rate": {
+       "rows": 4138,
+       "log_loss": 0.6930922300333804,
+       "brier": 0.24997252519862698
+      },
+      "auc": 0.6488799673479076,
+      "defeat": {
+       "weakener": 0.0,
+       "strengthener": 0.0,
+       "other_same_person": 0.0
+      },
+      "precision": null,
+      "recall": 0.0
+     }
+    }
+   },
+   "gate": {
+    "dev": {
+     "claims": 3840,
+     "statements": 3840,
+     "embedding_seconds": 22.0,
+     "premise and statement": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.04401041666666667,
+        "strengthener": 0.06041666666666667
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.04375,
+       "others_kept_per_statement": 0.00625,
+       "kept_other_defeat_rate": 0.0
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.03177083333333333,
+        "strengthener": 0.047135416666666666
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.05807291666666667,
+       "others_kept_per_statement": 0.0018733198924731182,
+       "kept_other_defeat_rate": 0.0
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04583333333333333
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.12161458333333333,
+       "others_kept_per_statement": 0.0009575951443569554,
+       "kept_other_defeat_rate": 0.0
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.026041666666666668,
+        "strengthener": 0.0421875
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.38958333333333334,
+       "others_kept_per_statement": 0.0007623939986953686,
+       "kept_other_defeat_rate": 0.0
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04401041666666667
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 2.8080729166666667,
+       "others_kept_per_statement": 0.0007324548765545562,
+       "kept_other_defeat_rate": 0.0
+      }
+     },
+     "named conditional": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.04401041666666667,
+        "strengthener": 0.06041666666666667
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.04375,
+       "others_kept_per_statement": 0.00625,
+       "kept_other_defeat_rate": 0.0
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.03177083333333333,
+        "strengthener": 0.047135416666666666
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.05807291666666667,
+       "others_kept_per_statement": 0.0018733198924731182,
+       "kept_other_defeat_rate": 0.0
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04583333333333333
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.12161458333333333,
+       "others_kept_per_statement": 0.0009575951443569554,
+       "kept_other_defeat_rate": 0.0
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.026041666666666668,
+        "strengthener": 0.0421875
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.38958333333333334,
+       "others_kept_per_statement": 0.0007623939986953686,
+       "kept_other_defeat_rate": 0.0
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04401041666666667
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 2.8080729166666667,
+       "others_kept_per_statement": 0.0007324548765545562,
+       "kept_other_defeat_rate": 0.0
+      }
+     }
+    },
+    "test": {
+     "claims": 4138,
+     "statements": 4138,
+     "embedding_seconds": 34.6,
+     "premise and statement": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.035766070565490575,
+        "strengthener": 0.05872402126631223
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.04084098598356694,
+       "others_kept_per_statement": 0.005834426569080992,
+       "kept_other_defeat_rate": 0.0
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.029241179313678107,
+        "strengthener": 0.04688255195746738
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.05775737071048816,
+       "others_kept_per_statement": 0.0018631409906609082,
+       "kept_other_defeat_rate": 0.0
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02150797486708555,
+        "strengthener": 0.03455775737071049
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.09811503141614307,
+       "others_kept_per_statement": 0.0007725593024893154,
+       "kept_other_defeat_rate": 0.0
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.02126631222812953,
+        "strengthener": 0.03359110681488642
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.32986950217496375,
+       "others_kept_per_statement": 0.0006455371862523752,
+       "kept_other_defeat_rate": 0.0
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.021024649589173515,
+        "strengthener": 0.03165780570323828
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 2.4639922667955534,
+       "others_kept_per_statement": 0.0005963590048455046,
+       "kept_other_defeat_rate": 0.0
+      }
+     },
+     "named conditional": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.035766070565490575,
+        "strengthener": 0.05872402126631223
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.04084098598356694,
+       "others_kept_per_statement": 0.005834426569080992,
+       "kept_other_defeat_rate": 0.0
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.029241179313678107,
+        "strengthener": 0.04688255195746738
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.05775737071048816,
+       "others_kept_per_statement": 0.0018631409906609082,
+       "kept_other_defeat_rate": 0.0
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02150797486708555,
+        "strengthener": 0.03455775737071049
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.09811503141614307,
+       "others_kept_per_statement": 0.0007725593024893154,
+       "kept_other_defeat_rate": 0.0
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.02126631222812953,
+        "strengthener": 0.03359110681488642
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.32986950217496375,
+       "others_kept_per_statement": 0.0006455371862523752,
+       "kept_other_defeat_rate": 0.0
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.021024649589173515,
+        "strengthener": 0.03165780570323828
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 2.4639922667955534,
+       "others_kept_per_statement": 0.0005963590048455046,
+       "kept_other_defeat_rate": 0.0
+      }
+     }
+    }
+   },
+   "seconds": 117.9,
+   "exception_trust": 1.0,
+   "provenance": {
+    "at": "2026-11-16T21:54:14+1100",
+    "command": "python experiments/exception_trust.py --judges nli-deberta-base,nli-deberta-large-wanli,reranker-qwen3,cosine-bge,cosine-qwen3 --stances STANCES/pa",
+    "commit": "08996dd668b8c402b5823c657388a8212046b0d9",
+    "inputs_uncommitted": []
+   }
+  },
+  "cosine-qwen3": {
+   "trust": 0.0005621496889577945,
+   "check_trust": 1.0,
+   "threshold": 0.9751224517822266,
+   "reads_contradiction": false,
+   "forms": {
+    "premise and statement": {
+     "trust": 1.0,
+     "dev": {
+      "rows": 3840,
+      "at_trust": {
+       "rows": 3840,
+       "log_loss": 0.6893728691003561,
+       "brier": 0.24811393306908913
+      },
+      "at_base_rate": {
+       "rows": 3840,
+       "log_loss": 0.6931079819140841,
+       "brier": 0.24998040093315974
+      },
+      "auc": 0.6453758446232357,
+      "defeat": {
+       "weakener": 0.0,
+       "strengthener": 0.0
+      },
+      "precision": null,
+      "recall": 0.0
+     },
+     "test": {
+      "rows": 4138,
+      "at_trust": {
+       "rows": 4138,
+       "log_loss": 0.6889220637526594,
+       "brier": 0.24788862270805553
+      },
+      "at_base_rate": {
+       "rows": 4138,
+       "log_loss": 0.6930922300333804,
+       "brier": 0.24997252519862698
+      },
+      "auc": 0.6642049101027807,
+      "defeat": {
+       "weakener": 0.0,
+       "strengthener": 0.0,
+       "other_same_person": 0.0
+      },
+      "precision": null,
+      "recall": 0.0
+     }
+    },
+    "named conditional": {
+     "trust": 1.0,
+     "dev": {
+      "rows": 3840,
+      "at_trust": {
+       "rows": 3840,
+       "log_loss": 0.6896611980546621,
+       "brier": 0.24825773382240804
+      },
+      "at_base_rate": {
+       "rows": 3840,
+       "log_loss": 0.6931079819140841,
+       "brier": 0.24998040093315974
+      },
+      "auc": 0.6643587238691401,
+      "defeat": {
+       "weakener": 0.0,
+       "strengthener": 0.0
+      },
+      "precision": null,
+      "recall": 0.0
+     },
+     "test": {
+      "rows": 4138,
+      "at_trust": {
+       "rows": 4138,
+       "log_loss": 0.6895569412694953,
+       "brier": 0.2482055644379566
+      },
+      "at_base_rate": {
+       "rows": 4138,
+       "log_loss": 0.6930922300333804,
+       "brier": 0.24997252519862698
+      },
+      "auc": 0.663247261801047,
+      "defeat": {
+       "weakener": 0.0,
+       "strengthener": 0.0,
+       "other_same_person": 0.0
+      },
+      "precision": null,
+      "recall": 0.0
+     }
+    }
+   },
+   "gate": {
+    "dev": {
+     "claims": 3840,
+     "statements": 3840,
+     "embedding_seconds": 17.9,
+     "premise and statement": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.04401041666666667,
+        "strengthener": 0.06041666666666667
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.04375,
+       "others_kept_per_statement": 0.00625,
+       "kept_other_defeat_rate": 0.0
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.03177083333333333,
+        "strengthener": 0.047135416666666666
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.05807291666666667,
+       "others_kept_per_statement": 0.0018733198924731182,
+       "kept_other_defeat_rate": 0.0
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04583333333333333
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.12161458333333333,
+       "others_kept_per_statement": 0.0009575951443569554,
+       "kept_other_defeat_rate": 0.0
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.026041666666666668,
+        "strengthener": 0.0421875
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.38958333333333334,
+       "others_kept_per_statement": 0.0007623939986953686,
+       "kept_other_defeat_rate": 0.0
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04401041666666667
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 2.8080729166666667,
+       "others_kept_per_statement": 0.0007324548765545562,
+       "kept_other_defeat_rate": 0.0
+      }
+     },
+     "named conditional": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.04401041666666667,
+        "strengthener": 0.06041666666666667
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.04375,
+       "others_kept_per_statement": 0.00625,
+       "kept_other_defeat_rate": 0.0
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.03177083333333333,
+        "strengthener": 0.047135416666666666
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.05807291666666667,
+       "others_kept_per_statement": 0.0018733198924731182,
+       "kept_other_defeat_rate": 0.0
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04583333333333333
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.12161458333333333,
+       "others_kept_per_statement": 0.0009575951443569554,
+       "kept_other_defeat_rate": 0.0
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.026041666666666668,
+        "strengthener": 0.0421875
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.38958333333333334,
+       "others_kept_per_statement": 0.0007623939986953686,
+       "kept_other_defeat_rate": 0.0
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04401041666666667
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 2.8080729166666667,
+       "others_kept_per_statement": 0.0007324548765545562,
+       "kept_other_defeat_rate": 0.0
+      }
+     }
+    },
+    "test": {
+     "claims": 4138,
+     "statements": 4138,
+     "embedding_seconds": 20.0,
+     "premise and statement": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.035766070565490575,
+        "strengthener": 0.05872402126631223
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.04084098598356694,
+       "others_kept_per_statement": 0.005834426569080992,
+       "kept_other_defeat_rate": 0.0
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.029241179313678107,
+        "strengthener": 0.04688255195746738
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.05775737071048816,
+       "others_kept_per_statement": 0.0018631409906609082,
+       "kept_other_defeat_rate": 0.0
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02150797486708555,
+        "strengthener": 0.03455775737071049
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.09811503141614307,
+       "others_kept_per_statement": 0.0007725593024893154,
+       "kept_other_defeat_rate": 0.0
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.02126631222812953,
+        "strengthener": 0.03359110681488642
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.32986950217496375,
+       "others_kept_per_statement": 0.0006455371862523752,
+       "kept_other_defeat_rate": 0.0
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.021024649589173515,
+        "strengthener": 0.03165780570323828
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 2.4639922667955534,
+       "others_kept_per_statement": 0.0005963590048455046,
+       "kept_other_defeat_rate": 0.0
+      }
+     },
+     "named conditional": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.035766070565490575,
+        "strengthener": 0.05872402126631223
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.04084098598356694,
+       "others_kept_per_statement": 0.005834426569080992,
+       "kept_other_defeat_rate": 0.0
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.029241179313678107,
+        "strengthener": 0.04688255195746738
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.05775737071048816,
+       "others_kept_per_statement": 0.0018631409906609082,
+       "kept_other_defeat_rate": 0.0
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02150797486708555,
+        "strengthener": 0.03455775737071049
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.09811503141614307,
+       "others_kept_per_statement": 0.0007725593024893154,
+       "kept_other_defeat_rate": 0.0
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.02126631222812953,
+        "strengthener": 0.03359110681488642
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.32986950217496375,
+       "others_kept_per_statement": 0.0006455371862523752,
+       "kept_other_defeat_rate": 0.0
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.021024649589173515,
+        "strengthener": 0.03165780570323828
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 2.4639922667955534,
+       "others_kept_per_statement": 0.0005963590048455046,
+       "kept_other_defeat_rate": 0.0
+      }
+     }
+    }
+   },
+   "seconds": 254.2,
+   "exception_trust": 1.0,
+   "provenance": {
+    "at": "2026-11-16T21:54:14+1100",
+    "command": "python experiments/exception_trust.py --judges nli-deberta-base,nli-deberta-large-wanli,reranker-qwen3,cosine-bge,cosine-qwen3 --stances STANCES/pa",
+    "commit": "08996dd668b8c402b5823c657388a8212046b0d9",
+    "inputs_uncommitted": []
+   }
+  },
+  "nli-deberta-base": {
+   "trust": 0.3114297961631095,
+   "check_trust": 0.702552660960317,
+   "threshold": 0.2221469032721426,
+   "reads_contradiction": true,
+   "forms": {
+    "premise and statement": {
+     "trust": 0.5343546836963156,
+     "dev": {
+      "rows": 3840,
+      "at_trust": {
+       "rows": 3840,
+       "log_loss": 0.6732363007485643,
+       "brier": 0.24038448625808892
+      },
+      "at_base_rate": {
+       "rows": 3840,
+       "log_loss": 0.6931079819140841,
+       "brier": 0.24998040093315974
+      },
+      "auc": 0.6658649183380533,
+      "defeat": {
+       "weakener": 0.11140304781923278,
+       "strengthener": 0.02839442436757873
+      },
+      "precision": 0.7940074906367042,
+      "recall": 0.11140304781923278
+     },
+     "test": {
+      "rows": 4138,
+      "at_trust": {
+       "rows": 4138,
+       "log_loss": 0.6658512738784406,
+       "brier": 0.23699752378841676
+      },
+      "at_base_rate": {
+       "rows": 4138,
+       "log_loss": 0.6930922300333804,
+       "brier": 0.24997252519862698
+      },
+      "auc": 0.6864672543389131,
+      "defeat": {
+       "weakener": 0.1167562286272594,
+       "strengthener": 0.018651362984218076,
+       "other_same_person": 0.0475
+      },
+      "precision": 0.8597122302158273,
+      "recall": 0.1167562286272594
+     }
+    },
+    "named conditional": {
+     "trust": 0.6191136171933787,
+     "dev": {
+      "rows": 3840,
+      "at_trust": {
+       "rows": 3840,
+       "log_loss": 0.6589605455974314,
+       "brier": 0.23390920191880524
+      },
+      "at_base_rate": {
+       "rows": 3840,
+       "log_loss": 0.6931079819140841,
+       "brier": 0.24998040093315974
+      },
+      "auc": 0.7058894862363071,
+      "defeat": {
+       "weakener": 0.29847609038360484,
+       "strengthener": 0.09808982963345379
+      },
+      "precision": 0.7493403693931399,
+      "recall": 0.29847609038360484
+     },
+     "test": {
+      "rows": 4138,
+      "at_trust": {
+       "rows": 4138,
+       "log_loss": 0.6584525405288508,
+       "brier": 0.2336428730611324
+      },
+      "at_base_rate": {
+       "rows": 4138,
+       "log_loss": 0.6930922300333804,
+       "brier": 0.24997252519862698
+      },
+      "auc": 0.7049485348728599,
+      "defeat": {
+       "weakener": 0.3014167073766488,
+       "strengthener": 0.0975609756097561,
+       "other_same_person": 0.2815
+      },
+      "precision": 0.7515225334957369,
+      "recall": 0.3014167073766488
+     }
+    }
+   },
+   "gate": {
+    "dev": {
+     "claims": 3840,
+     "statements": 3840,
+     "embedding_seconds": 21.3,
+     "premise and statement": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.04401041666666667,
+        "strengthener": 0.06041666666666667
+       },
+       "own_defeats": {
+        "weakener": 0.0033854166666666668,
+        "strengthener": 0.0010416666666666667
+       },
+       "others_kept_per_claim": 0.04375,
+       "others_kept_per_statement": 0.00625,
+       "kept_other_defeat_rate": 0.041666666666666664
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.03177083333333333,
+        "strengthener": 0.047135416666666666
+       },
+       "own_defeats": {
+        "weakener": 0.00234375,
+        "strengthener": 0.0018229166666666667
+       },
+       "others_kept_per_claim": 0.05807291666666667,
+       "others_kept_per_statement": 0.0018733198924731182,
+       "kept_other_defeat_rate": 0.026905829596412557
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04583333333333333
+       },
+       "own_defeats": {
+        "weakener": 0.002864583333333333,
+        "strengthener": 0.0020833333333333333
+       },
+       "others_kept_per_claim": 0.12161458333333333,
+       "others_kept_per_statement": 0.0009575951443569554,
+       "kept_other_defeat_rate": 0.06423982869379015
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.026041666666666668,
+        "strengthener": 0.0421875
+       },
+       "own_defeats": {
+        "weakener": 0.0026041666666666665,
+        "strengthener": 0.0020833333333333333
+       },
+       "others_kept_per_claim": 0.38958333333333334,
+       "others_kept_per_statement": 0.0007623939986953686,
+       "kept_other_defeat_rate": 0.05481283422459893
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04401041666666667
+       },
+       "own_defeats": {
+        "weakener": 0.0026041666666666665,
+        "strengthener": 0.0020833333333333333
+       },
+       "others_kept_per_claim": 2.8080729166666667,
+       "others_kept_per_statement": 0.0007324548765545562,
+       "kept_other_defeat_rate": 0.058147083371974405
+      }
+     },
+     "named conditional": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.04401041666666667,
+        "strengthener": 0.06041666666666667
+       },
+       "own_defeats": {
+        "weakener": 0.012239583333333333,
+        "strengthener": 0.003125
+       },
+       "others_kept_per_claim": 0.04375,
+       "others_kept_per_statement": 0.00625,
+       "kept_other_defeat_rate": 0.21428571428571427
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.03177083333333333,
+        "strengthener": 0.047135416666666666
+       },
+       "own_defeats": {
+        "weakener": 0.008333333333333333,
+        "strengthener": 0.0026041666666666665
+       },
+       "others_kept_per_claim": 0.05807291666666667,
+       "others_kept_per_statement": 0.0018733198924731182,
+       "kept_other_defeat_rate": 0.18834080717488788
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04583333333333333
+       },
+       "own_defeats": {
+        "weakener": 0.0078125,
+        "strengthener": 0.003125
+       },
+       "others_kept_per_claim": 0.12161458333333333,
+       "others_kept_per_statement": 0.0009575951443569554,
+       "kept_other_defeat_rate": 0.15631691648822268
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.026041666666666668,
+        "strengthener": 0.0421875
+       },
+       "own_defeats": {
+        "weakener": 0.007552083333333333,
+        "strengthener": 0.003125
+       },
+       "others_kept_per_claim": 0.38958333333333334,
+       "others_kept_per_statement": 0.0007623939986953686,
+       "kept_other_defeat_rate": 0.142379679144385
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04401041666666667
+       },
+       "own_defeats": {
+        "weakener": 0.0078125,
+        "strengthener": 0.00234375
+       },
+       "others_kept_per_claim": 2.8080729166666667,
+       "others_kept_per_statement": 0.0007324548765545562,
+       "kept_other_defeat_rate": 0.155893536121673
+      }
+     }
+    },
+    "test": {
+     "claims": 4138,
+     "statements": 4138,
+     "embedding_seconds": 33.3,
+     "premise and statement": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.035766070565490575,
+        "strengthener": 0.05872402126631223
+       },
+       "own_defeats": {
+        "weakener": 0.00459159014016433,
+        "strengthener": 0.0004833252779120348
+       },
+       "others_kept_per_claim": 0.04084098598356694,
+       "others_kept_per_statement": 0.005834426569080992,
+       "kept_other_defeat_rate": 0.05917159763313609
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.029241179313678107,
+        "strengthener": 0.04688255195746738
+       },
+       "own_defeats": {
+        "weakener": 0.003624939584340261,
+        "strengthener": 0.0007249879168680521
+       },
+       "others_kept_per_claim": 0.05775737071048816,
+       "others_kept_per_statement": 0.0018631409906609082,
+       "kept_other_defeat_rate": 0.04602510460251046
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02150797486708555,
+        "strengthener": 0.03455775737071049
+       },
+       "own_defeats": {
+        "weakener": 0.0033832769453842437,
+        "strengthener": 0.0004833252779120348
+       },
+       "others_kept_per_claim": 0.09811503141614307,
+       "others_kept_per_statement": 0.0007725593024893154,
+       "kept_other_defeat_rate": 0.06157635467980296
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.02126631222812953,
+        "strengthener": 0.03359110681488642
+       },
+       "own_defeats": {
+        "weakener": 0.0033832769453842437,
+        "strengthener": 0.0004833252779120348
+       },
+       "others_kept_per_claim": 0.32986950217496375,
+       "others_kept_per_statement": 0.0006455371862523752,
+       "kept_other_defeat_rate": 0.054945054945054944
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.021024649589173515,
+        "strengthener": 0.03165780570323828
+       },
+       "own_defeats": {
+        "weakener": 0.0033832769453842437,
+        "strengthener": 0.0002416626389560174
+       },
+       "others_kept_per_claim": 2.4639922667955534,
+       "others_kept_per_statement": 0.0005963590048455046,
+       "kept_other_defeat_rate": 0.054825421734013335
+      }
+     },
+     "named conditional": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.035766070565490575,
+        "strengthener": 0.05872402126631223
+       },
+       "own_defeats": {
+        "weakener": 0.01014983083615273,
+        "strengthener": 0.005799903334944417
+       },
+       "others_kept_per_claim": 0.04084098598356694,
+       "others_kept_per_statement": 0.005834426569080992,
+       "kept_other_defeat_rate": 0.1893491124260355
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.029241179313678107,
+        "strengthener": 0.04688255195746738
+       },
+       "own_defeats": {
+        "weakener": 0.008941517641372644,
+        "strengthener": 0.004108264862252296
+       },
+       "others_kept_per_claim": 0.05775737071048816,
+       "others_kept_per_statement": 0.0018631409906609082,
+       "kept_other_defeat_rate": 0.200836820083682
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02150797486708555,
+        "strengthener": 0.03455775737071049
+       },
+       "own_defeats": {
+        "weakener": 0.007974867085548574,
+        "strengthener": 0.003141614306428226
+       },
+       "others_kept_per_claim": 0.09811503141614307,
+       "others_kept_per_statement": 0.0007725593024893154,
+       "kept_other_defeat_rate": 0.18719211822660098
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.02126631222812953,
+        "strengthener": 0.03359110681488642
+       },
+       "own_defeats": {
+        "weakener": 0.008216529724504592,
+        "strengthener": 0.0021749637506041568
+       },
+       "others_kept_per_claim": 0.32986950217496375,
+       "others_kept_per_statement": 0.0006455371862523752,
+       "kept_other_defeat_rate": 0.17362637362637362
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.021024649589173515,
+        "strengthener": 0.03165780570323828
+       },
+       "own_defeats": {
+        "weakener": 0.007733204446592557,
+        "strengthener": 0.002416626389560174
+       },
+       "others_kept_per_claim": 2.4639922667955534,
+       "others_kept_per_statement": 0.0005963590048455046,
+       "kept_other_defeat_rate": 0.16800706159278148
+      }
+     }
+    }
+   },
+   "seconds": 56.1,
+   "exception_trust": 0.5343546836963156,
+   "provenance": {
+    "at": "2026-11-16T21:54:14+1100",
+    "command": "python experiments/exception_trust.py --judges nli-deberta-base,nli-deberta-large-wanli,reranker-qwen3,cosine-bge,cosine-qwen3 --stances STANCES/pa",
+    "commit": "08996dd668b8c402b5823c657388a8212046b0d9",
+    "inputs_uncommitted": []
+   }
+  },
+  "nli-deberta-large": {
+   "trust": 0.34785897737458393,
+   "check_trust": 0.698273436590954,
+   "threshold": 0.6592527778093171,
+   "reads_contradiction": true,
+   "forms": {
+    "premise and statement": {
+     "trust": 0.6702793088534087,
+     "dev": {
+      "rows": 3840,
+      "at_trust": {
+       "rows": 3840,
+       "log_loss": 0.6608333009721642,
+       "brier": 0.23498950223211326
+      },
+      "at_base_rate": {
+       "rows": 3840,
+       "log_loss": 0.6931079819140841,
+       "brier": 0.24998040093315974
+      },
+      "auc": 0.7028700437941234,
+      "defeat": {
+       "weakener": 0.12348922753547031,
+       "strengthener": 0.019101703665462055
+      },
+      "precision": 0.8639705882352942,
+      "recall": 0.12348922753547031
+     },
+     "test": {
+      "rows": 4138,
+      "at_trust": {
+       "rows": 4138,
+       "log_loss": 0.6618869563879257,
+       "brier": 0.2354543003051614
+      },
+      "at_base_rate": {
+       "rows": 4138,
+       "log_loss": 0.6930922300333804,
+       "brier": 0.24997252519862698
+      },
+      "auc": 0.7097171514834203,
+      "defeat": {
+       "weakener": 0.1250610649731314,
+       "strengthener": 0.017694882831181254,
+       "other_same_person": 0.045
+      },
+      "precision": 0.8737201365187713,
+      "recall": 0.1250610649731314
+     }
+    },
+    "named conditional": {
+     "trust": 0.6244095770580094,
+     "dev": {
+      "rows": 3840,
+      "at_trust": {
+       "rows": 3840,
+       "log_loss": 0.6486547164005834,
+       "brier": 0.22909825445891718
+      },
+      "at_base_rate": {
+       "rows": 3840,
+       "log_loss": 0.6931079819140841,
+       "brier": 0.24998040093315974
+      },
+      "auc": 0.7427136621767494,
+      "defeat": {
+       "weakener": 0.32737782448765107,
+       "strengthener": 0.08311822405782138
+      },
+      "precision": 0.7946428571428571,
+      "recall": 0.32737782448765107
+     },
+     "test": {
+      "rows": 4138,
+      "at_trust": {
+       "rows": 4138,
+       "log_loss": 0.6498607020024635,
+       "brier": 0.2296560253906262
+      },
+      "at_base_rate": {
+       "rows": 4138,
+       "log_loss": 0.6930922300333804,
+       "brier": 0.24997252519862698
+      },
+      "auc": 0.7357182724389099,
+      "defeat": {
+       "weakener": 0.3170493404982902,
+       "strengthener": 0.08560497369679579,
+       "other_same_person": 0.272
+      },
+      "precision": 0.783816425120773,
+      "recall": 0.3170493404982902
+     }
+    }
+   },
+   "gate": {
+    "dev": {
+     "claims": 3840,
+     "statements": 3840,
+     "embedding_seconds": 17.0,
+     "premise and statement": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.04401041666666667,
+        "strengthener": 0.06041666666666667
+       },
+       "own_defeats": {
+        "weakener": 0.004166666666666667,
+        "strengthener": 0.00026041666666666666
+       },
+       "others_kept_per_claim": 0.04375,
+       "others_kept_per_statement": 0.00625,
+       "kept_other_defeat_rate": 0.03571428571428571
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.03177083333333333,
+        "strengthener": 0.047135416666666666
+       },
+       "own_defeats": {
+        "weakener": 0.0018229166666666667,
+        "strengthener": 0.0005208333333333333
+       },
+       "others_kept_per_claim": 0.05807291666666667,
+       "others_kept_per_statement": 0.0018733198924731182,
+       "kept_other_defeat_rate": 0.026905829596412557
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04583333333333333
+       },
+       "own_defeats": {
+        "weakener": 0.0026041666666666665,
+        "strengthener": 0.0005208333333333333
+       },
+       "others_kept_per_claim": 0.12161458333333333,
+       "others_kept_per_statement": 0.0009575951443569554,
+       "kept_other_defeat_rate": 0.04068522483940043
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.026041666666666668,
+        "strengthener": 0.0421875
+       },
+       "own_defeats": {
+        "weakener": 0.003125,
+        "strengthener": 0.0005208333333333333
+       },
+       "others_kept_per_claim": 0.38958333333333334,
+       "others_kept_per_statement": 0.0007623939986953686,
+       "kept_other_defeat_rate": 0.03342245989304813
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04401041666666667
+       },
+       "own_defeats": {
+        "weakener": 0.003125,
+        "strengthener": 0.0005208333333333333
+       },
+       "others_kept_per_claim": 2.8080729166666667,
+       "others_kept_per_statement": 0.0007324548765545562,
+       "kept_other_defeat_rate": 0.03486970230919039
+      }
+     },
+     "named conditional": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.04401041666666667,
+        "strengthener": 0.06041666666666667
+       },
+       "own_defeats": {
+        "weakener": 0.011458333333333333,
+        "strengthener": 0.0046875
+       },
+       "others_kept_per_claim": 0.04375,
+       "others_kept_per_statement": 0.00625,
+       "kept_other_defeat_rate": 0.25
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.03177083333333333,
+        "strengthener": 0.047135416666666666
+       },
+       "own_defeats": {
+        "weakener": 0.007552083333333333,
+        "strengthener": 0.00234375
+       },
+       "others_kept_per_claim": 0.05807291666666667,
+       "others_kept_per_statement": 0.0018733198924731182,
+       "kept_other_defeat_rate": 0.17937219730941703
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04583333333333333
+       },
+       "own_defeats": {
+        "weakener": 0.00703125,
+        "strengthener": 0.0033854166666666668
+       },
+       "others_kept_per_claim": 0.12161458333333333,
+       "others_kept_per_statement": 0.0009575951443569554,
+       "kept_other_defeat_rate": 0.15417558886509636
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.026041666666666668,
+        "strengthener": 0.0421875
+       },
+       "own_defeats": {
+        "weakener": 0.007291666666666667,
+        "strengthener": 0.0026041666666666665
+       },
+       "others_kept_per_claim": 0.38958333333333334,
+       "others_kept_per_statement": 0.0007623939986953686,
+       "kept_other_defeat_rate": 0.1517379679144385
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04401041666666667
+       },
+       "own_defeats": {
+        "weakener": 0.00703125,
+        "strengthener": 0.002864583333333333
+       },
+       "others_kept_per_claim": 2.8080729166666667,
+       "others_kept_per_statement": 0.0007324548765545562,
+       "kept_other_defeat_rate": 0.14124084206621534
+      }
+     }
+    },
+    "test": {
+     "claims": 4138,
+     "statements": 4138,
+     "embedding_seconds": 17.5,
+     "premise and statement": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.035766070565490575,
+        "strengthener": 0.05872402126631223
+       },
+       "own_defeats": {
+        "weakener": 0.0033832769453842437,
+        "strengthener": 0.001208313194780087
+       },
+       "others_kept_per_claim": 0.04084098598356694,
+       "others_kept_per_statement": 0.005834426569080992,
+       "kept_other_defeat_rate": 0.03550295857988166
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.029241179313678107,
+        "strengthener": 0.04688255195746738
+       },
+       "own_defeats": {
+        "weakener": 0.002416626389560174,
+        "strengthener": 0.0009666505558240696
+       },
+       "others_kept_per_claim": 0.05775737071048816,
+       "others_kept_per_statement": 0.0018631409906609082,
+       "kept_other_defeat_rate": 0.02092050209205021
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02150797486708555,
+        "strengthener": 0.03455775737071049
+       },
+       "own_defeats": {
+        "weakener": 0.0026582890285161915,
+        "strengthener": 0.001208313194780087
+       },
+       "others_kept_per_claim": 0.09811503141614307,
+       "others_kept_per_statement": 0.0007725593024893154,
+       "kept_other_defeat_rate": 0.05172413793103448
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.02126631222812953,
+        "strengthener": 0.03359110681488642
+       },
+       "own_defeats": {
+        "weakener": 0.003141614306428226,
+        "strengthener": 0.0014499758337361043
+       },
+       "others_kept_per_claim": 0.32986950217496375,
+       "others_kept_per_statement": 0.0006455371862523752,
+       "kept_other_defeat_rate": 0.0336996336996337
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.021024649589173515,
+        "strengthener": 0.03165780570323828
+       },
+       "own_defeats": {
+        "weakener": 0.0028999516674722086,
+        "strengthener": 0.0007249879168680521
+       },
+       "others_kept_per_claim": 2.4639922667955534,
+       "others_kept_per_statement": 0.0005963590048455046,
+       "kept_other_defeat_rate": 0.03246371125931738
+      }
+     },
+     "named conditional": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.035766070565490575,
+        "strengthener": 0.05872402126631223
+       },
+       "own_defeats": {
+        "weakener": 0.009424842919284679,
+        "strengthener": 0.002416626389560174
+       },
+       "others_kept_per_claim": 0.04084098598356694,
+       "others_kept_per_statement": 0.005834426569080992,
+       "kept_other_defeat_rate": 0.20710059171597633
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.029241179313678107,
+        "strengthener": 0.04688255195746738
+       },
+       "own_defeats": {
+        "weakener": 0.008458192363460609,
+        "strengthener": 0.001208313194780087
+       },
+       "others_kept_per_claim": 0.05775737071048816,
+       "others_kept_per_statement": 0.0018631409906609082,
+       "kept_other_defeat_rate": 0.19665271966527198
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02150797486708555,
+        "strengthener": 0.03455775737071049
+       },
+       "own_defeats": {
+        "weakener": 0.005799903334944417,
+        "strengthener": 0.0009666505558240696
+       },
+       "others_kept_per_claim": 0.09811503141614307,
+       "others_kept_per_statement": 0.0007725593024893154,
+       "kept_other_defeat_rate": 0.16748768472906403
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.02126631222812953,
+        "strengthener": 0.03359110681488642
+       },
+       "own_defeats": {
+        "weakener": 0.006041565973900435,
+        "strengthener": 0.001208313194780087
+       },
+       "others_kept_per_claim": 0.32986950217496375,
+       "others_kept_per_statement": 0.0006455371862523752,
+       "kept_other_defeat_rate": 0.1619047619047619
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.021024649589173515,
+        "strengthener": 0.03165780570323828
+       },
+       "own_defeats": {
+        "weakener": 0.005799903334944417,
+        "strengthener": 0.0007249879168680521
+       },
+       "others_kept_per_claim": 2.4639922667955534,
+       "others_kept_per_statement": 0.0005963590048455046,
+       "kept_other_defeat_rate": 0.14829344841114162
+      }
+     }
+    }
+   },
+   "seconds": 35.8,
+   "exception_trust": 0.6702793088534087,
+   "provenance": {
+    "at": "2026-11-16T22:08:00+1100",
+    "command": "python experiments/exception_trust.py --judges nli-deberta-large --stances STANCES/pa",
+    "commit": "08996dd668b8c402b5823c657388a8212046b0d9",
+    "inputs_uncommitted": [
+     "semrewrite/judges/calibration.json"
+    ]
+   }
+  },
+  "nli-deberta-large-wanli": {
+   "trust": 0.5238079757330589,
+   "check_trust": 0.9033006495672349,
+   "threshold": 0.05405977550547415,
+   "reads_contradiction": true,
+   "forms": {
+    "premise and statement": {
+     "trust": 0.7724430525828829,
+     "dev": {
+      "rows": 3840,
+      "at_trust": {
+       "rows": 3840,
+       "log_loss": 0.6494497862044822,
+       "brier": 0.22988461599500806
+      },
+      "at_base_rate": {
+       "rows": 3840,
+       "log_loss": 0.6931079819140841,
+       "brier": 0.24998040093315974
+      },
+      "auc": 0.7342817402948527,
+      "defeat": {
+       "weakener": 0.20546505517603783,
+       "strengthener": 0.03871966959215281
+      },
+      "precision": 0.8390557939914163,
+      "recall": 0.20546505517603783
+     },
+     "test": {
+      "rows": 4138,
+      "at_trust": {
+       "rows": 4138,
+       "log_loss": 0.6487965741031714,
+       "brier": 0.22930864298372144
+      },
+      "at_base_rate": {
+       "rows": 4138,
+       "log_loss": 0.6930922300333804,
+       "brier": 0.24997252519862698
+      },
+      "auc": 0.7379190645839042,
+      "defeat": {
+       "weakener": 0.21348314606741572,
+       "strengthener": 0.04878048780487805,
+       "other_same_person": 0.096
+      },
+      "precision": 0.8107606679035251,
+      "recall": 0.21348314606741572
+     }
+    },
+    "named conditional": {
+     "trust": 0.8308716963918366,
+     "dev": {
+      "rows": 3840,
+      "at_trust": {
+       "rows": 3840,
+       "log_loss": 0.6353559818580733,
+       "brier": 0.22364194767761433
+      },
+      "at_base_rate": {
+       "rows": 3840,
+       "log_loss": 0.6931079819140841,
+       "brier": 0.24998040093315974
+      },
+      "auc": 0.7673865491299638,
+      "defeat": {
+       "weakener": 0.43825538623226484,
+       "strengthener": 0.11357769747031492
+      },
+      "precision": 0.7912713472485768,
+      "recall": 0.43825538623226484
+     },
+     "test": {
+      "rows": 4138,
+      "at_trust": {
+       "rows": 4138,
+       "log_loss": 0.6353104342374531,
+       "brier": 0.22354689499746327
+      },
+      "at_base_rate": {
+       "rows": 4138,
+       "log_loss": 0.6930922300333804,
+       "brier": 0.24997252519862698
+      },
+      "auc": 0.7638019688912657,
+      "defeat": {
+       "weakener": 0.44797264289203714,
+       "strengthener": 0.1257771401243424,
+       "other_same_person": 0.3815
+      },
+      "precision": 0.7771186440677966,
+      "recall": 0.44797264289203714
+     }
+    }
+   },
+   "gate": {
+    "dev": {
+     "claims": 3840,
+     "statements": 3840,
+     "embedding_seconds": 21.4,
+     "premise and statement": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.04401041666666667,
+        "strengthener": 0.06041666666666667
+       },
+       "own_defeats": {
+        "weakener": 0.009114583333333334,
+        "strengthener": 0.0010416666666666667
+       },
+       "others_kept_per_claim": 0.04375,
+       "others_kept_per_statement": 0.00625,
+       "kept_other_defeat_rate": 0.07738095238095238
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.03177083333333333,
+        "strengthener": 0.047135416666666666
+       },
+       "own_defeats": {
+        "weakener": 0.007291666666666667,
+        "strengthener": 0.0010416666666666667
+       },
+       "others_kept_per_claim": 0.05807291666666667,
+       "others_kept_per_statement": 0.0018733198924731182,
+       "kept_other_defeat_rate": 0.09865470852017937
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04583333333333333
+       },
+       "own_defeats": {
+        "weakener": 0.005989583333333334,
+        "strengthener": 0.0010416666666666667
+       },
+       "others_kept_per_claim": 0.12161458333333333,
+       "others_kept_per_statement": 0.0009575951443569554,
+       "kept_other_defeat_rate": 0.08779443254817987
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.026041666666666668,
+        "strengthener": 0.0421875
+       },
+       "own_defeats": {
+        "weakener": 0.007291666666666667,
+        "strengthener": 0.0013020833333333333
+       },
+       "others_kept_per_claim": 0.38958333333333334,
+       "others_kept_per_statement": 0.0007623939986953686,
+       "kept_other_defeat_rate": 0.08689839572192513
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04401041666666667
+       },
+       "own_defeats": {
+        "weakener": 0.00703125,
+        "strengthener": 0.0010416666666666667
+       },
+       "others_kept_per_claim": 2.8080729166666667,
+       "others_kept_per_statement": 0.0007324548765545562,
+       "kept_other_defeat_rate": 0.08958545859222851
+      }
+     },
+     "named conditional": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.04401041666666667,
+        "strengthener": 0.06041666666666667
+       },
+       "own_defeats": {
+        "weakener": 0.018229166666666668,
+        "strengthener": 0.0046875
+       },
+       "others_kept_per_claim": 0.04375,
+       "others_kept_per_statement": 0.00625,
+       "kept_other_defeat_rate": 0.30952380952380953
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.03177083333333333,
+        "strengthener": 0.047135416666666666
+       },
+       "own_defeats": {
+        "weakener": 0.014583333333333334,
+        "strengthener": 0.0033854166666666668
+       },
+       "others_kept_per_claim": 0.05807291666666667,
+       "others_kept_per_statement": 0.0018733198924731182,
+       "kept_other_defeat_rate": 0.3452914798206278
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04583333333333333
+       },
+       "own_defeats": {
+        "weakener": 0.011197916666666667,
+        "strengthener": 0.002864583333333333
+       },
+       "others_kept_per_claim": 0.12161458333333333,
+       "others_kept_per_statement": 0.0009575951443569554,
+       "kept_other_defeat_rate": 0.24411134903640258
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.026041666666666668,
+        "strengthener": 0.0421875
+       },
+       "own_defeats": {
+        "weakener": 0.011979166666666667,
+        "strengthener": 0.00234375
+       },
+       "others_kept_per_claim": 0.38958333333333334,
+       "others_kept_per_statement": 0.0007623939986953686,
+       "kept_other_defeat_rate": 0.2232620320855615
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04401041666666667
+       },
+       "own_defeats": {
+        "weakener": 0.011197916666666667,
+        "strengthener": 0.0026041666666666665
+       },
+       "others_kept_per_claim": 2.8080729166666667,
+       "others_kept_per_statement": 0.0007324548765545562,
+       "kept_other_defeat_rate": 0.2350922748771214
+      }
+     }
+    },
+    "test": {
+     "claims": 4138,
+     "statements": 4138,
+     "embedding_seconds": 21.1,
+     "premise and statement": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.035766070565490575,
+        "strengthener": 0.05872402126631223
+       },
+       "own_defeats": {
+        "weakener": 0.00652489125181247,
+        "strengthener": 0.004833252779120348
+       },
+       "others_kept_per_claim": 0.04084098598356694,
+       "others_kept_per_statement": 0.005834426569080992,
+       "kept_other_defeat_rate": 0.10650887573964497
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.029241179313678107,
+        "strengthener": 0.04688255195746738
+       },
+       "own_defeats": {
+        "weakener": 0.00652489125181247,
+        "strengthener": 0.0028999516674722086
+       },
+       "others_kept_per_claim": 0.05775737071048816,
+       "others_kept_per_statement": 0.0018631409906609082,
+       "kept_other_defeat_rate": 0.100418410041841
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02150797486708555,
+        "strengthener": 0.03455775737071049
+       },
+       "own_defeats": {
+        "weakener": 0.0043499275012083135,
+        "strengthener": 0.0033832769453842437
+       },
+       "others_kept_per_claim": 0.09811503141614307,
+       "others_kept_per_statement": 0.0007725593024893154,
+       "kept_other_defeat_rate": 0.1354679802955665
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.02126631222812953,
+        "strengthener": 0.03359110681488642
+       },
+       "own_defeats": {
+        "weakener": 0.00459159014016433,
+        "strengthener": 0.0038666022232962784
+       },
+       "others_kept_per_claim": 0.32986950217496375,
+       "others_kept_per_statement": 0.0006455371862523752,
+       "kept_other_defeat_rate": 0.1076923076923077
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.021024649589173515,
+        "strengthener": 0.03165780570323828
+       },
+       "own_defeats": {
+        "weakener": 0.004833252779120348,
+        "strengthener": 0.003141614306428226
+       },
+       "others_kept_per_claim": 2.4639922667955534,
+       "others_kept_per_statement": 0.0005963590048455046,
+       "kept_other_defeat_rate": 0.10808160062769713
+      }
+     },
+     "named conditional": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.035766070565490575,
+        "strengthener": 0.05872402126631223
+       },
+       "own_defeats": {
+        "weakener": 0.015466408893185114,
+        "strengthener": 0.007974867085548574
+       },
+       "others_kept_per_claim": 0.04084098598356694,
+       "others_kept_per_statement": 0.005834426569080992,
+       "kept_other_defeat_rate": 0.35502958579881655
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.029241179313678107,
+        "strengthener": 0.04688255195746738
+       },
+       "own_defeats": {
+        "weakener": 0.01304978250362494,
+        "strengthener": 0.006041565973900435
+       },
+       "others_kept_per_claim": 0.05775737071048816,
+       "others_kept_per_statement": 0.0018631409906609082,
+       "kept_other_defeat_rate": 0.3472803347280335
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02150797486708555,
+        "strengthener": 0.03455775737071049
+       },
+       "own_defeats": {
+        "weakener": 0.01014983083615273,
+        "strengthener": 0.0043499275012083135
+       },
+       "others_kept_per_claim": 0.09811503141614307,
+       "others_kept_per_statement": 0.0007725593024893154,
+       "kept_other_defeat_rate": 0.2857142857142857
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.02126631222812953,
+        "strengthener": 0.03359110681488642
+       },
+       "own_defeats": {
+        "weakener": 0.01014983083615273,
+        "strengthener": 0.004108264862252296
+       },
+       "others_kept_per_claim": 0.32986950217496375,
+       "others_kept_per_statement": 0.0006455371862523752,
+       "kept_other_defeat_rate": 0.2835164835164835
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.021024649589173515,
+        "strengthener": 0.03165780570323828
+       },
+       "own_defeats": {
+        "weakener": 0.01014983083615273,
+        "strengthener": 0.004108264862252296
+       },
+       "others_kept_per_claim": 2.4639922667955534,
+       "others_kept_per_statement": 0.0005963590048455046,
+       "kept_other_defeat_rate": 0.27451941938014907
+      }
+     }
+    }
+   },
+   "seconds": 43.8,
+   "exception_trust": 0.7724430525828829,
+   "provenance": {
+    "at": "2026-11-16T21:54:14+1100",
+    "command": "python experiments/exception_trust.py --judges nli-deberta-base,nli-deberta-large-wanli,reranker-qwen3,cosine-bge,cosine-qwen3 --stances STANCES/pa",
+    "commit": "08996dd668b8c402b5823c657388a8212046b0d9",
+    "inputs_uncommitted": []
+   }
+  },
+  "reranker-qwen3": {
+   "trust": 0.07735878821260883,
+   "check_trust": 0.9733920988967133,
+   "threshold": 0.8078806102275848,
+   "reads_contradiction": false,
+   "forms": {
+    "premise and statement": {
+     "trust": 0.756522201198913,
+     "dev": {
+      "rows": 3840,
+      "at_trust": {
+       "rows": 3840,
+       "log_loss": 0.6603143218649258,
+       "brier": 0.234235987335047
+      },
+      "at_base_rate": {
+       "rows": 3840,
+       "log_loss": 0.6931079819140841,
+       "brier": 0.24998040093315974
+      },
+      "auc": 0.6738093345534087,
+      "defeat": {
+       "weakener": 0.0031529164477141357,
+       "strengthener": 0.0005162622612287042
+      },
+      "precision": 0.8571428571428571,
+      "recall": 0.0031529164477141357
+     },
+     "test": {
+      "rows": 4138,
+      "at_trust": {
+       "rows": 4138,
+       "log_loss": 0.6632486365963608,
+       "brier": 0.23544932904014704
+      },
+      "at_base_rate": {
+       "rows": 4138,
+       "log_loss": 0.6930922300333804,
+       "brier": 0.24997252519862698
+      },
+      "auc": 0.6685653755586379,
+      "defeat": {
+       "weakener": 0.0039081582804103565,
+       "strengthener": 0.00047824007651841227,
+       "other_same_person": 0.0015
+      },
+      "precision": 0.8888888888888888,
+      "recall": 0.0039081582804103565
+     }
+    },
+    "named conditional": {
+     "trust": 0.8063101312179117,
+     "dev": {
+      "rows": 3840,
+      "at_trust": {
+       "rows": 3840,
+       "log_loss": 0.6817014685709605,
+       "brier": 0.24426982118040602
+      },
+      "at_base_rate": {
+       "rows": 3840,
+       "log_loss": 0.6931079819140841,
+       "brier": 0.24998040093315974
+      },
+      "auc": 0.604993582667478,
+      "defeat": {
+       "weakener": 0.0,
+       "strengthener": 0.0
+      },
+      "precision": null,
+      "recall": 0.0
+     },
+     "test": {
+      "rows": 4138,
+      "at_trust": {
+       "rows": 4138,
+       "log_loss": 0.6793738468196733,
+       "brier": 0.24325347586501467
+      },
+      "at_base_rate": {
+       "rows": 4138,
+       "log_loss": 0.6930922300333804,
+       "brier": 0.24997252519862698
+      },
+      "auc": 0.6021341609433222,
+      "defeat": {
+       "weakener": 0.0,
+       "strengthener": 0.0,
+       "other_same_person": 0.0
+      },
+      "precision": null,
+      "recall": 0.0
+     }
+    }
+   },
+   "gate": {
+    "dev": {
+     "claims": 3840,
+     "statements": 3840,
+     "embedding_seconds": 19.9,
+     "premise and statement": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.04401041666666667,
+        "strengthener": 0.06041666666666667
+       },
+       "own_defeats": {
+        "weakener": 0.0005208333333333333,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.04375,
+       "others_kept_per_statement": 0.00625,
+       "kept_other_defeat_rate": 0.0
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.03177083333333333,
+        "strengthener": 0.047135416666666666
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.05807291666666667,
+       "others_kept_per_statement": 0.0018733198924731182,
+       "kept_other_defeat_rate": 0.004484304932735426
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04583333333333333
+       },
+       "own_defeats": {
+        "weakener": 0.00026041666666666666,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.12161458333333333,
+       "others_kept_per_statement": 0.0009575951443569554,
+       "kept_other_defeat_rate": 0.0
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.026041666666666668,
+        "strengthener": 0.0421875
+       },
+       "own_defeats": {
+        "weakener": 0.00026041666666666666,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.38958333333333334,
+       "others_kept_per_statement": 0.0007623939986953686,
+       "kept_other_defeat_rate": 0.0
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04401041666666667
+       },
+       "own_defeats": {
+        "weakener": 0.00026041666666666666,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 2.8080729166666667,
+       "others_kept_per_statement": 0.0007324548765545562,
+       "kept_other_defeat_rate": 0.0008346471297412594
+      }
+     },
+     "named conditional": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.04401041666666667,
+        "strengthener": 0.06041666666666667
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.04375,
+       "others_kept_per_statement": 0.00625,
+       "kept_other_defeat_rate": 0.0
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.03177083333333333,
+        "strengthener": 0.047135416666666666
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.05807291666666667,
+       "others_kept_per_statement": 0.0018733198924731182,
+       "kept_other_defeat_rate": 0.0
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04583333333333333
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.12161458333333333,
+       "others_kept_per_statement": 0.0009575951443569554,
+       "kept_other_defeat_rate": 0.0
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.026041666666666668,
+        "strengthener": 0.0421875
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.38958333333333334,
+       "others_kept_per_statement": 0.0007623939986953686,
+       "kept_other_defeat_rate": 0.0
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.02578125,
+        "strengthener": 0.04401041666666667
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 2.8080729166666667,
+       "others_kept_per_statement": 0.0007324548765545562,
+       "kept_other_defeat_rate": 0.0
+      }
+     }
+    },
+    "test": {
+     "claims": 4138,
+     "statements": 4138,
+     "embedding_seconds": 25.2,
+     "premise and statement": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.035766070565490575,
+        "strengthener": 0.05872402126631223
+       },
+       "own_defeats": {
+        "weakener": 0.0002416626389560174,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.04084098598356694,
+       "others_kept_per_statement": 0.005834426569080992,
+       "kept_other_defeat_rate": 0.0
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.029241179313678107,
+        "strengthener": 0.04688255195746738
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.05775737071048816,
+       "others_kept_per_statement": 0.0018631409906609082,
+       "kept_other_defeat_rate": 0.0
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02150797486708555,
+        "strengthener": 0.03455775737071049
+       },
+       "own_defeats": {
+        "weakener": 0.0002416626389560174,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.09811503141614307,
+       "others_kept_per_statement": 0.0007725593024893154,
+       "kept_other_defeat_rate": 0.0049261083743842365
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.02126631222812953,
+        "strengthener": 0.03359110681488642
+       },
+       "own_defeats": {
+        "weakener": 0.0002416626389560174,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.32986950217496375,
+       "others_kept_per_statement": 0.0006455371862523752,
+       "kept_other_defeat_rate": 0.0007326007326007326
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.021024649589173515,
+        "strengthener": 0.03165780570323828
+       },
+       "own_defeats": {
+        "weakener": 0.0002416626389560174,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 2.4639922667955534,
+       "others_kept_per_statement": 0.0005963590048455046,
+       "kept_other_defeat_rate": 0.0014711651628089447
+      }
+     },
+     "named conditional": {
+      "8": {
+       "own_kept": {
+        "weakener": 0.035766070565490575,
+        "strengthener": 0.05872402126631223
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.04084098598356694,
+       "others_kept_per_statement": 0.005834426569080992,
+       "kept_other_defeat_rate": 0.0
+      },
+      "32": {
+       "own_kept": {
+        "weakener": 0.029241179313678107,
+        "strengthener": 0.04688255195746738
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.05775737071048816,
+       "others_kept_per_statement": 0.0018631409906609082,
+       "kept_other_defeat_rate": 0.0
+      },
+      "128": {
+       "own_kept": {
+        "weakener": 0.02150797486708555,
+        "strengthener": 0.03455775737071049
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.09811503141614307,
+       "others_kept_per_statement": 0.0007725593024893154,
+       "kept_other_defeat_rate": 0.0
+      },
+      "512": {
+       "own_kept": {
+        "weakener": 0.02126631222812953,
+        "strengthener": 0.03359110681488642
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 0.32986950217496375,
+       "others_kept_per_statement": 0.0006455371862523752,
+       "kept_other_defeat_rate": 0.0
+      },
+      "all": {
+       "own_kept": {
+        "weakener": 0.021024649589173515,
+        "strengthener": 0.03165780570323828
+       },
+       "own_defeats": {
+        "weakener": 0.0,
+        "strengthener": 0.0
+       },
+       "others_kept_per_claim": 2.4639922667955534,
+       "others_kept_per_statement": 0.0005963590048455046,
+       "kept_other_defeat_rate": 0.0
+      }
+     }
+    }
+   },
+   "seconds": 282.0,
+   "exception_trust": 0.756522201198913,
+   "provenance": {
+    "at": "2026-11-16T21:54:14+1100",
+    "command": "python experiments/exception_trust.py --judges nli-deberta-base,nli-deberta-large-wanli,reranker-qwen3,cosine-bge,cosine-qwen3 --stances STANCES/pa",
+    "commit": "08996dd668b8c402b5823c657388a8212046b0d9",
+    "inputs_uncommitted": []
+   }
+  }
+ }
+}

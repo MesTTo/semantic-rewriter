@@ -1,21 +1,4 @@
 {
- "provenance": {
-  "at": "2026-11-14T04:57:22+1100",
-  "command": "python experiments/check_trust.py --judges cosine-qwen3 --stances STANCES",
-  "commit": "17c09e8bd3df2eb95f1abdec6a28fad4c207b351",
-  "inputs_uncommitted": [
-   "experiments/check_trust.py",
-   "semrewrite/claims.py",
-   "semrewrite/cli.py",
-   "semrewrite/discovery.py",
-   "semrewrite/judges/__init__.py",
-   "semrewrite/judges/base.py",
-   "semrewrite/judges/calibration.json",
-   "semrewrite/pairs.py",
-   "semrewrite/rewriter.py",
-   "semrewrite/trace.py"
-  ]
- },
  "set": "delta-atomic",
  "base_rate": 0.5044270833333333,
  "rule": "each update read against its inference written as the claim If premise, inference. as the claim check reads a statement against a rewrite's claim; a strengthener's claim holds, a weakener's does not; the check trust maximises the dev labels' likelihood under each stance's projection at the set's base rate after discounting by it (Josang 2016, Eq. 14.6); a stance whose disbelief reaches the judge's threshold defeats",
@@ -29,7 +12,7 @@
    "trust": 0.001540569060717999,
    "threshold": 0.957196980714798,
    "reads_contradiction": false,
-   "seconds": 4.3,
+   "seconds": 0.3,
    "dev": {
     "rows": 3840,
     "at_check_trust": {
@@ -51,7 +34,9 @@
     "defeat": {
      "weakener": 0.0,
      "strengthener": 0.0
-    }
+    },
+    "precision": null,
+    "recall": 0.0
    },
    "test": {
     "rows": 4138,
@@ -75,7 +60,17 @@
      "weakener": 0.0,
      "strengthener": 0.0,
      "other": 0.0
-    }
+    },
+    "precision": null,
+    "recall": 0.0
+   },
+   "provenance": {
+    "at": "2026-11-16T22:22:14+1100",
+    "command": "python experiments/check_trust.py --judges cosine-bge,cosine-qwen3,nli-deberta-base,nli-deberta-large,nli-deberta-large-wanli,reranker-qwen3 --stances STANCES/pa-check",
+    "commit": "08996dd668b8c402b5823c657388a8212046b0d9",
+    "inputs_uncommitted": [
+     "semrewrite/judges/calibration.json"
+    ]
    }
   },
   "cosine-qwen3": {
@@ -83,7 +78,7 @@
    "trust": 0.0005621496889577945,
    "threshold": 0.9751224517822266,
    "reads_contradiction": false,
-   "seconds": 20.7,
+   "seconds": 0.2,
    "dev": {
     "rows": 3840,
     "at_check_trust": {
@@ -105,7 +100,9 @@
     "defeat": {
      "weakener": 0.0,
      "strengthener": 0.0
-    }
+    },
+    "precision": null,
+    "recall": 0.0
    },
    "test": {
     "rows": 4138,
@@ -129,7 +126,17 @@
      "weakener": 0.0,
      "strengthener": 0.0,
      "other": 0.0
-    }
+    },
+    "precision": null,
+    "recall": 0.0
+   },
+   "provenance": {
+    "at": "2026-11-16T22:22:14+1100",
+    "command": "python experiments/check_trust.py --judges cosine-bge,cosine-qwen3,nli-deberta-base,nli-deberta-large,nli-deberta-large-wanli,reranker-qwen3 --stances STANCES/pa-check",
+    "commit": "08996dd668b8c402b5823c657388a8212046b0d9",
+    "inputs_uncommitted": [
+     "semrewrite/judges/calibration.json"
+    ]
    }
   },
   "nli-deberta-base": {
@@ -137,7 +144,7 @@
    "trust": 0.3114297961631095,
    "threshold": 0.2221469032721426,
    "reads_contradiction": true,
-   "seconds": 11.1,
+   "seconds": 0.3,
    "dev": {
     "rows": 3840,
     "at_check_trust": {
@@ -159,7 +166,9 @@
     "defeat": {
      "weakener": 0.3068838675775092,
      "strengthener": 0.07692307692307693
-    }
+    },
+    "precision": 0.7967257844474761,
+    "recall": 0.3068838675775092
    },
    "test": {
     "rows": 4138,
@@ -183,7 +192,17 @@
      "weakener": 0.31167562286272593,
      "strengthener": 0.08225729316116691,
      "other": 0.2745
-    }
+    },
+    "precision": 0.7876543209876543,
+    "recall": 0.31167562286272593
+   },
+   "provenance": {
+    "at": "2026-11-16T22:22:14+1100",
+    "command": "python experiments/check_trust.py --judges cosine-bge,cosine-qwen3,nli-deberta-base,nli-deberta-large,nli-deberta-large-wanli,reranker-qwen3 --stances STANCES/pa-check",
+    "commit": "08996dd668b8c402b5823c657388a8212046b0d9",
+    "inputs_uncommitted": [
+     "semrewrite/judges/calibration.json"
+    ]
    }
   },
   "nli-deberta-large": {
@@ -191,7 +210,7 @@
    "trust": 0.34785897737458393,
    "threshold": 0.6592527778093171,
    "reads_contradiction": true,
-   "seconds": 32.4,
+   "seconds": 0.3,
    "dev": {
     "rows": 3840,
     "at_check_trust": {
@@ -213,7 +232,9 @@
     "defeat": {
      "weakener": 0.32317393589069887,
      "strengthener": 0.06504904491481672
-    }
+    },
+    "precision": 0.8299595141700404,
+    "recall": 0.32317393589069887
    },
    "test": {
     "rows": 4138,
@@ -237,7 +258,17 @@
      "weakener": 0.32095749877870056,
      "strengthener": 0.07269249163079866,
      "other": 0.2675
-    }
+    },
+    "precision": 0.8121137206427689,
+    "recall": 0.32095749877870056
+   },
+   "provenance": {
+    "at": "2026-11-16T22:22:14+1100",
+    "command": "python experiments/check_trust.py --judges cosine-bge,cosine-qwen3,nli-deberta-base,nli-deberta-large,nli-deberta-large-wanli,reranker-qwen3 --stances STANCES/pa-check",
+    "commit": "08996dd668b8c402b5823c657388a8212046b0d9",
+    "inputs_uncommitted": [
+     "semrewrite/judges/calibration.json"
+    ]
    }
   },
   "nli-deberta-large-wanli": {
@@ -245,7 +276,7 @@
    "trust": 0.5238079757330589,
    "threshold": 0.05405977550547415,
    "reads_contradiction": true,
-   "seconds": 11.1,
+   "seconds": 0.3,
    "dev": {
     "rows": 3840,
     "at_check_trust": {
@@ -267,7 +298,9 @@
     "defeat": {
      "weakener": 0.41723594324750396,
      "strengthener": 0.08828084667010841
-    }
+    },
+    "precision": 0.8227979274611399,
+    "recall": 0.41723594324750396
    },
    "test": {
     "rows": 4138,
@@ -291,7 +324,17 @@
      "weakener": 0.43038593063019054,
      "strengthener": 0.09995217599234815,
      "other": 0.3905
-    }
+    },
+    "precision": 0.808256880733945,
+    "recall": 0.43038593063019054
+   },
+   "provenance": {
+    "at": "2026-11-16T22:22:14+1100",
+    "command": "python experiments/check_trust.py --judges cosine-bge,cosine-qwen3,nli-deberta-base,nli-deberta-large,nli-deberta-large-wanli,reranker-qwen3 --stances STANCES/pa-check",
+    "commit": "08996dd668b8c402b5823c657388a8212046b0d9",
+    "inputs_uncommitted": [
+     "semrewrite/judges/calibration.json"
+    ]
    }
   },
   "reranker-qwen3": {
@@ -299,7 +342,7 @@
    "trust": 0.07735878821260883,
    "threshold": 0.8078806102275848,
    "reads_contradiction": false,
-   "seconds": 89.3,
+   "seconds": 0.3,
    "dev": {
     "rows": 3840,
     "at_check_trust": {
@@ -321,7 +364,9 @@
     "defeat": {
      "weakener": 0.0,
      "strengthener": 0.0
-    }
+    },
+    "precision": null,
+    "recall": 0.0
    },
    "test": {
     "rows": 4138,
@@ -345,7 +390,17 @@
      "weakener": 0.0,
      "strengthener": 0.0,
      "other": 0.0
-    }
+    },
+    "precision": null,
+    "recall": 0.0
+   },
+   "provenance": {
+    "at": "2026-11-16T22:22:14+1100",
+    "command": "python experiments/check_trust.py --judges cosine-bge,cosine-qwen3,nli-deberta-base,nli-deberta-large,nli-deberta-large-wanli,reranker-qwen3 --stances STANCES/pa-check",
+    "commit": "08996dd668b8c402b5823c657388a8212046b0d9",
+    "inputs_uncommitted": [
+     "semrewrite/judges/calibration.json"
+    ]
    }
   },
   "typical-qwen3-4b": {

@@ -12,7 +12,9 @@ import json
 import math
 import re
 from collections.abc import Callable, Sequence
+from functools import cache
 from pathlib import Path
+from types import ModuleType
 
 from impl_eval import aggregate
 
@@ -36,6 +38,8 @@ def _load(name: str) -> dict:
 
 def _table(header: Sequence[str], rows: Sequence[Sequence[object]]) -> str:
     def cell(v: object) -> str:
+        if v is None:
+            return "none"
         if isinstance(v, float):
             return f"{v:.3f}" if abs(v) < 10 else f"{v:,.0f}"
         if isinstance(v, int):
@@ -282,17 +286,28 @@ def typical_actions_table() -> str:
     return text
 
 
-def beliefs_table() -> str:
-    """The Wikidata questions' answers ranked by projected probability, from examples/wikidata/evaluate.py --beliefs,
-    rendered by that script's own table."""
+@cache
+def _evaluate() -> ModuleType:
+    """examples/wikidata/evaluate.py, whose own functions render the tables of the runs it writes."""
     import importlib.util
 
-    rows = _load("wikidata_beliefs.json")
     spec = importlib.util.spec_from_file_location("wikidata_evaluate", ROOT / "examples" / "wikidata" / "evaluate.py")
     assert spec is not None and spec.loader is not None
     evaluate = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(evaluate)
-    return evaluate.beliefs(rows)
+    return evaluate
+
+
+def beliefs_table() -> str:
+    """The Wikidata questions' answers ranked by projected probability, from examples/wikidata/evaluate.py --beliefs,
+    rendered by that script's own table."""
+    return _evaluate().beliefs(_load("wikidata_beliefs.json"))
+
+
+def wikidata_exceptions_table() -> str:
+    """Every Wikidata answer the exceptions changed, by the rewrite whose applications its derivations carry, from
+    examples/wikidata/evaluate.py --beliefs, rendered by that script's own table."""
+    return _evaluate().exceptions(_load("wikidata_beliefs.json"))
 
 
 def direction_policy_table() -> str:
@@ -391,7 +406,8 @@ def claim_actions_table() -> str:
     judge, form and rewrite threshold, the gaming and watching-TV matches and the answers through them, each one's P
     without the gaming belief and with it, or "withdrawn" where the check withdrew the match or no answer is left,
     what the check read against each match, and its cost with the belief stated."""
-    runs = {(r["judge"], r["form"], r["threshold"], r["believed"]): r for r in _load("claim_check_actions.json")}
+    runs = {(r["judge"], r["form"], r["threshold"], r["believed"]): r for r in _load("claim_check_actions.json")
+            if r["form"] != "per person"}
     rows = []
     for judge, form, threshold, believed in sorted(runs):
         if believed:
@@ -417,6 +433,93 @@ def claim_actions_table() -> str:
                          f"{pairs} pair{'s' * (pairs != 1)}, {after['cost']['seconds']:.2f} s"])
     return _table(["judge", "form", "rewrite threshold", "check trust", "match or answer", "P without the belief",
                    "P with it", "read against it, with the belief stated", "check's cost"], rows)
+
+
+def claim_people_table() -> str:
+    """The per-person actions example from experiments/claim_check.py, examples/actions_people.kb asked without and
+    with "kim considers gaming to be productive" stated about kim: for each judge and rewrite threshold, each answer's
+    P without the belief and with it, "no answer" where no derivation is left, and each application the check read
+    with the belief stated, defeated or weighed, with the statement's stance."""
+    runs = {(r["judge"], r["threshold"], r["believed"]): r for r in _load("claim_check_actions.json")
+            if r["form"] == "per person"}
+    rows = []
+    for judge, threshold, believed in sorted(runs):
+        if believed:
+            continue
+        before, after = runs[(judge, threshold, False)], runs[(judge, threshold, True)]
+        for name in sorted(set(before["answers"]) | set(after["answers"])):
+            read = [(label, app) for label, app in after["applications"].items() if label.endswith(f"({name})")]
+            notes = "; ".join(
+                f"{label.split(' (')[0].replace(' => ', ' ⇒ ')} for {name}: "
+                + ("defeated" if app["defeated"] else f"normal P {app['normal']['P']:.3f}") + ", "
+                + ", ".join(f"\"{x['statement']}\" b {x['stance']['b']:.3f} d {x['stance']['d']:.3f}" for x in app["read"])
+                for label, app in read)
+            rows.append([judge, f"{threshold:.3g}", f"wastes_time({name})",
+                         before["answers"][name]["P"] if name in before["answers"] else "no answer",
+                         after["answers"][name]["P"] if name in after["answers"] else "no answer", notes or "nothing"])
+        cost = after["cost"]
+        rows.append([judge, f"{threshold:.3g}", "the check's cost", "", "",
+                     (f"{cost['applications']} application{'s' * (cost['applications'] != 1)} read, {cost['pairs']} "
+                      f"pair{'s' * (cost['pairs'] != 1)}, {cost['seconds']:.2f} s")])
+    return _table(["judge", "rewrite threshold", "answer", "P without the belief", "P with it",
+                   "applications read with the belief stated"], rows)
+
+
+def exception_trust_table() -> str:
+    """Each judge's reading of delta-ATOMIC's updates about named people, from experiments/exception_trust.py, in the
+    form the check takes for an application's statements and in the named conditional it rejected, and beside them
+    the same updates read unnamed against the PersonX conditional, from experiments/check_trust.py, the general
+    reading the claim check's trust was fitted on: the trust fitted on dev, and on test the log loss at it and at
+    none, the ranking's AUC, the defeats of weakeners, strengtheners and other premises' updates about the same
+    person, and a defeat's precision and recall."""
+    m = _load("exception_trust.json")
+    general = _load("check_trust.json")["judges"]
+    rows = []
+    for judge, j in sorted(m["judges"].items()):
+        for form, f in j["forms"].items():
+            t = f["test"]
+            rows.append([judge, form, f["trust"], t["at_trust"]["log_loss"], t["at_base_rate"]["log_loss"], t["auc"],
+                         t["defeat"]["weakener"], t["defeat"]["strengthener"], t["defeat"]["other_same_person"],
+                         t["precision"], t["recall"]])
+        if judge in general:
+            g = general[judge]
+            t = g["test"]
+            rows.append([judge, "PersonX conditional", g["check_trust"], t["at_check_trust"]["log_loss"],
+                         t["at_base_rate"]["log_loss"], t["auc"], t["defeat"]["weakener"], t["defeat"]["strengthener"],
+                         t["defeat"]["other"], t["precision"], t["recall"]])
+    return (f"Test split at base rate {m['base_rate']:.3f}, PersonX and PersonY named per item from {len(m['people']['names'])} "
+            f"first names; other premises' updates are {m['others']['rows']:,} drawn with a fixed seed, each filled with "
+            "its claim's people. The PersonX conditional reads the same updates unnamed, with the check trust's other "
+            "premises' updates.\n\n"
+            + _table(["judge", "form", "trust", "log loss at trust", "at none", "AUC", "weakeners defeating",
+                      "strengtheners defeating", "same person's other updates defeating", "defeat precision",
+                      "defeat recall"], rows))
+
+
+def exception_gate_table() -> str:
+    """The gate as an application meets it, from experiments/exception_trust.py: statements naming people against
+    claims written with letters, at the deployed spread, by knowledge-base size, on the test split. The gate is the
+    embedder's, so what it keeps, the claim's own update and the other updates per statement in the knowledge base,
+    is one row a size for every judge and form; then, for each judge and form, how often it reads a kept other, about
+    the claim's own people, as a defeat, a size a column."""
+    m = _load("exception_trust.json")
+    sizes = ("8", "32", "128", "512", "all")
+    forms = ("premise and statement", "named conditional")
+    kept = {(judge, form): [(j["gate"]["test"][form][size]["own_kept"],
+                             j["gate"]["test"][form][size]["others_kept_per_statement"]) for size in sizes]
+            for judge, j in m["judges"].items() for form in forms}
+    if len({json.dumps(k, sort_keys=True) for k in kept.values()}) != 1:
+        msg = f"the gate kept different statements for different judges or forms: {sorted(kept)}"
+        raise ValueError(msg)
+    gate = [[size, own["weakener"] + own["strengthener"], f"{100 * others:.3f}%"]
+            for size, (own, others) in zip(sizes, next(iter(kept.values())), strict=True)]
+    defeats = [[judge, form, *(j["gate"]["test"][form][size]["kept_other_defeat_rate"] for size in sizes)]
+               for judge, j in sorted(m["judges"].items()) for form in forms]
+    return (f"Spread {m['spread']}; a knowledge base of each size holds a claim's own update and others drawn with a fixed "
+            "seed.\n\n"
+            + _table(["statements", "own update kept", "other statements kept, per statement"], gate)
+            + "\n\nThe kept others each judge reads as a defeat, by the knowledge base's statements:\n\n"
+            + _table(["judge", "form", *sizes], defeats))
 
 
 def check_trust_table() -> str:
@@ -480,6 +583,9 @@ def claim_gate_table() -> str:
 
 GENERATORS: dict[str, Callable[[], str]] = {
     "claim-check-actions": claim_actions_table,
+    "claim-check-people": claim_people_table,
+    "exception-trust": exception_trust_table,
+    "exception-gate": exception_gate_table,
     "check-trust": check_trust_table,
     "claim-readings": claim_readings_table,
     "claim-gate": claim_gate_table,
@@ -498,6 +604,7 @@ GENERATORS: dict[str, Callable[[], str]] = {
     "typical": typical_table,
     "typical-actions": typical_actions_table,
     "wikidata-beliefs": beliefs_table,
+    "wikidata-exceptions": wikidata_exceptions_table,
     "snars-ranking": snars_table,
     "snars-chain": snars_chain_table,
 }
