@@ -4,7 +4,8 @@ probability and second moment equal the sums over those subsets; with exception 
 the sums over every world of rewrite validities and leaves, each world run with the leaves' applications guarded, and a
 defeated application derives nothing; an exception never moves an answer whose probability does not depend on its
 application, and moves the others by its leaf's weight alone; a lineage kept to k sets keeps the k most probable; and
-a work budget too small stops the evaluation unfinished.
+a work budget too small stops the evaluation unfinished; and an answer the engine proves without a defeated
+application stays an answer of the lineage with the leaves.
 """
 
 from __future__ import annotations
@@ -19,6 +20,7 @@ from semrewrite.engines.python import PythonEngine
 from semrewrite.lineage import Leaf, Variable, leaf, lineages, minimise, moments, probability
 from semrewrite.model import Atom, Rewrite, Rule
 from semrewrite.protocols import Budget, Program
+from semrewrite.rewriter import _made
 
 CONSTANTS = ("a", "b", "c")
 PREDICATES = ("p", "q", "r", "s")
@@ -253,3 +255,24 @@ def test_an_exception_never_moves_an_answer_not_derived_through_its_application(
         else:
             assert math.isclose(probability(after.answers.get(answer, frozenset()), {**weights, exception: w}),
                                 w * p1 + (1 - w) * p0, abs_tol=1e-12)
+
+
+@settings(max_examples=80, deadline=None)
+@given(concluded(), st.data())
+def test_an_answer_proved_without_a_defeated_application_stays_an_answer(drawn, data) -> None:
+    """c-cc-pa-witness-sound on random programs: each answer whose engine proof makes no defeated application is an
+    answer of the lineage with the leaves, so a run whose proofs carry no defeat keeps every answer without the
+    lineage."""
+    program, query = drawn
+    leaves = _excepted(program, query, data)
+    weights: dict[Variable, float] = {rw.key: rw.score for rw in program.rewrites} | leaves
+    got = lineages(program, query, weights, k=64, work=10_000_000)
+    solved = PythonEngine().solve(Program(facts=program.facts, rules=program.rules, rewrites=program.rewrites,
+                                          proofs=True), query, GENEROUS)
+    assert solved.status == "ok" and solved.proofs is not None
+    defeated = {v for v, w in leaves.items() if w == 0.0}
+    for row, proof in solved.proofs.items():
+        made: dict = {}
+        _made(proof, made)
+        if not any(leaf(key, r) in defeated for key, rows in made.items() for r in rows):
+            assert row in got.answers
