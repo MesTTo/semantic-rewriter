@@ -2,7 +2,8 @@
 constructed chain how SNARS's P depends on a derivation's length. The rewriter weighs each answer by its exact lineage,
 the question's own rules certain and a rewrite used twice in a derivation counting once. SNARS is given the knowledge
 base's statements, the question's own rules as certain-rule rows, the admitted rewrites as semrewrite.snars writes
-them, and each of the question's N candidate answers seeded at the marginal 1/N, the base rate a conclusion keeps
+them, a rewrite one of whose applications the claim check read with a leaf per application it makes (exception_rows),
+and each of the question's N candidate answers seeded at the marginal 1/N, the base rate a conclusion keeps
 where its derivation fails (SLN 8.2). It proves every answer (mettabase's sn prove, which conditions a proof on a
 validity it uses more than once) and counts each answer's proofs over the statements they share (sn fuse-proofs, which
 conditions on every shared statement and takes the disjunction of the derivations that share nothing, as the lineage
@@ -32,6 +33,7 @@ import subprocess
 import sys
 import time
 from dataclasses import replace
+from functools import cache
 from pathlib import Path
 from typing import Any
 
@@ -44,8 +46,10 @@ from semrewrite.model import Atom, Rewrite, Rule, is_variable
 from semrewrite.opinion import Opinion
 from semrewrite.protocols import Budget
 from semrewrite.rewriter import Rewriter
-from semrewrite.snars import believed, certain_rule, marginal, rule_rows, statement
+from semrewrite.snars import believed, certain_rule, exception_rows, marginal, rule_rows, statement
 
+# The rewrites a path from the question to a statement may take, as RESULTS.md's answer beliefs allow.
+PATH_REWRITES = 1
 RESULTS = ROOT / "results" / "snars_ranking.json"
 CHAIN = ROOT / "results" / "snars_chain.json"
 # Each question's judge, rewrite threshold and SNARS proof depth: Jev at the low threshold whose answers RESULTS.md
@@ -60,8 +64,11 @@ VALIDITIES = {"certain": Opinion(1.0, 0.0, 0.0), "P 0.95": Opinion(0.94, 0.0, 0.
               "P 0.24": Opinion(0.2, 0.6, 0.2, 0.214)}
 
 
+@cache
 def _evaluate():
-    """examples/wikidata/evaluate.py as a module, for its questions, tools and strategy."""
+    """examples/wikidata/evaluate.py as a module, for its questions, tools and strategy, loaded once a process: each
+    load makes its own cached tools, whose cascade retriever holds the process's one shared nli-deberta-large
+    (claims.default_reader) and closes it at exit, so a second load would close that reader twice."""
     spec = importlib.util.spec_from_file_location("wikidata_evaluate", ROOT / "examples" / "wikidata" / "evaluate.py")
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -227,7 +234,7 @@ def compare(name: str, judge_name: str, threshold: float, depth: int) -> dict[st
     judge = make_judge(judge_name, threshold=threshold)
     rewriter = Rewriter(kb, judge, engine, retriever, k=evaluate.K, budget=Budget(work=evaluate.WORK, seconds=math.inf),
                         beliefs=evaluate.SETS, data_trust=default_data_trust(judge_name))
-    out = rewriter.ask(kb.queries[0], replace(evaluate.STRATEGY, depth=1), rewriter.discoverer())
+    out = rewriter.ask(kb.queries[0], replace(evaluate.STRATEGY, depth=PATH_REWRITES), rewriter.discoverer())
     rewrites, opinion = rewriter.rewrite_opinions(out.admitted)
     judge.close()
     if out.beliefs is None:
@@ -242,7 +249,17 @@ def compare(name: str, judge_name: str, threshold: float, depth: int) -> dict[st
     world = [marginal(a, 1.0 / len(lineage)) for a in sorted(lineage)]
     world += [believed(f, Opinion(1.0, 0.0, 0.0), "kb") for f in facts]
     world += [line for i, rule in enumerate(kb.rules) for line in _rule_lines(i, rule)]
-    world += [line for r in rewrites for line in rule_rows(r, opinion[r.key], f"semrewrite {judge_name}")]
+    # A rewrite with leaves takes two certain-rule steps per application, so a path, which applies at most
+    # PATH_REWRITES rewrites, may take that many steps more.
+    applied, read = out.applied or {}, out.applications or {}
+    for r in rewrites:
+        source = f"semrewrite {judge_name}"
+        if r.key in applied:
+            leaves = {row: app.normal for (key, row), app in read.items() if key == r.key}
+            world += exception_rows(r, opinion[r.key], applied[r.key], leaves, source)
+        else:
+            world += rule_rows(r, opinion[r.key], source)
+    depth += PATH_REWRITES if applied else 0
     by_answer, snars, seconds = _prove(world, kb.queries[0], depth)
     # Both scorings to 9 decimal places before anything compares them. SNARS counts an answer's proofs in an order its
     # statement ids set, so two answers equal in exact arithmetic can differ in the last bits (about 1e-16), and
@@ -263,6 +280,8 @@ def compare(name: str, judge_name: str, threshold: float, depth: int) -> dict[st
     multi = sum(1 for a in both if len(by_answer[a]) > 1)
     return {
         "question": name, "judge": judge_name, "threshold": threshold, "depth": depth, "prior": 1.0 / len(lineage),
+        "excepted": {"rewrites": len(applied), "applications_read": len(read),
+                     "defeated": sum(app.defeated for app in read.values()), "fallen": len(out.fallen)},
         "rewrites": len(rewrites), "facts": len(facts), "proofs": sum(len(ps) for ps in by_answer.values()),
         "answers": {"rewriter": len(lineage), "snars": len(snars), "both": len(both),
                     "rewriter_only": sorted(set(lineage) - set(snars))[:20],
