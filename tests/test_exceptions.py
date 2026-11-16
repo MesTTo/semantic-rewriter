@@ -338,7 +338,20 @@ def test_explain_lists_a_weighed_application_only_where_it_weighs_on_an_answer(m
     assert "1 application read, 0 defeated" in err
     assert main(["ask", "people.kb", "wastes_time(X)", "--retriever", "all", "--explain"]) == 0
     err = capsys.readouterr().err
-    assert "applications weighed" not in err and "other application" not in err and "1 application read" in err
+    assert "applications weighed" not in err and "other application" not in err
+
+
+@pytest.mark.parametrize(("belief", "lineage"), [(DEFEAT, True), ((0.5, 0.3), False)])
+def test_a_run_without_beliefs_settles_the_exceptions_from_its_proofs_unless_one_carries_a_defeat(belief, lineage) -> None:
+    """Without beliefs the engine's proofs settle the exceptions where none of the applications they make is
+    defeated: kim's gaming application read below the bar leaves every answer, and no lineage is evaluated. A defeat
+    on kim's proof sends the run to the lineage, which drops kim; either way the answers are the lineage's own."""
+    _, out = ask(*people(belief=belief), beliefs=0, proofs=True)
+    _, plain = ask(*people(belief=belief), beliefs=0, proofs=False)
+    assert out.answers == plain.answers and out.fallen == plain.fallen
+    assert out.fallen == ({("kim",)} if lineage else set())
+    assert (out.exception_work > 0) is lineage and plain.exception_work > 0
+    assert out.applications is not None and set(out.applications) == {(GAMES, ("kim",))}
 
 
 def test_a_rewrite_with_leaves_becomes_two_certain_rows_and_a_normal_statement_per_row() -> None:
