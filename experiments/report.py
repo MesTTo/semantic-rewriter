@@ -505,18 +505,21 @@ def exception_gate_table() -> str:
     m = _load("exception_trust.json")
     sizes = ("8", "32", "128", "512", "all")
     forms = ("premise and statement", "named conditional")
+    gated = {judge: j for judge, j in m["judges"].items() if "gate" in j}
+    ungated = sorted(set(m["judges"]) - set(gated))
     kept = {(judge, form): [(j["gate"]["test"][form][size]["own_kept"],
                              j["gate"]["test"][form][size]["others_kept_per_statement"]) for size in sizes]
-            for judge, j in m["judges"].items() for form in forms}
+            for judge, j in gated.items() for form in forms}
     if len({json.dumps(k, sort_keys=True) for k in kept.values()}) != 1:
         msg = f"the gate kept different statements for different judges or forms: {sorted(kept)}"
         raise ValueError(msg)
     gate = [[size, own["weakener"] + own["strengthener"], f"{100 * others:.3f}%"]
             for size, (own, others) in zip(sizes, next(iter(kept.values())), strict=True)]
     defeats = [[judge, form, *(j["gate"]["test"][form][size]["kept_other_defeat_rate"] for size in sizes)]
-               for judge, j in sorted(m["judges"].items()) for form in forms]
+               for judge, j in sorted(gated.items()) for form in forms]
+    unread = f" The gate was not read for {', '.join(ungated)} (experiments/exception_trust.py --no-gate)." if ungated else ""
     return (f"Spread {m['spread']}; a knowledge base of each size holds a claim's own update and others drawn with a fixed "
-            "seed.\n\n"
+            f"seed.{unread}\n\n"
             + _table(["statements", "own update kept", "other statements kept, per statement"], gate)
             + "\n\nThe kept others each judge reads as a defeat, by the knowledge base's statements:\n\n"
             + _table(["judge", "form", *sizes], defeats))

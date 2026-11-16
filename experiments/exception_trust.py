@@ -20,7 +20,8 @@ with the provenance of the run that measured it, since the file keeps the judges
 judge's exception_trust into semrewrite/judges/calibration.json, every other value there kept.
 
 Run from the repository root, with a GPU for the model judges: python experiments/exception_trust.py [--judges a,b]
-[--stances DIR].
+[--stances DIR] [--no-gate]. --no-gate measures the two forms alone, for a judge too slow to read the gate as well: the
+gate reads the kept pairs of every knowledge-base size, 45,322 for a judge to the forms' 19,956.
 """
 
 from __future__ import annotations
@@ -160,9 +161,9 @@ def gate(split: str, items: Sequence[Item], named: dict[str, Names], own: dict[s
     return out
 
 
-def measure(name: str, items: Sequence[Item], rate: float, cache: Path | None) -> dict[str, Any]:
-    """Judge `name`'s trust fitted on the dev items for each form, its scores and defeats on dev and test, and the
-    gate on each split."""
+def measure(name: str, items: Sequence[Item], rate: float, cache: Path | None, *, gated: bool = True) -> dict[str, Any]:
+    """Judge `name`'s trust fitted on the dev items for each form, its scores and defeats on dev and test, and, unless
+    `gated` is False, the gate on each split."""
     judge = make_judge(name)
     if not isinstance(judge, SentenceJudge):
         msg = f"judge {name} does not read sentences, so the claim check cannot use it"
@@ -198,7 +199,8 @@ def measure(name: str, items: Sequence[Item], rate: float, cache: Path | None) -
                 }
             result["test"]["defeat"]["other_same_person"] = defeat_rate(read_others, bar)
             out["forms"][form] = result
-        out["gate"] = {s: gate(s, items, named, by_item, judge, embedder, cache) for s in ("dev", "test")}
+        if gated:
+            out["gate"] = {s: gate(s, items, named, by_item, judge, embedder, cache) for s in ("dev", "test")}
     finally:
         judge.close()
         embedder.close()
@@ -211,6 +213,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--judges", default="nli-deberta-large,typical-qwen3-4b", help="comma-separated judge names")
     parser.add_argument("--stances", type=Path, help="directory to keep each judge's stances in, and reuse them from")
+    parser.add_argument("--no-gate", action="store_true", help="measure the two forms without the gate")
     args = parser.parse_args(argv)
     names = [n for n in args.judges.split(",") if n]
     unknown = sorted(set(names) - set(NAMES))
@@ -224,7 +227,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     measured = {k: v for k, v in previous.get("judges", {}).items() if k in NAMES}
     # The file keeps the judges earlier runs measured, so each judge carries the provenance of the run measuring it.
     for name in names:
-        measured[name] = {**measure(name, items, rate, args.stances), "provenance": state}
+        measured[name] = {**measure(name, items, rate, args.stances, gated=not args.no_gate), "provenance": state}
         taken = measured[name]["forms"][TAKEN]
         print(f"{name}: exception trust {taken['trust']:.4f}, test log loss {taken['test']['at_trust']['log_loss']:.4f}, "
               f"defeat precision {taken['test']['precision']}, recall {taken['test']['recall']:.3f}", flush=True)
