@@ -316,6 +316,31 @@ def test_the_command_line_shows_the_defeated_application_and_the_answer_it_left(
     assert exception["defeated"] and [s["statement"] for s in exception["statements"]] == [BELIEF]
 
 
+@pytest.mark.parametrize(("belief", "listed"), [((0.5, 0.3), True), ((0.9, 0.0), False)])
+def test_explain_lists_a_weighed_application_only_where_it_weighs_on_an_answer(monkeypatch, capsys, belief, listed) -> None:
+    """A belief read against kim's gaming application below the bar weighs on kim's P, so --explain with beliefs lists
+    the application; one that disbelieves nothing leaves the leaf certain and out of the lineage, so it is only counted.
+    Without beliefs nothing weighs, and only the cost line counts what was read."""
+    import semrewrite.judges
+    import semrewrite.retrieve
+    from semrewrite import cli
+
+    kb, judge, embedder = people(kim_watches=True, belief=belief)
+    monkeypatch.setattr(cli, "_judge", lambda args, kb: judge)
+    monkeypatch.setattr(semrewrite.retrieve, "EmbeddingRetriever", lambda: embedder)
+    monkeypatch.setattr(cli.formats, "load", lambda path: kb)
+    monkeypatch.setattr(semrewrite.judges, "default_data_trust", lambda name: 0.0)
+    assert main(["ask", "people.kb", "wastes_time(X)", "--retriever", "all", "--beliefs", "--explain"]) == 0
+    err = capsys.readouterr().err
+    assert ("applications weighed by what the knowledge base states about their individuals (1):\n"
+            "  wastes_time(kim) ⇐ play_games(kim)    normal") in err if listed else "applications weighed" not in err
+    assert ("1 other application read weighs on no answer" in err) is not listed
+    assert "1 application read, 0 defeated" in err
+    assert main(["ask", "people.kb", "wastes_time(X)", "--retriever", "all", "--explain"]) == 0
+    err = capsys.readouterr().err
+    assert "applications weighed" not in err and "other application" not in err and "1 application read" in err
+
+
 def test_a_rewrite_with_leaves_becomes_two_certain_rows_and_a_normal_statement_per_row() -> None:
     """Rows nothing was read about take the certain leaf, a defeated row none, and the rewrite's validity is written
     as rule_rows writes it."""

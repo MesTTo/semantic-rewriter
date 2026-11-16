@@ -141,7 +141,8 @@ class Outcome:
     rewrite's opinion that it is valid, which those answers' opinions are computed from; `readings`, with beliefs and
     a claim check, holds the statements read against each admitted rewrite (semrewrite.claims). Where the check read
     an application, `applications` holds each one read by (rewrite key, row), `applied` every row the lineage applied
-    each such rewrite to, and `fallen` the engine's answers every derivation of which a defeated application carries,
+    each such rewrite to, `carried` for each answer the applications whose leaves its derivations carry, those that
+    weigh on its opinion, and `fallen` the engine's answers every derivation of which a defeated application carries,
     which `answers` no longer holds. `work` counts what the run would count without the exceptions, the engine's and,
     with beliefs, the lineage's; `exception_work` what the exceptions add: the lineage a run without beliefs evaluates
     to find the applications, the lineage evaluated again with the leaves, and the solve showing a derivation they
@@ -173,6 +174,7 @@ class Outcome:
     readings: dict[Key, tuple[Reading, ...]] | None = None
     applications: dict[tuple[Key, Row], Application] | None = None
     applied: dict[Key, frozenset[Row]] | None = None
+    carried: dict[tuple[str, ...], frozenset[tuple[Key, Row]]] | None = None
     fallen: set[tuple[str, ...]] = field(default_factory=set)
 
     @property
@@ -375,6 +377,8 @@ class Rewriter:
             out.applied = {key: frozenset(rows) for key, rows in found.applied.items() if key in excepted}
             out.fallen = {row for row in out.answers if row not in found.answers}
             out.answers -= out.fallen
+            out.carried = {row: frozenset(((v[0], v[1], v[2]), v[3]) for s in found.answers[row] for v in s if len(v) == 4)
+                           for row in out.answers}
             self._prove_around(query, out, rewrites)
         if self.beliefs:
             out.beliefs = answer_beliefs(found, out.answers, {**opinion, **leaves})

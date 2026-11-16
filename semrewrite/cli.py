@@ -187,13 +187,18 @@ def _readers(rw: Rewriter) -> None:
 
 def _explain_applications(rw: Rewriter, out) -> None:
     """The applications the claim check read, on standard error: those a statement about their individuals defeats,
-    each with the statements contradicting its conclusion, then those it only weighs, each with its leaf's opinion
-    and the statements read, then the answers no derivation is left for. Nothing where no application was read."""
+    each with the statements contradicting its conclusion; with beliefs, those it weighs that an answer's derivations
+    carry, each with its leaf's opinion and the statements read, and how many others it read, which weigh on no
+    answer; then the answers no derivation is left for. Nothing where no application was read. Without beliefs an
+    application not defeated changes nothing printed, and on Alphabet's question the check reads 361 applications for
+    one answer, so the cost line's count stands for them."""
     if not out.applications or rw.claims is None:
         return
     order = sorted(out.applications.items(), key=lambda item: (item[0][0][1], item[0][0][0], item[0][1]))
     defeated = [(at, a) for at, a in order if a.defeated]
-    weighed = [(at, a) for at, a in order if not a.defeated]
+    carried = set().union(*(out.carried or {}).values()) if out.beliefs is not None else set()
+    weighed = [(at, a) for at, a in order if not a.defeated and at in carried]
+    others = len(order) - len(defeated) - len(weighed) if out.beliefs is not None else 0
     if defeated:
         print(f"\napplications defeated by what the knowledge base states about their individuals ({len(defeated)}):",
               file=sys.stderr)
@@ -208,6 +213,9 @@ def _explain_applications(rw: Rewriter, out) -> None:
             print(f"  {_application_text(key, row)}    normal {_opinion_text(a.normal)}", file=sys.stderr)
             for line in _reading_lines(a.readings):
                 print(f"    {line}", file=sys.stderr)
+    if others:
+        print(f"\n{others} other application{'s' * (others != 1)} read weigh{'s' * (others == 1)} on no answer: no "
+              "answer's derivations carry them, or nothing read about them disbelieves them", file=sys.stderr)
     if out.fallen:
         fallen = ", ".join(f"{out.query.split('(')[0]}({', '.join(row)})" for row in sorted(out.fallen))
         print(f"\nanswers a defeat leaves no derivation for ({len(out.fallen)}): {fallen}", file=sys.stderr)
