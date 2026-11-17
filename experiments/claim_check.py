@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import sys
 from pathlib import Path
@@ -35,6 +36,7 @@ from semrewrite.judges import make as make_judge
 from semrewrite.kb import KB
 from semrewrite.lineage import SETS
 from semrewrite.model import Atom, Proposal
+from semrewrite.protocols import Budget
 from semrewrite.retrieve import AllCandidates, EmbeddingRetriever
 from semrewrite.rewriter import Rewriter
 
@@ -66,8 +68,11 @@ def run(judge, form: str, believed: bool, threshold: float, embedder: EmbeddingR
     kb = believing(kb, belief) if believed else kb
     judge.threshold = threshold
     check = ClaimCheck(kb, judge, embedder)
+    # No time limit, the work budget still bounding every run, as the conformance kit's must-finish runs have, so the
+    # machine's load cannot decide a measurement: typical-qwen3-4b, its blocks streamed from disk under load, spent
+    # the default 60 s expanding a predicate at 19:03 on 17 November (i-cc-pa-actions-time-budget).
     rewriter = Rewriter(kb, judge, make_engine("python"), AllCandidates(), beliefs=SETS,
-                        data_trust=default_data_trust(judge.name), claims=check)
+                        data_trust=default_data_trust(judge.name), claims=check, budget=Budget(seconds=math.inf))
     out = rewriter.ask(kb.queries[0], "lazy-tabled")
     if not out.finished or out.beliefs is None or out.rewrite_beliefs is None or out.readings is None:
         msg = f"{form}: {out.status} {out.detail}"
