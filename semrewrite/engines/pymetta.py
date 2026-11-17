@@ -29,12 +29,18 @@ step, or (proof-rule j v1 ... vk proof1 ... proofn) for a step by the program's
 rule j, where v1 ... vk bind the variables its body has and its head lacks. A
 rewrite cycle gives an answer infinitely many proof terms, so plain tables never
 complete there; each table is instead declared by a (cache name (plain private
-(lattice keep))) row whose join keeps the proof with fewer steps, one per answer.
+(lattice keep))) row whose join keeps the proof with fewer steps, one per answer,
+and of two with as many steps the one first in the standard order of terms, which
+SWI-Prolog's msort sorts by: tabling promises no order for a table's answers, and
+pymetta's changes with when SWI's atom garbage collector runs and with the atoms
+the process made before, so a join keeping the first of two equally short proofs
+printed either derivation of swanson-jev's answers from run to run
+(c-pymetta-table-order-history).
 Steps are counted in naturals, so the join stops improving and the cycle
 converges, at each answer's shortest derivation (Knuth's superior-function
 argument: a proof's size is 1 plus its premises' sizes); a proof that went round
 a cycle is never the shortest. An untabled run returns every derivation, and the
-shortest is kept. The proof-free source is unchanged.
+shortest is kept, ties broken in the same order. The proof-free source is unchanged.
 
 Names are data: every predicate is written as p<k>__<name> and every constant as
 c__<name> inside the engine and read back in the answers, so no knowledge-base
@@ -49,7 +55,11 @@ which over a long process starved untabled runs of their budget.
 
 Work is the inferences evaluating the query spends, and a solve that finishes
 counts the same work whatever the process ran before it, so a finished run's work
-is the exact budget the same run needs. pymetta 0.9.4 counts some of its own upkeep
+is the exact budget the same run needs in that process. Another process may count a
+little more or less: pymetta's tables return answers in an order that varies between
+processes, and the work tabling does follows it, so the four benchmarks' 58 queries
+summed 1,250,060 to 1,250,190 inferences lazy-tabled in four processes of one tree
+(i-pymetta-work-varies-between-processes). pymetta 0.9.4 counts some of its own upkeep
 inside an evaluation, and the engine keeps that upkeep out of the count four ways
 (repros/history_changes_inference_count.py). It parses the query before counting:
 pymetta's reader spends three inferences a character, so a count that included it
@@ -126,9 +136,15 @@ class _ProofTerms:
         self.keep, self.size = f"keep{tag}", f"size{tag}"
 
     def definitions(self) -> list[str]:
-        """The size of a proof term, and the join a proof table keeps the proof with fewer steps by."""
+        """The size of a proof term, and the join a proof table keeps the proof with fewer steps by, and of two with
+        as many the one first in the standard order of terms, which msort puts first. The join reads both step counts
+        from its arguments' heads and calls msort only on a tie: on swanson-jev it counted 8,790 inferences, against
+        8,934 for the join calling size on both, 9,284 for one calling msort on every pair and 11,039 for one breaking
+        ties through a Python op (c-cc-pa-join-variants, c-cc-pa-msort-cost)."""
+        old, new = f"({_PROOF} $a $x)", f"({_PROOF} $b $y)"
+        first = f"(car-atom (msort ({old} {new})))"
         return [f"(= ({self.size} ({_PROOF} $n $node)) $n)",
-                f"(= ({self.keep} $old $new) (if (< ({self.size} $new) ({self.size} $old)) $new $old))"]
+                f"(= ({self.keep} {old} {new}) (if (< $b $a) {new} (if (< $a $b) {old} {first})))"]
 
     def body(self, calls: list[str], node: str) -> str:
         """The premises' calls as a left-to-right let chain binding each one's proof to $pf<i>, ending in the
@@ -140,6 +156,23 @@ class _ProofTerms:
         for i in reversed(range(len(calls))):
             text = f"(let $pf{i} {calls[i]} {text})"
         return text
+
+
+def _standard_order(term: object) -> tuple:
+    """A key ordering the terms pymetta returns as SWI-Prolog's standard order of terms, which msort sorts by, orders
+    them: numbers first, by value and a float before an equal integer, then symbols and other atoms by their text,
+    then expressions element by element, one that begins a longer one first."""
+    if isinstance(term, Expression):
+        return (2, tuple(_standard_order(child) for child in term.children))
+    text = str(term)
+    try:
+        value = int(text)
+    except ValueError:
+        try:
+            return (0, float(text), 0)
+        except ValueError:
+            return (1, text)
+    return (0, value, 1)
 
 
 def _mapping_symbol(m: tuple[int, ...]) -> str:
@@ -301,19 +334,20 @@ def _settle(engine: PyMeTTaEngine) -> None:
     this thread counts pymetta resolving a builtin, op or library predicate, or creating a global, for the first time.
 
     The program has facts of arity one and two, a rule with a two-atom body, and rewrites with and without a swap of
-    their arguments, two of which make the cycle f <= g <= f, so the sources hold every clause shape _native_source
-    and _meta_source write. It runs under every setting of tables, depth bound, what the bound counts, discovery
-    callback and proofs, with and without a time limit, since the first evaluation under a time limit cost 3
-    inferences more. e(X, Y) reaches no cycle and runs under each; f(X, Y) runs wherever a run on a cycle
-    terminates, with tables or a bound, since the first tabled cycle of a process, and the first proof table to join
-    two proofs of one answer, cost their first solve more too. Each must answer as the program says, since a
-    warm-up that failed would hide the engine's own fault. Last, f(X, Y) runs without tables or a bound, an endless
-    loop, to check that this thread counts work at all.
+    their arguments, two of which make the cycle f <= g <= f and two more of which give e(j, k) a second derivation as
+    short as the first, through h, so a proof table joins two proofs of as many steps and sorts them with msort; the
+    sources hold every clause shape _native_source and _meta_source write. It runs under every setting of tables, depth
+    bound, what the bound counts, discovery callback and proofs, with and without a time limit, since the first
+    evaluation under a time limit cost 3 inferences more. e(X, Y) reaches no cycle and runs under each; f(X, Y) runs
+    wherever a run on a cycle terminates, with tables or a bound, since the first tabled cycle of a process, and the
+    first proof table to join two proofs of one answer, cost their first solve more too. Each must answer as the
+    program says, since a warm-up that failed would hide the engine's own fault. Last, f(X, Y) runs without tables or
+    a bound, an endless loop, to check that this thread counts work at all.
     """
-    # Time: 89 solves of this eight-clause program, once per thread.
+    # Time: 89 solves of this ten-clause program, once per thread.
     _SETTLED.done = True
     rewrites = (Rewrite("d", "c", (1, 0)), Rewrite("e", "d", (0, 1)), Rewrite("g", "d", (0, 1)),
-                Rewrite("f", "g", (1, 0)), Rewrite("g", "f", (1, 0)))
+                Rewrite("f", "g", (1, 0)), Rewrite("g", "f", (1, 0)), Rewrite("h", "c", (1, 0)), Rewrite("e", "h", (0, 1)))
     facts = (Atom("a", ("k", "j")), Atom("b", ("j",)))
     rules = (Rule(Atom("c", ("X", "Y")), (Atom("a", ("X", "Y")), Atom("b", ("Y",)))),)
     queries = ((Atom("e", ("X", "Y")), {("j", "k")}), (Atom("f", ("X", "Y")), {("k", "j")}))
@@ -355,10 +389,12 @@ def _settle(engine: PyMeTTaEngine) -> None:
 
 def _read_answers(solution: Solution, result: list, query: Atom, consts: _Names, reader: _ProofReader | None) -> None:
     """Fill the solution's answers from the evaluation's (ans a1 ... an) terms, each with its proof term last when
-    proofs were asked for, the shortest proof of each answer kept; anything else makes the run an error."""
+    proofs were asked for, of each answer's proofs the one first in the standard order of terms, which orders (pf n
+    node) by its step count first, as the proof tables' join keeps them: the shortest, and among equally short ones
+    not whichever pymetta returned first (c-pymetta-table-order-history); anything else makes the run an error."""
     width = query.arity + 1 + (reader is not None)
     answers: set[tuple[str, ...]] = set()
-    shortest: dict[tuple[str, ...], tuple[int, object]] = {}
+    shortest: dict[tuple[str, ...], tuple[tuple, object]] = {}
     for atom in result:
         children: list[object] = list(atom.children) if isinstance(atom, Expression) else []
         if len(children) != width or str(children[0]) != "ans":
@@ -371,8 +407,9 @@ def _read_answers(solution: Solution, result: list, query: Atom, consts: _Names,
             if size is None:
                 solution.status, solution.detail = "error", f"answer {atom} has no proof term"
                 return
-            if row not in shortest or size < shortest[row][0]:
-                shortest[row] = (size, children[-1])
+            rank = _standard_order(children[-1])
+            if row not in shortest or rank < shortest[row][0]:
+                shortest[row] = (rank, children[-1])
     proofs: dict[tuple[str, ...], Proof] = {}
     for row, (_, term) in shortest.items():
         try:

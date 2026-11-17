@@ -186,7 +186,7 @@ def test_kit_passes_a_top_down_engine_and_runs_untabled() -> None:
     assert report.passed, report.summary()
     assert outcomes == {"tabling": "skip", "depth": "pass", "rewrite-depth": "pass", "lazy": "pass",
                         "budget": "pass", "repeatable": "pass", "names": "pass", "untabled": "pass", "proofs": "skip",
-                        "rounds": "skip"}
+                        "rounds": "skip", "hash-order": "pass"}
     depth = next(v for v in report.verdicts if v.prop == "depth")
     assert depth.may_stop == 3 * depth.cases and 0 <= depth.stopped <= depth.may_stop
     assert "untabled runs allowed to stop at a limit did" in depth.lines()[0]
@@ -441,6 +441,33 @@ class DriftingWork(_Delegate):
         return replace(solution, work=solution.work + self.solves)
 
 
+class HashOrderedProofs(PaddedProofs):
+    """Pads its proofs when the first predicate a set of the program's yields is not the least, as an engine keeping
+    whichever of two derivations it meets first while walking a set of strings does, so its proofs follow
+    PYTHONHASHSEED."""
+
+    def solve(self, program, query, budget, expand=None):
+        names = {fact.pred for fact in program.facts} | {query.pred}
+        if next(iter(names)) == min(names):
+            return self.inner.solve(program, query, budget, expand)
+        return super().solve(program, query, budget, expand)
+
+
+class DriftingProofs(PaddedProofs):
+    """Pads its proofs on every second solve of the process, as an engine keeping whichever of two derivations its
+    tables return first does when what ran before changes their order: the same answers and work, another proof."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.solves = 0
+
+    def solve(self, program, query, budget, expand=None):
+        self.solves += 1
+        if self.solves % 2:
+            return self.inner.solve(program, query, budget, expand)
+        return super().solve(program, query, budget, expand)
+
+
 BROKEN: list[tuple[Engine, str]] = [
     (IgnoresDepth(), "depth"),
     (DepthOffByOne(), "depth"),
@@ -464,6 +491,8 @@ BROKEN: list[tuple[Engine, str]] = [
     (LoosensOneAtomRules(), "tabling"),
     (ReachesQueryOnly(), "rounds"),
     (DriftingWork(), "repeatable"),
+    (DriftingProofs(), "repeatable"),
+    (HashOrderedProofs(), "hash-order"),
 ]
 
 
@@ -473,6 +502,14 @@ def test_kit_fails_a_broken_engine(engine: Engine, prop: str) -> None:
     print("\n".join(verdict.lines()))
     assert verdict.outcome == "fail", f"the kit passed {type(engine).__name__} on {prop}"
     assert verdict.case is not None and verdict.detail
+
+
+def test_an_engine_no_other_process_can_rebuild_skips_the_hash_order_property() -> None:
+    class Local(_Delegate):
+        """Defined inside a test, so it does not pickle and no fresh process can import it."""
+
+    verdict = kit.check(Local(), kit.HASH_ORDER, max_examples=5)
+    assert verdict.outcome == "skip" and "does not pickle" in verdict.detail, verdict
 
 
 def test_broken_engine_fails_the_whole_run() -> None:

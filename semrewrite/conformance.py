@@ -15,11 +15,16 @@ or from a shell, `python -m semrewrite.conformance --engine python`.
 | rewrite-depth | rewrite_depth | with a bound of 1 to 4 rewrites, answers equal the reference cut at that many rewrites and recursion through user rules answers completely, tables on or off (untabled runs may stop) |
 | lazy | lazy, and tabling or a depth bound | rewrites given through expand answer as rewrites given up front; expand sees only the program's predicates |
 | budget | | a budget too small ends with a limit status and no answers; a run reporting ok stayed in its budget |
-| repeatable | repeatable_work, and tabling or depth | every run that must finish counts the same work when solved again after the others, in reverse order, and one unit less stops it with no answers |
+| repeatable | tabling or depth | every run that must finish has the same status, answers, reached predicates and proofs when solved again after the others, in reverse order; with repeatable_work it counts the same work too, and one unit less stops it with no answers |
 | names | tabling or a depth bound | predicates and constants spelled like reserved words keep their answers, eagerly and lazily |
 | untabled | untabled | untabled, a query on a rewrite cycle hits a limit and one reaching no cycle answers exactly |
 | proofs | proofs, and tabling or a depth bound | every answer has a proof deriving it from the program within the depth bound |
 | rounds | reached and tabling | evaluating, adding the rewrites of every predicate a run reached and evaluating again until a run reaches nothing new gives the reference answers |
+| hash-order | tabling or a depth bound | a run's status, answers, reached predicates and proofs are the same under PYTHONHASHSEED 0 and 1 |
+
+The hash-order property solves each run in two processes of its own, one per seed, since Python fixes a process's
+string hashing when it starts: each rebuilds the engine from its pickle, so an engine that does not pickle, or whose
+class a fresh process cannot import, is skipped.
 
 The reference is semrewrite.fixpoint, a naive evaluator sharing no code with any
 engine. Generated programs have 2 to 6 predicates of arity 0 to 3 over four
@@ -67,16 +72,22 @@ so importing this module never needs it.
 from __future__ import annotations
 
 import argparse
+import atexit
+import base64
 import contextvars
 import math
+import os
+import pickle
 import random
+import subprocess
+import sys
 import traceback
 import unittest
 import warnings
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, replace
-from typing import TYPE_CHECKING, Literal, NoReturn
+from typing import TYPE_CHECKING, Literal, NoReturn, cast
 
 from semrewrite import fixpoint
 from semrewrite.engines import REGISTRY, make
@@ -128,6 +139,9 @@ LOOP: Budget = Budget(work=20_000, seconds=1.0)
 #: The budget an untabled bounded run that may stop gets: a second bounds what a search
 #: too large to finish costs the kit.
 SEARCH: Budget = Budget(work=GENEROUS.work, seconds=LOOP.seconds)
+
+#: The string-hash seeds the hash-order property solves each run under, each in a process of its own.
+HASH_SEEDS: tuple[int, int] = (0, 1)
 
 # While check() runs, the depth-bounded runs it allowed to stop and the ones that stopped.
 _ALLOWED_TO_STOP: contextvars.ContextVar[list[int] | None] = contextvars.ContextVar("allowed_to_stop", default=None)
@@ -588,13 +602,15 @@ def _run_name(program: Program, lazy: bool) -> str:
 
 # Time: 2r + 1 solves, r = len(_repeated_runs), at most 9.
 def check_repeatable(engine: Engine, case: Case) -> None:
-    """A finished run counts the same work whatever ran before it, so its work is the exact budget it needs.
+    """A finished run's status, answers, reached predicates and proofs are the same whatever ran before it in the
+    process, and where the engine declares repeatable_work so is its work, which is then the exact budget it needs.
 
     Every run _repeated_runs lists must finish; each is solved again after all of them, in reverse order, so its
-    second solve follows other runs than its first did, and must answer as before with the same work. The first run
-    then gets a budget one unit short of the work it counted, and must end at work_limit with no answers.
+    second solve follows other runs than its first did, and must have the outcome its first had. With repeatable_work
+    the first run then gets a budget one unit short of the work it counted, and must end at work_limit with no answers.
     """
     _require(engine, REPEATABLE.needs)
+    work = engine.capabilities.repeatable_work
     expander = _Expander(case.program.rewrites)
     runs = _repeated_runs(engine.capabilities, case.program)
     first = []
@@ -604,11 +620,13 @@ def check_repeatable(engine: Engine, case: Case) -> None:
             _fail(f"{_run_name(program, lazy)}: status {solution.status} ({solution.detail}), expected ok")
         first.append(solution)
     for (program, lazy), was in reversed(list(zip(runs, first, strict=True))):
-        again = engine.solve(program, case.query, GENEROUS, expander if lazy else None)
-        if again.status != "ok" or again.work != was.work or set(again.answers) != set(was.answers):
-            _fail(f"{_run_name(program, lazy)}, solved again after the other runs: status {again.status}, work "
-                  f"{again.work} and {len(again.answers)} answers, where the first solve counted {was.work} for "
-                  f"{len(was.answers)} answers")
+        before = _outcome(was, work)
+        again = _outcome(engine.solve(program, case.query, GENEROUS, expander if lazy else None), work)
+        if again != before:
+            _fail(f"{_run_name(program, lazy)}, solved first and again after the other runs, differs in "
+                  f"{_difference(before, again)}")
+    if not work:
+        return
     (program, lazy), need = runs[0], first[0].work
     if need > 0:
         short = Budget(work=need - 1, seconds=GENEROUS.seconds)
@@ -722,6 +740,154 @@ def check_proofs(engine: Engine, case: Case) -> None:
             problem = proof_problem(proof, Atom(case.query.pred, answer), program)
             if problem:
                 _fail(f"{_bound(program)}: the proof of {Atom(case.query.pred, answer)} {problem}")
+
+
+Outcome = tuple[str, tuple[Row, ...], int | None, tuple[str, ...] | None, tuple[tuple[Row, tuple[str, ...]], ...] | None]
+
+
+def _outcome(solution: Solution, work: bool) -> Outcome:
+    """What the repeatable and hash-order properties compare of a run: its status, answers, reached predicates and
+    each answer's proof as text, in sorted order, and its work where `work` says the engine declares it repeatable,
+    leaving out its seconds and its detail's wording."""
+    reached = None if solution.reached is None else tuple(sorted(solution.reached))
+    proofs = None if solution.proofs is None else tuple(sorted((row, tuple(proof.lines()))
+                                                                for row, proof in solution.proofs.items()))
+    return solution.status, tuple(sorted(solution.answers)), solution.work if work else None, reached, proofs
+
+
+def _line(value: object) -> str:
+    return base64.b64encode(pickle.dumps(value)).decode() + "\n"
+
+
+class _Worker:
+    """A process solving with one engine under one PYTHONHASHSEED, `python -m semrewrite.conformance --solve`: it
+    reads the engine, then one run a line, and answers each with the run's outcome, every line a base64-encoded
+    pickle. It imports from the parent's sys.path, so an engine class a test defines rebuilds too."""
+
+    def __init__(self, engine: Engine, seed: int) -> None:
+        env = {**os.environ, "PYTHONHASHSEED": str(seed), "PYTHONPATH": os.pathsep.join(p for p in sys.path if p)}
+        self.seed = seed
+        self.process = subprocess.Popen([sys.executable, "-m", "semrewrite.conformance", "--solve"],
+                                        stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, env=env)
+        kind, detail = self.ask(engine)
+        if kind != "ready":
+            self.close()
+            msg = f"the engine cannot be rebuilt in a fresh process, so its runs cannot be compared across hash seeds: {detail}"
+            raise MissingCapability(msg)
+
+    def ask(self, payload: object) -> tuple[str, object]:
+        """Send one pickled message and read the reply."""
+        stdin, stdout = self.process.stdin, self.process.stdout
+        assert stdin is not None and stdout is not None
+        stdin.write(_line(payload))
+        stdin.flush()
+        reply = stdout.readline()
+        if not reply:
+            msg = f"the solving process under PYTHONHASHSEED {self.seed} exited with status {self.process.wait()}"
+            raise RuntimeError(msg)
+        # The reply comes from this kit's own worker process.
+        return pickle.loads(base64.b64decode(reply))
+
+    def close(self) -> None:
+        if self.process.stdin is not None:
+            self.process.stdin.close()
+        self.process.wait()
+
+
+# Each engine's workers, by its pickle and the seed, kept while this process runs.
+_WORKERS: dict[tuple[bytes, int], _Worker] = {}
+
+
+@atexit.register
+def _close_workers() -> None:
+    while _WORKERS:
+        _WORKERS.popitem()[1].close()
+
+
+def _worker(engine: Engine, seed: int) -> _Worker:
+    """The worker solving with `engine` under `seed`, started on first use; MissingCapability where the engine does
+    not pickle."""
+    try:
+        blob = pickle.dumps(engine)
+    except Exception as error:  # pickling fails with whatever error an object's state raises
+        msg = f"the engine does not pickle, so the kit cannot rebuild it in a fresh process: {error}"
+        raise MissingCapability(msg) from error
+    if (blob, seed) not in _WORKERS:
+        _WORKERS[(blob, seed)] = _Worker(engine, seed)
+    return _WORKERS[(blob, seed)]
+
+
+def _serve() -> int:
+    """The --solve process: rebuild the engine from the first line, refusing anything without a solve method, then
+    answer each run with its outcome, or with the error its solve raised."""
+    engine: Engine | None = None
+    for line in sys.stdin:
+        try:
+            # Written by this kit's parent process.
+            payload = pickle.loads(base64.b64decode(line))
+        except Exception as error:  # noqa: BLE001 - an engine class that will not import is reported, not raised
+            reply: tuple[str, object] = ("unbuildable", f"{type(error).__name__}: {error}")
+        else:
+            if engine is None and not callable(getattr(payload, "solve", None)):
+                reply = ("unbuildable", f"the first message is a {type(payload).__name__}, not an engine")
+            elif engine is None:
+                engine, reply = payload, ("ready", None)
+            else:
+                program, query, budget, expand = payload
+                try:
+                    # Work is left out: it may follow the order an engine finds derivations in, which can differ
+                    # between processes (i-pymetta-work-varies-between-processes); repeatable compares it within one.
+                    reply = ("solved", _outcome(engine.solve(program, query, budget, expand), work=False))
+                except Exception as error:  # noqa: BLE001 - a raising solve is an outcome the other seed must match
+                    reply = ("raised", f"{type(error).__name__}: {error}")
+        sys.stdout.write(_line(reply))
+        sys.stdout.flush()
+    return 0
+
+
+def _difference(first: Outcome, second: Outcome) -> str:
+    """The first part of two runs' outcomes that differs, as a report sentence."""
+    for name, x, y in zip(("status", "answers", "work", "reached predicates"), first, second, strict=False):
+        if x != y:
+            return f"{name} {x} and {y}"
+    proofs = dict(first[4] or ()), dict(second[4] or ())
+    for row in sorted(set(proofs[0]) | set(proofs[1])):
+        if proofs[0].get(row) != proofs[1].get(row):
+            return (f"the proof of {row}:\n" + "\n".join(proofs[0].get(row, ("none",))) + "\nand\n"
+                    + "\n".join(proofs[1].get(row, ("none",))))
+    return "outcomes that differ"
+
+
+# Time: 2r solves, each in a worker process, r = len(_exact_bounds) plus one lazy run, at most 7.
+def check_hash_order(engine: Engine, case: Case) -> None:
+    """A run's status, answers, reached predicates and proofs are the same in processes hashing strings with each of
+    HASH_SEEDS: where several derivations are equally good, the engine keeps one chosen by the derivations, not by the
+    order its sets or tables hold them. The two processes solve the same runs in the same order, so only the seed
+    tells them apart. Each run is one at an exact bound, with proofs where the engine gives them, and, where it is
+    lazy, the first of them with every rewrite through expand. Only runs that must finish are compared, each with no
+    time limit, so how loaded the machine is cannot make two processes differ, and each must finish in both
+    processes, so two processes failing alike cannot pass."""
+    _require(engine, HASH_ORDER.needs)
+    c = engine.capabilities
+    workers = [_worker(engine, seed) for seed in HASH_SEEDS]
+    bounded = (replace(case.program, tabled=_tabled(c, depth), depth=depth, depth_counts=counts, proofs=c.proofs)
+               for depth, counts in _exact_bounds(c))
+    runs: list[tuple[Program, _Expander | None]] = [(p, None) for p in bounded if _must_finish(engine, p)]
+    if c.lazy and runs:
+        runs.append((replace(runs[0][0], rewrites=()), _Expander(case.program.rewrites)))
+    for program, expand in runs:
+        budget = _budget(engine, program, case.query)
+        how = "every rewrite through expand" if expand else "rewrites up front"
+        outcomes: list[Outcome] = []
+        for worker in workers:
+            kind, outcome = worker.ask((program, case.query, budget, expand))
+            if kind != "solved" or not isinstance(outcome, tuple) or outcome[0] != "ok":
+                ended = f"ended {outcome[0]}" if isinstance(outcome, tuple) else f"{kind}: {outcome}"
+                _fail(f"{_bound(program)}, {how}: under PYTHONHASHSEED {worker.seed} a run that must finish {ended}")
+            outcomes.append(cast(Outcome, outcome))
+        if outcomes[0] != outcomes[1]:
+            _fail(f"{_bound(program)}, {how}: under PYTHONHASHSEED {HASH_SEEDS[0]} and {HASH_SEEDS[1]} the runs "
+                  f"differ in {_difference(outcomes[0], outcomes[1])}")
 
 
 def _unifies(patterns: Sequence[Atom], atoms: Sequence[Atom]) -> bool:
@@ -849,8 +1015,8 @@ LAZY = Property("lazy", "rewrites given through expand answer as rewrites given 
                 _capability("lazy", _exact), cases, check_lazy)
 BUDGET = Property("budget", "a budget too small ends with a limit status and no answers; a run reporting ok stayed in its budget",
                   _nothing, chains, check_budget)
-REPEATABLE = Property("repeatable", "a finished run counts the same work after other runs, and one unit less stops it",
-                      _capability("repeatable_work", _finishing), cases, check_repeatable)
+REPEATABLE = Property("repeatable", "a finished run has the same outcome after other runs, and with repeatable work one "
+                      "unit less stops it", _finishing, cases, check_repeatable)
 NAMES = Property("names", "predicates and constants spelled like reserved words keep their answers, eagerly and lazily",
                  _exact, lambda: cases(RESERVED, RESERVED), check_names)
 UNTABLED = Property("untabled", "untabled, a query on a rewrite cycle hits a limit and one reaching no cycle answers exactly",
@@ -860,10 +1026,12 @@ PROOFS = Property("proofs", "every answer has a proof deriving it from the progr
 ROUNDS = Property("rounds", "evaluating, adding the rewrites of every predicate a run reached and evaluating again until a "
                   "run reaches nothing new gives the reference answers", _capability("reached", _capability("tabling")),
                   cases, check_rounds)
+HASH_ORDER = Property("hash-order", "a run's status, answers, reached predicates and proofs are the same under "
+                      f"PYTHONHASHSEED {HASH_SEEDS[0]} and {HASH_SEEDS[1]}", _exact, cases, check_hash_order)
 
 #: Every property, in the order the report lists them.
 PROPERTIES: tuple[Property, ...] = (TABLING, DEPTH, REWRITE_DEPTH, LAZY, BUDGET, REPEATABLE, NAMES, UNTABLED, PROOFS,
-                                    ROUNDS)
+                                    ROUNDS, HASH_ORDER)
 
 
 def property_named(name: str) -> Property:
@@ -996,6 +1164,8 @@ def check(engine: Engine, prop: Property, max_examples: int = 200, seed: int | N
         tried += 1
         try:
             prop.check(engine, case)
+        except MissingCapability:
+            raise
         except Exception:  # noqa: BLE001 - a failure or a crash both falsify the property
             failed = True
             return True
@@ -1010,6 +1180,9 @@ def check(engine: Engine, prop: Property, max_examples: int = 200, seed: int | N
             case = hypothesis.find(prop.strategy(), fails, settings=settings,
                                    random=None if seed is None else random.Random(seed))
         detail = _explain(engine, prop, case)
+    except MissingCapability as skip:
+        # A need only a run can show, such as an engine the hash-order property cannot rebuild in another process.
+        return Verdict(prop.name, "skip", detail=str(skip))
     except hypothesis.errors.NoSuchExample:
         return Verdict(prop.name, "pass", cases=tried, may_stop=tally[0], stopped=tally[1])
     except hypothesis.errors.Flaky as error:
@@ -1037,7 +1210,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--seed", type=int, default=0, help="the search seed, so a run repeats exactly (default 0)")
     parser.add_argument("--property", action="append", choices=[p.name for p in PROPERTIES],
                         help="check only this property; repeat for several")
+    # The hash-order property's worker processes (_Worker), not for people.
+    parser.add_argument("--solve", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
+    if args.solve:
+        return _serve()
     properties = [property_named(n) for n in args.property] if args.property else PROPERTIES
     report = run(make(args.engine), args.max_examples, args.seed, properties)
     print(report.summary())

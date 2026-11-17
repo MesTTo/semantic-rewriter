@@ -409,7 +409,7 @@ A knowledge base can also be built in code with `KB`, `atom` and `Rule`, and pre
 | `python` | nothing | yes | yes | yes | yes | no | yes |
 | `pymetta` | `pymetta` | yes | yes | yes | yes | yes | yes |
 
-An engine is anything with a `solve(program, query, budget, expand)` method and a `capabilities` record; DESIGN.md gives the five rules it must keep. `semrewrite conformance --engine NAME` checks them with property tests against a reference evaluator: exact answers with tables, one meaning of depth, lazy expansion equal to eager, hard budgets, and engine keywords accepted as ordinary names. A Prolog through janus, a Datalog engine or SQL with recursive queries can implement the same protocol; add it to `semrewrite/engines/__init__.py` and run the kit.
+An engine is anything with a `solve(program, query, budget, expand)` method and a `capabilities` record; DESIGN.md gives the six rules it must keep. `semrewrite conformance --engine NAME` checks them with property tests against a reference evaluator: exact answers with tables, one meaning of depth, lazy expansion equal to eager, hard budgets, engine keywords accepted as ordinary names, and the same solution, proofs included, whatever ran before in the process and in processes that hash strings differently. A Prolog through janus, a Datalog engine or SQL with recursive queries can implement the same protocol; add it to `semrewrite/engines/__init__.py` and run the kit.
 
 ## Judges
 

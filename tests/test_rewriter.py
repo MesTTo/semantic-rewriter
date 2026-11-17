@@ -4,7 +4,8 @@ strategies it cannot run are refused by name, names spelled like engine
 keywords keep their answers, without tables rewriting loops on a cycle, and an
 engine claiming repeatable work counts a fresh process's first solves as it
 counts them again, and counts a solve on a second thread as on the first or
-refuses it.
+refuses it. Of two equally short derivations PyMeTTa keeps the one first in the
+standard order of terms, with tables or without.
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ import math
 import os
 import subprocess
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -25,7 +27,7 @@ from semrewrite.engines import available, make
 from semrewrite.engines.python import PythonEngine
 from semrewrite.judges.oracle import OracleJudge
 from semrewrite.kb import KB, atom
-from semrewrite.model import Atom, Rewrite
+from semrewrite.model import Atom, Rewrite, Rule
 from semrewrite.protocols import Budget, Capabilities, Program
 from semrewrite.rewriter import STRATEGIES, CapabilityError, Rewriter, Strategy, Timing
 
@@ -389,3 +391,34 @@ def test_proofs_converge_on_a_rewrite_cycle_and_leave_no_cache_rows() -> None:
         assert s.proofs[("k",)].lines() == ["b(k)    [by b(X0) ⇐ a(X0), score 0.900]", "  a(k)    [fact]"]
     with MeTTa() as m:
         assert m.self.run("!(size-atom (collapse (match &metta (cache $name $policy) $name)))") == [[0]]
+
+
+@pytest.mark.skipif("pymetta" not in ENGINES, reason="pymetta does not import here")
+def test_equally_short_proofs_keep_the_first_in_the_standard_order_of_terms() -> None:
+    """e(j, k) has two derivations of three steps, through d and through h. With tables the proof tables' join keeps
+    the one msort puts first, the one through d, whichever order the program lists its rewrites in; without tables
+    the answer reader sees both and keeps the same one, since its key orders proof terms as msort does, numbers by
+    value rather than as text."""
+    from metta import MeTTa
+
+    from semrewrite.engines.pymetta import _standard_order
+
+    engine = make("pymetta")
+    through_d = (Rewrite("d", "c", (1, 0)), Rewrite("e", "d", (0, 1)))
+    through_h = (Rewrite("h", "c", (1, 0)), Rewrite("e", "h", (0, 1)))
+    base = Program(facts=(Atom("a", ("k", "j")), Atom("b", ("j",))),
+                   rules=(Rule(Atom("c", ("X", "Y")), (Atom("a", ("X", "Y")), Atom("b", ("Y",)))),), proofs=True)
+    for rewrites in (through_d + through_h, through_h + through_d):
+        for program in (replace(base, rewrites=rewrites), replace(base, rewrites=rewrites, tabled=False, depth=3)):
+            s = engine.solve(program, Atom("e", ("X", "Y")), Budget(work=1_000_000, seconds=math.inf))
+            assert s.status == "ok" and s.answers == {("j", "k")}, (program.tabled, s.status, s.detail)
+            assert s.proofs[("j", "k")].by == through_d[1], (program.tabled, rewrites, s.proofs[("j", "k")].lines())
+    terms = ["(pf 2 (proof-rule 10 c__a))", "(pf 2 (proof-rule 9 c__a))", "(pf 2 (proof-rule 0 c__a (pf 1 proof-fact)))",
+             "(pf 2 (proof-rule 0 c__a))", "(pf 2 (proof-rewrite p1__x m1_0 (pf 1 proof-fact)))",
+             "(pf 1 (proof-rule 0 c__b (pf 0 proof-fact)))", "(pf 1 proof-fact)", "(pf 10 proof-fact)"]
+    with MeTTa() as m:
+        [[given]] = m.self.run(f"!(let $terms ({' '.join(terms)}) $terms)")
+        [[ordered]] = m.self.run(f"!(msort ({' '.join(terms)}))")
+    by_msort = [str(term) for term in ordered.children]
+    assert [str(term) for term in sorted(given.children, key=_standard_order)] == by_msort
+    assert by_msort != sorted(by_msort), "these terms cannot tell msort's order from the order of their text"
