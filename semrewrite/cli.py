@@ -190,8 +190,7 @@ def _explain_applications(rw: Rewriter, out) -> None:
     each with the statements contradicting its conclusion; with beliefs, those it weighs that an answer's derivations
     carry, each with its leaf's opinion and the statements read, and how many others it read, which weigh on no
     answer; then the answers no derivation is left for. Nothing where no application was read. Without beliefs an
-    application not defeated changes nothing printed, and on Alphabet's question the check reads 361 applications for
-    one answer, so the cost line's count stands for them."""
+    application not defeated changes nothing printed, so the cost line's count stands for it."""
     if not out.applications or rw.claims is None:
         return
     order = sorted(out.applications.items(), key=lambda item: (item[0][0][1], item[0][0][0], item[0][1]))
