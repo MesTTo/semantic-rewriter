@@ -105,7 +105,8 @@ def _opinion_json(o: Opinion) -> dict[str, float]:
 def _statement_json(r) -> dict:
     """One statement read against a claim, as --json writes it: the judge's own stance and the opinion it weighs on
     the rewrite with, at the judge's check trust."""
-    return {"statement": r.statement, "similarity": round(r.similarity, 6), "source": r.source, "side": r.side,
+    similarity = None if r.similarity is None else round(r.similarity, 6)
+    return {"statement": r.statement, "similarity": similarity, "source": r.source, "side": r.side,
             "stance": _opinion_json(r.stance), **_opinion_json(r.opinion)}
 
 
@@ -141,18 +142,23 @@ def _applications_json(out) -> list[dict]:
             for ((p, c, m), row), a in sorted(out.applications.items())]
 
 
+def _similarity_text(similarity: float | None) -> str:
+    """The cosine annotation for a reading selected by similarity."""
+    return "" if similarity is None else f"  similarity {similarity:.3f}"
+
+
 def _reading_lines(readings) -> list[str]:
     """Each statement read against a claim, as a line: which side it weighs on, the reading's opinion, the statement,
     its similarity to the claim, and the statement it was counted with when the judge reads the two as the same."""
-    return [f"{r.side:8} {_opinion_text(r.opinion)}  {json.dumps(r.statement)}  similarity {r.similarity:.3f}"
+    return [f"{r.side:8} {_opinion_text(r.opinion)}  {json.dumps(r.statement)}" + _similarity_text(r.similarity)
             + ("" if r.source == r.statement else f"  (one source with {json.dumps(r.source)})") for r in readings]
 
 
 def _defeat_lines(readings, threshold: float) -> list[str]:
     """Each statement clearly contradicting a claim, as a line: the judge's disbelief against the threshold it
     reaches, the statement and its similarity to the claim."""
-    return [f"contradicts  d {r.stance.disbelief:.3f} >= {threshold:.3f}  {json.dumps(r.statement)}  "
-            f"similarity {r.similarity:.3f}" for r in readings]
+    return [f"contradicts  d {r.stance.disbelief:.3f} >= {threshold:.3f}  {json.dumps(r.statement)}"
+            + _similarity_text(r.similarity) for r in readings]
 
 
 def _explain_rewrites(rw: Rewriter, out) -> None:

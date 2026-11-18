@@ -820,6 +820,37 @@ Three things caught me out, but they're MeTTa semantics rather than defects:
 | family | 204 | 0 |
 <!-- END GENERATED: isolation -->
 
+## Reading without the similarity gate
+
+Both policies use each reader's release calibration. On delta-ATOMIC test, each labelled update supplies one context
+with its own update and up to 31 distinct updates from other premises. The sizes are nested. In the application arm,
+facts are attached to the same bound individuals and the reader sees the premise along with each update. Rendering
+uses the release's PersonX and PersonY substitution. In the general arm, the updates have no bound individuals and
+the reader sees them against the conditional claim. Each policy sees the same contexts. A defeat is a stance that
+reaches the reader's calibrated disbelief threshold.
+
+The delta-ATOMIC cost is for a fresh check per context. Stance pairs include Qwen's additional question about the
+negation. Source pairs count the release's comparisons between selected statements in both directions. The benchmark
+counts those comparisons from the selected statements, since source grouping has no effect on hard defeats. A call
+is one batch for the sentence judge. The ungated check groups sources only when every stance stays below the defeat
+bar. It uses at most 512 source pairs per batch. The actions runs measure both stance and source calls and include projected
+probabilities. The ungated Wikidata run counts full-scan stance pairs and batches. Qwen can stop at the first
+calibrated defeat. It can skip the positive reading when the negation belief alone falls below the defeat bar.
+The queried counts include prior model scores from the cache, and the newly scored counts measure the physical
+model work during the run. The run counts source pairs and batches
+from the surviving contexts' statement identities and reports answer membership. With the release's exception
+trusts below one, source grouping can change a surviving application's probability while its weight stays positive.
+The projected probabilities are therefore omitted from the ungated Wikidata result. Both Wikidata readers use the
+same release DeBERTa ranking and admissions. The actions runs use each reader for admissions at its default
+threshold and the release actions experiment's low threshold. Both use the reader's calibrated defeat bar throughout.
+Wikidata samples take a fixed prefix of a seeded uniform permutation of gated answers. The sample tests whether each
+answer still has a proof under the ungated check. Gated costs cover the run that produced the population. Ungated sample
+costs cover the applications visited in the witness search for the sampled answers. The overall and reference-answer
+loss shares have 95% Clopper-Pearson binomial intervals.
+
+<!-- BEGIN GENERATED: read-without-gate -->
+<!-- END GENERATED: read-without-gate -->
+
 ## Reproduce
 
 Every file under `results/` comes from this release's code on the PyMeTTa engine, and these commands regenerate them. The Levy/Holt and Balanced COPA pairs are fetched first, as the README says:
@@ -834,6 +865,9 @@ uv sync
 .venv/bin/python experiments/judge_eval.py
 .venv/bin/python experiments/typical_actions.py
 .venv/bin/python examples/wikidata/evaluate.py --beliefs
+.venv/bin/python experiments/exception_trust.py --compare-gate delta --stances STANCES
+.venv/bin/python experiments/exception_trust.py --compare-gate actions --stances STANCES
+.venv/bin/python experiments/exception_trust.py --compare-gate wikidata --stances STANCES
 .venv/bin/python experiments/impl_eval.py --judges oracle --budget 500000 --tag oracle
 for spec in "judges-1 jev" "judges-2 nli-deberta-base" "judges-3 nli-deberta-large" "judges-4 nli-deberta-large-wanli" \
             "judges-5 reranker-qwen3" "judges-6 cosine-bge" "judges-7 cosine-qwen3"; do
@@ -856,6 +890,7 @@ What each step produces:
 - `judge_eval.py` writes `results/judges.json` and the calibrated thresholds and trusts in `semrewrite/judges/calibration.json`. Jev's answers are cached on disk, so a rerun sends no requests unless it asks something new, which needs a TypeSafe key; this repository does not include the experiment's cache.
 - `typical_actions.py` asks the actions example, `examples/actions.kb`, what wastes time with nli-deberta-large and with typical-qwen3-4b, and writes each action's opinion and the answers to `results/typical_actions.json`.
 - `evaluate.py --beliefs` answers the three Wikidata questions with Jev admitting at two rewrite thresholds and nli-deberta-large at its own, gives every answer its opinion, and writes how well they rank Wikidata's answer to `results/wikidata_beliefs.json`. It loads nli-deberta-large for the retrieval cascade and reads Jev's answer cache.
+- `exception_trust.py --compare-gate` writes both reading policies into `results/read_without_gate.json` without refitting any judge.
 - `impl_eval.py` writes `results/implementations.<tag>.json` and `.jsonl`. Each judge run takes a process of its own: pymetta keeps about 25 KB for every context that imports `lib_tabling` (see the pymetta section), and three judges in one process outgrew 4 GiB.
 - `direction_policy.py` writes `results/direction_policy.<tag>.json`, and `blowup.py` writes `results/blowup.json`.
 - `report.py` fills the tables in this file; `--complete` makes a missing results file an error.

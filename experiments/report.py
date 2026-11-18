@@ -584,11 +584,114 @@ def claim_gate_table() -> str:
                       "spurious defeats per claim, test", "contradictions at 3.5, dev", "at 3.5, test"], rows))
 
 
+def binomial_interval(lost: int, size: int) -> str:
+    """The loss rate and two-sided 95% Clopper-Pearson interval."""
+    if not size:
+        return "n/a"
+
+    def lower(count: int) -> float:
+        if not count:
+            return 0.
+        log_n = math.lgamma(size + 1)
+        coefficients = [(k, log_n - math.lgamma(k + 1) - math.lgamma(size - k + 1)) for k in range(count, size + 1)]
+        lo, hi = 0., 1.
+        for _ in range(48):
+            mid = (lo + hi) / 2
+            log_p, log_q = math.log(mid), math.log1p(-mid)
+            tail = math.fsum(math.exp(c + k * log_p + (size - k) * log_q) for k, c in coefficients)
+            if tail < .025:
+                lo = mid
+            else:
+                hi = mid
+        return (lo + hi) / 2
+
+    return f"{lost / size:.1%} ({lower(lost):.1%} to {1 - lower(size - lost):.1%})"
+
+
+def reading_comparison() -> str:
+    """Paired delta-ATOMIC and inference results at the release's calibrated disbelief bars."""
+    measured = _load("read_without_gate.json")
+    sizes = measured["sizes"]
+    parts = ("delta", "actions", "wikidata")
+    names = ("typical-qwen3-4b", "nli-deberta-large")
+    judges = measured["judges"]
+    missing = [f"{name}/{part}" for name in names for part in parts if part not in judges.get(name, {})]
+    if missing:
+        msg = f"read_without_gate.json is missing {', '.join(missing)}"
+        raise FileNotFoundError(msg)
+
+    def percentages(rows: list[dict], numerator: str, denominator: int) -> list[str]:
+        return [f"{r[numerator] / denominator:.2%}" for r in rows]
+
+    blocks = []
+    for scope, title in (("application", "Statements about bound individuals"), ("general", "General statements")):
+        rows = []
+        for name in names:
+            scope_result = judges[name]["delta"][scope]
+            weak = scope_result["weakener_contexts"]
+            strong = scope_result["strengthener_contexts"]
+            total = weak + strong
+            for policy in ("gated", "ungated"):
+                counts = [scope_result[policy][str(h)] for h in sizes]
+                metrics = [
+                    ("Own weakeners defeated", percentages(counts, "own_weakener_defeats", weak)),
+                    ("Own strengtheners defeated", percentages(counts, "own_strengthener_defeats", strong)),
+                    ("Other defeats per context", [f"{m['other_defeats'] / total:.4f}" for m in counts]),
+                    ("Contexts with an other defeat", percentages(counts, "contexts_with_other_defeat", total)),
+                    ("Stance pairs per context", [m["stance_pairs"] / total for m in counts]),
+                    ("Source pairs per context", [m["source_pairs"] / total for m in counts]),
+                    ("Judge calls per context", [m["judge_calls"] / total for m in counts]),
+                ]
+                rows.extend((name, policy, metric, *values) for metric, values in metrics)
+        blocks.append(f"#### {title}\n\n" + _table(("reader", "policy", "measure", *map(str, sizes)), rows))
+
+    rows = []
+    for name in names:
+        result = judges[name]
+        for case in (*result["actions"], *result["wikidata"]):
+            gated, ungated = case["gated"], case["ungated"]
+            before = {tuple(row): p for row, p in gated["answers"]}
+            after = {tuple(row): p for row, p in ungated["answers"]}
+            kept = before.keys() & after.keys()
+            moved = ("n/a" if "reference_found" in ungated
+                     else sum(abs(before[row] - after[row]) > 1e-12 for row in kept))
+            reference_lost = (len(set(gated["reference_found"]) - set(ungated["reference_found"]))
+                              if "reference_found" in gated else None)
+            lost = len(before.keys() - after.keys())
+            sample = case.get("sample")
+            label = case["case"]
+            interval = None
+            reference_interval = None
+            if sample and sample["size"]:
+                n = sample["size"]
+                label += f" (sample {n:,}/{sample['population']:,}, seed {sample['seed']})"
+                interval = binomial_interval(lost, n)
+                reference_interval = binomial_interval(reference_lost or 0, len(gated["reference_found"]))
+            actual = (f"{ungated['physical_pairs']:,} / {ungated['physical_calls']:,}"
+                      if "physical_pairs" in ungated else None)
+            queried = (f"{ungated['queried_pairs']:,} / {ungated['queried_calls']:,}"
+                       if "queried_pairs" in ungated else None)
+            rows.append((name, label, f"{case['admission_bar']:.3f}", len(kept), lost,
+                         len(after.keys() - before.keys()), moved, reference_lost,
+                         f"{gated['check_pairs']:,} → {ungated['check_pairs']:,}",
+                         f"{gated['reader_calls']:,} → {ungated['reader_calls']:,}",
+                         ungated.get("accounted_source_pairs", 0), queried, actual, interval, reference_interval))
+    blocks.append("#### Answers on the example knowledge bases\n\n" +
+                  _table(("reader", "question", "admission bar", "kept", "lost", "gained", "kept with changed P",
+                          "reference answers lost", "full-scan pairs (gated → ungated)",
+                          "full-scan calls (gated → ungated)", "ungated source pairs counted",
+                          "ungated queried pairs / calls", "ungated newly scored pairs / calls", "sample loss, 95% CI",
+                          "sample reference loss, 95% CI"),
+                         rows))
+    return "\n\n".join(blocks)
+
+
 GENERATORS: dict[str, Callable[[], str]] = {
     "claim-check-actions": claim_actions_table,
     "claim-check-people": claim_people_table,
     "exception-trust": exception_trust_table,
     "exception-gate": exception_gate_table,
+    "read-without-gate": reading_comparison,
     "check-trust": check_trust_table,
     "claim-readings": claim_readings_table,
     "claim-gate": claim_gate_table,

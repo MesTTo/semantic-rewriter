@@ -160,6 +160,48 @@ def test_an_application_reads_only_the_statements_naming_its_individuals_that_st
     assert len(judge.asked) == 1
 
 
+@pytest.mark.parametrize("general", [False, True])
+@pytest.mark.parametrize("beliefs", [0, 16])
+def test_ungated_reading_catches_a_bearing_statement_with_low_similarity(general: bool, beliefs: int) -> None:
+    kb, judge, _ = people(believed=not general)
+    if general:
+        generic = "Some play to earn a living"
+        kb = dataclasses.replace(kb, glosses=kb.glosses | {"livelihood": generic},
+                                 facts=(*kb.facts, Atom("livelihood", ())))
+        judge.table[sentence(generic), conditional("A plays games", "A wastes time")] = reading(*DEFEAT)
+    embedder = TableEmbedder({}, default=0.45)
+    gated = ClaimCheck(kb, judge, embedder)
+    assert Rewriter(kb, judge, make("python"), None, claims=gated, beliefs=beliefs).ask(
+        "wastes_time(X)", "lazy-tabled").answers == {("sam",), ("amy",), ("kim",)}
+
+    class UnusedEmbedder(TableEmbedder):
+        def cosines(self, anchors, sentences):
+            raise AssertionError("ungated reading asked for a cosine")
+
+    ungated = ClaimCheck(kb, judge, UnusedEmbedder({}), spread=None)
+    result = Rewriter(kb, judge, make("python"), None, claims=ungated, beliefs=beliefs).ask(
+        "wastes_time(X)", "lazy-tabled")
+    assert result.answers == ({("sam",)} if general else {("sam",), ("amy",)})
+    if general:
+        assert result.defeated[GAMES][0].similarity is None
+    else:
+        assert result.applications is not None
+        assert result.applications[GAMES, ("kim",)].defeats[0].similarity is None
+
+
+def test_ungated_defeat_reads_every_eligible_statement_and_needs_no_source_grouping() -> None:
+    kb, judge, embedder = people(kim_watches=True)
+    check = ClaimCheck(kb, judge, embedder, spread=None)
+    assert check.bears([Rewrite("wastes_time", "play_games", (0,))])
+    read = check.applications({GAMES: [("kim",), ("amy",)]})
+    assert set(read) == {(GAMES, ("kim",))}
+    application = read[GAMES, ("kim",)]
+    assert [r.statement for r in application.readings] == [BELIEF, "kim watches TV."]
+    assert [r.statement for r in application.defeats] == [BELIEF]
+    assert check.usage["pairs"] == 2 and check.judge_calls == 1
+    assert not embedder.asked
+
+
 def test_a_statement_the_claims_read_is_not_read_again_for_an_application() -> None:
     """With every statement read against the claims, the belief is read against the gaming claim and defeats the
     rewrite there, as before applications were read, and no application reads anything, so its evidence counts

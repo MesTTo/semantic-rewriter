@@ -2,7 +2,8 @@
 the knowledge base states, read by meaning. A rewrite claims the conditional its proposal states, "If A plays games, A
 wastes time."; each fact is a statement, its predicate's gloss filled with its arguments' names as words, "kim plays
 games." The run's judge reads against a claim the statements that name no individual and stand out in similarity to
-it. A statement it reads as contradicting the claim at the threshold it was calibrated to admit at defeats the
+it by default. Passing spread=None reads every eligible statement without computing similarity. A statement it reads
+as contradicting the claim at the threshold it was calibrated to admit at defeats the
 rewrite, which is withdrawn before the engine uses it, as a fact added in ASP blocks a default: with "I consider gaming
 to be productive." stated, the match from playing games is withdrawn and the one from watching TV stays. A vaguer
 reading only weighs on the rewrite's opinion: what the judge reads as following from a statement counts for the claim,
@@ -33,6 +34,7 @@ import statistics
 import time
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from itertools import islice
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from semrewrite.model import LETTERS, Key, Predicate, Proposal, Rewrite
@@ -56,6 +58,9 @@ SPREAD = 3.75
 # Claims whose cosines one call of the embedder computes: 32 rows over the 23,116 statements of Victoria's question
 # are 740,000 floats, about 24 MB as Python lists.
 BATCH = 32
+
+# Bound the prompts built together when a hub individual names thousands of statements.
+UNGATED_BATCH = 512
 
 
 def words(constant: str) -> str:
@@ -179,6 +184,15 @@ def read_given(judge: SentenceJudge, asked: Sequence[tuple[str, str, str]]) -> l
                     [(given(p, s), denied(c)) for s, p, c in asked])
 
 
+# Time: one stance per question. Space: at most UNGATED_BATCH questions and their model inputs.
+def _read_bounded(judge: SentenceJudge, asked: Iterable[tuple[str, str, str]], *, application: bool) -> Iterable[Opinion]:
+    """Read a possibly large stream without constructing all its prompts at once."""
+    reader = read_given if application else read
+    pending = iter(asked)
+    while batch := list(islice(pending, UNGATED_BATCH)):
+        yield from reader(judge, batch)
+
+
 def _stances(judge: SentenceJudge, pairs: Sequence[tuple[str, str]], negations: Sequence[tuple[str, str]]) -> list[Opinion]:
     """The judge's stance on each pair, in one call: its reading alone where it reads contradiction, else combined
     with its reading of the matching negation (stance)."""
@@ -190,12 +204,12 @@ def _stances(judge: SentenceJudge, pairs: Sequence[tuple[str, str]], negations: 
 
 @dataclass(frozen=True, slots=True)
 class Reading:
-    """One statement's weight on a claim: the statement, its cosine to the claim, the judge's own stance on the claim
+    """One statement's weight on a claim: the statement, its cosine to the claim (None without the gate), the stance
     given the statement (read), the opinion it weighs on the rewrite with, that stance discounted by the judge's check
     trust, and its source, the statement nearest the claim among those the judge reads as saying the same as it."""
 
     statement: str
-    similarity: float
+    similarity: float | None
     stance: Opinion
     opinion: Opinion
     source: str
@@ -360,12 +374,13 @@ class ClaimCheck:
     sentence judge carrying the trust that reading weighs at, else DEFAULT_READER, loaded once a process on the first
     statement any check hands it, with why recorded in `substituted` and told to `trace`. A given reader without that
     trust is refused once it has something to read. The embedding model is `embedder`, or the default one, loaded
-    when a claim first has a statement to be read against. Each claim and each application is read once; `usage`
+    when a claim first has a statement to be read against. With `spread=None` every eligible statement is read in
+    text order and no embedding is needed. Each claim and each application is read once; `usage`
     counts the claims read, the judge pairs asked, the statements embedded and, once one is read, the applications,
     and `seconds` the time spent."""
 
     def __init__(self, kb: KB, judge: object, embedder: Embedder | None = None, *, reader: SentenceJudge | None = None,
-                 trust: float | None = None, exception_trust: float | None = None, spread: float = SPREAD,
+                 trust: float | None = None, exception_trust: float | None = None, spread: float | None = SPREAD,
                  with_arguments: bool = False, trace: Tracer | None = None) -> None:
         self.catalogue: Mapping[str, Predicate] = kb.catalogue()
         self.judge = judge
@@ -385,6 +400,7 @@ class ClaimCheck:
         self._sentences = sorted(stated)
         self._stated_by = [stated[text].predicates for text in self._sentences]
         self._readable = [with_arguments or stated[text].general for text in self._sentences]
+        self._general = [j for j, readable in enumerate(self._readable) if readable]
         # The statements naming each individual that no claim reads, so an application finds its own without reading
         # the rest, and a statement the claims read is not read again.
         self._about: dict[str, list[int]] = {}
@@ -405,6 +421,7 @@ class ClaimCheck:
         self._same: dict[str, dict[tuple[str, str], float]] = {}
         # "applications" joins the counts once an application is read, so a run reading none counts what it did before.
         self.usage: dict[str, int] = {"claims": 0, "pairs": 0, "statements": len(self._sentences)}
+        self.judge_calls = 0
         self.seconds = 0.0
 
     def reading(self, kind: str) -> tuple[SentenceJudge, float | None]:
@@ -450,7 +467,7 @@ class ClaimCheck:
     @property
     def reads(self) -> bool:
         """Whether the knowledge base states anything this check reads against a rewrite's claim."""
-        return any(self._readable)
+        return bool(self._general)
 
     @property
     def individuals(self) -> bool:
@@ -499,6 +516,8 @@ class ClaimCheck:
             about = {j for name in names for j in self._about.get(name, ())
                      if premise not in self._stated_by[j] and conclusion not in self._stated_by[j]}
             if about:
+                if self.spread is None:
+                    return True
                 bearing.append((key, about))
         if not bearing:
             return False
@@ -557,6 +576,8 @@ class ClaimCheck:
     def _standing(self, keys: Sequence[Key]) -> None:
         """Each claim's statements standing out against it among every statement but its rewrite's own predicates',
         with their cosines, nearest first, found for the claims not seen before."""
+        if self.spread is None:
+            return
         fresh = [key for key in keys if key not in self._kept]
         claims = [self.claim(key) for key in fresh]
         for start in range(0, len(fresh), BATCH):
@@ -587,13 +608,24 @@ class ClaimCheck:
             self._read.update({key: () for key in keys})
             return
         self._standing(keys)
-        near = [{j: c for j, c in self._kept[key].items() if self._readable[j]} for key in keys]
+        near: list[dict[int, float | None]] = []
+        for key in keys:
+            if self.spread is None:
+                premise, conclusion, _ = key
+                near.append({j: None for j in self._general
+                             if premise not in self._stated_by[j] and conclusion not in self._stated_by[j]})
+            else:
+                near.append({j: c for j, c in self._kept[key].items() if self._readable[j]})
+        if self.spread is None:
+            self._read_all(((key, None, js) for key, js in zip(keys, near, strict=True)), application=False)
+            return
         asked = [(self._sentences[j], *self.sentences(key)) for key, js in zip(keys, near, strict=True) for j in js]
         if not asked:
             self._read.update({key: () for key in keys})
             return
         reader, trust = self._reader_for(CLAIMS, "against a rewrite's claim")
         self.usage["pairs"] += len(asked) * (1 if reader.reads_contradiction else 2)
+        self.judge_calls += 1
         stances = read(reader, asked)
         self._paraphrases([list(js) for js in near], reader)
         at = 0
@@ -603,7 +635,7 @@ class ClaimCheck:
             for j, similarity in js.items():
                 text, mine = self._sentences[j], stances[at]
                 weighed = mine.with_base_rate(reader.base_rate).discount(trust)
-                readings.append(Reading(text, float(similarity), mine, weighed, sources[text]))
+                readings.append(Reading(text, similarity, mine, weighed, sources[text]))
                 at += 1
             self._read[key] = tuple(readings)
 
@@ -620,17 +652,22 @@ class ClaimCheck:
             if found:
                 about[(key, row)] = found
         self._standing(sorted({key for key, _ in about}))
-        todo: list[tuple[Key, tuple[str, ...], dict[int, float]]] = []
+        todo: list[tuple[Key, tuple[str, ...], dict[int, float | None]]] = []
         for (key, row), found in about.items():
-            near = {j: c for j, c in self._kept[key].items() if j in found}
+            near: dict[int, float | None] = ({j: None for j in sorted(found)} if self.spread is None
+                                             else {j: c for j, c in self._kept[key].items() if j in found})
             if near:
                 todo.append((key, row, near))
         if not todo:
+            return
+        if self.spread is None:
+            self._read_all(todo, application=True)
             return
         asked = [(self._sentences[j], *self.instance(key, row)) for key, row, near in todo for j in near]
         reader, trust = self._reader_for(APPLICATIONS, "about an application's individuals")
         self.usage["applications"] = self.usage.get("applications", 0) + len(todo)
         self.usage["pairs"] += len(asked) * (1 if reader.reads_contradiction else 2)
+        self.judge_calls += 1
         stances = read_given(reader, asked)
         self._paraphrases([list(near) for _, _, near in todo], reader)
         bar = self.bar(APPLICATIONS)
@@ -641,11 +678,52 @@ class ClaimCheck:
             for j, similarity in near.items():
                 text, mine = self._sentences[j], stances[at]
                 weighed = mine.with_base_rate(reader.base_rate).discount(trust)
-                readings.append(Reading(text, float(similarity), mine, weighed, sources[text]))
+                readings.append(Reading(text, similarity, mine, weighed, sources[text]))
                 at += 1
-            defeats = tuple(r for r in readings if r.stance.disbelief >= bar)
-            normal = Opinion(0.0, 1.0, 0.0, 1.0) if defeats else weigh(Opinion(0.0, 0.0, 1.0, 1.0), readings)
-            self._applied[(key, row)] = Application(key, row, *self.instance(key, row), tuple(readings), defeats, normal)
+            self._store_application(key, row, self.instance(key, row), tuple(readings), bar)
+
+    def _store_application(self, key: Key, row: tuple[str, ...], claim: tuple[str, str], readings: tuple[Reading, ...],
+                           bar: float) -> None:
+        """Cache the same hard defeat and normality calculation for either reading policy."""
+        defeats = tuple(r for r in readings if r.stance.disbelief >= bar)
+        normal = Opinion(0.0, 1.0, 0.0, 1.0) if defeats else weigh(Opinion(0.0, 0.0, 1.0, 1.0), readings)
+        self._applied[(key, row)] = Application(key, row, *claim, readings, defeats, normal)
+
+    # Time: one stance per selected statement and a comparison in both directions for each uncached pair of
+    # statements in each context that survives all its stances.
+    def _read_all(self, contexts: Iterable[tuple[Key, tuple[str, ...] | None, dict[int, float | None]]], *,
+                  application: bool) -> None:
+        """Read every eligible statement, grouping evidence for the conclusions that survive."""
+        kind = APPLICATIONS if application else CLAIMS
+        todo = [(key, row, js, self.sentences(key) if row is None else self.instance(key, row))
+                for key, row, js in contexts]
+        count = sum(len(js) for _, _, js, _ in todo)
+        if not count:
+            self._read.update({key: () for key, _, _, _ in todo})
+            return
+        reader, trust = self._reader_for(kind, "without the similarity gate")
+        if application:
+            self.usage["applications"] = self.usage.get("applications", 0) + len(todo)
+        self.usage["pairs"] += count * (1 if reader.reads_contradiction else 2)
+        self.judge_calls += (count + UNGATED_BATCH - 1) // UNGATED_BATCH
+        bar = self.bar(kind)
+        asked = ((self._sentences[j], *claim) for _, _, js, claim in todo for j in js)
+        stances = iter(_read_bounded(reader, asked, application=application))
+        for key, row, js, claim in todo:
+            found = list(zip(js, islice(stances, len(js)), strict=True))
+            texts = [self._sentences[j] for j, _ in found]
+            defeated = any(stance.disbelief >= bar for _, stance in found)
+            if defeated:
+                sources = {text: text for text in texts}
+            else:
+                self._paraphrases([list(js)], reader)
+                sources = self._sources(texts, reader)
+            readings = tuple(Reading(text, None, stance, stance.with_base_rate(reader.base_rate).discount(trust),
+                                     sources[text]) for text, (_, stance) in zip(texts, found, strict=True))
+            if row is None:
+                self._read[key] = readings
+            else:
+                self._store_application(key, row, claim, readings, bar)
 
     def _paraphrases(self, kept: Sequence[Sequence[int]], reader: SentenceJudge) -> None:
         """Have `reader` judge, both ways, each pair of statements one claim keeps that it has not judged, so _sources
@@ -656,8 +734,12 @@ class ClaimCheck:
         if not ordered:
             return
         self.usage["pairs"] += len(ordered)
-        for pair, o in zip(ordered, reader.sentence_opinions(ordered), strict=True):
-            same[pair] = o.belief
+        batch = len(ordered) if self.spread is not None else UNGATED_BATCH
+        for start in range(0, len(ordered), batch):
+            chunk = ordered[start:start + batch]
+            self.judge_calls += 1
+            for pair, o in zip(chunk, reader.sentence_opinions(chunk), strict=True):
+                same[pair] = o.belief
 
     def _sources(self, texts: Sequence[str], reader: SentenceJudge) -> dict[str, str]:
         """Each of `texts`, nearest the claim first, mapped to its source: two statements say the same when `reader`
