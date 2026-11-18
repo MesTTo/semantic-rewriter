@@ -11,16 +11,19 @@ from __future__ import annotations
 import json
 import math
 import re
+import sys
 from collections.abc import Callable, Sequence
 from functools import cache
 from pathlib import Path
 from types import ModuleType
 
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
 from impl_eval import aggregate
 
 from semrewrite.trace import plural
 
-ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
 REPORT = ROOT / "RESULTS.md"
 
@@ -664,7 +667,9 @@ def reading_comparison() -> str:
             reference_interval = None
             if sample and sample["size"]:
                 n = sample["size"]
-                label += f" (sample {n:,}/{sample['population']:,}, seed {sample['seed']})"
+                planned = sample.get("target", n)
+                target = f", planned {planned:,}" if planned != n else ""
+                label += f" (sample {n:,}/{sample['population']:,}{target}, seed {sample['seed']})"
                 interval = binomial_interval(lost, n)
                 reference_size = len(gated["reference_found"])
                 bounds = binomial_interval(reference_lost or 0, reference_size)
@@ -733,7 +738,6 @@ def main() -> None:
     report must not keep a stale table.
     """
     import argparse
-    import sys
 
     parser = argparse.ArgumentParser(description="Fill the generated tables in RESULTS.md from the files under results/.")
     parser.add_argument("--complete", action="store_true", help="fail when a results file a table needs is missing")

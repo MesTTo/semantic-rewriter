@@ -846,13 +846,104 @@ threshold and the release actions experiment's low threshold. Both use the reade
 The GPU slot allowed complete Qwen Victoria and DeBERTa coverage, with Qwen samples for Alphabet and Leonardo.
 Four-answer pilots sized the two samples by their measured scoring time. Samples take a fixed prefix of a seeded
 uniform permutation of gated answers. Each tests whether the answer still has a proof under the ungated check.
-Gated costs cover the run that produced the population. Ungated sample costs cover the applications visited in
-the witness search for sampled answers. The sample rows give newly scored pairs and calls. The remaining ungated
-cost cells are blank because separate witness blocks can revisit applications and their statements. The overall
-and reference-answer loss shares have 95% Clopper-Pearson binomial intervals. The full-population DeBERTa audit
-compared exact answer identities before either Qwen sample was read.
+The shared 08:58 GPU handoff cut Leonardo's sample to its completed prefix. Its row gives the realized and planned
+sizes. Gated costs cover the run that produced the population. The sample rows give newly scored pairs and calls
+for completed blocks. The rest of the ungated costs are unavailable because separate witness blocks can revisit
+applications and their statements. The overall and reference-answer loss shares have 95% Clopper-Pearson binomial
+intervals. The full-population DeBERTa audit compared exact answer identities before either Qwen sample was read.
 
 <!-- BEGIN GENERATED: read-without-gate -->
+#### Statements about bound individuals
+
+| reader | policy | measure | 1 | 2 | 4 | 8 | 16 | 32 |
+|---|---|---|---|---|---|---|---|---|
+| typical-qwen3-4b | gated | Own weakeners defeated | 0.00% | 0.00% | 2.20% | 1.91% | 1.37% | 1.37% |
+| typical-qwen3-4b | gated | Own strengtheners defeated | 0.00% | 0.00% | 0.43% | 0.53% | 0.33% | 0.43% |
+| typical-qwen3-4b | gated | Other defeats per context | 0.0000 | 0.0000 | 0.0005 | 0.0024 | 0.0007 | 0.0027 |
+| typical-qwen3-4b | gated | Contexts with an other defeat | 0.00% | 0.00% | 0.05% | 0.24% | 0.07% | 0.24% |
+| typical-qwen3-4b | gated | Stance pairs per context | 0.000 | 0.000 | 0.263 | 0.290 | 0.293 | 0.276 |
+| typical-qwen3-4b | gated | Source pairs per context | 0.000 | 0.000 | 0.000 | 0.025 | 0.044 | 0.045 |
+| typical-qwen3-4b | gated | Judge calls per context | 0.000 | 0.000 | 0.132 | 0.145 | 0.144 | 0.136 |
+| typical-qwen3-4b | ungated | Own weakeners defeated | 22.91% | 22.91% | 22.91% | 22.91% | 22.91% | 22.91% |
+| typical-qwen3-4b | ungated | Own strengtheners defeated | 4.45% | 4.45% | 4.45% | 4.45% | 4.45% | 4.45% |
+| typical-qwen3-4b | ungated | Other defeats per context | 0.0000 | 0.0507 | 0.1580 | 0.3772 | 0.8284 | 1.7308 |
+| typical-qwen3-4b | ungated | Contexts with an other defeat | 0.00% | 5.07% | 12.37% | 22.45% | 36.13% | 50.80% |
+| typical-qwen3-4b | ungated | Stance pairs per context | 2.000 | 4.000 | 8.000 | 16 | 32 | 64 |
+| typical-qwen3-4b | ungated | Source pairs per context | 0.000 | 1.660 | 9.303 | 39 | 140 | 453 |
+| typical-qwen3-4b | ungated | Judge calls per context | 1.000 | 1.830 | 1.775 | 1.696 | 1.585 | 1.914 |
+| nli-deberta-large | gated | Own weakeners defeated | 0.00% | 0.00% | 1.03% | 1.12% | 0.73% | 0.83% |
+| nli-deberta-large | gated | Own strengtheners defeated | 0.00% | 0.00% | 0.24% | 0.33% | 0.19% | 0.19% |
+| nli-deberta-large | gated | Other defeats per context | 0.0000 | 0.0000 | 0.0012 | 0.0010 | 0.0027 | 0.0014 |
+| nli-deberta-large | gated | Contexts with an other defeat | 0.00% | 0.00% | 0.12% | 0.10% | 0.27% | 0.14% |
+| nli-deberta-large | gated | Stance pairs per context | 0.000 | 0.000 | 0.132 | 0.145 | 0.147 | 0.138 |
+| nli-deberta-large | gated | Source pairs per context | 0.000 | 0.000 | 0.000 | 0.025 | 0.044 | 0.045 |
+| nli-deberta-large | gated | Judge calls per context | 0.000 | 0.000 | 0.132 | 0.145 | 0.144 | 0.136 |
+| nli-deberta-large | ungated | Own weakeners defeated | 12.12% | 12.12% | 12.12% | 12.12% | 12.12% | 12.12% |
+| nli-deberta-large | ungated | Own strengtheners defeated | 2.15% | 2.15% | 2.15% | 2.15% | 2.15% | 2.15% |
+| nli-deberta-large | ungated | Other defeats per context | 0.0000 | 0.0534 | 0.1682 | 0.3857 | 0.8214 | 1.6803 |
+| nli-deberta-large | ungated | Contexts with an other defeat | 0.00% | 5.34% | 11.89% | 19.09% | 27.91% | 37.14% |
+| nli-deberta-large | ungated | Stance pairs per context | 1.000 | 2.000 | 4.000 | 8.000 | 16 | 32 |
+| nli-deberta-large | ungated | Source pairs per context | 0.000 | 1.789 | 10 | 44 | 168 | 610 |
+| nli-deberta-large | ungated | Judge calls per context | 1.000 | 1.895 | 1.841 | 1.778 | 1.701 | 2.230 |
+
+#### General statements
+
+| reader | policy | measure | 1 | 2 | 4 | 8 | 16 | 32 |
+|---|---|---|---|---|---|---|---|---|
+| typical-qwen3-4b | gated | Own weakeners defeated | 0.00% | 0.00% | 1.03% | 0.34% | 0.24% | 0.15% |
+| typical-qwen3-4b | gated | Own strengtheners defeated | 0.00% | 0.00% | 0.38% | 0.19% | 0.05% | 0.05% |
+| typical-qwen3-4b | gated | Other defeats per context | 0.0000 | 0.0000 | 0.0012 | 0.0012 | 0.0007 | 0.0007 |
+| typical-qwen3-4b | gated | Contexts with an other defeat | 0.00% | 0.00% | 0.12% | 0.12% | 0.07% | 0.07% |
+| typical-qwen3-4b | gated | Stance pairs per context | 0.000 | 0.000 | 0.130 | 0.102 | 0.053 | 0.023 |
+| typical-qwen3-4b | gated | Source pairs per context | 0.000 | 0.000 | 0.000 | 0.012 | 0.009 | 0.000 |
+| typical-qwen3-4b | gated | Judge calls per context | 0.000 | 0.000 | 0.065 | 0.051 | 0.026 | 0.012 |
+| typical-qwen3-4b | ungated | Own weakeners defeated | 21.25% | 21.25% | 21.25% | 21.25% | 21.25% | 21.25% |
+| typical-qwen3-4b | ungated | Own strengtheners defeated | 5.12% | 5.12% | 5.12% | 5.12% | 5.12% | 5.12% |
+| typical-qwen3-4b | ungated | Other defeats per context | 0.0000 | 0.0377 | 0.1063 | 0.2424 | 0.5430 | 1.1300 |
+| typical-qwen3-4b | ungated | Contexts with an other defeat | 0.00% | 3.77% | 9.28% | 17.96% | 32.07% | 46.04% |
+| typical-qwen3-4b | ungated | Stance pairs per context | 2.000 | 4.000 | 8.000 | 16 | 32 | 64 |
+| typical-qwen3-4b | ungated | Source pairs per context | 0.000 | 1.684 | 9.584 | 41 | 147 | 494 |
+| typical-qwen3-4b | ungated | Judge calls per context | 1.000 | 1.842 | 1.799 | 1.727 | 1.613 | 1.996 |
+| nli-deberta-large | gated | Own weakeners defeated | 0.00% | 0.00% | 0.73% | 0.54% | 0.20% | 0.15% |
+| nli-deberta-large | gated | Own strengtheners defeated | 0.00% | 0.00% | 0.38% | 0.19% | 0.05% | 0.00% |
+| nli-deberta-large | gated | Other defeats per context | 0.0000 | 0.0000 | 0.0053 | 0.0051 | 0.0029 | 0.0010 |
+| nli-deberta-large | gated | Contexts with an other defeat | 0.00% | 0.00% | 0.53% | 0.48% | 0.27% | 0.10% |
+| nli-deberta-large | gated | Stance pairs per context | 0.000 | 0.000 | 0.065 | 0.051 | 0.026 | 0.012 |
+| nli-deberta-large | gated | Source pairs per context | 0.000 | 0.000 | 0.000 | 0.012 | 0.009 | 0.000 |
+| nli-deberta-large | gated | Judge calls per context | 0.000 | 0.000 | 0.065 | 0.051 | 0.026 | 0.012 |
+| nli-deberta-large | ungated | Own weakeners defeated | 32.10% | 32.10% | 32.10% | 32.10% | 32.10% | 32.10% |
+| nli-deberta-large | ungated | Own strengtheners defeated | 7.27% | 7.27% | 7.27% | 7.27% | 7.27% | 7.27% |
+| nli-deberta-large | ungated | Other defeats per context | 0.0000 | 0.2496 | 0.7731 | 1.8301 | 3.9294 | 8.0831 |
+| nli-deberta-large | ungated | Contexts with an other defeat | 0.00% | 24.96% | 47.17% | 65.35% | 78.27% | 86.85% |
+| nli-deberta-large | ungated | Stance pairs per context | 1.000 | 2.000 | 4.000 | 8.000 | 16 | 32 |
+| nli-deberta-large | ungated | Source pairs per context | 0.000 | 1.271 | 5.562 | 18 | 48 | 122 |
+| nli-deberta-large | ungated | Judge calls per context | 1.000 | 1.635 | 1.464 | 1.313 | 1.201 | 1.245 |
+
+#### Answers on the example knowledge bases
+
+| reader | question | admission bar | kept | lost | gained | kept with changed P | reference answers lost | full-scan pairs (gated → ungated) | full-scan calls (gated → ungated) | ungated source pairs counted | ungated queried pairs / calls | ungated newly scored pairs / calls | sample loss, 95% CI | sample reference loss, 95% CI |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| typical-qwen3-4b | actions_people | 0.269 | 7 | 1 | 0 | 4 | none | 0 → 160 | 0 → 2 | 0 | none | none | none | none |
+| typical-qwen3-4b | actions_people | 0.030 | 9 | 0 | 0 | 8 | none | 4 → 398 | 1 → 2 | 0 | none | none | none | none |
+| typical-qwen3-4b | actions_people_believed | 0.269 | 6 | 2 | 0 | 3 | none | 4 → 188 | 1 → 3 | 0 | none | none | none | none |
+| typical-qwen3-4b | actions_people_believed | 0.030 | 8 | 1 | 0 | 7 | none | 8 → 504 | 1 → 3 | 0 | none | none | none | none |
+| typical-qwen3-4b | victoria | 0.659 | 883 | 305 | 0 | n/a | 281 | 10 → 5,332,582 | 1 → 11,849 | 4,953,506 | 153,245 / 548 | 127,012 / 490 | none | none |
+| typical-qwen3-4b | alphabet (sample 28/2,901, seed 20261116) | 0.659 | 21 | 7 | none | n/a | 7 | 1,040 → n/a | 2 → n/a | none | none | 20,537 / 954 | 25.0% (10.7% to 44.9%) | 7/28, 25.0% (10.7% to 44.9%) |
+| typical-qwen3-4b | leonardo (sample 48/858, planned 60, seed 20261116) | 0.659 | 36 | 12 | none | n/a | 12 | 4 → n/a | 1 → n/a | none | none | 36,062 / 1,116 | 25.0% (13.6% to 39.6%) | 12/48, 25.0% (13.6% to 39.6%) |
+| nli-deberta-large | actions_people | 0.659 | 2 | 0 | 0 | 1 | none | 0 → 1 | 0 → 1 | 0 | none | none | none | none |
+| nli-deberta-large | actions_people | 0.030 | 3 | 0 | 0 | 1 | none | 0 → 2 | 0 → 1 | 0 | none | none | none | none |
+| nli-deberta-large | actions_people_believed | 0.659 | 1 | 1 | 0 | 0 | none | 0 → 2 | 0 → 1 | 0 | none | none | none | none |
+| nli-deberta-large | actions_people_believed | 0.030 | 2 | 1 | 0 | 0 | none | 1 → 5 | 1 → 1 | 0 | none | none | none | none |
+| nli-deberta-large | victoria | 0.659 | 1,172 | 16 | 0 | n/a | 0 | 5 → 5,701,436 | 1 → 13,452 | 5,511,898 | none | none | none | none |
+| nli-deberta-large | leonardo | 0.659 | 743 | 115 | 0 | n/a | 113 | 2 → 10,438,033 | 1 → 20,621 | 9,563,358 | none | none | none | none |
+| nli-deberta-large | alphabet | 0.659 | 2,882 | 24 | 0 | n/a | 23 | 530 → 34,638,303 | 2 → 68,562 | 32,580,590 | none | none | none | none |
+
+#### Agreement of witness search with the full engine
+
+| question | cached reader | gated answers compared | kept by both | lost by both |
+|---|---|---|---|---|
+| alphabet | nli-deberta-large | 2,906 | 2,882 | 24 |
+| leonardo | nli-deberta-large | 858 | 743 | 115 |
 <!-- END GENERATED: read-without-gate -->
 
 ## Reproduce
@@ -875,7 +966,7 @@ uv sync
     --stances STANCES
 .venv/bin/python experiments/exception_trust.py --verify-wikidata-witnesses --stances STANCES
 .venv/bin/python experiments/exception_trust.py --compare-gate wikidata --judges typical-qwen3-4b \
-    --short-circuit --wikidata-sample alphabet=28 --wikidata-sample leonardo=60 --stances STANCES
+    --short-circuit --wikidata-sample alphabet=28 --wikidata-sample leonardo=48 --stances STANCES
 .venv/bin/python experiments/impl_eval.py --judges oracle --budget 500000 --tag oracle
 for spec in "judges-1 jev" "judges-2 nli-deberta-base" "judges-3 nli-deberta-large" "judges-4 nli-deberta-large-wanli" \
             "judges-5 reranker-qwen3" "judges-6 cosine-bge" "judges-7 cosine-qwen3"; do
