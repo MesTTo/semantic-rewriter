@@ -51,8 +51,9 @@ evaluation reached owns, which no fact states, and asks for the rewrites conclud
     owns(X0, X1) ⇐ owned_by_p127(X1, X0)
     owns(X0, X1) ⇐ owner_of_p1830(X0, X1)
     owns(X0, X1) ⇐ afterward_owned_by_p11812(X1, X0)
-pymetta finished: ok, 1 answer, 2,296,924 work
+pymetta finished: ok, 1 answer, 2,293,164 work
   the memo answered 5,699 more asks for owns, without asking the judge again
+  the claim check reads statements about applications' individuals with nli-deberta-large: jev has no exception trust
 owns(alphabet_inc, youtube_q866)
     owns(alphabet_inc, youtube_q866)    [by owns(X, Z) :- owns(X, Y), owns(Y, Z)]
       owns(alphabet_inc, google_q95)    [by owns(X, Z) :- owns(X, Y), owns(Y, Z)]
@@ -67,11 +68,13 @@ rewrites admitted (3):
   owns(X0, X1) ⇐ afterward_owned_by_p11812(X1, X0)
   owns(X0, X1) ⇐ owned_by_p127(X1, X0)
   owns(X0, X1) ⇐ owner_of_p1830(X0, X1)
-ok: 1 answer, 2,296,924 work, 101 judge questions, 32.33 s
+
+statements about applications' individuals read by nli-deberta-large: jev has no exception trust
+ok: 1 answer, 2,293,164 work, 101 judge questions, 4 pairs reading 3 claims in 89.04 s, 0 rewrites withdrawn, 1 application read, 0 defeated, 0 work on exceptions, 191.95 s
 ```
 <!-- END GENERATED: wikidata-trace -->
 
-No statement says `owns`, so the engine called back for rewrites in the middle of evaluating. The cross-encoder read all 1,790 properties as premises of "A owns B", in both argument orders, and Jev judged its 50 best, each both ways: "B is owned by A" entails "A owns B" at 0.990, and "A is owned by B" at 0.010. Three of Jev's 101 answers reached the threshold, and the engine carried on with those three as rules. The question's own transitive rule chained them: Alphabet owns XXVI Holdings, which owns Google, which owns YouTube. Wikidata states the first and last of those links on what is owned, as owned by, and the middle one on the owner, as owner of. As the rule recursed, evaluation asked for `owns` 5,699 more times, and the memo answered each, so Jev was asked once.
+No statement says `owns`, so the engine called back for rewrites in the middle of evaluating. The cross-encoder read all 1,790 properties as premises of "A owns B", in both argument orders, and Jev judged its 50 best, each both ways: "B is owned by A" entails "A owns B" at 0.990, and "A is owned by B" at 0.010. Three of Jev's 101 answers reached the threshold, and the engine carried on with those three as rules. The question's own transitive rule chained them: Alphabet owns XXVI Holdings, which owns Google, which owns YouTube. Wikidata states the first and last of those links on what is owned, as owned by, and the middle one on the owner, as owner of. As the rule recursed, evaluation asked for `owns` 5,699 more times, and the memo answered each, so Jev was asked once. The claim check then read four sentence pairs for the three rewrites and one application of them, and withdrew and defeated nothing. Jev has no trust fitted for reading an application, so nli-deberta-large read that one.
 
 ### Every answer against Wikidata's own
 
@@ -94,20 +97,20 @@ Read literally, no question finds anything. Jev returned exactly Victoria's 1,16
 $ semrewrite ask examples/wikidata/victoria.metta 'descendant_of(frederik_x_of_denmark, queen_victoria)' --judge jev --threshold 0.65 --strategy rewrite-depth-tabled --depth 1 --retriever judge --k 50 --engine pymetta --work 50000000 --seconds inf --explain
 descendant_of(frederik_x_of_denmark, queen_victoria)
     descendant_of(frederik_x_of_denmark, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-      parent_of(margrethe_ii_of_denmark, frederik_x_of_denmark)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
-        mother_p25(frederik_x_of_denmark, margrethe_ii_of_denmark)    [fact]
+      parent_of(margrethe_ii_of_denmark, frederik_x_of_denmark)    [by parent_of(X0, X1) ⇐ child_p40(X0, X1), score 0.970]
+        child_p40(margrethe_ii_of_denmark, frederik_x_of_denmark)    [fact]
       descendant_of(margrethe_ii_of_denmark, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-        parent_of(ingrid_of_sweden, margrethe_ii_of_denmark)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
-          mother_p25(margrethe_ii_of_denmark, ingrid_of_sweden)    [fact]
+        parent_of(ingrid_of_sweden, margrethe_ii_of_denmark)    [by parent_of(X0, X1) ⇐ child_p40(X0, X1), score 0.970]
+          child_p40(ingrid_of_sweden, margrethe_ii_of_denmark)    [fact]
         descendant_of(ingrid_of_sweden, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-          parent_of(princess_margaret_of_connaught, ingrid_of_sweden)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
-            mother_p25(ingrid_of_sweden, princess_margaret_of_connaught)    [fact]
+          parent_of(princess_margaret_of_connaught, ingrid_of_sweden)    [by parent_of(X0, X1) ⇐ child_p40(X0, X1), score 0.970]
+            child_p40(princess_margaret_of_connaught, ingrid_of_sweden)    [fact]
           descendant_of(princess_margaret_of_connaught, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-            parent_of(prince_arthur_duke_of_connaught_and_strathearn, princess_margaret_of_connaught)    [by parent_of(X0, X1) ⇐ father_p22(X1, X0), score 0.980]
-              father_p22(princess_margaret_of_connaught, prince_arthur_duke_of_connaught_and_strathearn)    [fact]
+            parent_of(prince_arthur_duke_of_connaught_and_strathearn, princess_margaret_of_connaught)    [by parent_of(X0, X1) ⇐ child_p40(X0, X1), score 0.970]
+              child_p40(prince_arthur_duke_of_connaught_and_strathearn, princess_margaret_of_connaught)    [fact]
             descendant_of(prince_arthur_duke_of_connaught_and_strathearn, queen_victoria)    [by descendant_of(X, Y) :- parent_of(Y, X)]
-              parent_of(queen_victoria, prince_arthur_duke_of_connaught_and_strathearn)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
-                mother_p25(prince_arthur_duke_of_connaught_and_strathearn, queen_victoria)    [fact]
+              parent_of(queen_victoria, prince_arthur_duke_of_connaught_and_strathearn)    [by parent_of(X0, X1) ⇐ child_p40(X0, X1), score 0.970]
+                child_p40(queen_victoria, prince_arthur_duke_of_connaught_and_strathearn)    [fact]
 
 rewrites admitted (18):
   descendant_of(X0, X1) ⇐ derived_from_base_unit_p12571(X0, X1)
@@ -128,7 +131,7 @@ rewrites admitted (18):
   parent_of(X0, X1) ⇐ parent_p8810(X1, X0)
   parent_of(X0, X1) ⇐ parent_peak_p3137(X1, X0)
   parent_of(X0, X1) ⇐ subdivision_of_this_unit_p9059(X0, X1)
-ok: 1 answer, 35,172 work, 202 judge questions, 42.17 s
+ok: 1 answer, 34,386 work, 202 judge questions, 343.95 s
 ```
 <!-- END GENERATED: wikidata-descent -->
 
@@ -141,11 +144,11 @@ King Frederik X of Denmark descends from Victoria through his mother Margrethe I
 $ semrewrite ask examples/wikidata/victoria.metta 'descendant_of(queen_victoria, queen_victoria)' --judge cosine-bge --strategy rewrite-depth-tabled --depth 1 --retriever judge --k 50 --engine pymetta --work 50000000 --seconds inf --explain
 descendant_of(queen_victoria, queen_victoria)
     descendant_of(queen_victoria, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-      parent_of(princess_louise_duchess_of_argyll, queen_victoria)    [by parent_of(X0, X1) ⇐ child_p40(X1, X0), score 0.968]
-        child_p40(queen_victoria, princess_louise_duchess_of_argyll)    [fact]
-      descendant_of(princess_louise_duchess_of_argyll, queen_victoria)    [by descendant_of(X, Y) :- parent_of(Y, X)]
-        parent_of(queen_victoria, princess_louise_duchess_of_argyll)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.969]
-          mother_p25(princess_louise_duchess_of_argyll, queen_victoria)    [fact]
+      parent_of(alfred_duke_of_saxe_coburg_and_gotha, queen_victoria)    [by parent_of(X0, X1) ⇐ child_p40(X1, X0), score 0.968]
+        child_p40(queen_victoria, alfred_duke_of_saxe_coburg_and_gotha)    [fact]
+      descendant_of(alfred_duke_of_saxe_coburg_and_gotha, queen_victoria)    [by descendant_of(X, Y) :- parent_of(Y, X)]
+        parent_of(queen_victoria, alfred_duke_of_saxe_coburg_and_gotha)    [by parent_of(X0, X1) ⇐ child_p40(X0, X1), score 0.959]
+          child_p40(queen_victoria, alfred_duke_of_saxe_coburg_and_gotha)    [fact]
 
 rewrites admitted (8):
   descendant_of(X0, X1) ⇐ descendant_of(X1, X0)
@@ -156,11 +159,11 @@ rewrites admitted (8):
   parent_of(X0, X1) ⇐ parent_of(X1, X0)
   parent_of(X0, X1) ⇐ parent_p8810(X0, X1)
   parent_of(X0, X1) ⇐ parent_p8810(X1, X0)
-ok: 1 answer, 2,581,151 work, 202 judge questions, 43.58 s
+ok: 1 answer, 2,584,921 work, 202 judge questions, 223.69 s
 ```
 <!-- END GENERATED: wikidata-similarity -->
 
-Embedding similarity scores how alike two sentences are, whichever way they run. As premises of "A is a parent of B", the embedding judge scored "B is the child of A" at 0.96 and "A is the child of B" at 0.97, and admitted both. So "Princess Louise is the child of Queen Victoria" also made Louise a parent of Victoria, and Victoria a descendant of herself.
+Embedding similarity scores how alike two sentences are, whichever way they run. As premises of "A is a parent of B", the embedding judge scored "B is the child of A" at 0.96 and "A is the child of B" at 0.97, and admitted both. So "Prince Alfred is the child of Queen Victoria" also made Alfred a parent of Victoria, and Victoria a descendant of herself.
 
 ### How sure is each answer?
 
@@ -193,8 +196,8 @@ descendant_of(british_army, queen_victoria)    P 0.324  b 0.321  d 0.637  u 0.04
       parent_of(edward_vii, british_army)    [by parent_of(X0, X1) ⇐ military_branch_p241(X0, X1), score 0.330]
         military_branch_p241(edward_vii, british_army)    [fact]
       descendant_of(edward_vii, queen_victoria)    [by descendant_of(X, Y) :- parent_of(Y, X)]
-        parent_of(queen_victoria, edward_vii)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
-          mother_p25(edward_vii, queen_victoria)    [fact]
+        parent_of(queen_victoria, edward_vii)    [by parent_of(X0, X1) ⇐ child_p40(X0, X1), score 0.970]
+          child_p40(queen_victoria, edward_vii)    [fact]
 ```
 <!-- END GENERATED: wikidata-graded -->
 
@@ -236,11 +239,47 @@ rewrites admitted (1):
 rewrites withdrawn by what the knowledge base states (1):
   wastes_time() ⇐ play_games()
     contradicts  d 1.000 >= 0.659  "I consider gaming to be productive."  similarity 0.764
-ok: 1 answer, 4 work, 18 judge questions, 1 pair reading 2 claims in 1.66 s, 1 rewrite withdrawn, 2.86 s
+ok: 1 answer, 4 work, 18 judge questions, 1 pair reading 2 claims in 1.04 s, 1 rewrite withdrawn, 3.04 s
 ```
 <!-- END GENERATED: actions-defeat -->
 
-The judge reads the belief as contradicting the gaming match's claim, "If I play video games, I waste time.", more surely than it was calibrated to read a match to admit it, so the match is withdrawn: `ask` no longer answers through it, and "I waste time" stands on watching TV alone. A statement the judge reads as contradicting a claim less surely than that only lowers the match's P, discounted by the trust the judge earned reading delta-ATOMIC's updates against the inferences they weaken or strengthen. `ask --explain` names the statements that withdrew or weighed on each match. Where a knowledge base states nothing without arguments, as in the Wikidata examples, the check reads nothing, asks the judge nothing and loads no model. The check reads rewrites, not answers: the same model reads the belief as contradicting "sam wastes time." as surely as "kim wastes time.", though only kim plays games. It reads only statements with no arguments, like the belief above: a fact about named things, such as "kim plays games", bears on a rewrite through the rows it states, which the knowledge base's evidence already counts. And it reads only those that stand out in similarity to a rewrite, because the judge reads most unrelated statements as contradictions too; [DESIGN.md](DESIGN.md#the-claim-check) says how, and [RESULTS.md](RESULTS.md#what-the-knowledge-base-states) gives the measurements.
+The judge reads the belief as contradicting the gaming match's claim, "If I play video games, I waste time.", more surely than it was calibrated to read a match to admit it, so the match is withdrawn: `ask` no longer answers through it, and "I waste time" stands on watching TV alone. A statement the judge reads as contradicting a claim less surely than that only lowers the match's P, discounted by the trust the judge earned reading delta-ATOMIC's updates against the inferences they weaken or strengthen. `ask --explain` names the statements that withdrew or weighed on each match. The check reads rewrites, not answers: the same model reads the belief as contradicting "sam wastes time." as surely as "kim wastes time.", though only kim plays games. And it reads only the statements that stand out in similarity to a rewrite, because the judge reads most unrelated statements as contradictions too; [DESIGN.md](DESIGN.md#the-claim-check) says how, and [RESULTS.md](RESULTS.md#what-the-knowledge-base-states) gives the measurements.
+
+A belief about one person changes that person's answers alone. `examples/actions_people.kb` is `examples/actions.kb` with amy also playing games and kim also watching TV, and `examples/actions_people_believed.kb` states a belief about kim, as a gloss and a fact naming kim:
+
+```text
+gloss gaming_productive "{x} considers gaming to be productive".
+gaming_productive(kim).
+```
+
+nli-deberta-large admits the gaming match only below its calibrated threshold, so this asks at 0.03:
+
+<!-- BEGIN GENERATED: actions-people -->
+```text
+$ semrewrite ask examples/actions_people_believed.kb 'wastes_time(X)' --retriever all --threshold 0.03 --beliefs --explain
+wastes_time(kim)    P 0.420  b 0.263  d 0.000  u 0.737
+    wastes_time(kim)    [by wastes_time(X0) ⇐ watch_tv(X0), score 0.756]
+      watch_tv(kim)    [fact]
+wastes_time(sam)    P 0.420  b 0.263  d 0.000  u 0.737
+    wastes_time(sam)    [by wastes_time(X0) ⇐ watch_tv(X0), score 0.756]
+      watch_tv(sam)    [fact]
+wastes_time(amy)    P 0.224  b 0.014  d 0.001  u 0.985
+    wastes_time(amy)    [by wastes_time(X0) ⇐ play_games(X0), score 0.039]
+      play_games(amy)    [fact]
+
+rewrites admitted (3):
+  play_games(X0) ⇐ gaming_productive(X0)    P 0.528  b 0.400  d 0.000  u 0.600
+  wastes_time(X0) ⇐ play_games(X0)    P 0.224  b 0.014  d 0.001  u 0.985
+  wastes_time(X0) ⇐ watch_tv(X0)    P 0.420  b 0.263  d 0.000  u 0.737
+
+applications defeated by what the knowledge base states about their individuals (1):
+  wastes_time(kim) ⇐ play_games(kim), given "kim plays games."
+    contradicts  d 0.985 >= 0.659  "kim considers gaming to be productive."  similarity 0.676
+ok: 3 answers, 20 work, 36 judge questions, 1 pair reading 3 claims in 1.10 s, 0 rewrites withdrawn, 1 application read, 1 defeated, 12 work on exceptions, 4.90 s
+```
+<!-- END GENERATED: actions-people -->
+
+The statement names kim, so it bears on each application of a match to kim, not on the match. Each application reads the statements that name its individuals and stand out against its match's claim, as delta-NLI reads an update: the application's premise and the statement together, "kim plays games. kim considers gaming to be productive.", against its conclusion, "kim wastes time.". The judge reads that as a clear contradiction, so kim's application of the gaming match derives nothing, as an abnormality atom `ab(play_games, kim)` blocks one instance of a default in answer-set programming. kim still wastes time through watching TV, at that match's P, and the derivation shown is that one; amy still wastes time through the gaming match, which stays admitted, at the P it had with nothing stated about kim. A reading short of a clear contradiction only lowers the answers derived through that application, at a trust fitted on delta-ATOMIC's updates read the same way with names filled in.
 
 ## A small example: choosing the threshold
 
@@ -307,7 +346,7 @@ rewrites admitted (14):
   parent(X0, X1) ⇐ guardian(X0, X1)
   parent(X0, X1) ⇐ mother(X0, X1)
   parent(X0, X1) ⇐ mum(X0, X1)
-ok: 3 answers, 63 work, 78 judge questions, 0.75 s
+ok: 3 answers, 63 work, 78 judge questions, 4.58 s
 ```
 <!-- END GENERATED: tom-explain -->
 
@@ -318,7 +357,7 @@ Every answer comes with its derivation, and each step names the rule or the admi
 $ semrewrite ask examples/parent_of_tom.kb 'parent(X, tom)' --judge nli-deberta-large --retriever all --threshold 0.995
 parent(alice, tom)
 parent(bob, tom)
-ok: 2 answers, 14 work, 65 judge questions, 0.24 s
+ok: 2 answers, 14 work, 65 judge questions, 5.54 s
 ```
 <!-- END GENERATED: tom-strict -->
 
@@ -347,7 +386,7 @@ rewrites admitted (6):
   parent(X0, X1) ⇐ dad(X0, X1)
   parent(X0, X1) ⇐ mother(X0, X1)
   parent(X0, X1) ⇐ mum(X0, X1)
-ok: 2 answers, 24 work, 78 judge questions, 0.29 s
+ok: 2 answers, 24 work, 78 judge questions, 7.93 s
 ```
 <!-- END GENERATED: tom-grandparent -->
 
@@ -366,12 +405,12 @@ pip install ".[pymetta]"       # the PyMeTTa engine
 pip install ".[all]"           # everything, plus the conformance kit and the Jev judge
 ```
 
-The core runs on Python 3.11 or later; the PyMeTTa engine needs 3.12 or later. `uv sync --all-extras` builds the environment the experiment used, with CUDA 12.8 torch on Linux and Windows. A command that needs a library you have not installed names the extra that installs it.
+The core runs on Python 3.11 or later; the PyMeTTa engine needs 3.12 or later. `uv sync --all-extras` builds the environment the experiment used, with CUDA 12.8 torch on Linux and Windows. A command that needs a library you have not installed names the extra that installs it. The claim check needs the models extra once a knowledge base states something it reads: a fact with no arguments, or a fact naming an individual a rewrite is applied to, as nearly every knowledge base's facts do. It chooses what to read with an embedding model, and where the run's judge has no calibrated trust for a reading, as Jev has none, it reads with nli-deberta-large; with Jev's extra alone, a run with something to read stops with an error naming the extra.
 
 ## Command line
 
 ```sh
-semrewrite ask KB QUERY [--judge NAME] [--engine python|pymetta] [--strategy NAME] [--depth N] [--explain] [--trace] [--json]
+semrewrite ask KB QUERY [--judge NAME] [--reader NAME] [--engine python|pymetta] [--strategy NAME] [--depth N] [--explain] [--trace] [--json]
 semrewrite ask KB QUERY --beliefs [--answer-threshold P]  # each answer with its opinion, ranked by P
 semrewrite rewrites KB PREDICATE [--judge NAME] [--all]   # what discovery admits, what KB's statements withdraw, and with --all what it rejects
 semrewrite rewrites KB PREDICATE --snars                  # the admitted rewrites as SNARS beliefs and rules for GoalChainer
@@ -382,7 +421,7 @@ semrewrite conformance --engine NAME                     # check an engine again
 semrewrite convert family.metta family.kb                # between the text, JSON and MeTTa formats
 ```
 
-`--judge oracle` uses the `gold` lines of the knowledge base instead of a model, which is how tests and the experiment separate engine behaviour from judge error. `--retriever all` judges every predicate of the right arity instead of the 8 nearest by gloss embedding, which suits small catalogues and loads no embedding model. `--retriever judge` ranks every predicate with the `--prefilter` judge, the cross-encoder nli-deberta-large by default, and the admitting judge sees only the `--k` it ranks highest, which suits a catalogue too large to judge whole, such as Wikidata's 1,790 properties above. `--depth N` replaces the strategy's depth bound, counted the way the strategy counts it, and `--depth 0` removes it. `--explain` prints each answer's derivation and the rewrites admitted, and `--trace` prints each step on standard error as it happens, as in the Alphabet example above. `--beliefs` prints each answer with its opinion, highest P first, as in the Victoria example above, and `--answer-threshold P` drops the answers below P. Every run checks each rewrite the judge admits against the knowledge base's statements read by meaning: a statement the judge reads as contradicting the rewrite's claim at its calibrated threshold, which `--threshold` does not move, withdraws the rewrite, and vaguer readings weigh on its opinion. `--explain` lists under each admitted rewrite the statements read against it and then the rewrites withdrawn, each with the statements that withdrew it; `--json` writes both with the check's cost; `rewrites` prints each withdrawn rewrite as a `defeat` line and each admitted one's opinion after the check where something was read against it; and `rewrites --snars` exports that opinion. The check needs a judge that reads sentences, so `--judge oracle` refuses a knowledge base that states something without arguments, and it uses the run's embedding model, loading the default one, only once there is something to read, when `--retriever` is `all` or `judge`. `rewrites --snars` prints each admitted rewrite as two lines of the live world of mettabase's SNARS, the subjective-logic reasoner GoalChainer uses: its validity, a statement `(valid rw-owns-owned_by_p127-10)` believed with the rewrite's opinion as evidence, and a row of SNARS's rule kit deriving `owns(X0, X1)` from `owned_by_p127(X1, X0)` and that statement. The row is of SNARS's `certain-rule` class, a rule that holds whenever its premises do, so the rewrite's doubt lives in its validity alone: SNARS's `sn prove` gives the conclusion the product of the premise's and the validity's probabilities, every application of the rewrite shares the one validity statement, and a proof that uses it twice counts it once, as every answer through it does here. A knowledge base seeds each of a question's N candidate answers at 1/N (`sn marginal!`), the probability SNARS leaves an answer no derivation reaches. `judge` reads sentence pairs from standard input, one JSON object a line with a `premise` and a `conclusion`, and writes each pair's opinion as a JSON line, calibrated at the judge's trust and base rate unless `--trust` and `--base-rate` give others, for pairs drawn from another population; GoalChainer uses it to ask whether a request states an element of a problem. The exit status is 0 when the query finished, 2 when a budget stopped it and 1 on an error.
+`--judge oracle` uses the `gold` lines of the knowledge base instead of a model, which is how tests and the experiment separate engine behaviour from judge error. `--retriever all` judges every predicate of the right arity instead of the 8 nearest by gloss embedding, which suits small catalogues and loads no embedding model. `--retriever judge` ranks every predicate with the `--prefilter` judge, the cross-encoder nli-deberta-large by default, and the admitting judge sees only the `--k` it ranks highest, which suits a catalogue too large to judge whole, such as Wikidata's 1,790 properties above. `--depth N` replaces the strategy's depth bound, counted the way the strategy counts it, and `--depth 0` removes it. `--explain` prints each answer's derivation and the rewrites admitted, and `--trace` prints each step on standard error as it happens, as in the Alphabet example above. `--beliefs` prints each answer with its opinion, highest P first, as in the Victoria example above, and `--answer-threshold P` drops the answers below P. Every run checks each rewrite the judge admits against the knowledge base's statements read by meaning: a statement the judge reads as contradicting the rewrite's claim at its calibrated threshold, which `--threshold` does not move, withdraws the rewrite, and vaguer readings weigh on its opinion. Each application of a rewrite to the row it concludes is checked too, against the statements naming the row's individuals: one the judge reads as contradicting the application's conclusion, given its premise, at that threshold derives nothing, and an answer every derivation of which applies a defeated application is no answer; vaguer readings weigh on the answers derived through the application alone. `--explain` lists under each admitted rewrite the statements read against it, then the rewrites withdrawn, each with the statements that withdrew it, then the applications defeated and weighed, each with its statements, and the answers a defeat left no derivation for; `--json` writes them with the check's cost; `rewrites` prints each withdrawn rewrite as a `defeat` line and each admitted one's opinion after the check where something was read against it; and `rewrites --snars` exports that opinion. The check reads with `--reader` where given, else with the run's judge wherever it carries the calibrated trust a reading weighs at, else with nli-deberta-large, and `--trace`, `--explain` and `--json` name a reader the run's judge handed a reading to, with why; a `--reader` without that trust is refused. `--judge oracle`, which reads no sentences, has no check unless a `--reader` is given: without one it refuses a knowledge base that states something without arguments and leaves facts naming individuals to the rows. The check uses the run's embedding model, loading the default one, only once there is something to read, when `--retriever` is `all` or `judge`. `rewrites --snars` prints each admitted rewrite as two lines of the live world of mettabase's SNARS, the subjective-logic reasoner GoalChainer uses: its validity, a statement `(valid rw-owns-owned_by_p127-10)` believed with the rewrite's opinion as evidence, and a row of SNARS's rule kit deriving `owns(X0, X1)` from `owned_by_p127(X1, X0)` and that statement. The row is of SNARS's `certain-rule` class, a rule that holds whenever its premises do, so the rewrite's doubt lives in its validity alone: SNARS's `sn prove` gives the conclusion the product of the premise's and the validity's probabilities, every application of the rewrite shares the one validity statement, and a proof that uses it twice counts it once, as every answer through it does here. A knowledge base seeds each of a question's N candidate answers at 1/N (`sn marginal!`), the probability SNARS leaves an answer no derivation reaches. `judge` reads sentence pairs from standard input, one JSON object a line with a `premise` and a `conclusion`, and writes each pair's opinion as a JSON line, calibrated at the judge's trust and base rate unless `--trust` and `--base-rate` give others, for pairs drawn from another population; GoalChainer uses it to ask whether a request states an element of a problem. The exit status is 0 when the query finished, 2 when a budget stopped it and 1 on an error.
 
 ## Python
 
@@ -398,7 +437,7 @@ print(outcome.answers)        # {('carol', 'tom'), ('dave', 'tom')}
 print(outcome.admitted)       # the rewrites admitted, as (premise, conclusion, argument mapping)
 ```
 
-`Rewriter` checks every rewrite it admits with its judge, and `outcome.defeated` holds the rewrites the knowledge base's statements withdrew, each with the readings that withdrew it; with `beliefs=16`, `outcome.readings` holds the statements read against each admitted rewrite. `claims=ClaimCheck(kb, judge, embedder)`, `ClaimCheck` from `semrewrite`, gives the check its embedding model or other settings.
+`Rewriter` checks every rewrite it admits, and every application of one, with its judge, and `outcome.defeated` holds the rewrites the knowledge base's statements withdrew, each with the readings that withdrew it; `outcome.applications` holds each application read, by (rewrite key, row), with its readings and its leaf's opinion that the rewrite applies normally there, `outcome.fallen` the answers a defeated application left no derivation for, and `outcome.exception_work` the work those exceptions added, apart from `outcome.work`; with `beliefs=16`, `outcome.readings` holds the statements read against each admitted rewrite. `reader=` gives the check its reader, and `claims=ClaimCheck(kb, judge, embedder, reader=...)`, `ClaimCheck` from `semrewrite`, its embedding model or other settings.
 
 A knowledge base can also be built in code with `KB`, `atom` and `Rule`, and predicates may have any arity: `gave(x, y, z)` with the gloss `{x} gave {y} to {z}` implies `received(z, y, x)`, and discovery proposes every argument mapping.
 

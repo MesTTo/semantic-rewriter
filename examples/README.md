@@ -47,13 +47,13 @@ Wikidata's own answer, through `child_p40`, `father_p22`, `mother_p25`: 1,164 en
 
 | judge | most rewrites on a path | answers | in Wikidata's answer | not in it | missed | judge questions | rewrites admitted | seconds |
 |---|---|---|---|---|---|---|---|---|
-| none, read literally | none | 0 | 0 | 0 | 1,164 | 0 | 0 | 49.7 |
-| cosine-bge | 1 | 1,165 | 1,164 | 1 | 0 | 202 | 8 | 44.9 |
-| jev | 1 | 1,164 | 1,164 | 0 | 0 | 202 | 18 | 7.6 |
-| cosine-bge | 3 | none, the work budget stopped it | 0 | 0 | 1,164 | 606 | 24 | 67.4 |
-| jev | 3 | 1,191 | 1,164 | 27 | 0 | 5,454 | 184 | 1059.3 |
+| none, read literally | none | 0 | 0 | 0 | 1,164 | 0 | 0 | 26.6 |
+| cosine-bge | 1 | 1,165 | 1,164 | 1 | 0 | 202 | 8 | 280.0 |
+| jev | 1 | 1,164 | 1,164 | 0 | 0 | 202 | 18 | 1.5 |
+| cosine-bge | 3 | none, the work budget stopped it | 0 | 0 | 1,164 | 606 | 24 | 275.2 |
+| jev | 3 | 1,191 | 1,164 | 27 | 0 | 5,454 | 184 | 3997.6 |
 
-cosine-bge, at most 1 rewrite on a path: ok, 2,723,404 inferences.
+cosine-bge, at most 1 rewrite on a path: ok, 2,724,979 inferences.
 Rewrites it admitted into the question's own predicates:
 
 - `descendant_of` ⇐ `descendant_of` (arguments swapped) 0.99
@@ -67,7 +67,7 @@ Rewrites it admitted into the question's own predicates:
 
 Some answers not in Wikidata's: `queen_victoria`
 
-jev, at most 1 rewrite on a path: ok, 2,459,364 inferences.
+jev, at most 1 rewrite on a path: ok, 2,458,614 inferences.
 Rewrites it admitted into the question's own predicates:
 
 - `descendant_of` ⇐ `parent_peak_p3137` 0.91
@@ -89,12 +89,12 @@ Rewrites it admitted into the question's own predicates:
 - `parent_of` ⇐ `parent_astronomical_body_p397` (arguments swapped) 0.69
 - `parent_of` ⇐ `parent_club_p831` (arguments swapped) 0.68
 
-cosine-bge, at most 3 rewrites on a path: work_limit, 50,002,221 inferences.
+cosine-bge, at most 3 rewrites on a path: work_limit, 50,001,236 inferences.
 Into the question's own predicates it admitted the same rewrites as above.
 
 It chained 16 more rewrites into the properties those premises name.
 
-jev, at most 3 rewrites on a path: ok, 34,403,137 inferences.
+jev, at most 3 rewrites on a path: ok, 34,402,336 inferences.
 Into the question's own predicates it admitted the same rewrites as above.
 
 It chained 166 more rewrites into the properties those premises name.
@@ -108,18 +108,18 @@ Wikidata's own answer, through `architect_p84`, `author_p50`, `composer_p86`, `c
 
 | judge | most rewrites on a path | answers | in Wikidata's answer | not in it | missed | judge questions | rewrites admitted | seconds |
 |---|---|---|---|---|---|---|---|---|
-| none, read literally | none | 0 | 0 | 0 | 854 | 0 | 0 | 16.7 |
-| cosine-bge | 1 | 0 | 0 | 0 | 854 | 101 | 1 | 16.0 |
-| jev | 1 | 851 | 849 | 2 | 5 | 101 | 16 | 1.2 |
+| none, read literally | none | 0 | 0 | 0 | 854 | 0 | 0 | 8.1 |
+| cosine-bge | 1 | 0 | 0 | 0 | 854 | 101 | 1 | 195.1 |
+| jev | 1 | 851 | 849 | 2 | 5 | 101 | 16 | 101.7 |
 
-cosine-bge, at most 1 rewrite on a path: ok, 1,681 inferences.
+cosine-bge, at most 1 rewrite on a path: ok, 1,071 inferences.
 Rewrites it admitted into the question's own predicates:
 
 - `created` ⇐ `created` (arguments swapped) 0.96
 
 Some of Wikidata's answers it missed: `a_copse_of_trees`, `a_hillside_with_an_outcrop_of_stratified_rock`, `a_marshy_plain_seen_from_above_and_notes`, `a_mechanical_military_drum`, `a_miracle_of_saint_donatus_of_arezzo`, `a_portrait_of_a_woman_in_profile`, `a_ravine`, `a_rider_at_a_gallop_a_horse_s_head_in_profile_and_a_horse_viewed_from_behind`
 
-jev, at most 1 rewrite on a path: ok, 34,633 inferences.
+jev, at most 1 rewrite on a path: ok, 34,023 inferences.
 Rewrites it admitted into the question's own predicates:
 
 - `created` ⇐ `creator_p170` (arguments swapped) 0.92
@@ -150,11 +150,11 @@ Wikidata's own answer, through `child_organization_or_unit_p355`, `copyright_hol
 
 | judge | most rewrites on a path | answers | in Wikidata's answer | not in it | missed | judge questions | rewrites admitted | seconds |
 |---|---|---|---|---|---|---|---|---|
-| none, read literally | none | 0 | 0 | 0 | 3,225 | 0 | 0 | 100.5 |
-| cosine-bge | 1 | none, the work budget stopped it | 0 | 0 | 3,225 | 101 | 8 | 25.3 |
-| jev | 1 | 2,849 | 2,849 | 0 | 376 | 101 | 3 | 2.7 |
+| none, read literally | none | 0 | 0 | 0 | 3,225 | 0 | 0 | 61.8 |
+| cosine-bge | 1 | none, the work budget stopped it | 0 | 0 | 3,225 | 101 | 8 | 74.6 |
+| jev | 1 | 2,849 | 2,849 | 0 | 376 | 101 | 3 | 304.7 |
 
-cosine-bge, at most 1 rewrite on a path: work_limit, 50,000,892 inferences.
+cosine-bge, at most 1 rewrite on a path: work_limit, 50,000,320 inferences.
 Rewrites it admitted into the question's own predicates:
 
 - `owns` ⇐ `owns` (arguments swapped) 0.99
@@ -166,7 +166,7 @@ Rewrites it admitted into the question's own predicates:
 - `owns` ⇐ `beforehand_owned_by_p11811` 0.97
 - `owns` ⇐ `beforehand_owned_by_p11811` (arguments swapped) 0.96
 
-jev, at most 1 rewrite on a path: ok, 1,268,948 inferences.
+jev, at most 1 rewrite on a path: ok, 1,268,374 inferences.
 Rewrites it admitted into the question's own predicates:
 
 - `owns` ⇐ `owned_by_p127` (arguments swapped) 0.99
@@ -195,20 +195,20 @@ Each answer comes with its derivation, the statements and rewrites it rests on, 
 $ semrewrite ask examples/wikidata/victoria.metta 'descendant_of(frederik_x_of_denmark, queen_victoria)' --judge jev --threshold 0.65 --strategy rewrite-depth-tabled --depth 1 --retriever judge --k 50 --engine pymetta --work 50000000 --seconds inf --explain
 descendant_of(frederik_x_of_denmark, queen_victoria)
     descendant_of(frederik_x_of_denmark, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-      parent_of(margrethe_ii_of_denmark, frederik_x_of_denmark)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
-        mother_p25(frederik_x_of_denmark, margrethe_ii_of_denmark)    [fact]
+      parent_of(margrethe_ii_of_denmark, frederik_x_of_denmark)    [by parent_of(X0, X1) ⇐ child_p40(X0, X1), score 0.970]
+        child_p40(margrethe_ii_of_denmark, frederik_x_of_denmark)    [fact]
       descendant_of(margrethe_ii_of_denmark, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-        parent_of(ingrid_of_sweden, margrethe_ii_of_denmark)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
-          mother_p25(margrethe_ii_of_denmark, ingrid_of_sweden)    [fact]
+        parent_of(ingrid_of_sweden, margrethe_ii_of_denmark)    [by parent_of(X0, X1) ⇐ child_p40(X0, X1), score 0.970]
+          child_p40(ingrid_of_sweden, margrethe_ii_of_denmark)    [fact]
         descendant_of(ingrid_of_sweden, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-          parent_of(princess_margaret_of_connaught, ingrid_of_sweden)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
-            mother_p25(ingrid_of_sweden, princess_margaret_of_connaught)    [fact]
+          parent_of(princess_margaret_of_connaught, ingrid_of_sweden)    [by parent_of(X0, X1) ⇐ child_p40(X0, X1), score 0.970]
+            child_p40(princess_margaret_of_connaught, ingrid_of_sweden)    [fact]
           descendant_of(princess_margaret_of_connaught, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-            parent_of(prince_arthur_duke_of_connaught_and_strathearn, princess_margaret_of_connaught)    [by parent_of(X0, X1) ⇐ father_p22(X1, X0), score 0.980]
-              father_p22(princess_margaret_of_connaught, prince_arthur_duke_of_connaught_and_strathearn)    [fact]
+            parent_of(prince_arthur_duke_of_connaught_and_strathearn, princess_margaret_of_connaught)    [by parent_of(X0, X1) ⇐ child_p40(X0, X1), score 0.970]
+              child_p40(prince_arthur_duke_of_connaught_and_strathearn, princess_margaret_of_connaught)    [fact]
             descendant_of(prince_arthur_duke_of_connaught_and_strathearn, queen_victoria)    [by descendant_of(X, Y) :- parent_of(Y, X)]
-              parent_of(queen_victoria, prince_arthur_duke_of_connaught_and_strathearn)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
-                mother_p25(prince_arthur_duke_of_connaught_and_strathearn, queen_victoria)    [fact]
+              parent_of(queen_victoria, prince_arthur_duke_of_connaught_and_strathearn)    [by parent_of(X0, X1) ⇐ child_p40(X0, X1), score 0.970]
+                child_p40(queen_victoria, prince_arthur_duke_of_connaught_and_strathearn)    [fact]
 
 rewrites admitted (18):
   descendant_of(X0, X1) ⇐ derived_from_base_unit_p12571(X0, X1)
@@ -229,7 +229,7 @@ rewrites admitted (18):
   parent_of(X0, X1) ⇐ parent_p8810(X1, X0)
   parent_of(X0, X1) ⇐ parent_peak_p3137(X1, X0)
   parent_of(X0, X1) ⇐ subdivision_of_this_unit_p9059(X0, X1)
-ok: 1 answer, 35,172 work, 202 judge questions, 42.17 s
+ok: 1 answer, 34,386 work, 202 judge questions, 343.95 s
 ```
 <!-- END GENERATED: wikidata-descent -->
 
@@ -257,7 +257,7 @@ rewrites admitted (16):
   created(X0, X1) ⇐ notable_work_p800(X0, X1)
   created(X0, X1) ⇐ produced_by_p2849(X1, X0)
   created(X0, X1) ⇐ producer_p162(X1, X0)
-ok: 1 answer, 3,169 work, 101 judge questions, 26.76 s
+ok: 1 answer, 2,460 work, 101 judge questions, 182.72 s
 ```
 <!-- END GENERATED: wikidata-work -->
 
@@ -278,7 +278,9 @@ rewrites admitted (3):
   owns(X0, X1) ⇐ afterward_owned_by_p11812(X1, X0)
   owns(X0, X1) ⇐ owned_by_p127(X1, X0)
   owns(X0, X1) ⇐ owner_of_p1830(X0, X1)
-ok: 1 answer, 2,294,032 work, 101 judge questions, 37.30 s
+
+statements about applications' individuals read by nli-deberta-large: jev has no exception trust
+ok: 1 answer, 2,293,214 work, 101 judge questions, 4 pairs reading 3 claims in 136.64 s, 0 rewrites withdrawn, 1 application read, 0 defeated, 0 work on exceptions, 249.00 s
 ```
 <!-- END GENERATED: wikidata-holding -->
 
@@ -298,23 +300,23 @@ descendant_of(army_air_corps, queen_victoria)
         parent_organization_or_unit_p749(army_air_corps, prince_harry_duke_of_sussex)    [by parent_organization_or_unit_p749(X0, X1) ⇐ military_branch_p241(X1, X0), score 0.880]
           military_branch_p241(prince_harry_duke_of_sussex, army_air_corps)    [fact]
       descendant_of(prince_harry_duke_of_sussex, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-        parent_of(charles_iii_q43274, prince_harry_duke_of_sussex)    [by parent_of(X0, X1) ⇐ father_p22(X1, X0), score 0.980]
-          father_p22(prince_harry_duke_of_sussex, charles_iii_q43274)    [fact]
+        parent_of(charles_iii_q43274, prince_harry_duke_of_sussex)    [by parent_of(X0, X1) ⇐ child_p40(X0, X1), score 0.970]
+          child_p40(charles_iii_q43274, prince_harry_duke_of_sussex)    [fact]
         descendant_of(charles_iii_q43274, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-          parent_of(prince_philip_duke_of_edinburgh, charles_iii_q43274)    [by parent_of(X0, X1) ⇐ father_p22(X1, X0), score 0.980]
-            father_p22(charles_iii_q43274, prince_philip_duke_of_edinburgh)    [fact]
-          descendant_of(prince_philip_duke_of_edinburgh, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-            parent_of(princess_alice_of_battenberg, prince_philip_duke_of_edinburgh)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
-              mother_p25(prince_philip_duke_of_edinburgh, princess_alice_of_battenberg)    [fact]
-            descendant_of(princess_alice_of_battenberg, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-              parent_of(princess_victoria_of_hesse_and_by_rhine, princess_alice_of_battenberg)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
-                mother_p25(princess_alice_of_battenberg, princess_victoria_of_hesse_and_by_rhine)    [fact]
-              descendant_of(princess_victoria_of_hesse_and_by_rhine, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-                parent_of(princess_alice_of_the_united_kingdom, princess_victoria_of_hesse_and_by_rhine)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
-                  mother_p25(princess_victoria_of_hesse_and_by_rhine, princess_alice_of_the_united_kingdom)    [fact]
-                descendant_of(princess_alice_of_the_united_kingdom, queen_victoria)    [by descendant_of(X, Y) :- parent_of(Y, X)]
-                  parent_of(queen_victoria, princess_alice_of_the_united_kingdom)    [by parent_of(X0, X1) ⇐ mother_p25(X1, X0), score 0.990]
-                    mother_p25(princess_alice_of_the_united_kingdom, queen_victoria)    [fact]
+          parent_of(elizabeth_ii, charles_iii_q43274)    [by parent_of(X0, X1) ⇐ child_p40(X0, X1), score 0.970]
+            child_p40(elizabeth_ii, charles_iii_q43274)    [fact]
+          descendant_of(elizabeth_ii, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
+            parent_of(george_vi, elizabeth_ii)    [by parent_of(X0, X1) ⇐ child_p40(X0, X1), score 0.970]
+              child_p40(george_vi, elizabeth_ii)    [fact]
+            descendant_of(george_vi, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
+              parent_of(george_v, george_vi)    [by parent_of(X0, X1) ⇐ child_p40(X0, X1), score 0.970]
+                child_p40(george_v, george_vi)    [fact]
+              descendant_of(george_v, queen_victoria)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
+                parent_of(edward_vii, george_v)    [by parent_of(X0, X1) ⇐ child_p40(X0, X1), score 0.970]
+                  child_p40(edward_vii, george_v)    [fact]
+                descendant_of(edward_vii, queen_victoria)    [by descendant_of(X, Y) :- parent_of(Y, X)]
+                  parent_of(queen_victoria, edward_vii)    [by parent_of(X0, X1) ⇐ child_p40(X0, X1), score 0.970]
+                    child_p40(queen_victoria, edward_vii)    [fact]
 
 rewrites admitted (184):
   by_product_of_p2822(X0, X1) ⇐ by_product_p2821(X1, X0)
@@ -501,7 +503,7 @@ rewrites admitted (184):
   this_taxon_is_source_of_p1672(X0, X1) ⇐ protonym_of_p12765(X0, X1)
   twinning_p537(X0, X1) ⇐ permanent_duplicated_item_p2959(X0, X1)
   twinning_p537(X0, X1) ⇐ twinning_p537(X1, X0)
-ok: 1 answer, 794,410 work, 5,454 judge questions, 1333.21 s
+ok: 1 answer, 792,964 work, 5,454 judge questions, 4958.90 s
 ```
 <!-- END GENERATED: wikidata-chained -->
 
@@ -567,7 +569,7 @@ Read literally, the knowledge base answers nothing, because no fact says `lowers
 <!-- BEGIN GENERATED: swanson-exact -->
 ```text
 $ semrewrite ask examples/swanson.metta 'worth_testing_against(X, raynauds)' --strategy exact --engine pymetta
-ok: 0 answers, 2,261 work, 0 judge questions, 0.07 s
+ok: 0 answers, 1,689 work, 0 judge questions, 0.11 s
 ```
 <!-- END GENERATED: swanson-exact -->
 
@@ -604,7 +606,7 @@ rewrites admitted (12):
   lowers(X0, X1) ⇐ reduces(X0, X1)
   reduces(X0, X1) ⇐ is_reduced_by(X1, X0)
   reduces(X0, X1) ⇐ lowers(X0, X1)
-ok: 2 answers, 8,476 work, 152 judge questions, 0.04 s
+ok: 2 answers, 8,790 work, 152 judge questions, 0.31 s
 ```
 <!-- END GENERATED: swanson-jev -->
 
@@ -615,12 +617,12 @@ Each answer shows one shortest derivation, and omega-3 has a second one of the s
 $ semrewrite ask examples/swanson.metta 'lowers(omega_3, B)' --judge jev --threshold 0.65 --strategy rewrite-depth-tabled --retriever all --engine pymetta
 lowers(omega_3, blood_viscosity)
 lowers(omega_3, platelet_aggregation)
-ok: 2 answers, 2,901 work, 76 judge questions, 0.04 s
+ok: 2 answers, 2,612 work, 76 judge questions, 0.11 s
 
 $ semrewrite ask examples/swanson.metta 'aggravates(B, raynauds)' --judge jev --threshold 0.65 --strategy rewrite-depth-tabled --retriever all --engine pymetta
 aggravates(blood_viscosity, raynauds)
 aggravates(platelet_aggregation, raynauds)
-ok: 2 answers, 2,495 work, 57 judge questions, 0.03 s
+ok: 2 answers, 2,125 work, 57 judge questions, 0.17 s
 ```
 <!-- END GENERATED: swanson-paths -->
 
@@ -699,7 +701,7 @@ rewrites admitted (18):
   reduces(X0, X1) ⇐ lowers(X1, X0)
   reduces(X0, X1) ⇐ reduces(X1, X0)
   worth_testing_against(X0, X1) ⇐ worth_testing_against(X1, X0)
-ok: 0 answers, 25,390 work, 114 judge questions, 0.53 s
+ok: 0 answers, 27,222 work, 114 judge questions, 0.66 s
 ```
 <!-- END GENERATED: swanson-similarity -->
 
@@ -708,7 +710,7 @@ Tables make the rewrites safe to chain. Jev admits "reduces" and "lowers" in bot
 <!-- BEGIN GENERATED: swanson-naive -->
 ```text
 $ semrewrite ask examples/swanson.metta 'worth_testing_against(X, raynauds)' --judge jev --threshold 0.65 --strategy naive --retriever all --engine pymetta --seconds 600
-work_limit: 0 answers, 2,058,835 work, 548,777 judge questions, 2.80 s
+work_limit: 0 answers, 2,045,239 work, 426,759 judge questions, 1.11 s
 ```
 <!-- END GENERATED: swanson-naive -->
 
@@ -824,7 +826,7 @@ rewrites admitted (19):
   parent_of(X0, X1) ⇐ gave_birth_to(X0, X1)
   parent_of(X0, X1) ⇐ mother_of(X0, X1)
   parent_of(X0, X1) ⇐ son_of(X1, X0)
-ok: 5 answers, 29,085 work, 168 judge questions, 0.05 s
+ok: 5 answers, 31,903 work, 168 judge questions, 0.24 s
 ```
 <!-- END GENERATED: family-jev -->
 
@@ -837,7 +839,7 @@ descendant_of(jim, bob)
 descendant_of(jim, pam)
 descendant_of(jim, pat)
 descendant_of(jim, tom)
-ok: 4 answers, 17,542 work, 168 judge questions, 0.04 s
+ok: 4 answers, 19,109 work, 168 judge questions, 0.13 s
 ```
 <!-- END GENERATED: family-ancestors -->
 
@@ -852,13 +854,13 @@ mother_of(pam, bob)
 
 rewrites admitted (1):
   mother_of(X0, X1) ⇐ gave_birth_to(X0, X1)
-ok: 1 answer, 1,993 work, 42 judge questions, 1.28 s
+ok: 1 answer, 1,406 work, 42 judge questions, 0.13 s
 
 $ semrewrite ask examples/family_tree.metta 'mother_of(X, jim)' --judge jev --threshold 0.65 --strategy rewrite-depth-tabled --retriever all --engine pymetta --explain
 
 rewrites admitted (1):
   mother_of(X0, X1) ⇐ gave_birth_to(X0, X1)
-ok: 0 answers, 1,868 work, 42 judge questions, 0.17 s
+ok: 0 answers, 1,315 work, 42 judge questions, 0.14 s
 ```
 <!-- END GENERATED: family-mothers -->
 
@@ -908,8 +910,8 @@ descendant_of(liz, tom)
           daughter_of(liz, tom)    [fact]
 descendant_of(tom, tom)
     descendant_of(tom, tom)    [by descendant_of(X, Z) :- parent_of(Y, X), descendant_of(Y, Z)]
-      parent_of(bob, tom)    [by parent_of(X0, X1) ⇐ parent_of(X1, X0), score 0.990]
-        parent_of(tom, bob)    [by parent_of(X0, X1) ⇐ father_of(X0, X1), score 0.965]
+      parent_of(bob, tom)    [by parent_of(X0, X1) ⇐ father_of(X0, X1), score 0.965]
+        father_of(bob, tom)    [by father_of(X0, X1) ⇐ father_of(X1, X0), score 0.987]
           father_of(tom, bob)    [fact]
       descendant_of(bob, tom)    [by descendant_of(X, Y) :- parent_of(Y, X)]
         parent_of(tom, bob)    [by parent_of(X0, X1) ⇐ father_of(X0, X1), score 0.965]
@@ -937,7 +939,7 @@ rewrites admitted (21):
   son_of(X0, X1) ⇐ father_of(X0, X1)
   son_of(X0, X1) ⇐ parent_of(X0, X1)
   son_of(X0, X1) ⇐ son_of(X1, X0)
-ok: 3 answers, 70,332 work, 126 judge questions, 0.49 s
+ok: 3 answers, 69,235 work, 126 judge questions, 0.87 s
 
 $ semrewrite ask examples/family_tree.metta 'mother_of(X, jim)' --judge cosine-bge --strategy rewrite-depth-tabled --retriever all --engine pymetta --explain
 mother_of(pat, jim)
@@ -966,7 +968,7 @@ rewrites admitted (20):
   son_of(X0, X1) ⇐ father_of(X0, X1)
   son_of(X0, X1) ⇐ parent_of(X0, X1)
   son_of(X0, X1) ⇐ son_of(X1, X0)
-ok: 1 answer, 5,526 work, 105 judge questions, 0.85 s
+ok: 1 answer, 4,958 work, 105 judge questions, 0.54 s
 ```
 <!-- END GENERATED: family-similarity -->
 

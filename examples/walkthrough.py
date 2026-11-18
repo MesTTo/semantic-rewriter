@@ -97,6 +97,8 @@ BLOCKS: dict[str, str | list[list[str]] | Callable[[], str]] = {
     "actions-defeat": [["rewrites", "examples/actions_first_person_believed.kb", "wastes_time", "--retriever", "all"],
                        ["ask", "examples/actions_first_person_believed.kb", "wastes_time", "--retriever", "all",
                         "--beliefs", "--explain"]],
+    "actions-people": [["ask", "examples/actions_people_believed.kb", "wastes_time(X)", "--retriever", "all",
+                        "--threshold", "0.03", "--beliefs", "--explain"]],
     "tom-source": TOM,
     "tom-explain": [["ask", TOM, "parent(X, tom)", *NLI, "--explain"]],
     "tom-strict": [["ask", TOM, "parent(X, tom)", *NLI, "--threshold", "0.995"]],
