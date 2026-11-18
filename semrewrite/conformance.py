@@ -819,7 +819,12 @@ def _worker(engine: Engine, seed: int) -> _Worker:
 
 def _serve() -> int:
     """The --solve process: rebuild the engine from the first line, refusing anything without a solve method, then
-    answer each run with its outcome, or with the error its solve raised."""
+    answer each run with its outcome, or with the error its solve raised. Replies go to the pipe the parent reads,
+    held apart from standard output, which is pointed at standard error before any engine runs, so an engine that
+    prints, from Python or from native code, cannot corrupt a reply."""
+    sys.stdout.flush()
+    replies = os.fdopen(os.dup(sys.stdout.fileno()), "w")
+    os.dup2(sys.stderr.fileno(), sys.stdout.fileno())
     engine: Engine | None = None
     for line in sys.stdin:
         try:
@@ -840,8 +845,8 @@ def _serve() -> int:
                     reply = ("solved", _outcome(engine.solve(program, query, budget, expand), work=False))
                 except Exception as error:  # noqa: BLE001 - a raising solve is an outcome the other seed must match
                     reply = ("raised", f"{type(error).__name__}: {error}")
-        sys.stdout.write(_line(reply))
-        sys.stdout.flush()
+        replies.write(_line(reply))
+        replies.flush()
     return 0
 
 

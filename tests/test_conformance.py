@@ -468,6 +468,16 @@ class DriftingProofs(PaddedProofs):
         return super().solve(program, query, budget, expand)
 
 
+class NoisyEngine(_Delegate):
+    """Prints to standard output while it solves, from Python and straight to the file descriptor, as native code
+    does; a correct engine otherwise."""
+
+    def solve(self, program, query, budget, expand=None):
+        print("solving", query)
+        os.write(1, b"native noise\n")
+        return self.inner.solve(program, query, budget, expand)
+
+
 BROKEN: list[tuple[Engine, str]] = [
     (IgnoresDepth(), "depth"),
     (DepthOffByOne(), "depth"),
@@ -510,6 +520,11 @@ def test_an_engine_no_other_process_can_rebuild_skips_the_hash_order_property() 
 
     verdict = kit.check(Local(), kit.HASH_ORDER, max_examples=5)
     assert verdict.outcome == "skip" and "does not pickle" in verdict.detail, verdict
+
+
+def test_an_engine_printing_to_standard_output_keeps_the_hash_order_comparable() -> None:
+    verdict = kit.check(NoisyEngine(), kit.HASH_ORDER, max_examples=5)
+    assert verdict.outcome == "pass", "\n".join(verdict.lines())
 
 
 def test_broken_engine_fails_the_whole_run() -> None:

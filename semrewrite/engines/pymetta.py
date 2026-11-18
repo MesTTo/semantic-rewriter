@@ -161,10 +161,13 @@ class _ProofTerms:
 def _standard_order(term: object) -> tuple:
     """A key ordering the terms pymetta returns as SWI-Prolog's standard order of terms, which msort sorts by, orders
     them: numbers first, by value and a float before an equal integer, then symbols and other atoms by their text,
-    then expressions element by element, one that begins a longer one first."""
+    then expressions element by element, one that begins a longer one first. A symbol is an atom whatever its text
+    spells; only a grounded value can be a number."""
     if isinstance(term, Expression):
         return (2, tuple(_standard_order(child) for child in term.children))
     text = str(term)
+    if isinstance(term, Symbol):
+        return (1, text)
     try:
         value = int(text)
     except ValueError:

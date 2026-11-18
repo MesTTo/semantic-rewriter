@@ -19,6 +19,8 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
+from hypothesis import given, settings
+from hypothesis import strategies as st
 
 import semrewrite
 from semrewrite import conformance as kit
@@ -397,12 +399,7 @@ def test_proofs_converge_on_a_rewrite_cycle_and_leave_no_cache_rows() -> None:
 def test_equally_short_proofs_keep_the_first_in_the_standard_order_of_terms() -> None:
     """e(j, k) has two derivations of three steps, through d and through h. With tables the proof tables' join keeps
     the one msort puts first, the one through d, whichever order the program lists its rewrites in; without tables
-    the answer reader sees both and keeps the same one, since its key orders proof terms as msort does, numbers by
-    value rather than as text."""
-    from metta import MeTTa
-
-    from semrewrite.engines.pymetta import _standard_order
-
+    the answer reader sees both and keeps the same one, since its key orders proof terms as msort does."""
     engine = make("pymetta")
     through_d = (Rewrite("d", "c", (1, 0)), Rewrite("e", "d", (0, 1)))
     through_h = (Rewrite("h", "c", (1, 0)), Rewrite("e", "h", (0, 1)))
@@ -413,12 +410,28 @@ def test_equally_short_proofs_keep_the_first_in_the_standard_order_of_terms() ->
             s = engine.solve(program, Atom("e", ("X", "Y")), Budget(work=1_000_000, seconds=math.inf))
             assert s.status == "ok" and s.answers == {("j", "k")}, (program.tabled, s.status, s.detail)
             assert s.proofs[("j", "k")].by == through_d[1], (program.tabled, rewrites, s.proofs[("j", "k")].lines())
-    terms = ["(pf 2 (proof-rule 10 c__a))", "(pf 2 (proof-rule 9 c__a))", "(pf 2 (proof-rule 0 c__a (pf 1 proof-fact)))",
-             "(pf 2 (proof-rule 0 c__a))", "(pf 2 (proof-rewrite p1__x m1_0 (pf 1 proof-fact)))",
-             "(pf 1 (proof-rule 0 c__b (pf 0 proof-fact)))", "(pf 1 proof-fact)", "(pf 10 proof-fact)"]
+
+
+# Proof-shaped terms written as MeTTa: integers, negative ones too, floats some of which equal an integer, the symbols
+# proof terms hold, and expressions of them nested, so one term can begin another and a symbol can meet a number.
+_LEAVES = st.one_of(st.integers(-30, 30).map(str), st.sampled_from(["0.0", "-1.0", "2.0", "2.5", "10.0"]),
+                    st.sampled_from(["pf", "proof-fact", "proof-rule", "proof-rewrite", "c__a", "c__b", "c__ab",
+                                     "p0__x", "m1_0", "m0_1"]))
+_TERMS = st.recursive(_LEAVES, lambda inner: st.lists(inner, min_size=1, max_size=4).map(lambda xs: f"({' '.join(xs)})"),
+                      max_leaves=12)
+
+
+@pytest.mark.skipif("pymetta" not in ENGINES, reason="pymetta does not import here")
+@settings(max_examples=200)
+@given(st.lists(_TERMS, min_size=2, max_size=8))
+def test_the_answer_readers_order_is_msorts(terms: list[str]) -> None:
+    """The key the answer reader ranks proofs by orders any proof-shaped terms as msort does, which the proof tables'
+    join keeps by, so a run with tables and one without keep the same derivation."""
+    from metta import MeTTa
+
+    from semrewrite.engines.pymetta import _standard_order
+
     with MeTTa() as m:
-        [[given]] = m.self.run(f"!(let $terms ({' '.join(terms)}) $terms)")
+        [[given_terms]] = m.self.run(f"!(let $terms ({' '.join(terms)}) $terms)")
         [[ordered]] = m.self.run(f"!(msort ({' '.join(terms)}))")
-    by_msort = [str(term) for term in ordered.children]
-    assert [str(term) for term in sorted(given.children, key=_standard_order)] == by_msort
-    assert by_msort != sorted(by_msort), "these terms cannot tell msort's order from the order of their text"
+    assert [str(t) for t in sorted(given_terms.children, key=_standard_order)] == [str(t) for t in ordered.children]
