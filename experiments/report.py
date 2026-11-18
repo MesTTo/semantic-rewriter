@@ -666,16 +666,20 @@ def reading_comparison() -> str:
                 n = sample["size"]
                 label += f" (sample {n:,}/{sample['population']:,}, seed {sample['seed']})"
                 interval = binomial_interval(lost, n)
-                reference_interval = binomial_interval(reference_lost or 0, len(gated["reference_found"]))
+                reference_size = len(gated["reference_found"])
+                bounds = binomial_interval(reference_lost or 0, reference_size)
+                reference_interval = f"{reference_lost}/{reference_size}, {bounds}" if reference_size else bounds
             actual = (f"{ungated['physical_pairs']:,} / {ungated['physical_calls']:,}"
                       if "physical_pairs" in ungated else None)
             queried = (f"{ungated['queried_pairs']:,} / {ungated['queried_calls']:,}"
-                       if "queried_pairs" in ungated else None)
+                       if not sample and "queried_pairs" in ungated else None)
+            pairs = f"{ungated['check_pairs']:,}" if not sample else "n/a"
+            calls = f"{ungated['reader_calls']:,}" if not sample else "n/a"
             rows.append((name, label, f"{case['admission_bar']:.3f}", len(kept), lost,
-                         len(after.keys() - before.keys()), moved, reference_lost,
-                         f"{gated['check_pairs']:,} → {ungated['check_pairs']:,}",
-                         f"{gated['reader_calls']:,} → {ungated['reader_calls']:,}",
-                         ungated.get("accounted_source_pairs", 0), queried, actual, interval, reference_interval))
+                         len(after.keys() - before.keys()) if not sample else None, moved, reference_lost,
+                         f"{gated['check_pairs']:,} → {pairs}", f"{gated['reader_calls']:,} → {calls}",
+                         ungated.get("accounted_source_pairs", 0) if not sample else None,
+                         queried, actual, interval, reference_interval))
     blocks.append("#### Answers on the example knowledge bases\n\n" +
                   _table(("reader", "question", "admission bar", "kept", "lost", "gained", "kept with changed P",
                           "reference answers lost", "full-scan pairs (gated → ungated)",
@@ -683,6 +687,11 @@ def reading_comparison() -> str:
                           "ungated queried pairs / calls", "ungated newly scored pairs / calls", "sample loss, 95% CI",
                           "sample reference loss, 95% CI"),
                          rows))
+    if audit := measured.get("wikidata_witness_audit"):
+        rows = [(question, result["reader"], result["compared"], result["kept"], result["lost"])
+                for question, result in sorted(audit.items())]
+        blocks.append("#### Agreement of witness search with the full engine\n\n"
+                      + _table(("question", "cached reader", "gated answers compared", "kept by both", "lost by both"), rows))
     return "\n\n".join(blocks)
 
 

@@ -843,10 +843,14 @@ trusts below one, source grouping can change a surviving application's probabili
 The projected probabilities are therefore omitted from the ungated Wikidata result. Both Wikidata readers use the
 same release DeBERTa ranking and admissions. The actions runs use each reader for admissions at its default
 threshold and the release actions experiment's low threshold. Both use the reader's calibrated defeat bar throughout.
-Wikidata samples take a fixed prefix of a seeded uniform permutation of gated answers. The sample tests whether each
-answer still has a proof under the ungated check. Gated costs cover the run that produced the population. Ungated sample
-costs cover the applications visited in the witness search for the sampled answers. The overall and reference-answer
-loss shares have 95% Clopper-Pearson binomial intervals.
+The GPU slot allowed complete Qwen Victoria and DeBERTa coverage, with Qwen samples for Alphabet and Leonardo.
+Four-answer pilots sized the two samples by their measured scoring time. Samples take a fixed prefix of a seeded
+uniform permutation of gated answers. Each tests whether the answer still has a proof under the ungated check.
+Gated costs cover the run that produced the population. Ungated sample costs cover the applications visited in
+the witness search for sampled answers. The sample rows give newly scored pairs and calls. The remaining ungated
+cost cells are blank because separate witness blocks can revisit applications and their statements. The overall
+and reference-answer loss shares have 95% Clopper-Pearson binomial intervals. The full-population DeBERTa audit
+compared exact answer identities before either Qwen sample was read.
 
 <!-- BEGIN GENERATED: read-without-gate -->
 <!-- END GENERATED: read-without-gate -->
@@ -867,7 +871,11 @@ uv sync
 .venv/bin/python examples/wikidata/evaluate.py --beliefs
 .venv/bin/python experiments/exception_trust.py --compare-gate delta --stances STANCES
 .venv/bin/python experiments/exception_trust.py --compare-gate actions --stances STANCES
-.venv/bin/python experiments/exception_trust.py --compare-gate wikidata --stances STANCES
+.venv/bin/python experiments/exception_trust.py --compare-gate wikidata --judges nli-deberta-large \
+    --stances STANCES
+.venv/bin/python experiments/exception_trust.py --verify-wikidata-witnesses --stances STANCES
+.venv/bin/python experiments/exception_trust.py --compare-gate wikidata --judges typical-qwen3-4b \
+    --short-circuit --wikidata-sample alphabet=28 --wikidata-sample leonardo=60 --stances STANCES
 .venv/bin/python experiments/impl_eval.py --judges oracle --budget 500000 --tag oracle
 for spec in "judges-1 jev" "judges-2 nli-deberta-base" "judges-3 nli-deberta-large" "judges-4 nli-deberta-large-wanli" \
             "judges-5 reranker-qwen3" "judges-6 cosine-bge" "judges-7 cosine-qwen3"; do

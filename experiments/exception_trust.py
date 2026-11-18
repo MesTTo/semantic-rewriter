@@ -76,7 +76,16 @@ from semrewrite.claims import (
 )
 from semrewrite.discovery import Discoverer, ScoreCache
 from semrewrite.engines import make as make_engine
-from semrewrite.judges import CALIBRATION, CHECK_SET, NAMES, default_data_trust
+from semrewrite.judges import (
+    CALIBRATION,
+    CHECK_SET,
+    NAMES,
+    default_base_rate,
+    default_check_trust,
+    default_data_trust,
+    default_exception_trust,
+    default_threshold,
+)
 from semrewrite.judges import make as make_judge
 from semrewrite.judges.base import LETTERS, SentenceJudge
 from semrewrite.judges.metrics import fit_trust, roc_auc
@@ -497,7 +506,7 @@ class SourcePairCounts:
 class WikidataAnswerCheck(ClaimCheck):
     """Read all stances for answer membership and account for source-grouping work."""
 
-    def __init__(self, kb: KB, admission: SentenceJudge, reader: SentenceJudge, embedder: EmbeddingRetriever,
+    def __init__(self, kb: KB, admission: SentenceJudge, reader: SentenceJudge, embedder: EmbeddingRetriever | None,
                  *, short_circuit: bool = False) -> None:
         trust = reader.exception_trust
         if trust is None or trust >= 1.0:
@@ -686,11 +695,12 @@ def wikidata_cases() -> list[WikidataCase]:
 
 
 SAMPLE_BLOCK = 4
+WIKIDATA_SAMPLE_CASES = ("alphabet", "leonardo")
 
 
 # Time: one scan of the stated edges, then one graph search and witness check per pass that disqualifies an edge.
 def sample_relation(kb: KB, admission: SentenceJudge, reader: SentenceJudge, retrieval: Retriever,
-                    embedder: EmbeddingRetriever, chosen: Sequence, k: int) -> dict:
+                    chosen: Sequence, k: int) -> dict:
     """Find whether the sample has a surviving proof in the checked relation graph."""
     started = time.perf_counter()
     query = kb.queries[0]
@@ -714,13 +724,12 @@ def sample_relation(kb: KB, admission: SentenceJudge, reader: SentenceJudge, ret
         for rewrite in by_pred[fact.pred]:
             left, right = (fact.args[i] for i in rewrite.mapping)
             edges[left][right].append(rewrite.key)
-    check = WikidataAnswerCheck(kb, admission, reader, embedder, short_circuit=True)
+    check = WikidataAnswerCheck(kb, admission, reader, None, short_circuit=True)
     if check.reads:
         raise ValueError("a sampled relation requires admission independent of general statements")
     disabled: set[tuple[Key, tuple[str, ...]]] = set()
     kept = set()
     pending = {row[1] for row, _ in chosen}
-    measured_before = reader.usage.copy()
     live = reader.judge if isinstance(reader, SavedReader) else reader
     physical_before = live.usage.copy()
     while pending:
@@ -757,14 +766,6 @@ def sample_relation(kb: KB, admission: SentenceJudge, reader: SentenceJudge, ret
         kept.update(answer for answer, proof in candidate.items() if not proof & new)
         pending = {answer for answer, proof in candidate.items() if proof & new}
     return {"answers": [[[subject, answer], None] for answer in sorted(kept)],
-            "rewrites_defeated": 0, "rewrites_admitted": len(rewrites),
-            "applications_read": check.usage.get("applications", 0), "applications_defeated": len(disabled),
-            "check_pairs": check.usage["pairs"] + check.accounted_pairs,
-            "reader_calls": check.judge_calls + check.accounted_calls,
-            "admission_pairs": scorer.computed,
-            "accounted_source_pairs": check.accounted_pairs, "accounted_source_calls": check.accounted_calls,
-            "queried_pairs": reader.usage["pairs"] - measured_before["pairs"],
-            "queried_calls": reader.usage["calls"] - measured_before["calls"],
             "physical_pairs": live.usage["pairs"] - physical_before["pairs"],
             "physical_calls": live.usage["calls"] - physical_before["calls"], "seconds": round(time.perf_counter() - started, 2)}
 
@@ -775,10 +776,66 @@ def sample_permutation(answers: Sequence) -> list:
 
 
 def add_sample_block(total: dict, block: dict) -> dict:
-    """Accumulate independently solved sample blocks down one fixed permutation."""
+    """Accumulate the answers, new model work and timings of independent sample blocks."""
     if not total:
         return block
-    return {key: value if key == "rewrites_admitted" else total[key] + value for key, value in block.items()}
+    return {key: total[key] + value for key, value in block.items()}
+
+
+class CachedDeberta(SentenceJudge):
+    """Replay DeBERTa's saved model opinions, with an error on any cache miss."""
+
+    reads_contradiction = True
+
+    def __init__(self, db: sqlite3.Connection) -> None:
+        name = DEFAULT_READER
+        super().__init__(name, default_threshold(name))
+        self.calibrated_threshold = self.threshold
+        self.base_rate = default_base_rate(name)
+        self.check_trust = default_check_trust(name)
+        self.exception_trust = default_exception_trust(name)
+        self.db = db
+
+    def _opinions(self, pairs: Sequence[tuple[str, str]]) -> list[Opinion]:
+        opinions = []
+        for pair in pairs:
+            row = self.db.execute("SELECT b, d, u FROM readings WHERE p = ? AND h = ?", pair).fetchone()
+            if row is None:
+                raise ValueError(f"missing engine stance in the cached DeBERTa audit: {pair!r}")
+            opinions.append(Opinion(*row))
+        return opinions
+
+
+def verify_wikidata_witnesses(cache: Path) -> None:
+    """Compare kept row identities for every gated answer using the full DeBERTa run and its cache."""
+    from examples.wikidata.evaluate import K
+
+    out = json.loads(COMPARISON_OUT.read_text())
+    exact = {case["case"]: case for case in out["judges"][DEFAULT_READER]["wikidata"] if "sample" not in case}
+    if any(name not in exact for name in WIKIDATA_SAMPLE_CASES):
+        raise ValueError("the witness audit needs full DeBERTa runs for Alphabet and Leonardo")
+    path = cache / f"{DEFAULT_READER}.wikidata-readings.sqlite"
+    with closing(sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True)) as db:
+        cases = wikidata_cases()
+        reader = CachedDeberta(db)
+        verdict = {}
+        for name, kb, _, admission, retrieval in cases:
+            if name not in WIKIDATA_SAMPLE_CASES:
+                continue
+            baseline = exact[name]
+            if (baseline["admission"], baseline["admission_bar"]) != (admission.name, admission.threshold):
+                raise ValueError(f"{name}: DeBERTa witness audit requires the full run's admission calibration")
+            chosen = baseline["gated"]["answers"]
+            observed = sample_relation(kb, admission, reader, retrieval, chosen, K)
+            found = {tuple(row) for row, _ in observed["answers"]}
+            gated = {tuple(row) for row, _ in chosen}
+            expected = {tuple(row) for row, _ in baseline["ungated"]["answers"]} & gated
+            if found != expected:
+                raise ValueError(f"{name}: witness search misses {sorted(expected - found)} and adds {sorted(found - expected)}")
+            verdict[name] = {"reader": reader.name, "compared": len(gated), "kept": len(found), "lost": len(gated - found)}
+            print(f"{name}: witness search and full engine agree on all {len(gated):,} answers", flush=True)
+    out["wikidata_witness_audit"] = verdict
+    save_comparison(out, "the cached DeBERTa witness audit")
 
 
 def compare_wikidata(judge: SentenceJudge, cases: Sequence[WikidataCase], cache: Path | None,
@@ -809,8 +866,7 @@ def compare_wikidata(judge: SentenceJudge, cases: Sequence[WikidataCase], cache:
                 gated["answers"] = chosen
                 ungated: dict = {}
                 for start in range(0, max(len(chosen), 1), SAMPLE_BLOCK):
-                    block = sample_relation(kb, admission, reader, retrieval, embedder,
-                                            chosen[start:start + SAMPLE_BLOCK], K)
+                    block = sample_relation(kb, admission, reader, retrieval, chosen[start:start + SAMPLE_BLOCK], K)
                     ungated = add_sample_block(ungated, block)
                 sample = {"sample": {"population": population, "size": len(chosen), "seed": SEED}}
             else:
@@ -880,6 +936,8 @@ def main(argv: Sequence[str] | None = None) -> None:
     modes.add_argument("--no-gate", action="store_true", help="measure the two calibration forms without the gate")
     modes.add_argument("--compare-gate", choices=("delta", "actions", "wikidata"),
                        help="compare gated and ungated at release calibration")
+    modes.add_argument("--verify-wikidata-witnesses", action="store_true",
+                       help="check witness answers against the full DeBERTa engine run and saved stances")
     parser.add_argument("--short-circuit", action="store_true", help="short-circuit hard defeats for Wikidata answers")
     parser.add_argument("--wikidata-sample", metavar="CASE=SIZE", action="append", default=[],
                         help="fixed size for a sampled Leonardo or Alphabet comparison; may be repeated")
@@ -887,7 +945,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     samples: dict[str, int] = {}
     for spec in args.wikidata_sample:
         name, _, size = spec.partition("=")
-        if name not in ("alphabet", "leonardo") or name in samples or not size.isdecimal() or int(size) < 1:
+        if name not in WIKIDATA_SAMPLE_CASES or name in samples or not size.isdecimal() or int(size) < 1:
             parser.error("--wikidata-sample requires a unique alphabet=SIZE or leonardo=SIZE with SIZE >= 1")
         samples[name] = int(size)
     if (args.short_circuit or samples) and args.compare_gate != "wikidata":
@@ -896,6 +954,11 @@ def main(argv: Sequence[str] | None = None) -> None:
     unknown = sorted(set(names) - set(NAMES))
     if unknown:
         parser.error(f"unknown judges {unknown}; known: {', '.join(NAMES)}")
+    if args.verify_wikidata_witnesses:
+        if args.stances is None:
+            parser.error("--verify-wikidata-witnesses needs --stances from the full DeBERTa run")
+        verify_wikidata_witnesses(args.stances)
+        return
     if args.compare_gate:
         compare_gate(names, args.stances, args.compare_gate, short_circuit=args.short_circuit,
                      samples=samples)
