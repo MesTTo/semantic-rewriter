@@ -489,36 +489,36 @@ The rewriter checks every rewrite it admits against the knowledge base's stateme
 | nli-deberta-large | with holes | 0.03 | 0.698 | answer wastes_time(sam) | 0.420 | 0.420 |  | 1 pair, 0.73 s |
 | nli-deberta-large | with holes | 0.659 | 0.698 | match watch_tv ⇒ wastes_time | 0.420 | 0.420 | nothing | 0 pairs, 0.20 s |
 | nli-deberta-large | with holes | 0.659 | 0.698 | answer wastes_time(sam) | 0.420 | 0.420 |  | 0 pairs, 0.20 s |
-| typical-qwen3-4b | first person | 0.03 | 0.738 | match play_games ⇒ wastes_time | 0.782 | withdrawn | contradicted by "I consider gaming to be productive." (d 0.977) | 10 pairs, 0.29 s |
-| typical-qwen3-4b | first person | 0.03 | 0.738 | match watch_tv ⇒ wastes_time | 0.782 | 0.782 | nothing | 10 pairs, 0.29 s |
-| typical-qwen3-4b | first person | 0.03 | 0.738 | answer wastes_time() | 0.999 | 0.998 |  | 10 pairs, 0.29 s |
-| typical-qwen3-4b | first person | 0.269 | 0.738 | match play_games ⇒ wastes_time | 0.782 | withdrawn | contradicted by "I consider gaming to be productive." (d 0.977) | 10 pairs, 0.30 s |
-| typical-qwen3-4b | first person | 0.269 | 0.738 | match watch_tv ⇒ wastes_time | 0.782 | 0.782 | nothing | 10 pairs, 0.30 s |
-| typical-qwen3-4b | first person | 0.269 | 0.738 | answer wastes_time() | 0.999 | 0.995 |  | 10 pairs, 0.30 s |
-| typical-qwen3-4b | with holes | 0.03 | 0.738 | match play_games ⇒ wastes_time | 0.780 | withdrawn | contradicted by "I consider gaming to be productive." (d 0.953) | 8 pairs, 0.27 s |
-| typical-qwen3-4b | with holes | 0.03 | 0.738 | match watch_tv ⇒ wastes_time | 0.782 | 0.782 | nothing | 8 pairs, 0.27 s |
-| typical-qwen3-4b | with holes | 0.03 | 0.738 | answer wastes_time(ana) | 0.373 | 0.373 |  | 8 pairs, 0.27 s |
-| typical-qwen3-4b | with holes | 0.03 | 0.738 | answer wastes_time(eve) | 0.658 | 0.658 |  | 8 pairs, 0.27 s |
-| typical-qwen3-4b | with holes | 0.03 | 0.738 | answer wastes_time(joe) | 0.602 | 0.602 |  | 8 pairs, 0.27 s |
-| typical-qwen3-4b | with holes | 0.03 | 0.738 | answer wastes_time(kim) | 0.918 | 0.627 |  | 8 pairs, 0.27 s |
-| typical-qwen3-4b | with holes | 0.03 | 0.738 | answer wastes_time(lee) | 0.589 | 0.589 |  | 8 pairs, 0.27 s |
-| typical-qwen3-4b | with holes | 0.03 | 0.738 | answer wastes_time(max) | 0.856 | 0.850 |  | 8 pairs, 0.27 s |
-| typical-qwen3-4b | with holes | 0.03 | 0.738 | answer wastes_time(raj) | 0.947 | 0.925 |  | 8 pairs, 0.27 s |
-| typical-qwen3-4b | with holes | 0.03 | 0.738 | answer wastes_time(sam) | 0.810 | 0.810 |  | 8 pairs, 0.27 s |
-| typical-qwen3-4b | with holes | 0.269 | 0.738 | match play_games ⇒ wastes_time | 0.780 | withdrawn | contradicted by "I consider gaming to be productive." (d 0.953) | 6 pairs, 0.24 s |
-| typical-qwen3-4b | with holes | 0.269 | 0.738 | match watch_tv ⇒ wastes_time | 0.782 | 0.782 | nothing | 6 pairs, 0.24 s |
-| typical-qwen3-4b | with holes | 0.269 | 0.738 | answer wastes_time(ana) | 0.373 | 0.373 |  | 6 pairs, 0.24 s |
-| typical-qwen3-4b | with holes | 0.269 | 0.738 | answer wastes_time(eve) | 0.609 | 0.609 |  | 6 pairs, 0.24 s |
-| typical-qwen3-4b | with holes | 0.269 | 0.738 | answer wastes_time(kim) | 0.885 | 0.479 |  | 6 pairs, 0.24 s |
-| typical-qwen3-4b | with holes | 0.269 | 0.738 | answer wastes_time(lee) | 0.444 | 0.444 |  | 6 pairs, 0.24 s |
-| typical-qwen3-4b | with holes | 0.269 | 0.738 | answer wastes_time(max) | 0.543 | 0.543 |  | 6 pairs, 0.24 s |
-| typical-qwen3-4b | with holes | 0.269 | 0.738 | answer wastes_time(raj) | 0.868 | 0.868 |  | 6 pairs, 0.24 s |
-| typical-qwen3-4b | with holes | 0.269 | 0.738 | answer wastes_time(sam) | 0.782 | 0.782 |  | 6 pairs, 0.24 s |
+| typical-qwen3-4b | first person | 0.03 | 0.738 | match play_games ⇒ wastes_time | 0.782 | withdrawn | contradicted by "I consider gaming to be productive." (d 0.977) | 10 pairs, 188.04 s |
+| typical-qwen3-4b | first person | 0.03 | 0.738 | match watch_tv ⇒ wastes_time | 0.782 | 0.782 | nothing | 10 pairs, 188.04 s |
+| typical-qwen3-4b | first person | 0.03 | 0.738 | answer wastes_time() | 0.999 | 0.998 |  | 10 pairs, 188.04 s |
+| typical-qwen3-4b | first person | 0.269 | 0.738 | match play_games ⇒ wastes_time | 0.782 | withdrawn | contradicted by "I consider gaming to be productive." (d 0.977) | 10 pairs, 152.21 s |
+| typical-qwen3-4b | first person | 0.269 | 0.738 | match watch_tv ⇒ wastes_time | 0.782 | 0.782 | nothing | 10 pairs, 152.21 s |
+| typical-qwen3-4b | first person | 0.269 | 0.738 | answer wastes_time() | 0.999 | 0.995 |  | 10 pairs, 152.21 s |
+| typical-qwen3-4b | with holes | 0.03 | 0.738 | match play_games ⇒ wastes_time | 0.780 | withdrawn | contradicted by "I consider gaming to be productive." (d 0.953) | 8 pairs, 227.59 s |
+| typical-qwen3-4b | with holes | 0.03 | 0.738 | match watch_tv ⇒ wastes_time | 0.782 | 0.782 | nothing | 8 pairs, 227.59 s |
+| typical-qwen3-4b | with holes | 0.03 | 0.738 | answer wastes_time(ana) | 0.373 | 0.373 |  | 8 pairs, 227.59 s |
+| typical-qwen3-4b | with holes | 0.03 | 0.738 | answer wastes_time(eve) | 0.658 | 0.658 |  | 8 pairs, 227.59 s |
+| typical-qwen3-4b | with holes | 0.03 | 0.738 | answer wastes_time(joe) | 0.602 | 0.602 |  | 8 pairs, 227.59 s |
+| typical-qwen3-4b | with holes | 0.03 | 0.738 | answer wastes_time(kim) | 0.918 | 0.627 |  | 8 pairs, 227.59 s |
+| typical-qwen3-4b | with holes | 0.03 | 0.738 | answer wastes_time(lee) | 0.589 | 0.589 |  | 8 pairs, 227.59 s |
+| typical-qwen3-4b | with holes | 0.03 | 0.738 | answer wastes_time(max) | 0.856 | 0.850 |  | 8 pairs, 227.59 s |
+| typical-qwen3-4b | with holes | 0.03 | 0.738 | answer wastes_time(raj) | 0.947 | 0.925 |  | 8 pairs, 227.59 s |
+| typical-qwen3-4b | with holes | 0.03 | 0.738 | answer wastes_time(sam) | 0.810 | 0.810 |  | 8 pairs, 227.59 s |
+| typical-qwen3-4b | with holes | 0.269 | 0.738 | match play_games ⇒ wastes_time | 0.780 | withdrawn | contradicted by "I consider gaming to be productive." (d 0.953) | 6 pairs, 170.26 s |
+| typical-qwen3-4b | with holes | 0.269 | 0.738 | match watch_tv ⇒ wastes_time | 0.782 | 0.782 | nothing | 6 pairs, 170.26 s |
+| typical-qwen3-4b | with holes | 0.269 | 0.738 | answer wastes_time(ana) | 0.373 | 0.373 |  | 6 pairs, 170.26 s |
+| typical-qwen3-4b | with holes | 0.269 | 0.738 | answer wastes_time(eve) | 0.609 | 0.609 |  | 6 pairs, 170.26 s |
+| typical-qwen3-4b | with holes | 0.269 | 0.738 | answer wastes_time(kim) | 0.885 | 0.479 |  | 6 pairs, 170.26 s |
+| typical-qwen3-4b | with holes | 0.269 | 0.738 | answer wastes_time(lee) | 0.444 | 0.444 |  | 6 pairs, 170.26 s |
+| typical-qwen3-4b | with holes | 0.269 | 0.738 | answer wastes_time(max) | 0.543 | 0.543 |  | 6 pairs, 170.26 s |
+| typical-qwen3-4b | with holes | 0.269 | 0.738 | answer wastes_time(raj) | 0.868 | 0.868 |  | 6 pairs, 170.26 s |
+| typical-qwen3-4b | with holes | 0.269 | 0.738 | answer wastes_time(sam) | 0.782 | 0.782 |  | 6 pairs, 170.26 s |
 <!-- END GENERATED: claim-check-actions -->
 
 The belief withdraws the gaming match and moves nothing else. nli-deberta-large reads it as contradicting the gaming match's claim at d 1.000, past its calibrated threshold of 0.659, so discovery withdraws the match before the engine runs. In the first person "I waste time" keeps only watching TV's derivation and falls from P 0.717 to 0.478, the watching-TV match's own P; with holes, at 0.03, kim is no longer an answer and sam stays at 0.420. Nothing asks for `play_games` once its match is gone, so `play_games ⇐ gaming_productive`, which the judge reads at 0.958 and which once gave the answer a second gaming derivation, is never considered. The check asks the judge one pair: of the eight or nine statements, only the belief stands out from the gaming match's claim, at a modified z-score of 4.8 without arguments and 5.8 with them, and no statement reaches 2.5 against any other claim. nli-deberta-large's seconds here and in the per-person table below were measured with its 24 blocks streamed from CPU memory to the GPU, which other work left about 1.4 GiB free; whole on the GPU the release took 0.02 s for the first person's pair, against 0.44 s streamed.
 
-typical-qwen3-4b, the judge of what typically follows, runs at its delta-ATOMIC calibration: threshold 0.269, trust 0.559, base rate 0.504 and check trust 0.738. Its disbelief says only that a conclusion does not follow, so the check also asks it whether the claim's negation follows, and it reads the belief as making "It is not the case that if A plays games, A wastes time." follow: a stance of d 0.953 with holes and 0.977 in the first person, so it withdraws the gaming match too. With holes it also withdraws "If A wastes time, A plays games.", read at d 0.411 against its threshold. Kim stays an answer, falling from P 0.885 to 0.479, because this judge also admits "If A plays games, A scrolls social media." at P 0.553, and scrolling social media wastes time: a second route the belief does not bear on, since being productive does not stop a gamer scrolling. Typical implications chain as rules here, as DESIGN.md's limits say. In the first person this judge matches five actions to wasting time, so "I waste time" stays at 0.995 with the gaming match withdrawn.
+typical-qwen3-4b, the judge of what typically follows, runs at its delta-ATOMIC calibration: threshold 0.269, trust 0.559, base rate 0.504 and check trust 0.738. Its disbelief says only that a conclusion does not follow, so the check also asks it whether the claim's negation follows, and it reads the belief as making "It is not the case that if A plays games, A wastes time." follow: a stance of d 0.953 with holes and 0.977 in the first person, so it withdraws the gaming match too. With holes it also withdraws "If A wastes time, A plays games.", read at d 0.411 against its threshold. Kim stays an answer, falling from P 0.885 to 0.479, because this judge also admits "If A plays games, A scrolls social media." at P 0.553, and scrolling social media wastes time: a second route the belief does not bear on, since being productive does not stop a gamer scrolling. Typical implications chain as rules here, as DESIGN.md's limits say. In the first person this judge matches five actions to wasting time, so "I waste time" stays at 0.995 with the gaming match withdrawn. typical-qwen3-4b's seconds here and in the per-person table below were measured with its 36 blocks streamed from disk for every forward pass while other services held most of the GPU, so they price that configuration, not the judge: the asks of the first two forms took 86 to 228 s for 4 to 10 pairs and those of the per-person form 2.4 to 6.8 s for 4 to 8, as the host's memory pressure fell over the run, full avg60 52 at its start and 8.9 at its end.
 
 At 0.03 both judges withdraw what they withdraw at their calibrated thresholds, because the check defeats at the threshold a judge was calibrated at, whatever threshold a run admits at. While the bar followed the run's threshold, typical-qwen3-4b at 0.03 withdrew three of its first-person matches with no belief stated, on readings as faint as "I watch TV." against "If I scroll social media, I waste time." at d 0.078.
 
@@ -593,9 +593,30 @@ A statement about one person should change that person's answers alone (DESIGN.m
 | nli-deberta-large | 0.659 | wastes_time(kim) | 0.420 | 0.420 | nothing |
 | nli-deberta-large | 0.659 | wastes_time(sam) | 0.420 | 0.420 | nothing |
 | nli-deberta-large | 0.659 | the check's cost |  |  | 0 applications read, 0 pairs, 0.00 s |
+| typical-qwen3-4b | 0.03 | wastes_time(amy) | 0.916 | 0.929 | nothing |
+| typical-qwen3-4b | 0.03 | wastes_time(ana) | 0.373 | 0.373 | nothing |
+| typical-qwen3-4b | 0.03 | wastes_time(eve) | 0.658 | 0.663 | nothing |
+| typical-qwen3-4b | 0.03 | wastes_time(joe) | 0.602 | 0.607 | nothing |
+| typical-qwen3-4b | 0.03 | wastes_time(kim) | 0.977 | 0.933 | play_games ⇒ wastes_time for kim: defeated, "kim considers gaming to be productive." b 0.000 d 0.995; play_games ⇒ watch_tv for kim: normal P 0.998, "kim considers gaming to be productive." b 0.001 d 0.002; read_book ⇒ study for kim: normal P 0.985, "kim considers gaming to be productive." b 0.143 d 0.019 |
+| typical-qwen3-4b | 0.03 | wastes_time(lee) | 0.586 | 0.588 | sleep_early ⇒ read_book for lee: normal P 0.854, "lee studies for an exam." b 0.115 d 0.189 |
+| typical-qwen3-4b | 0.03 | wastes_time(max) | 0.856 | 0.851 | nothing |
+| typical-qwen3-4b | 0.03 | wastes_time(raj) | 0.947 | 0.942 | nothing |
+| typical-qwen3-4b | 0.03 | wastes_time(sam) | 0.809 | 0.809 | nothing |
+| typical-qwen3-4b | 0.03 | the check's cost |  |  | 4 applications read, 8 pairs, 3.02 s |
+| typical-qwen3-4b | 0.269 | wastes_time(amy) | 0.879 | 0.881 | nothing |
+| typical-qwen3-4b | 0.269 | wastes_time(ana) | 0.373 | 0.373 | nothing |
+| typical-qwen3-4b | 0.269 | wastes_time(eve) | 0.609 | 0.609 | nothing |
+| typical-qwen3-4b | 0.269 | wastes_time(kim) | 0.974 | 0.881 | play_games ⇒ wastes_time for kim: defeated, "kim considers gaming to be productive." b 0.000 d 0.989; read_book ⇒ study for kim: normal P 0.989, "kim considers gaming to be productive." b 0.177 d 0.015 |
+| typical-qwen3-4b | 0.269 | wastes_time(lee) | 0.444 | 0.444 | nothing |
+| typical-qwen3-4b | 0.269 | wastes_time(max) | 0.543 | 0.707 | nothing |
+| typical-qwen3-4b | 0.269 | wastes_time(raj) | 0.868 | 0.868 | nothing |
+| typical-qwen3-4b | 0.269 | wastes_time(sam) | 0.782 | 0.782 | nothing |
+| typical-qwen3-4b | 0.269 | the check's cost |  |  | 2 applications read, 4 pairs, 6.82 s |
 <!-- END GENERATED: claim-check-people -->
 
 At 0.03, where nli-deberta-large admits the gaming match, kim's application of it reads the belief with kim's premise, "kim plays games. kim considers gaming to be productive.", against "kim wastes time." at d 0.985, past the calibrated 0.659, so it derives nothing. kim falls from 0.551, gaming or watching TV, to 0.420, watching TV alone; amy, whose application of the same match reads nothing, stays at 0.224, and sam at 0.420. amy's and sam's P move in the seventh digit only because the judge scores the same proposals a few millionths apart in a different batch. The check read one application with one judge pair. The belief stands out against the gaming claim at z 4.4 and against the TV claim at 0.98, so kim's TV application reads nothing, which matters: the judge reads the belief with "kim watches TV." against "kim wastes time." at d 0.988 too, so the gate, not the judge, keeps the exception to the right rewrite. At the calibrated threshold the gaming match is not admitted, so nothing is read.
+
+typical-qwen3-4b reads kim's application of the gaming match as a contradiction too, at d 0.995 at 0.03 and d 0.989 at its calibrated 0.269, past its bar, so that application derives nothing and kim falls from 0.977 to 0.933 and from 0.974 to 0.881. It reads applications with its own exception trust, 0.772, and admits more matches than nli-deberta-large, so more applications are read: at 0.03 kim's application of play_games ⇒ watch_tv reads the belief as no contradiction (normal P 0.998), and lee's application of sleep_early ⇒ read_book reads "lee studies for an exam." at d 0.189, which only weighs (normal P 0.854). People the belief does not name move too, up to max, from 0.543 to 0.707 at 0.269, though nothing is read about them. The exceptions do not move them. typical reads the same proposal differently in a different batch, by up to 0.12 in score here (read_book ⇒ study 0.500 without the belief and 0.622 with it), where nli-deberta-large's readings move by 6 × 10⁻⁷, and stating the belief adds a predicate, gaming_productive, which changes typical's batches. At 0.269 that lifts pay_bills ⇒ watch_tv from 0.214 to 0.307, over the threshold, and max, who pays the bills, gains a second way to waste time.
 
 An application's statements are read with its premise against its conclusion, not against its named conditional. `experiments/exception_trust.py` fills a name in for PersonX and PersonY in every delta-ATOMIC update and inference and reads each update both ways; the trust is fitted on dev as the check trust is, and the defeat columns count readings at the judge's calibrated threshold:
 
@@ -622,9 +643,12 @@ Test split at base rate 0.504, PersonX and PersonY named per item from 16 first 
 | reranker-qwen3 | premise and statement | 0.757 | 0.663 | 0.693 | 0.669 | 0.004 | 0.000 | 0.002 | 0.889 | 0.004 |
 | reranker-qwen3 | named conditional | 0.806 | 0.679 | 0.693 | 0.602 | 0.000 | 0.000 | 0.000 | none | 0.000 |
 | reranker-qwen3 | PersonX conditional | 0.973 | 0.667 | 0.693 | 0.642 | 0.000 | 0.000 | 0.000 | none | 0.000 |
+| typical-qwen3-4b | premise and statement | 0.772 | 0.623 | 0.693 | 0.723 | 0.227 | 0.051 | 0.064 | 0.813 | 0.227 |
+| typical-qwen3-4b | named conditional | 0.734 | 0.654 | 0.693 | 0.707 | 0.093 | 0.019 | 0.011 | 0.827 | 0.093 |
+| typical-qwen3-4b | PersonX conditional | 0.738 | 0.626 | 0.693 | 0.735 | 0.214 | 0.051 | 0.042 | 0.804 | 0.214 |
 <!-- END GENERATED: exception-trust -->
 
-Filling a name in for PersonX does not make a claim easier to read. For every judge that reads contradiction, the named conditional calibrates a little worse than the PersonX conditional the check trust was fitted on: log loss 0.658 against 0.649 for nli-deberta-base, 0.650 against 0.642 for nli-deberta-large, 0.635 against 0.623 for the WANLI judge and 0.679 against 0.667 for the reranker, with AUC lower by 0.014 to 0.040. Read with its premise, an update defeats its inference more precisely than as a conditional, at less than half the recall: precision 0.874 against 0.784 for nli-deberta-large and 0.860 against 0.752 for nli-deberta-base, and an update about the same person written for another premise defeats at 4.5% against 27.2% under nli-deberta-large. A defeat removes an answer, while a reading below the bar only weighs, so the check takes the form with the higher precision and weighs its readings at the trust fitted on it, 0.670 for nli-deberta-large. The WANLI judge gains least, 0.811 against 0.777, and still defeats 9.6% of the same person's other updates. The reranker almost never reads a contradiction, recall 0.004 with the premise and none as a conditional. The cosine judges score a conclusion and its negation alike, so their stances' belief and disbelief nearly cancel (medians 0.149 and 0.122 for cosine-bge), and nine in ten of their projections lie between 0.498 and 0.531, around the base rate 0.504. Discounting such readings moves them almost nowhere, so the fit's likelihood is highest at the top of its range and their trust sits at that bound, 1.0, with log loss 0.689 against the base rate's 0.693; their disbelief never reaches their threshold, so they never defeat.
+Filling a name in for PersonX does not make a claim easier to read. For every judge that reads contradiction, the named conditional calibrates a little worse than the PersonX conditional the check trust was fitted on: log loss 0.658 against 0.649 for nli-deberta-base, 0.650 against 0.642 for nli-deberta-large, 0.635 against 0.623 for the WANLI judge, 0.679 against 0.667 for the reranker and 0.654 against 0.626 for typical-qwen3-4b, with AUC lower by 0.014 to 0.040. For the NLI cross-encoders, an update read with its premise defeats its inference more precisely than as a conditional, at less than half the recall: precision 0.874 against 0.784 for nli-deberta-large and 0.860 against 0.752 for nli-deberta-base, and an update about the same person written for another premise defeats at 4.5% against 27.2% under nli-deberta-large. A defeat removes an answer, while a reading below the bar only weighs, so the check takes the form with the higher precision and weighs its readings at the trust fitted on it, 0.670 for nli-deberta-large. typical-qwen3-4b runs the other way and confirms the choice: with its premise it defeats 465 of the 2,047 weakeners at precision 0.813 (465 of 572), as a named conditional 191 at 0.827 (191 of 231), a difference sampling explains (z 0.46, p 0.64), and the premise form calibrates better than the conditional, log loss 0.623 against 0.654, so it is fitted a trust of 0.772. It defeats more of the same person's other updates with the premise, 6.4% against 1.1%. The WANLI judge gains least, 0.811 against 0.777, and still defeats 9.6% of the same person's other updates. The reranker almost never reads a contradiction, recall 0.004 with the premise and none as a conditional. The cosine judges score a conclusion and its negation alike, so their stances' belief and disbelief nearly cancel (medians 0.149 and 0.122 for cosine-bge), and nine in ten of their projections lie between 0.498 and 0.531, around the base rate 0.504. Discounting such readings moves them almost nowhere, so the fit's likelihood is highest at the top of its range and their trust sits at that bound, 1.0, with log loss 0.689 against the base rate's 0.693; their disbelief never reaches their threshold, so they never defeat.
 
 The gate the applications meet is not the one the check trust was calibrated in: there every statement and claim shared PersonX, while here the claim is written with letters and each statement names its own people. At the deployed spread over all 4,138 test updates it keeps 5.3% of an inference's own update, against 0.15% with PersonX, and 0.06% of the other updates each:
 
@@ -655,9 +679,11 @@ The kept others each judge reads as a defeat, by the knowledge base's statements
 | nli-deberta-large-wanli | named conditional | 0.355 | 0.347 | 0.286 | 0.284 | 0.275 |
 | reranker-qwen3 | premise and statement | 0.000 | 0.000 | 0.005 | 0.001 | 0.001 |
 | reranker-qwen3 | named conditional | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 |
+| typical-qwen3-4b | premise and statement | 0.065 | 0.071 | 0.099 | 0.086 | 0.088 |
+| typical-qwen3-4b | named conditional | 0.006 | 0.021 | 0.025 | 0.032 | 0.024 |
 <!-- END GENERATED: exception-gate -->
 
-An application reads only the kept statements naming its own individuals, so h statements about them cost about h × 0.0006 kept others, and with the premise beside them nli-deberta-large defeats 3.2% of those, against 14.8% as a named conditional: about h × 1.9 × 10⁻⁵ spurious defeats an application, within the budget of one per hundred for any h up to 500.
+An application reads only the kept statements naming its own individuals, so h statements about them cost about h × 0.0006 kept others, and with the premise beside them nli-deberta-large defeats 3.2% of those, against 14.8% as a named conditional: about h × 1.9 × 10⁻⁵ spurious defeats an application, within the budget of one per hundred for any h up to 500. typical-qwen3-4b defeats 8.8% of those with the premise beside them, against 2.4% as a named conditional, so with the taken form it makes about h × 5.3 × 10⁻⁵ spurious defeats an application, within that budget for h up to about 190.
 
 ### SNARS's ranking beside the rewriter's
 

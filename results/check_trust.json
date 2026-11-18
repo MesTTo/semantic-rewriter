@@ -408,7 +408,7 @@
    "trust": 0.5591332022607642,
    "threshold": 0.2688319140417118,
    "reads_contradiction": false,
-   "seconds": 492.7,
+   "seconds": 0.4,
    "dev": {
     "rows": 3840,
     "at_check_trust": {
@@ -430,7 +430,9 @@
     "defeat": {
      "weakener": 0.19968470835522859,
      "strengthener": 0.041300980898296334
-    }
+    },
+    "precision": 0.8260869565217391,
+    "recall": 0.19968470835522859
    },
    "test": {
     "rows": 4138,
@@ -454,7 +456,15 @@
      "weakener": 0.2144601856375183,
      "strengthener": 0.05117168818747011,
      "other": 0.0415
-    }
+    },
+    "precision": 0.8040293040293041,
+    "recall": 0.2144601856375183
+   },
+   "provenance": {
+    "at": "2026-11-17T05:02:46+1100",
+    "command": "python experiments/check_trust.py --judges typical-qwen3-4b --stances STANCES/pa-check",
+    "commit": "5a875321d6953e29d7669bc7683a8e1d2b7da948",
+    "inputs_uncommitted": []
    }
   }
  }
